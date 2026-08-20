@@ -14,7 +14,7 @@ MouseArea {
 
     onExpandedChanged: {
         if (expanded && targetPath) {
-            meta.setPath(targetPath);
+            meta.path = targetPath;
             currentTab = 0;
             hashToCompare = "";
         }
@@ -22,6 +22,7 @@ MouseArea {
 
     FileMetadata {
         id: meta
+        path: root.targetPath
     }
 
     anchors.fill: parent

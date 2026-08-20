@@ -48,7 +48,7 @@ public:
     explicit FileMetadata(QObject* parent = nullptr);
 
     QString path() const { return m_path; }
-    void setPath(const QString& p);
+    Q_INVOKABLE void setPath(const QString& p);
 
     QString name() const { return m_name; }
     qint64 size() const { return m_size; }
