@@ -400,13 +400,14 @@ MouseArea {
         anchors.bottom: filmstrip.visible ? filmstrip.top : parent.bottom
         anchors.bottomMargin: Tokens.padding.medium
         anchors.horizontalCenter: parent.horizontalCenter
-        implicitWidth: root.isVideo ? Math.min(parent.width - 40, 560) : Math.min(parent.width - 40, controlsRow.implicitWidth + Tokens.padding.large * 2)
+        implicitWidth: root.isVideo ? Math.min(parent.width - 40, 560) : 48
         implicitHeight: 48
         radius: Tokens.rounding.full
         color: Qt.alpha(Colours.palette.m3surfaceContainerHighest, 0.85)
         visible: (root.isVideo || root.mediaList.length > 1)
         opacity: root.showControls ? 1.0 : 0.0
         Behavior on opacity { Anim { type: Anim.FastEffects } }
+        Behavior on implicitWidth { Anim { type: Anim.FastSpatial } }
 
         MouseArea {
             id: controlHover
@@ -416,8 +417,10 @@ MouseArea {
             onExited: activityTimer.restart()
         }
 
+        // Full Playback Row (when Video)
         RowLayout {
             id: controlsRow
+            visible: root.isVideo
             anchors.fill: parent
             anchors.leftMargin: Tokens.padding.medium
             anchors.rightMargin: Tokens.padding.medium
@@ -429,7 +432,6 @@ MouseArea {
                 implicitHeight: 36
                 radius: Tokens.rounding.full
                 color: playBtnHover.containsMouse ? Colours.palette.m3primaryContainer : Colours.palette.m3primary
-                visible: root.isVideo
 
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -448,7 +450,6 @@ MouseArea {
 
             // Video Seek Bar & Timestamps
             RowLayout {
-                visible: root.isVideo
                 Layout.fillWidth: true
                 spacing: Tokens.spacing.small
 
@@ -484,7 +485,6 @@ MouseArea {
 
             // Volume Controls (for Video)
             RowLayout {
-                visible: root.isVideo
                 spacing: 4
 
                 MaterialIcon {
@@ -518,7 +518,6 @@ MouseArea {
                 implicitHeight: 32
                 radius: Tokens.rounding.full
                 color: videoPlayer.loop ? Colours.palette.m3primaryContainer : (loopHover.containsMouse ? Colours.palette.m3surfaceContainerHigh : "transparent")
-                visible: root.isVideo
 
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -556,6 +555,30 @@ MouseArea {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.showFilmstrip = !root.showFilmstrip
                 }
+            }
+        }
+
+        // Single Centered Gallery Button (when Image)
+        StyledRect {
+            anchors.centerIn: parent
+            width: 36
+            height: 36
+            radius: Tokens.rounding.full
+            visible: !root.isVideo && root.mediaList.length > 1
+            color: root.showFilmstrip ? Colours.palette.m3primaryContainer : (filmHoverImg.containsMouse ? Colours.palette.m3surfaceContainerHigh : "transparent")
+
+            MaterialIcon {
+                anchors.centerIn: parent
+                text: "photo_library"
+                fontStyle: Tokens.font.icon.small
+                color: root.showFilmstrip ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+            }
+            MouseArea {
+                id: filmHoverImg
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.showFilmstrip = !root.showFilmstrip
             }
         }
     }
