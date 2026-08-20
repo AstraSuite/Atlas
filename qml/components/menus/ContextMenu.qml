@@ -38,6 +38,11 @@ MouseArea {
         radius: Tokens.rounding.large
         color: Colours.palette.m3surfaceContainerLow
 
+        MouseArea {
+            anchors.fill: parent
+            onClicked: mouse => mouse.accepted = true
+        }
+
         ColumnLayout {
             id: menuCol
 
@@ -80,19 +85,10 @@ MouseArea {
                     Layout.fillWidth: true
                     implicitHeight: 36
                     radius: Tokens.rounding.medium
-                    color: itemMouse.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                    color: itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
 
                     StateLayer {
-                        onClicked: {
-                            root.expanded = false;
-                            root.actionTriggered(menuItem.modelData.action, root.targetItem);
-                        }
-                    }
-
-                    MouseArea {
-                        id: itemMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
+                        id: itemHover
                         onClicked: {
                             root.expanded = false;
                             root.actionTriggered(menuItem.modelData.action, root.targetItem);

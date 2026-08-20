@@ -21,6 +21,10 @@ MouseArea {
         }
     }
 
+    onClicked: root.expanded = false
+
+    Keys.onEscapePressed: root.expanded = false
+
     Rectangle {
         anchors.fill: parent
         color: Qt.alpha(Colours.palette.m3scrim, 0.4)
@@ -40,6 +44,11 @@ MouseArea {
 
         radius: Tokens.rounding.large
         color: Colours.palette.m3surfaceContainerHigh
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: mouse => mouse.accepted = true
+        }
 
         ColumnLayout {
             id: propCol

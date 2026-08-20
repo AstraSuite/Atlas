@@ -149,20 +149,42 @@ StyledRect {
                         Repeater {
                             model: {
                                 if (!root.activeTab || !root.activeTab.currentPath) return [];
-                                let p = root.activeTab.currentPath;
-                                let parts = p.split("/").filter(s => s.length > 0);
-                                return ["/"].concat(parts);
+                                let current = root.activeTab.currentPath;
+                                let home = FileUtils.home;
+                                
+                                if (current === home) {
+                                    return [{ name: qsTr("Home"), path: home, isHome: true }];
+                                } else if (current.startsWith(home + "/")) {
+                                    let rel = current.substring(home.length + 1);
+                                    let parts = rel.split("/").filter(s => s.length > 0);
+                                    let list = [{ name: qsTr("Home"), path: home, isHome: true }];
+                                    let accum = home;
+                                    for (let part of parts) {
+                                        accum += "/" + part;
+                                        list.push({ name: part, path: accum, isHome: false });
+                                    }
+                                    return list;
+                                } else {
+                                    let parts = current.split("/").filter(s => s.length > 0);
+                                    let list = [{ name: "/", path: "/", isHome: false }];
+                                    let accum = "";
+                                    for (let part of parts) {
+                                        accum += "/" + part;
+                                        list.push({ name: part, path: accum, isHome: false });
+                                    }
+                                    return list;
+                                }
                             }
 
                             RowLayout {
                                 id: crumb
-                                required property string modelData
+                                required property var modelData
                                 required property int index
                                 spacing: Tokens.spacing.extraSmall
 
                                 StyledRect {
                                     implicitHeight: 26
-                                    implicitWidth: crumbText.implicitWidth + Tokens.padding.small * 2
+                                    implicitWidth: crumbContent.implicitWidth + Tokens.padding.small * 2
                                     radius: Tokens.rounding.small
                                     color: crumbMouse.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
 
@@ -171,21 +193,29 @@ StyledRect {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         onClicked: {
-                                            if (crumb.index === 0) {
-                                                root.activeTab.currentPath = "/";
-                                            } else {
-                                                let p = root.activeTab.currentPath.split("/").filter(s => s.length > 0);
-                                                root.activeTab.currentPath = "/" + p.slice(0, crumb.index).join("/");
+                                            if (root.activeTab) {
+                                                root.activeTab.currentPath = crumb.modelData.path;
                                             }
                                         }
                                     }
 
-                                    StyledText {
-                                        id: crumbText
+                                    RowLayout {
+                                        id: crumbContent
                                         anchors.centerIn: parent
-                                        text: crumb.modelData === "/" ? "root" : (crumb.index === 1 && crumb.modelData === "home" ? "home" : crumb.modelData)
-                                        color: Colours.palette.m3onSurface
-                                        font: Tokens.font.body.small
+                                        spacing: 4
+
+                                        MaterialIcon {
+                                            visible: crumb.modelData.isHome
+                                            text: "home"
+                                            fontStyle: Tokens.font.icon.small
+                                            color: Colours.palette.m3onSurface
+                                        }
+
+                                        StyledText {
+                                            text: crumb.modelData.name
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.small
+                                        }
                                     }
                                 }
 
@@ -193,7 +223,7 @@ StyledRect {
                                     text: "/"
                                     color: Colours.palette.m3outline
                                     font: Tokens.font.body.small
-                                    visible: crumb.index < (root.activeTab.currentPath.split("/").filter(s => s.length > 0).length)
+                                    visible: crumb.index < (parent.parent.count - 1)
                                 }
                             }
                         }
