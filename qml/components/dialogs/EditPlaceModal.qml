@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
 import prism
@@ -27,7 +28,7 @@ MouseArea {
     }
 
     function updateIcons() {
-        displayedIcons = IconCatalog.search(iconSearchQuery, 120);
+        displayedIcons = IconCatalog.search(iconSearchQuery, 0);
     }
 
     anchors.fill: parent
@@ -154,7 +155,7 @@ MouseArea {
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: qsTr("Choose Icon (%1 selected)").arg(root.selectedIcon)
+                        text: qsTr("Choose Icon (%1 of %2 available)").arg(root.displayedIcons.length).arg(IconCatalog.totalIcons)
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.label.medium
                     }
@@ -234,6 +235,10 @@ MouseArea {
                         cellHeight: 42
                         clip: true
                         model: root.displayedIcons
+
+                        ScrollBar.vertical: StyledScrollBar {
+                            flickable: iconGrid
+                        }
 
                         delegate: StyledRect {
                             id: iconTile

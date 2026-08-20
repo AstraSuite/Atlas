@@ -20,7 +20,7 @@ public:
 
     int totalIcons() const { return m_icons.size(); }
 
-    Q_INVOKABLE QStringList search(const QString& query, int limit = 120) const;
+    Q_INVOKABLE QStringList search(const QString& query, int limit = 0) const;
     Q_INVOKABLE QStringList getAllIcons() const { return m_icons; }
 
 private:
