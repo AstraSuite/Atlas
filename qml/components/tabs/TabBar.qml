@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Shapes
 import "../"
 import prism
 
@@ -13,7 +14,7 @@ StyledRect {
         id: tabRow
 
         anchors.fill: parent
-        anchors.leftMargin: Tokens.padding.small
+        anchors.leftMargin: 12
         anchors.rightMargin: Tokens.padding.small
         anchors.topMargin: 4
         spacing: Tokens.spacing.extraSmall
@@ -24,12 +25,12 @@ StyledRect {
             Layout.fillWidth: true
             Layout.fillHeight: true
             orientation: ListView.Horizontal
-            spacing: 2
-            clip: true
+            spacing: 0
+            clip: false
 
             model: TabManager
 
-            delegate: StyledRect {
+            delegate: Item {
                 id: tabItem
 
                 required property int index
@@ -40,58 +41,108 @@ StyledRect {
                 implicitWidth: Math.min(220, Math.max(120, tabContent.implicitWidth + Tokens.padding.medium * 2))
                 anchors.bottom: parent ? parent.bottom : undefined
                 anchors.top: parent ? parent.top : undefined
+                z: selected ? 10 : 1
 
-                // Chrome-style top corner rounding, connecting to the NavigationBar below
-                topLeftRadius: selected ? Tokens.rounding.medium : Tokens.rounding.small
-                topRightRadius: selected ? Tokens.rounding.medium : Tokens.rounding.small
-                bottomLeftRadius: 0
-                bottomRightRadius: 0
+                // Left outer concave fillet curve
+                Shape {
+                    anchors.right: tabBackground.left
+                    anchors.bottom: parent.bottom
+                    width: 8
+                    height: 8
+                    visible: tabItem.selected
+                    layer.enabled: true
 
-                color: selected ? Colours.tPalette.m3surfaceContainer : (tabHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
+                    ShapePath {
+                        fillColor: Colours.tPalette.m3surfaceContainer
+                        strokeColor: "transparent"
+                        startX: 8; startY: 0
+                        PathArc {
+                            x: 0; y: 8
+                            radiusX: 8; radiusY: 8
+                            direction: PathArc.Counterclockwise
+                        }
+                        PathLine { x: 8; y: 8 }
+                    }
+                }
 
-                RowLayout {
-                    id: tabContent
+                // Right outer concave fillet curve
+                Shape {
+                    anchors.left: tabBackground.right
+                    anchors.bottom: parent.bottom
+                    width: 8
+                    height: 8
+                    visible: tabItem.selected
+                    layer.enabled: true
 
+                    ShapePath {
+                        fillColor: Colours.tPalette.m3surfaceContainer
+                        strokeColor: "transparent"
+                        startX: 0; startY: 0
+                        PathArc {
+                            x: 8; y: 8
+                            radiusX: 8; radiusY: 8
+                            direction: PathArc.Clockwise
+                        }
+                        PathLine { x: 0; y: 8 }
+                    }
+                }
+
+                // Main Tab Body
+                StyledRect {
+                    id: tabBackground
                     anchors.fill: parent
-                    anchors.leftMargin: Tokens.padding.medium
-                    anchors.rightMargin: Tokens.padding.small
-                    spacing: Tokens.spacing.small
 
-                    MaterialIcon {
-                        text: "folder"
-                        color: tabItem.selected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-                        fontStyle: Tokens.font.icon.small
-                    }
+                    topLeftRadius: tabItem.selected ? 8 : Tokens.rounding.small
+                    topRightRadius: tabItem.selected ? 8 : Tokens.rounding.small
+                    bottomLeftRadius: 0
+                    bottomRightRadius: 0
 
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: tabItem.title
-                        color: tabItem.selected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.body.small
-                        elide: Text.ElideRight
-                    }
+                    color: tabItem.selected ? Colours.tPalette.m3surfaceContainer : (tabHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
 
-                    Item {
-                        implicitWidth: 20
-                        implicitHeight: 20
-                        visible: TabManager.count > 1
-                        z: 2
+                    RowLayout {
+                        id: tabContent
+
+                        anchors.fill: parent
+                        anchors.leftMargin: Tokens.padding.medium
+                        anchors.rightMargin: Tokens.padding.small
+                        spacing: Tokens.spacing.small
 
                         MaterialIcon {
-                            anchors.centerIn: parent
-                            text: "close"
+                            text: "folder"
+                            color: tabItem.selected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                             fontStyle: Tokens.font.icon.small
-                            color: closeHover.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
                         }
 
-                        MouseArea {
-                            id: closeHover
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: mouse => {
-                                mouse.accepted = true;
-                                TabManager.closeTab(tabItem.index);
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: tabItem.title
+                            color: tabItem.selected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                            font: Tokens.font.body.small
+                            elide: Text.ElideRight
+                        }
+
+                        Item {
+                            implicitWidth: 20
+                            implicitHeight: 20
+                            visible: TabManager.count > 1
+                            z: 2
+
+                            MaterialIcon {
+                                anchors.centerIn: parent
+                                text: "close"
+                                fontStyle: Tokens.font.icon.small
+                                color: closeHover.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                            }
+
+                            MouseArea {
+                                id: closeHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: mouse => {
+                                    mouse.accepted = true;
+                                    TabManager.closeTab(tabItem.index);
+                                }
                             }
                         }
                     }
@@ -120,6 +171,7 @@ StyledRect {
             implicitWidth: 28
             implicitHeight: 28
             Layout.alignment: Qt.AlignVCenter
+            Layout.leftMargin: 8
 
             StyledRect {
                 anchors.fill: parent
