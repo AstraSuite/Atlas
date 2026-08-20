@@ -34,6 +34,7 @@ public:
     Q_INVOKABLE static QString formatSize(qint64 bytes);
     Q_INVOKABLE static QString shortenHome(const QString& path);
     Q_INVOKABLE static QString toLocalFile(const QUrl& url);
+    Q_INVOKABLE static QString baseName(const QString& path);
     Q_INVOKABLE static QString iconForName(const QString& name, const QString& fallback = QString());
     Q_INVOKABLE static QString iconForFile(const QString& name, bool isDir, const QString& mimeType);
 };

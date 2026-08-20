@@ -10,6 +10,7 @@ MouseArea {
     property string title: qsTr("New Item")
     property string icon: "note_add"
     property string initialText: ""
+    property string targetRenamePath: ""
 
     signal accepted(string text)
 

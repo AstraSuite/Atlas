@@ -88,6 +88,7 @@ Item {
 
     GridView {
         id: gridView
+        z: 1
 
         anchors.fill: parent
         anchors.margins: Tokens.padding.small
@@ -309,6 +310,7 @@ Item {
         property real currentX: 0
         property real currentY: 0
         property bool isSelecting: false
+        property bool wasSelecting: false
 
         onPressed: mouse => {
             startX = mouse.x;
@@ -316,6 +318,7 @@ Item {
             currentX = mouse.x;
             currentY = mouse.y;
             isSelecting = false;
+            wasSelecting = false;
         }
 
         onPositionChanged: mouse => {
@@ -326,6 +329,7 @@ Item {
                 let dy = currentY - startY;
                 if (!isSelecting && (dx * dx + dy * dy) > 36) {
                     isSelecting = true;
+                    wasSelecting = true;
                     if (!(mouse.modifiers & Qt.ControlModifier)) {
                         root.selectedPaths = [];
                         gridView.currentIndex = -1;
@@ -344,15 +348,17 @@ Item {
         }
 
         onClicked: mouse => {
-            if (!isSelecting) {
-                if (mouse.button === Qt.RightButton) {
-                    let globalPos = mapToItem(null, mouse.x, mouse.y);
-                    root.blankContextMenu(globalPos.x, globalPos.y);
-                } else if (mouse.button === Qt.LeftButton) {
-                    root.selectedPaths = [];
-                    gridView.currentIndex = -1;
-                    root.anchorIndex = -1;
-                }
+            if (wasSelecting) {
+                wasSelecting = false;
+                return;
+            }
+            if (mouse.button === Qt.RightButton) {
+                let globalPos = mapToItem(null, mouse.x, mouse.y);
+                root.blankContextMenu(globalPos.x, globalPos.y);
+            } else if (mouse.button === Qt.LeftButton) {
+                root.selectedPaths = [];
+                gridView.currentIndex = -1;
+                root.anchorIndex = -1;
             }
         }
 

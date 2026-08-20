@@ -304,11 +304,14 @@ ApplicationWindow {
             onAccepted: text => {
                 let currentDir = TabManager.currentTab ? TabManager.currentTab.currentPath : "";
                 if (title === qsTr("Create New Folder")) {
-                    FileOperations.createFolder(currentDir, text);
+                    FileOperations.createDirectory(currentDir, text);
                 } else if (title === qsTr("Create New File")) {
                     FileOperations.createFile(currentDir, text);
-                } else if (title === qsTr("Rename") && contextMenu.targetItem) {
-                    FileOperations.renameItem(contextMenu.targetItem.path, text);
+                } else if (title === qsTr("Rename")) {
+                    let oldPath = newItemModal.targetRenamePath || (contextMenu.targetItem ? contextMenu.targetItem.path : "");
+                    if (oldPath) {
+                        FileOperations.renameFile(oldPath, text);
+                    }
                 }
             }
         }
@@ -452,6 +455,7 @@ ApplicationWindow {
                 if (sel && sel.length > 0) {
                     newItemModal.title = qsTr("Rename");
                     newItemModal.icon = "drive_file_rename_outline";
+                    newItemModal.targetRenamePath = sel;
                     newItemModal.initialText = FileUtils.baseName(sel);
                     newItemModal.expanded = true;
                 }

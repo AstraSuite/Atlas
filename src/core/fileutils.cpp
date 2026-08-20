@@ -57,6 +57,11 @@ QString FileUtils::toLocalFile(const QUrl& url) {
     return url.isLocalFile() ? url.toLocalFile() : url.toString();
 }
 
+QString FileUtils::baseName(const QString& path) {
+    if (path.isEmpty()) return QString();
+    return QFileInfo(path).fileName();
+}
+
 QString FileUtils::iconForName(const QString& name, const QString& fallback) {
     if (QIcon::hasThemeIcon(name)) {
         return QString("image://icon/") + name;
