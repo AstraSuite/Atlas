@@ -6,7 +6,7 @@ import prism
 T.Slider {
     id: root
 
-    property int radius: Tokens.rounding.medium
+    property int radius: Tokens.rounding.full
     property bool interactionOnMove: true
     readonly property bool dragging: mouse.pressed
 
@@ -21,8 +21,8 @@ T.Slider {
 
     Component.onCompleted: filledWidth = Qt.binding(() => (width - handle.implicitWidth - handle.anchors.leftMargin) * pos)
 
-    implicitWidth: 140
-    implicitHeight: 12
+    implicitWidth: 80
+    implicitHeight: 8
 
     contentItem: Item {
         anchors.fill: parent
@@ -35,22 +35,20 @@ T.Slider {
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: Tokens.spacing.extraSmall
 
-            implicitHeight: parent.height * (parent.height <= 12 ? opacity : Math.min(opacity * 2, 1))
-            opacity: Math.min(width, 12) / 12
+            implicitHeight: 6
+            opacity: Math.min(width, 10) / 10
 
             radius: root.radius
-            topLeftRadius: Tokens.rounding.extraSmall / 2
-            bottomLeftRadius: Tokens.rounding.extraSmall / 2
             color: root.bgColour
         }
 
         StyledRect {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            anchors.rightMargin: 4 * remaining.opacity
+            anchors.rightMargin: 2
 
-            implicitWidth: implicitHeight
-            implicitHeight: 4 * remaining.opacity
+            implicitWidth: 4
+            implicitHeight: 4
             opacity: remaining.opacity
 
             radius: Tokens.rounding.full
@@ -62,14 +60,10 @@ T.Slider {
 
             anchors.left: filled.right
             anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: Tokens.spacing.extraSmall
+            anchors.leftMargin: 2
 
-            implicitWidth: 4
-            implicitHeight: {
-                const t = Math.min(Math.max((parent.height - 12) / 16, 0), 1);
-                const lerp = (a, b) => a + (b - a) * t;
-                return parent.height * (mouse.pressed ? lerp(3.5, 1.5) : lerp(3, 1.2));
-            }
+            implicitWidth: 3
+            implicitHeight: mouse.pressed ? 18 : 14
 
             radius: Tokens.rounding.full
             color: root.fgColour
@@ -88,11 +82,9 @@ T.Slider {
             anchors.verticalCenter: parent.verticalCenter
 
             implicitWidth: root.filledWidth
-            implicitHeight: root.height
+            implicitHeight: 6
 
             radius: root.radius
-            topRightRadius: Tokens.rounding.extraSmall / 2
-            bottomRightRadius: Tokens.rounding.extraSmall / 2
             color: root.fgColour
         }
     }
@@ -118,7 +110,7 @@ T.Slider {
         anchors.verticalCenter: parent.verticalCenter
 
         preventStealing: true
-        implicitHeight: handle.implicitHeight
+        implicitHeight: 18
 
         onPressed: e => {
             widthBehavior.enabled = false;

@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Layouts
 import "../"
+import prism
 
 StyledRect {
     id: root
 
-    implicitHeight: 40
-    color: Colours.tPalette.m3surfaceContainer
+    implicitHeight: 38
+    color: Colours.tPalette.m3surfaceContainerLowest
 
     RowLayout {
         id: tabRow
@@ -14,6 +15,7 @@ StyledRect {
         anchors.fill: parent
         anchors.leftMargin: Tokens.padding.small
         anchors.rightMargin: Tokens.padding.small
+        anchors.topMargin: 4
         spacing: Tokens.spacing.extraSmall
 
         ListView {
@@ -22,7 +24,7 @@ StyledRect {
             Layout.fillWidth: true
             Layout.fillHeight: true
             orientation: ListView.Horizontal
-            spacing: Tokens.spacing.extraSmall
+            spacing: 2
             clip: true
 
             model: TabManager
@@ -35,12 +37,17 @@ StyledRect {
                 required property string path
                 readonly property bool selected: TabManager.currentIndex === index
 
-                implicitWidth: Math.min(200, Math.max(100, tabContent.implicitWidth + Tokens.padding.medium * 2))
-                implicitHeight: 32
-                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+                implicitWidth: Math.min(220, Math.max(120, tabContent.implicitWidth + Tokens.padding.medium * 2))
+                anchors.bottom: parent ? parent.bottom : undefined
+                anchors.top: parent ? parent.top : undefined
 
-                radius: Tokens.rounding.medium
-                color: selected ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                // Chrome-style top corner rounding, connecting to the NavigationBar below
+                topLeftRadius: selected ? Tokens.rounding.medium : Tokens.rounding.small
+                topRightRadius: selected ? Tokens.rounding.medium : Tokens.rounding.small
+                bottomLeftRadius: 0
+                bottomRightRadius: 0
+
+                color: selected ? Colours.tPalette.m3surfaceContainer : (tabHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
 
                 RowLayout {
                     id: tabContent
@@ -81,6 +88,7 @@ StyledRect {
                             id: closeHover
                             anchors.fill: parent
                             hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
                             onClicked: mouse => {
                                 mouse.accepted = true;
                                 TabManager.closeTab(tabItem.index);
@@ -89,19 +97,18 @@ StyledRect {
                     }
                 }
 
-                StateLayer {
-                    anchors.fill: parent
-                    z: 1
-                    color: tabItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                    onClicked: TabManager.currentIndex = tabItem.index
-                }
-
                 MouseArea {
+                    id: tabHover
                     anchors.fill: parent
-                    acceptedButtons: Qt.MiddleButton
+                    hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                    cursorShape: Qt.PointingHandCursor
+
                     onClicked: mouse => {
                         if (mouse.button === Qt.MiddleButton) {
                             TabManager.closeTab(tabItem.index);
+                        } else {
+                            TabManager.currentIndex = tabItem.index;
                         }
                     }
                 }
@@ -112,15 +119,12 @@ StyledRect {
         Item {
             implicitWidth: 28
             implicitHeight: 28
+            Layout.alignment: Qt.AlignVCenter
 
             StyledRect {
                 anchors.fill: parent
                 radius: Tokens.rounding.full
-                color: Colours.tPalette.m3surfaceContainerHigh
-
-                StateLayer {
-                    onClicked: TabManager.newTab()
-                }
+                color: addHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
 
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -128,28 +132,13 @@ StyledRect {
                     color: Colours.palette.m3onSurface
                     fontStyle: Tokens.font.icon.small
                 }
-            }
-        }
 
-        // Split View (F3) Button
-        Item {
-            implicitWidth: 28
-            implicitHeight: 28
-
-            StyledRect {
-                anchors.fill: parent
-                radius: Tokens.rounding.medium
-                color: (TabManager.currentTab && TabManager.currentTab.isSplit) ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainerHigh
-
-                StateLayer {
-                    onClicked: TabManager.toggleSplitView()
-                }
-
-                MaterialIcon {
-                    anchors.centerIn: parent
-                    text: "vertical_split"
-                    color: (TabManager.currentTab && TabManager.currentTab.isSplit) ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                    fontStyle: Tokens.font.icon.small
+                MouseArea {
+                    id: addHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: TabManager.newTab()
                 }
             }
         }

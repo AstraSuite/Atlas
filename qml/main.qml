@@ -356,10 +356,7 @@ ApplicationWindow {
             onActivated: navBar.openAddressEdit()
         }
 
-        Shortcut {
-            sequence: "F3"
-            onActivated: TabManager.toggleSplitView()
-        }
+
 
         Shortcut {
             sequence: "F4"

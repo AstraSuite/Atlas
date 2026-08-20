@@ -1,29 +1,42 @@
 import QtQuick
 import QtQuick.Layouts
 import "../"
+import prism
 
 MouseArea {
     id: root
 
     property bool expanded: false
     property string title: qsTr("New Item")
-    property string icon: "create_new_folder"
+    property string icon: "note_add"
     property string initialText: ""
-    property string placeholder: qsTr("Enter name...")
 
     signal accepted(string text)
-    signal rejected()
 
     anchors.fill: parent
-    visible: expanded
+    visible: opacity > 0.001
     enabled: expanded
     hoverEnabled: expanded
     cursorShape: expanded ? Qt.ArrowCursor : undefined
     z: 100
 
-    onClicked: {
-        root.rejected();
-        root.expanded = false;
+    opacity: expanded ? 1.0 : 0.0
+    Behavior on opacity {
+        Anim {
+            type: Anim.FastEffects
+        }
+    }
+
+    onClicked: root.expanded = false
+
+    Keys.onEscapePressed: root.expanded = false
+
+    onExpandedChanged: {
+        if (expanded) {
+            input.text = initialText;
+            input.forceActiveFocus();
+            input.selectAll();
+        }
     }
 
     Rectangle {
@@ -32,14 +45,23 @@ MouseArea {
     }
 
     StyledRect {
-        id: dialogCard
+        id: modalCard
 
         anchors.centerIn: parent
         implicitWidth: 380
-        implicitHeight: cardCol.implicitHeight + Tokens.padding.large * 2
+        implicitHeight: modalCol.implicitHeight + Tokens.padding.large * 2
 
         radius: Tokens.rounding.large
         color: Colours.palette.m3surfaceContainerHigh
+
+        scale: root.expanded ? 1.0 : 0.94
+
+        Behavior on scale {
+            Anim {
+                type: Anim.FastEffects
+                easing: Tokens.anim.standard
+            }
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -47,13 +69,13 @@ MouseArea {
         }
 
         ColumnLayout {
-            id: cardCol
+            id: modalCol
 
             anchors.fill: parent
             anchors.margins: Tokens.padding.large
             spacing: Tokens.spacing.medium
 
-            // Header
+            // Header (no close button)
             RowLayout {
                 spacing: Tokens.spacing.small
 
@@ -69,32 +91,12 @@ MouseArea {
                     color: Colours.palette.m3onSurface
                     font: Tokens.font.title.medium
                 }
-
-                Item {
-                    implicitWidth: 24
-                    implicitHeight: 24
-
-                    MaterialIcon {
-                        anchors.centerIn: parent
-                        text: "close"
-                        color: Colours.palette.m3onSurfaceVariant
-                        fontStyle: Tokens.font.icon.small
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            root.rejected();
-                            root.expanded = false;
-                        }
-                    }
-                }
             }
 
             // Input Field
             StyledRect {
                 Layout.fillWidth: true
-                implicitHeight: 44
+                implicitHeight: 42
                 radius: Tokens.rounding.small
                 color: Colours.palette.m3surfaceContainerHighest
 
@@ -104,9 +106,11 @@ MouseArea {
                     anchors.margins: Tokens.padding.medium
                     text: root.initialText
                     color: Colours.palette.m3onSurface
+                    selectionColor: Colours.palette.m3primaryContainer
+                    selectedTextColor: Colours.palette.m3onPrimaryContainer
                     font: Tokens.font.body.medium
                     selectByMouse: true
-                    focus: root.expanded
+                    cursorVisible: focus
 
                     onAccepted: {
                         if (text.trim().length > 0) {
@@ -114,15 +118,10 @@ MouseArea {
                             root.expanded = false;
                         }
                     }
-
-                    Keys.onEscapePressed: {
-                        root.rejected();
-                        root.expanded = false;
-                    }
                 }
             }
 
-            // Buttons
+            // Action Buttons
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Tokens.spacing.small
@@ -133,17 +132,14 @@ MouseArea {
 
                 // Cancel Button
                 StyledRect {
-                    implicitWidth: 80
+                    implicitWidth: 70
                     implicitHeight: 36
                     radius: Tokens.rounding.full
                     color: "transparent"
 
                     StateLayer {
                         color: Colours.palette.m3onSurface
-                        onClicked: {
-                            root.rejected();
-                            root.expanded = false;
-                        }
+                        onClicked: root.expanded = false
                     }
 
                     StyledText {
@@ -154,7 +150,7 @@ MouseArea {
                     }
                 }
 
-                // Confirm Button
+                // OK / Create Button
                 StyledRect {
                     implicitWidth: 80
                     implicitHeight: 36
@@ -173,7 +169,7 @@ MouseArea {
 
                     StyledText {
                         anchors.centerIn: parent
-                        text: qsTr("Create")
+                        text: qsTr("OK")
                         color: Colours.palette.m3onPrimary
                         font: Tokens.font.label.large
                     }

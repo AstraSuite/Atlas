@@ -44,9 +44,9 @@ StyledRect {
             Layout.fillWidth: true
         }
 
-        // Zoom Icons Slider matching Nexus
+        // Compact Zoom Slider with Material Icons
         RowLayout {
-            spacing: Tokens.spacing.small
+            spacing: Tokens.spacing.extraSmall
 
             MaterialIcon {
                 text: "photo_size_select_small"
@@ -65,8 +65,8 @@ StyledRect {
 
             StyledSlider {
                 id: zoomSlider
-                implicitWidth: 120
-                implicitHeight: 12
+                implicitWidth: 80
+                implicitHeight: 8
                 from: 0.0
                 to: 1.0
                 value: (root.zoomLevel - 48) / (180 - 48)

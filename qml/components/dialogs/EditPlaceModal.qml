@@ -17,11 +17,18 @@ MouseArea {
     signal removeRequested(int index)
 
     anchors.fill: parent
-    visible: expanded
+    visible: opacity > 0.001
     enabled: expanded
     hoverEnabled: expanded
     cursorShape: expanded ? Qt.ArrowCursor : undefined
     z: 100
+
+    opacity: expanded ? 1.0 : 0.0
+    Behavior on opacity {
+        Anim {
+            type: Anim.FastEffects
+        }
+    }
 
     onClicked: root.expanded = false
 
@@ -43,18 +50,11 @@ MouseArea {
         color: Colours.palette.m3surfaceContainerHigh
 
         scale: root.expanded ? 1.0 : 0.94
-        opacity: root.expanded ? 1.0 : 0.0
 
         Behavior on scale {
             Anim {
                 type: Anim.FastEffects
                 easing: Tokens.anim.standard
-            }
-        }
-
-        Behavior on opacity {
-            Anim {
-                type: Anim.FastEffects
             }
         }
 
@@ -70,7 +70,7 @@ MouseArea {
             anchors.margins: Tokens.padding.large
             spacing: Tokens.spacing.medium
 
-            // Header
+            // Header (no close button, only icon and title)
             RowLayout {
                 spacing: Tokens.spacing.small
 
@@ -85,24 +85,6 @@ MouseArea {
                     text: qsTr("Edit Place")
                     color: Colours.palette.m3onSurface
                     font: Tokens.font.title.medium
-                }
-
-                Item {
-                    implicitWidth: 24
-                    implicitHeight: 24
-
-                    MaterialIcon {
-                        anchors.centerIn: parent
-                        text: "close"
-                        color: Colours.palette.m3onSurfaceVariant
-                        fontStyle: Tokens.font.icon.small
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.expanded = false
-                    }
                 }
             }
 
@@ -138,6 +120,8 @@ MouseArea {
                         anchors.margins: Tokens.padding.medium
                         text: root.placeName
                         color: Colours.palette.m3onSurface
+                        selectionColor: Colours.palette.m3primaryContainer
+                        selectedTextColor: Colours.palette.m3onPrimaryContainer
                         font: Tokens.font.body.medium
                         selectByMouse: true
                         cursorVisible: focus
