@@ -37,6 +37,9 @@ ApplicationWindow {
             // 1. Tab Bar
             TabBar {
                 Layout.fillWidth: true
+                onTabContextMenuRequested: (idx, gx, gy) => {
+                    tabContextMenu.open(gx, gy, idx);
+                }
             }
 
             // Main Content Area with Chrome-like rounded top corners connecting to the titlebar/tabstrip
@@ -59,6 +62,10 @@ ApplicationWindow {
                         id: navBar
                         Layout.fillWidth: true
                         activeTab: TabManager.currentTab
+
+                        onGitRequested: {
+                            gitModal.expanded = true;
+                        }
 
                         onTogglePreview: {
                             previewPanel.expanded = !previewPanel.expanded;
@@ -264,6 +271,16 @@ ApplicationWindow {
         // Properties Modal
         PropertiesModal {
             id: propertiesModal
+        }
+
+        // Git Repository Modal
+        GitModal {
+            id: gitModal
+        }
+
+        // Tab Context Menu (Top-level window overlay)
+        TabContextMenu {
+            id: tabContextMenu
         }
 
         // Global Desktop Shortcuts

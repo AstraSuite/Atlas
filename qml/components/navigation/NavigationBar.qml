@@ -20,6 +20,7 @@ StyledRect {
     signal reload()
     signal searchRequested(string query)
     signal filterRequested(string filter)
+    signal gitRequested()
 
     implicitHeight: 48
     color: Colours.tPalette.m3surfaceContainer
@@ -476,8 +477,8 @@ StyledRect {
             StyledRect {
                 anchors.fill: parent
                 radius: Tokens.rounding.full
-                color: Qt.alpha(Colours.palette.m3tertiary, 0.15)
-                border.color: Qt.alpha(Colours.palette.m3tertiary, 0.3)
+                color: gitChipHover.containsMouse ? Qt.alpha(Colours.palette.m3tertiary, 0.28) : Qt.alpha(Colours.palette.m3tertiary, 0.15)
+                border.color: Qt.alpha(Colours.palette.m3tertiary, 0.4)
                 border.width: 1
 
                 RowLayout {
@@ -496,6 +497,14 @@ StyledRect {
                         font: Tokens.font.label.small
                         color: Colours.palette.m3tertiary
                     }
+                }
+
+                MouseArea {
+                    id: gitChipHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.gitRequested()
                 }
             }
         }

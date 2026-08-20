@@ -99,10 +99,12 @@ qt_add_qml_module(prism_app
         qml/components/views/SplitViewContainer.qml
         qml/components/views/EmptyStateView.qml
         qml/components/menus/ContextMenu.qml
+        qml/components/menus/TabContextMenu.qml
         qml/components/dialogs/NewItemModal.qml
         qml/components/dialogs/EditPlaceModal.qml
         qml/components/dialogs/PropertiesModal.qml
         qml/components/dialogs/OpenWithModal.qml
+        qml/components/dialogs/GitModal.qml
         qml/components/containers/VerticalFadeFlickable.qml
         qml/components/containers/VerticalFadeListView.qml
         qml/components/containers/VerticalFadeGridView.qml

@@ -101,11 +101,13 @@ StyledRect {
                             id: placeHover
                             anchors.fill: parent
                             hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                             cursorShape: Qt.PointingHandCursor
 
                             onClicked: mouse => {
-                                if (mouse.button === Qt.RightButton) {
+                                if (mouse.button === Qt.MiddleButton) {
+                                    TabManager.newTab(placeItem.path);
+                                } else if (mouse.button === Qt.RightButton) {
                                     root.editPlaceRequested(placeItem.index, placeItem.name, placeItem.path, placeItem.iconName, placeItem.isCustom);
                                 } else {
                                     if (root.activeTab) {
@@ -219,11 +221,17 @@ StyledRect {
                             id: driveHover
                             anchors.fill: parent
                             hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                             cursorShape: Qt.PointingHandCursor
 
                             onClicked: mouse => {
-                                if (mouse.button === Qt.RightButton) {
+                                if (mouse.button === Qt.MiddleButton) {
+                                    if (driveItem.isMounted && driveItem.mountPoint && driveItem.mountPoint.length > 0) {
+                                        TabManager.newTab(driveItem.mountPoint);
+                                    } else {
+                                        DriveManager.mountDevice(driveItem.devicePath, -1);
+                                    }
+                                } else if (mouse.button === Qt.RightButton) {
                                     if (driveItem.isMounted) {
                                         DriveManager.unmountDevice(driveItem.devicePath);
                                     } else {
