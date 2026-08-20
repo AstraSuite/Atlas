@@ -38,9 +38,10 @@ int main(int argc, char* argv[]) {
     app.setOrganizationName("Caelestia");
     app.setApplicationVersion("1.0.0");
 
-    // Load fonts and initialize icon theme engine on main thread
+    // Load fonts, window icon, and initialize icon theme engine on main thread
     QFontDatabase::addApplicationFont(":/qt/qml/prism/assets/fonts/GoogleSansFlex.ttf");
     QFontDatabase::addApplicationFont(":/qt/qml/prism/assets/fonts/MaterialSymbolsRounded.ttf");
+    app.setWindowIcon(QIcon(":/qt/qml/prism/assets/prism.svg"));
     (void)QIcon::fromTheme("folder");
 
     QCommandLineParser parser;

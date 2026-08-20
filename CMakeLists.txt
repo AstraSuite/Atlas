@@ -12,6 +12,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     QuickControls2
     QuickEffects
     Concurrent
+    Svg
 )
 
 qt_standard_project_setup(REQUIRES 6.5)
@@ -102,6 +103,8 @@ qt_add_qml_module(prism_app
     RESOURCES
         assets/fonts/GoogleSansFlex.ttf
         assets/fonts/MaterialSymbolsRounded.ttf
+        assets/prism.png
+        assets/prism.svg
 )
 
 target_link_libraries(prism_app PRIVATE
@@ -112,6 +115,7 @@ target_link_libraries(prism_app PRIVATE
     Qt6::QuickControls2
     Qt6::QuickEffects
     Qt6::Concurrent
+    Qt6::Svg
 )
 
 include(GNUInstallDirs)
