@@ -177,18 +177,35 @@ void DriveManager::mountDevice(const QString& devicePath, int tabIndex) {
         QString out = QString::fromUtf8(proc.readAllStandardOutput()).trimmed();
         QString err = QString::fromUtf8(proc.readAllStandardError()).trimmed();
 
-        // Output format: "Mounted /dev/nvme0n1p1 at /run/media/dim/Games."
         QString mountPoint;
         if (out.contains(" at ")) {
             int atIdx = out.indexOf(" at ");
             mountPoint = out.mid(atIdx + 4).trimmed();
             if (mountPoint.endsWith('.')) mountPoint.chop(1);
-        } else {
-            // Already mounted? Check QStorageInfo or lsblk
+        } else if (err.contains("already mounted at `")) {
+            int atIdx = err.indexOf("already mounted at `");
+            mountPoint = err.mid(atIdx + 20);
+            int endQuote = mountPoint.indexOf('\'');
+            if (endQuote != -1) mountPoint = mountPoint.left(endQuote);
+        } else if (err.contains("already mounted at '")) {
+            int atIdx = err.indexOf("already mounted at '");
+            mountPoint = err.mid(atIdx + 20);
+            int endQuote = mountPoint.indexOf('\'');
+            if (endQuote != -1) mountPoint = mountPoint.left(endQuote);
+        }
+
+        if (mountPoint.isEmpty()) {
             QProcess checkProc;
-            checkProc.start("lsblk", { "-no", "MOUNTPOINT", devicePath });
+            checkProc.start("lsblk", { "-no", "MOUNTPOINTS,MOUNTPOINT", devicePath });
             checkProc.waitForFinished(2000);
-            mountPoint = QString::fromUtf8(checkProc.readAllStandardOutput()).trimmed();
+            QString lines = QString::fromUtf8(checkProc.readAllStandardOutput()).trimmed();
+            for (const QString& line : lines.split('\n')) {
+                QString trimmed = line.trimmed();
+                if (!trimmed.isEmpty() && trimmed != "[SWAP]") {
+                    mountPoint = trimmed;
+                    break;
+                }
+            }
         }
 
         QMetaObject::invokeMethod(this, [this, devicePath, mountPoint, tabIndex, err]() {

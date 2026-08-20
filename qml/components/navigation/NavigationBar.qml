@@ -152,8 +152,10 @@ StyledRect {
             Layout.fillWidth: true
             implicitHeight: 36
 
-            radius: Tokens.rounding.medium
+            radius: Tokens.rounding.small
             color: Colours.tPalette.m3surfaceContainerHigh
+            border.color: (root.isEditingPath || root.isSearching) ? Colours.palette.m3primary : "transparent"
+            border.width: (root.isEditingPath || root.isSearching) ? 1.5 : 0
 
             // Normal Breadcrumbs Mode
             RowLayout {
@@ -289,15 +291,24 @@ StyledRect {
             // Editable Address Bar (Ctrl+L)
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: Tokens.padding.medium
+                anchors.leftMargin: Tokens.padding.small
                 anchors.rightMargin: Tokens.padding.small
                 visible: root.isEditingPath && !root.isSearching
+                spacing: Tokens.spacing.small
+
+                MaterialIcon {
+                    text: "folder"
+                    color: Colours.palette.m3onSurfaceVariant
+                    fontStyle: Tokens.font.icon.small
+                }
 
                 TextInput {
                     id: pathInput
                     Layout.fillWidth: true
                     text: root.activeTab ? root.activeTab.currentPath : ""
                     color: Colours.palette.m3onSurface
+                    selectionColor: Colours.palette.m3primaryContainer
+                    selectedTextColor: Colours.palette.m3onPrimaryContainer
                     font: Tokens.font.body.small
                     selectByMouse: true
                     cursorVisible: focus
@@ -314,14 +325,52 @@ StyledRect {
                     }
                 }
 
+                // Clear Button
                 Item {
-                    implicitWidth: 24
-                    implicitHeight: 24
+                    implicitWidth: 22
+                    implicitHeight: 22
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "backspace"
+                        color: Colours.palette.m3onSurfaceVariant
+                        fontStyle: Tokens.font.icon.small
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: pathInput.text = ""
+                    }
+                }
+
+                // Dropdown Chevron
+                Item {
+                    implicitWidth: 22
+                    implicitHeight: 22
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "expand_more"
+                        color: Colours.palette.m3onSurfaceVariant
+                        fontStyle: Tokens.font.icon.small
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                }
+
+                // Accept Button
+                Item {
+                    implicitWidth: 22
+                    implicitHeight: 22
 
                     MaterialIcon {
                         anchors.centerIn: parent
                         text: "check"
-                        color: Colours.palette.m3primary
+                        color: Colours.palette.m3onSurfaceVariant
                         fontStyle: Tokens.font.icon.small
                     }
 
