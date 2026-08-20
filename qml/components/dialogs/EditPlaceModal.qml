@@ -126,6 +126,14 @@ MouseArea {
                     implicitHeight: 40
                     radius: Tokens.rounding.small
                     color: Colours.palette.m3surfaceContainerHighest
+                    border.color: nameInput.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outlineVariant, 0.5)
+                    border.width: nameInput.activeFocus ? 2 : 1
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.IBeamCursor
+                        acceptedButtons: Qt.NoButton
+                    }
 
                     TextInput {
                         id: nameInput
@@ -167,6 +175,14 @@ MouseArea {
                     implicitHeight: 38
                     radius: Tokens.rounding.full
                     color: Colours.palette.m3surfaceContainerHighest
+                    border.color: iconSearchInput.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outlineVariant, 0.5)
+                    border.width: iconSearchInput.activeFocus ? 2 : 1
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.IBeamCursor
+                        acceptedButtons: Qt.NoButton
+                    }
 
                     RowLayout {
                         anchors.fill: parent

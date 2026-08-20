@@ -475,6 +475,62 @@ ApplicationWindow {
         }
 
         Shortcut {
+            sequence: "Alt+."
+            onActivated: AppController.showHidden = !AppController.showHidden
+        }
+
+        Shortcut {
+            sequence: "Ctrl+A"
+            onActivated: {
+                if (splitContainer.activeModel) {
+                    let all = [];
+                    for (let i = 0; i < splitContainer.activeModel.count; ++i) {
+                        let e = splitContainer.activeModel.get(i);
+                        if (e) all.push(e.path);
+                    }
+                    if (splitContainer.mainViewLoader && splitContainer.mainViewLoader.item) {
+                        splitContainer.mainViewLoader.item.selectedPaths = all;
+                    }
+                }
+            }
+        }
+
+        Shortcut {
+            sequence: "Ctrl+Shift+A"
+            onActivated: {
+                if (splitContainer.mainViewLoader && splitContainer.mainViewLoader.item) {
+                    splitContainer.mainViewLoader.item.selectedPaths = [];
+                }
+            }
+        }
+
+        Shortcut {
+            sequence: "Ctrl+D"
+            onActivated: {
+                if (splitContainer.mainViewLoader && splitContainer.mainViewLoader.item) {
+                    splitContainer.mainViewLoader.item.selectedPaths = [];
+                }
+            }
+        }
+
+        Shortcut {
+            sequence: "Ctrl+I"
+            onActivated: {
+                if (splitContainer.activeModel && splitContainer.mainViewLoader && splitContainer.mainViewLoader.item) {
+                    let cur = splitContainer.mainViewLoader.item.selectedPaths;
+                    let inverted = [];
+                    for (let i = 0; i < splitContainer.activeModel.count; ++i) {
+                        let e = splitContainer.activeModel.get(i);
+                        if (e && cur.indexOf(e.path) === -1) {
+                            inverted.push(e.path);
+                        }
+                    }
+                    splitContainer.mainViewLoader.item.selectedPaths = inverted;
+                }
+            }
+        }
+
+        Shortcut {
             sequence: "Ctrl+1"
             onActivated: if (TabManager.currentTab) TabManager.currentTab.viewMode = 0
         }
@@ -505,13 +561,40 @@ ApplicationWindow {
         }
 
         Shortcut {
+            sequence: "Alt+Home"
+            onActivated: if (TabManager.currentTab) TabManager.currentTab.currentPath = FileUtils.home
+        }
+
+        Shortcut {
             sequence: "Ctrl+F"
+            onActivated: navBar.openSearch()
+        }
+
+        Shortcut {
+            sequence: "F9"
             onActivated: navBar.openSearch()
         }
 
         Shortcut {
             sequence: "Ctrl+L"
             onActivated: navBar.openAddressEdit()
+        }
+
+        Shortcut {
+            sequence: "Alt+D"
+            onActivated: navBar.openAddressEdit()
+        }
+
+        Shortcut {
+            sequence: "F3"
+            onActivated: {
+                if (TabManager.currentTab) {
+                    TabManager.currentTab.isSplit = !TabManager.currentTab.isSplit;
+                    if (TabManager.currentTab.isSplit && !TabManager.currentTab.splitPath) {
+                        TabManager.currentTab.splitPath = TabManager.currentTab.currentPath;
+                    }
+                }
+            }
         }
 
         Shortcut {
@@ -526,15 +609,54 @@ ApplicationWindow {
         Shortcut {
             sequence: "F5"
             onActivated: {
-                if (TabManager.currentTab) {
-                    TabManager.currentTab.currentPath = TabManager.currentTab.currentPath;
+                if (splitContainer.activeModel) {
+                    splitContainer.activeModel.refresh();
                 }
+            }
+        }
+
+        Shortcut {
+            sequence: "Ctrl+R"
+            onActivated: {
+                if (splitContainer.activeModel) {
+                    splitContainer.activeModel.refresh();
+                }
+            }
+        }
+
+        Shortcut {
+            sequence: "F10"
+            onActivated: {
+                newItemModal.title = qsTr("Create New Folder");
+                newItemModal.icon = "create_new_folder";
+                newItemModal.initialText = qsTr("New Folder");
+                newItemModal.expanded = true;
             }
         }
 
         Shortcut {
             sequence: "F11"
             onActivated: previewPanel.expanded = !previewPanel.expanded
+        }
+
+        Shortcut {
+            sequence: "Ctrl+="
+            onActivated: zoomLevel = Math.min(2.0, zoomLevel + 0.15)
+        }
+
+        Shortcut {
+            sequence: "Ctrl++"
+            onActivated: zoomLevel = Math.min(2.0, zoomLevel + 0.15)
+        }
+
+        Shortcut {
+            sequence: "Ctrl+-"
+            onActivated: zoomLevel = Math.max(0.4, zoomLevel - 0.15)
+        }
+
+        Shortcut {
+            sequence: "Ctrl+0"
+            onActivated: zoomLevel = 1.0
         }
     }
 

@@ -99,6 +99,14 @@ MouseArea {
                 implicitHeight: 42
                 radius: Tokens.rounding.small
                 color: Colours.palette.m3surfaceContainerHighest
+                border.color: input.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outlineVariant, 0.5)
+                border.width: input.activeFocus ? 2 : 1
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.IBeamCursor
+                    acceptedButtons: Qt.NoButton
+                }
 
                 TextInput {
                     id: input

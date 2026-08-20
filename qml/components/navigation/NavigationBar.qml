@@ -327,6 +327,12 @@ StyledRect {
                     selectByMouse: true
                     cursorVisible: focus
 
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.IBeamCursor
+                        acceptedButtons: Qt.NoButton
+                    }
+
                     onAccepted: {
                         if (root.activeTab && text.trim().length > 0) {
                             root.activeTab.currentPath = text.trim();
@@ -423,6 +429,12 @@ StyledRect {
                     selectByMouse: true
                     cursorVisible: focus
                     text: root.searchText
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.IBeamCursor
+                        acceptedButtons: Qt.NoButton
+                    }
 
                     onTextChanged: {
                         root.searchText = text;

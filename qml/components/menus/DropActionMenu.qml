@@ -22,6 +22,49 @@ MouseArea {
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     onClicked: expanded = false
 
+    focus: expanded
+
+    onExpandedChanged: {
+        if (expanded) {
+            root.forceActiveFocus();
+        }
+    }
+
+    Keys.onPressed: event => {
+        if (!expanded) return;
+        if (event.key === Qt.Key_Escape) {
+            expanded = false;
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Shift) {
+            executeAction("move");
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Control) {
+            executeAction("copy");
+            event.accepted = true;
+        } else if ((event.modifiers & Qt.ControlModifier) && (event.modifiers & Qt.ShiftModifier)) {
+            executeAction("link");
+            event.accepted = true;
+        }
+    }
+
+    function executeAction(act) {
+        expanded = false;
+        if (act === "move") {
+            FileOperations.moveFiles(root.sourceFiles, root.targetDir);
+        } else if (act === "copy") {
+            FileOperations.copyFiles(root.sourceFiles, root.targetDir);
+        } else if (act === "link") {
+            for (let i = 0; i < root.sourceFiles.length; ++i) {
+                let src = root.sourceFiles[i];
+                let fileName = src.substring(src.lastIndexOf('/') + 1);
+                let linkPath = root.targetDir + "/" + fileName;
+                FileOperations.createSymlink(src, linkPath);
+            }
+        } else if (act === "moveNewFolder") {
+            root.actionTriggered("moveNewFolder", root.sourceFiles, root.targetDir);
+        }
+    }
+
     opacity: expanded ? 1 : 0
     Behavior on opacity { Anim { type: Anim.FastEffects } }
 
@@ -134,22 +177,7 @@ MouseArea {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                root.expanded = false;
-                                let act = menuItem.modelData.action;
-                                if (act === "move") {
-                                    FileOperations.moveFiles(root.sourceFiles, root.targetDir);
-                                } else if (act === "copy") {
-                                    FileOperations.copyFiles(root.sourceFiles, root.targetDir);
-                                } else if (act === "link") {
-                                    for (let i = 0; i < root.sourceFiles.length; ++i) {
-                                        let src = root.sourceFiles[i];
-                                        let fileName = src.substring(src.lastIndexOf('/') + 1);
-                                        let linkPath = root.targetDir + "/" + fileName;
-                                        FileOperations.createSymlink(src, linkPath);
-                                    }
-                                } else if (act === "moveNewFolder") {
-                                    root.actionTriggered("moveNewFolder", root.sourceFiles, root.targetDir);
-                                }
+                                root.executeAction(menuItem.modelData.action);
                             }
                         }
                     }
