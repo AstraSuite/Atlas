@@ -53,6 +53,7 @@ class FileOperations : public QObject {
     Q_PROPERTY(QStringList clipboardFiles READ clipboardFiles NOTIFY clipboardChanged)
     Q_PROPERTY(bool isCutOperation READ isCutOperation NOTIFY clipboardChanged)
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY clipboardChanged)
+    Q_PROPERTY(QStringList activeDragFiles READ activeDragFiles NOTIFY activeDragFilesChanged)
 
 public:
     explicit FileOperations(QObject* parent = nullptr);
@@ -61,6 +62,7 @@ public:
 
     FileOperationProgress* progress() const { return m_progress; }
     QStringList clipboardFiles() const { return m_clipboardFiles; }
+    QStringList activeDragFiles() const { return m_activeDragFiles; }
     bool isCutOperation() const { return m_isCut; }
     bool canPaste() const { return !m_clipboardFiles.isEmpty(); }
 
@@ -108,10 +110,11 @@ public:
     Q_INVOKABLE void pasteAsSymlink(const QString& destinationDir);
 
     Q_INVOKABLE void cancelOperation();
-    Q_INVOKABLE void startNativeDrag(const QStringList& filePaths);
+    Q_INVOKABLE void startNativeDrag(const QStringList& filePaths, int cardWidth = 0, int cardHeight = 0, int iconSize = 0);
 
 signals:
     void clipboardChanged();
+    void activeDragFilesChanged();
     void transferEngineChanged();
     void customCommandChanged();
     void operationFinished(bool success, const QString& message);
@@ -124,6 +127,7 @@ private:
 
     FileOperationProgress* m_progress = nullptr;
     QStringList m_clipboardFiles;
+    QStringList m_activeDragFiles;
     bool m_isCut = false;
     int m_transferEngine = StandardEngine;
     QString m_customCommand;

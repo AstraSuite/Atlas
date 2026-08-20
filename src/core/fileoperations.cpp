@@ -571,8 +571,11 @@ void FileOperations::cancelOperation() {
     m_cancelRequested = true;
 }
 
-void FileOperations::startNativeDrag(const QStringList& filePaths) {
+void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth, int cardHeight, int iconSize) {
     if (filePaths.isEmpty()) return;
+
+    m_activeDragFiles = filePaths;
+    emit activeDragFilesChanged();
 
     QList<QUrl> urls;
     for (const QString& path : filePaths) {
@@ -586,9 +589,11 @@ void FileOperations::startNativeDrag(const QStringList& filePaths) {
     auto* drag = new QDrag(this);
     drag->setMimeData(mimeData);
 
-    // Render an exact selected item card matching Prism UI
-    int cardW = 140;
-    int cardH = 110;
+    // Exact card dimensions and scaling matching the grid card
+    int cardW = cardWidth > 0 ? cardWidth : 140;
+    int cardH = cardHeight > 0 ? cardHeight : 110;
+    int iSize = iconSize > 0 ? iconSize : 48;
+
     QPixmap pixmap(cardW, cardH);
     pixmap.fill(Qt::transparent);
 
@@ -602,10 +607,10 @@ void FileOperations::startNativeDrag(const QStringList& filePaths) {
     QColor primary = pal.m3primary();
     QColor onPrimary = pal.m3onPrimary();
 
-    // Card Background (Rounded card matching selection)
-    cardBg.setAlpha(235);
+    // Card Background (Rounded card matching selection exactly, translucent 0.88)
+    cardBg.setAlpha(225);
     painter.setBrush(cardBg);
-    painter.setPen(QPen(cardBg.lighter(115), 1.0));
+    painter.setPen(QPen(cardBg.lighter(120), 1.0));
     painter.drawRoundedRect(2, 2, cardW - 4, cardH - 4, 16, 16);
 
     // Primary File Icon & Thumbnail
@@ -616,7 +621,7 @@ void FileOperations::startNativeDrag(const QStringList& filePaths) {
     if (suffix == "png" || suffix == "jpg" || suffix == "jpeg" || suffix == "webp" || suffix == "svg") {
         QImage img(firstFi.filePath());
         if (!img.isNull()) {
-            iconPix = QPixmap::fromImage(img.scaled(48, 48, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            iconPix = QPixmap::fromImage(img.scaled(iSize, iSize, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         }
     }
 
@@ -634,9 +639,9 @@ void FileOperations::startNativeDrag(const QStringList& filePaths) {
         if (icon.isNull()) {
             icon = QIcon::fromTheme("text-x-generic");
         }
-        iconPix = icon.pixmap(48, 48);
+        iconPix = icon.pixmap(iSize, iSize);
     }
-    painter.drawPixmap((cardW - iconPix.width()) / 2, 14, iconPix);
+    painter.drawPixmap((cardW - iconPix.width()) / 2, 10, iconPix);
 
     // Label Text
     painter.setPen(onCard);
@@ -647,8 +652,8 @@ void FileOperations::startNativeDrag(const QStringList& filePaths) {
 
     QString label = firstFi.fileName();
     if (label.isEmpty()) label = firstFi.filePath();
-    QRect textRect(8, cardH - 36, cardW - 16, 28);
-    painter.drawText(textRect, Qt::AlignHCenter | Qt::AlignTop, painter.fontMetrics().elidedText(label, Qt::ElideMiddle, cardW - 16));
+    QRect textRect(6, cardH - 36, cardW - 12, 30);
+    painter.drawText(textRect, Qt::AlignHCenter | Qt::AlignTop, painter.fontMetrics().elidedText(label, Qt::ElideMiddle, cardW - 12));
 
     // If multiple items, render a badge (+N) in the top-right
     if (filePaths.size() > 1) {
@@ -674,6 +679,9 @@ void FileOperations::startNativeDrag(const QStringList& filePaths) {
     drag->setHotSpot(QPoint(cardW / 2, cardH / 2));
 
     drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::CopyAction);
+
+    m_activeDragFiles.clear();
+    emit activeDragFilesChanged();
 }
 
 } // namespace prism::core

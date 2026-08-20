@@ -79,8 +79,33 @@ Item {
             readonly property bool isSelected: root.isSelected(modelData.path) || (view.currentIndex === index)
             // Reactive Cut state: updates instantly on clipboard change
             readonly property bool isCut: FileOperations.isCutOperation && FileOperations.clipboardFiles.indexOf(modelData.path) !== -1
+            // Reactive Drag state: indicates items currently in flight
+            readonly property bool isDragged: FileOperations.activeDragFiles.indexOf(modelData.path) !== -1
             // Unhidden hidden files (dotfiles) visual distinction
             readonly property bool isHidden: delegateContainer.modelData ? (delegateContainer.modelData.isHidden || delegateContainer.modelData.name.startsWith('.')) : false
+
+            // Drop Area for Folders (Drag-over Drop Target)
+            DropArea {
+                id: folderDropArea
+                anchors.fill: parent
+                z: 1
+                enabled: delegateContainer.modelData ? delegateContainer.modelData.isDir : false
+
+                onDropped: drop => {
+                    if (drop.hasUrls) {
+                        let urls = [];
+                        for (let i = 0; i < drop.urls.length; ++i) {
+                            urls.push(FileUtils.toLocalFile(drop.urls[i]));
+                        }
+                        let destDir = delegateContainer.modelData.path;
+                        let filtered = urls.filter(u => u !== destDir);
+                        if (filtered.length > 0) {
+                            FileOperations.moveFiles(filtered, destDir);
+                            drop.accept();
+                        }
+                    }
+                }
+            }
 
             // Uniform Card Highlight Size
             StyledRect {
@@ -90,11 +115,19 @@ Item {
                 height: parent.height - 8
 
                 radius: Tokens.rounding.large
-                color: delegateContainer.isSelected ? Colours.palette.m3secondaryContainer : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
+                color: folderDropArea.containsDrag
+                    ? Qt.alpha(Colours.palette.m3primaryContainer, 0.9)
+                    : (delegateContainer.isSelected ? Colours.palette.m3secondaryContainer : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"))
+                
+                border.color: folderDropArea.containsDrag
+                    ? Colours.palette.m3primary
+                    : (delegateContainer.isDragged ? Colours.palette.m3outline : "transparent")
+                border.width: (folderDropArea.containsDrag || delegateContainer.isDragged) ? 2 : 0
+
                 clip: true
 
-                // Cut & Hidden Files Indication: Darkened / Ghosted Opacity
-                opacity: delegateContainer.isCut ? 0.38 : (delegateContainer.isHidden ? 0.58 : 1.0)
+                // Cut & Hidden & Dragging Files Indication: Darkened / Ghosted Opacity
+                opacity: delegateContainer.isDragged ? 0.35 : (delegateContainer.isCut ? 0.38 : (delegateContainer.isHidden ? 0.58 : 1.0))
 
                 Behavior on opacity {
                     Anim {
@@ -102,22 +135,12 @@ Item {
                     }
                 }
 
-                // Pop in animation
-                scale: 0.6
-                Component.onCompleted: popInAnim.start()
-
-                ParallelAnimation {
-                    id: popInAnim
-                    NumberAnimation {
-                        target: itemCard
-                        property: "scale"
-                        from: 0.5
-                        to: 1.0
-                        duration: 250
-                        easing.type: Easing.OutBack
-                        easing.overshoot: 1.3
+                Behavior on scale {
+                    Anim {
+                        type: Anim.FastEffects
                     }
                 }
+                scale: folderDropArea.containsDrag ? 1.05 : 1.0
 
                 MouseArea {
                     id: itemHover
@@ -143,7 +166,7 @@ Item {
                             if (!isDragging && (dx * dx + dy * dy) > 64) {
                                 isDragging = true;
                                 let paths = root.isSelected(delegateContainer.modelData.path) ? root.selectedPaths : [delegateContainer.modelData.path];
-                                FileOperations.startNativeDrag(paths);
+                                FileOperations.startNativeDrag(paths, itemCard.width, itemCard.height, root.zoomSize);
                             }
                         }
                     }

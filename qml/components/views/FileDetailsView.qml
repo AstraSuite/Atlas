@@ -281,6 +281,8 @@ Item {
                 readonly property bool isSelected: root.isSelected(modelData.path) || (listView.currentIndex === index)
                 // Reactive Cut state
                 readonly property bool isCut: FileOperations.isCutOperation && FileOperations.clipboardFiles.indexOf(modelData.path) !== -1
+                // Reactive Drag state
+                readonly property bool isDragged: FileOperations.activeDragFiles.indexOf(modelData.path) !== -1
                 // Unhidden hidden files (dotfiles) visual distinction
                 readonly property bool isHidden: rowItem.modelData ? (rowItem.modelData.isHidden || rowItem.modelData.name.startsWith('.')) : false
 
@@ -288,14 +290,43 @@ Item {
                 implicitHeight: 36
 
                 radius: Tokens.rounding.small
-                color: isSelected ? Colours.palette.m3secondaryContainer : (rowHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : (index % 2 === 1 ? Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0.3) : "transparent"))
+                color: folderDropArea.containsDrag
+                    ? Qt.alpha(Colours.palette.m3primaryContainer, 0.9)
+                    : (isSelected ? Colours.palette.m3secondaryContainer : (rowHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : (index % 2 === 1 ? Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0.3) : "transparent")))
 
-                // Cut & Hidden Files Indication: Darkened / Ghosted Opacity
-                opacity: isCut ? 0.38 : (isHidden ? 0.58 : 1.0)
+                border.color: folderDropArea.containsDrag
+                    ? Colours.palette.m3primary
+                    : (isDragged ? Colours.palette.m3outline : "transparent")
+                border.width: (folderDropArea.containsDrag || isDragged) ? 1.5 : 0
+
+                // Cut & Hidden & Dragging Files Indication: Darkened / Ghosted Opacity
+                opacity: isDragged ? 0.35 : (isCut ? 0.38 : (isHidden ? 0.58 : 1.0))
 
                 Behavior on opacity {
                     Anim {
                         type: Anim.FastEffects
+                    }
+                }
+
+                DropArea {
+                    id: folderDropArea
+                    anchors.fill: parent
+                    z: 1
+                    enabled: rowItem.modelData ? rowItem.modelData.isDir : false
+
+                    onDropped: drop => {
+                        if (drop.hasUrls) {
+                            let urls = [];
+                            for (let i = 0; i < drop.urls.length; ++i) {
+                                urls.push(FileUtils.toLocalFile(drop.urls[i]));
+                            }
+                            let destDir = rowItem.modelData.path;
+                            let filtered = urls.filter(u => u !== destDir);
+                            if (filtered.length > 0) {
+                                FileOperations.moveFiles(filtered, destDir);
+                                drop.accept();
+                            }
+                        }
                     }
                 }
 
@@ -323,7 +354,7 @@ Item {
                             if (!isDragging && (dx * dx + dy * dy) > 64) {
                                 isDragging = true;
                                 let paths = root.isSelected(rowItem.modelData.path) ? root.selectedPaths : [rowItem.modelData.path];
-                                FileOperations.startNativeDrag(paths);
+                                FileOperations.startNativeDrag(paths, 160, 110, 48);
                             }
                         }
                     }

@@ -69,8 +69,33 @@ Item {
             readonly property bool isSelected: root.isSelected(modelData.path) || (gridView.currentIndex === index)
             // Reactive Cut state
             readonly property bool isCut: FileOperations.isCutOperation && FileOperations.clipboardFiles.indexOf(modelData.path) !== -1
+            // Reactive Drag state
+            readonly property bool isDragged: FileOperations.activeDragFiles.indexOf(modelData.path) !== -1
             // Unhidden hidden files (dotfiles) visual distinction
             readonly property bool isHidden: compDelegate.modelData ? (compDelegate.modelData.isHidden || compDelegate.modelData.name.startsWith('.')) : false
+
+            // Drop Area for Folders
+            DropArea {
+                id: folderDropArea
+                anchors.fill: parent
+                z: 1
+                enabled: compDelegate.modelData ? compDelegate.modelData.isDir : false
+
+                onDropped: drop => {
+                    if (drop.hasUrls) {
+                        let urls = [];
+                        for (let i = 0; i < drop.urls.length; ++i) {
+                            urls.push(FileUtils.toLocalFile(drop.urls[i]));
+                        }
+                        let destDir = compDelegate.modelData.path;
+                        let filtered = urls.filter(u => u !== destDir);
+                        if (filtered.length > 0) {
+                            FileOperations.moveFiles(filtered, destDir);
+                            drop.accept();
+                        }
+                    }
+                }
+            }
 
             StyledRect {
                 id: compCard
@@ -79,10 +104,17 @@ Item {
                 height: parent.height - 4
 
                 radius: Tokens.rounding.small
-                color: compDelegate.isSelected ? Colours.palette.m3secondaryContainer : (compHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
+                color: folderDropArea.containsDrag
+                    ? Qt.alpha(Colours.palette.m3primaryContainer, 0.9)
+                    : (compDelegate.isSelected ? Colours.palette.m3secondaryContainer : (compHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"))
 
-                // Cut & Hidden Files Indication: Darkened / Ghosted Opacity
-                opacity: compDelegate.isCut ? 0.38 : (compDelegate.isHidden ? 0.58 : 1.0)
+                border.color: folderDropArea.containsDrag
+                    ? Colours.palette.m3primary
+                    : (compDelegate.isDragged ? Colours.palette.m3outline : "transparent")
+                border.width: (folderDropArea.containsDrag || compDelegate.isDragged) ? 1.5 : 0
+
+                // Cut & Hidden & Dragging Files Indication: Darkened / Ghosted Opacity
+                opacity: compDelegate.isDragged ? 0.35 : (compDelegate.isCut ? 0.38 : (compDelegate.isHidden ? 0.58 : 1.0))
 
                 Behavior on opacity {
                     Anim {
@@ -114,7 +146,7 @@ Item {
                             if (!isDragging && (dx * dx + dy * dy) > 64) {
                                 isDragging = true;
                                 let paths = root.isSelected(compDelegate.modelData.path) ? root.selectedPaths : [compDelegate.modelData.path];
-                                FileOperations.startNativeDrag(paths);
+                                FileOperations.startNativeDrag(paths, 180, 50, 24);
                             }
                         }
                     }
