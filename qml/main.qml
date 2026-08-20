@@ -12,14 +12,19 @@ import "components/dialogs"
 import "components/statusbar"
 import prism
 
-Item {
+ApplicationWindow {
     id: root
+
+    visible: true
+    title: pickerActive ? (AppController.title.length > 0 ? AppController.title : qsTr("Select a file")) : (TabManager.currentTab ? TabManager.currentTab.title + " — Prism" : qsTr("Prism"))
+    width: 1060
+    height: 680
+    minimumWidth: 520
+    minimumHeight: 400
+    color: Colours.tPalette.m3surface
 
     property bool pickerActive: typeof isPickerMode !== "undefined" ? isPickerMode : false
     property real zoomLevel: 80
-
-    implicitWidth: 1060
-    implicitHeight: 680
 
     // Full File Manager Mode
     Item {
