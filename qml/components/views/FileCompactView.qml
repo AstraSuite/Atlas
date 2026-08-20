@@ -107,6 +107,7 @@ Item {
                     }
 
                     onPositionChanged: mouse => {
+                        if (dragSelectArea.isSelecting) return;
                         if (mouse.buttons & Qt.LeftButton) {
                             let dx = mouse.x - pressX;
                             let dy = mouse.y - pressY;
@@ -119,7 +120,7 @@ Item {
                     }
 
                     onClicked: mouse => {
-                        if (isDragging) return;
+                        if (isDragging || dragSelectArea.isSelecting) return;
                         if (mouse.button === Qt.BackButton) {
                             if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
                         } else if (mouse.button === Qt.ForwardButton) {
@@ -226,32 +227,28 @@ Item {
         property bool isSelecting: false
 
         onPressed: mouse => {
-            if (mouse.button === Qt.LeftButton) {
-                let item = gridView.childAt(mouse.x - gridView.x + gridView.contentX, mouse.y - gridView.y);
-                if (!item) {
-                    startX = mouse.x;
-                    startY = mouse.y;
-                    currentX = mouse.x;
-                    currentY = mouse.y;
-                    isSelecting = false;
+            startX = mouse.x;
+            startY = mouse.y;
+            currentX = mouse.x;
+            currentY = mouse.y;
+            isSelecting = false;
+            mouse.accepted = false;
+        }
+
+        onPositionChanged: mouse => {
+            if (mouse.buttons & Qt.LeftButton) {
+                currentX = mouse.x;
+                currentY = mouse.y;
+                let dx = currentX - startX;
+                let dy = currentY - startY;
+                if (!isSelecting && (dx * dx + dy * dy) > 36) {
+                    isSelecting = true;
                     if (!(mouse.modifiers & Qt.ControlModifier)) {
                         root.selectedPaths = [];
                         gridView.currentIndex = -1;
                     }
-                } else {
-                    mouse.accepted = false;
                 }
-            } else {
-                mouse.accepted = false;
-            }
-        }
-
-        onPositionChanged: mouse => {
-            if (pressed && (mouse.buttons & Qt.LeftButton)) {
-                currentX = mouse.x;
-                currentY = mouse.y;
-                if (Math.abs(currentX - startX) > 6 || Math.abs(currentY - startY) > 6) {
-                    isSelecting = true;
+                if (isSelecting) {
                     updateRubberBandSelection();
                 }
             }
@@ -260,6 +257,7 @@ Item {
         onReleased: mouse => {
             if (isSelecting) {
                 isSelecting = false;
+                mouse.accepted = true;
             } else {
                 mouse.accepted = false;
             }
@@ -275,8 +273,8 @@ Item {
             for (let i = 0; i < gridView.count; ++i) {
                 let item = gridView.itemAtIndex(i);
                 if (item && item.modelData) {
-                    if (item.x + item.width > rx && item.x < rx + rw &&
-                        item.y + item.height > ry && item.y < ry + rh) {
+                    if (item.x < rx + rw && item.x + item.width > rx &&
+                        item.y < ry + rh && item.y + item.height > ry) {
                         newlySelected.push(item.modelData.path);
                     }
                 }

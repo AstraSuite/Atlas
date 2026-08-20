@@ -12,9 +12,13 @@
 #include <QLoggingCategory>
 #include <QDrag>
 #include <QMimeData>
+#include <QMimeDatabase>
 #include <QUrl>
 #include <QPixmap>
 #include <QPainter>
+#include <QIcon>
+#include <QImage>
+#include "config/colours.hpp"
 
 namespace prism::core {
 
@@ -582,31 +586,92 @@ void FileOperations::startNativeDrag(const QStringList& filePaths) {
     auto* drag = new QDrag(this);
     drag->setMimeData(mimeData);
 
-    // Create a drag visual pill pixmap
-    QPixmap pixmap(140, 40);
+    // Render an exact selected item card matching Prism UI
+    int cardW = 140;
+    int cardH = 110;
+    QPixmap pixmap(cardW, cardH);
     pixmap.fill(Qt::transparent);
+
     QPainter painter(&pixmap);
     painter.setRenderHint(QPainter::Antialiasing);
-    
-    QColor bg(30, 32, 40, 230);
-    painter.setBrush(bg);
-    painter.setPen(QPen(QColor(130, 170, 255), 1.5));
-    painter.drawRoundedRect(1, 1, 138, 38, 8, 8);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
 
-    painter.setPen(Qt::white);
+    prism::config::M3Palette pal(false);
+    QColor cardBg = pal.m3secondaryContainer();
+    QColor onCard = pal.m3onSecondaryContainer();
+    QColor primary = pal.m3primary();
+    QColor onPrimary = pal.m3onPrimary();
+
+    // Card Background (Rounded card matching selection)
+    cardBg.setAlpha(235);
+    painter.setBrush(cardBg);
+    painter.setPen(QPen(cardBg.lighter(115), 1.0));
+    painter.drawRoundedRect(2, 2, cardW - 4, cardH - 4, 16, 16);
+
+    // Primary File Icon & Thumbnail
+    QFileInfo firstFi(filePaths.first());
+    QPixmap iconPix;
+    
+    QString suffix = firstFi.suffix().toLower();
+    if (suffix == "png" || suffix == "jpg" || suffix == "jpeg" || suffix == "webp" || suffix == "svg") {
+        QImage img(firstFi.filePath());
+        if (!img.isNull()) {
+            iconPix = QPixmap::fromImage(img.scaled(48, 48, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        }
+    }
+
+    if (iconPix.isNull()) {
+        QIcon icon;
+        if (firstFi.isDir()) {
+            icon = QIcon::fromTheme("folder", QIcon::fromTheme("inode-directory"));
+        } else {
+            QMimeDatabase mimeDb;
+            QMimeType mime = mimeDb.mimeTypeForFile(firstFi);
+            QString mimeIcon = mime.name();
+            mimeIcon.replace('/', '-');
+            icon = QIcon::fromTheme(mimeIcon, QIcon::fromTheme(mime.iconName(), QIcon::fromTheme("text-x-generic", QIcon::fromTheme("application-x-zerosize"))));
+        }
+        if (icon.isNull()) {
+            icon = QIcon::fromTheme("text-x-generic");
+        }
+        iconPix = icon.pixmap(48, 48);
+    }
+    painter.drawPixmap((cardW - iconPix.width()) / 2, 14, iconPix);
+
+    // Label Text
+    painter.setPen(onCard);
     QFont font = painter.font();
     font.setPointSize(9);
     font.setBold(true);
     painter.setFont(font);
-    
-    QString text = filePaths.size() == 1 
-        ? QFileInfo(filePaths.first()).fileName() 
-        : QString("%1 items").arg(filePaths.size());
-    painter.drawText(QRect(10, 0, 120, 40), Qt::AlignVCenter | Qt::AlignLeft, painter.fontMetrics().elidedText(text, Qt::ElideMiddle, 120));
+
+    QString label = firstFi.fileName();
+    if (label.isEmpty()) label = firstFi.filePath();
+    QRect textRect(8, cardH - 36, cardW - 16, 28);
+    painter.drawText(textRect, Qt::AlignHCenter | Qt::AlignTop, painter.fontMetrics().elidedText(label, Qt::ElideMiddle, cardW - 16));
+
+    // If multiple items, render a badge (+N) in the top-right
+    if (filePaths.size() > 1) {
+        QString badgeText = QString("+%1").arg(filePaths.size() - 1);
+        int badgeW = 26;
+        int badgeH = 20;
+        QRect badgeRect(cardW - badgeW - 6, 6, badgeW, badgeH);
+        painter.setBrush(primary);
+        painter.setPen(Qt::NoPen);
+        painter.drawRoundedRect(badgeRect, 10, 10);
+
+        painter.setPen(onPrimary);
+        QFont badgeFont = painter.font();
+        badgeFont.setPointSize(8);
+        badgeFont.setBold(true);
+        painter.setFont(badgeFont);
+        painter.drawText(badgeRect, Qt::AlignCenter, badgeText);
+    }
+
     painter.end();
 
     drag->setPixmap(pixmap);
-    drag->setHotSpot(QPoint(pixmap.width() / 2, pixmap.height() / 2));
+    drag->setHotSpot(QPoint(cardW / 2, cardH / 2));
 
     drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::CopyAction);
 }
