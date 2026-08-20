@@ -35,7 +35,7 @@ MouseArea {
         x: Math.min(Math.max(8, root.menuX), root.width - width - 8)
         y: Math.min(Math.max(8, root.menuY), root.height - height - 8)
 
-        implicitWidth: 260
+        implicitWidth: menuCol.implicitWidth + Tokens.padding.extraSmall * 2
         implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
 
         radius: Tokens.rounding.large
@@ -59,11 +59,13 @@ MouseArea {
             // Split Tab Side-by-Side
             StyledRect {
                 Layout.fillWidth: true
+                implicitWidth: mi1Row.implicitWidth + 24
                 implicitHeight: 36
                 radius: Tokens.rounding.medium
                 color: mi1Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
 
                 RowLayout {
+                    id: mi1Row
                     anchors.fill: parent
                     anchors.leftMargin: 12
                     anchors.rightMargin: 12
@@ -87,11 +89,13 @@ MouseArea {
             // Duplicate Tab
             StyledRect {
                 Layout.fillWidth: true
+                implicitWidth: mi2Row.implicitWidth + 24
                 implicitHeight: 36
                 radius: Tokens.rounding.medium
                 color: mi2Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
 
                 RowLayout {
+                    id: mi2Row
                     anchors.fill: parent
                     anchors.leftMargin: 12
                     anchors.rightMargin: 12
@@ -115,12 +119,14 @@ MouseArea {
             // Close Tab
             StyledRect {
                 Layout.fillWidth: true
+                implicitWidth: mi3Row.implicitWidth + 24
                 implicitHeight: 36
                 radius: Tokens.rounding.medium
                 color: mi3Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
                 visible: TabManager.count > 1
 
                 RowLayout {
+                    id: mi3Row
                     anchors.fill: parent
                     anchors.leftMargin: 12
                     anchors.rightMargin: 12

@@ -149,6 +149,8 @@ StyledRect {
                         required property string model
                         required property bool isMounted
                         required property bool isRemovable
+                        required property real bytesFree
+                        required property real bytesTotal
                         required property string freeSpaceFormatted
 
                         readonly property bool selected: root.activeTab && driveItem.isMounted && !driveItem.mountPoint.isEmpty && root.activeTab.currentPath === mountPoint
@@ -176,7 +178,7 @@ StyledRect {
 
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 0
+                                spacing: 2
 
                                 StyledText {
                                     Layout.fillWidth: true
@@ -186,9 +188,35 @@ StyledRect {
                                     elide: Text.ElideRight
                                 }
 
+                                // Visual Storage Bar (slider track without handle)
+                                StyledRect {
+                                    Layout.fillWidth: true
+                                    implicitHeight: 4
+                                    radius: Tokens.rounding.full
+                                    color: Qt.alpha(Colours.palette.m3outline, 0.25)
+                                    clip: true
+                                    visible: driveItem.isMounted && driveItem.bytesTotal > 0
+
+                                    Rectangle {
+                                        anchors.left: parent.left
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        width: Math.max(4, parent.width * (driveItem.bytesTotal > 0 ? (driveItem.bytesTotal - driveItem.bytesFree) / driveItem.bytesTotal : 0))
+                                        radius: Tokens.rounding.full
+                                        color: ((driveItem.bytesTotal - driveItem.bytesFree) / driveItem.bytesTotal) > 0.9
+                                            ? Colours.palette.m3error
+                                            : (driveItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3primary)
+
+                                        Behavior on width {
+                                            Anim { type: Anim.FastEffects }
+                                        }
+                                    }
+                                }
+
                                 StyledText {
                                     Layout.fillWidth: true
-                                    text: driveItem.isMounted ? driveItem.freeSpaceFormatted : `${driveItem.fsType} (${driveItem.sizeFormatted})`
+                                    visible: !driveItem.isMounted || driveItem.bytesTotal === 0
+                                    text: `${driveItem.fsType} (${driveItem.sizeFormatted})`
                                     color: Colours.palette.m3outline
                                     font: Tokens.font.label.small
                                     elide: Text.ElideRight
@@ -196,22 +224,28 @@ StyledRect {
                             }
 
                             // Unmount / Eject Button
-                            Item {
-                                implicitWidth: 24
-                                implicitHeight: 24
+                            StyledRect {
+                                id: ejectBtn
+                                z: 10
+                                implicitWidth: 28
+                                implicitHeight: 28
+                                radius: Tokens.rounding.full
                                 visible: driveItem.isMounted
+                                color: ejectHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
 
                                 MaterialIcon {
                                     anchors.centerIn: parent
                                     text: "eject"
-                                    color: Colours.palette.m3onSurfaceVariant
+                                    color: ejectHover.containsMouse ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                                     fontStyle: Tokens.font.icon.small
                                 }
 
                                 MouseArea {
+                                    id: ejectHover
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
+                                    acceptedButtons: Qt.LeftButton
                                     onClicked: mouse => {
                                         mouse.accepted = true;
                                         DriveManager.unmountDevice(driveItem.devicePath);

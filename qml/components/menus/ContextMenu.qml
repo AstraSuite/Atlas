@@ -37,7 +37,7 @@ MouseArea {
         x: Math.min(Math.max(8, root.menuX), root.width - width - 8)
         y: Math.min(Math.max(8, root.menuY), root.height - height - 8)
 
-        implicitWidth: Math.max(220, menuCol.implicitWidth + Tokens.padding.extraSmall * 2)
+        implicitWidth: menuCol.implicitWidth + Tokens.padding.extraSmall * 2
         implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
 
         radius: Tokens.rounding.large
@@ -131,6 +131,7 @@ MouseArea {
                     visible: modelData.visible !== false
 
                     Layout.fillWidth: true
+                    implicitWidth: itemRow.implicitWidth + Tokens.padding.medium * 2
                     implicitHeight: 36
                     radius: Tokens.rounding.medium
                     color: itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
@@ -144,6 +145,7 @@ MouseArea {
                     }
 
                     RowLayout {
+                        id: itemRow
                         anchors.fill: parent
                         anchors.leftMargin: Tokens.padding.medium
                         anchors.rightMargin: Tokens.padding.medium
