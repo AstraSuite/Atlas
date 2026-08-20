@@ -4,9 +4,9 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QDateTime>
+#include <QtConcurrent>
 #include <QGuiApplication>
 #include <QClipboard>
-#include <QtConcurrent>
 #include <QStandardPaths>
 #include <QLoggingCategory>
 
@@ -35,14 +35,8 @@ void FileOperations::cutToClipboard(const QStringList& paths) {
     emit clipboardChanged();
 }
 
-bool FileOperations::isPathCut(const QString& path) const {
-    return m_isCut && m_clipboardFiles.contains(path);
-}
-
 void FileOperations::copyTextToClipboard(const QString& text) {
-    if (auto* cb = QGuiApplication::clipboard()) {
-        cb->setText(text);
-    }
+    QGuiApplication::clipboard()->setText(text);
 }
 
 void FileOperations::clearClipboard() {

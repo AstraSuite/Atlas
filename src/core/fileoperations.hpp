@@ -64,14 +64,17 @@ public:
     bool isCutOperation() const { return m_isCut; }
     bool canPaste() const { return !m_clipboardFiles.isEmpty(); }
 
+    Q_INVOKABLE bool isPathCut(const QString& path) const {
+        return m_isCut && m_clipboardFiles.contains(path);
+    }
+
     Q_INVOKABLE void copyToClipboard(const QStringList& paths);
     Q_INVOKABLE void cutToClipboard(const QStringList& paths);
     Q_INVOKABLE void copyPaths(const QStringList& paths) { copyToClipboard(paths); }
     Q_INVOKABLE void cutPaths(const QStringList& paths) { cutToClipboard(paths); }
-    Q_INVOKABLE bool isPathCut(const QString& path) const;
-    Q_INVOKABLE void copyTextToClipboard(const QString& text);
     Q_INVOKABLE void clearClipboard();
     Q_INVOKABLE void paste(const QString& destinationDir);
+    Q_INVOKABLE void copyTextToClipboard(const QString& text);
 
     Q_INVOKABLE void copyFiles(const QStringList& sources, const QString& destinationDir);
     Q_INVOKABLE void moveFiles(const QStringList& sources, const QString& destinationDir);

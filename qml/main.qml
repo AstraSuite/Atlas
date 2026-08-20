@@ -151,8 +151,8 @@ ApplicationWindow {
                     StatusBar {
                         id: statusBar
                         Layout.fillWidth: true
-                        activeModel: null
-                        selectedCount: contextMenu.targetItem ? 1 : 0
+                        activeModel: splitContainer.activeModel
+                        selectedCount: splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths.length : (contextMenu.targetItem ? 1 : 0)
                         selectedSizeFormatted: contextMenu.targetItem ? (contextMenu.targetItem.isDir ? "" : contextMenu.targetItem.formattedSize) : ""
                         onZoomChanged: level => zoomLevel = level
                     }
@@ -286,16 +286,16 @@ ApplicationWindow {
         Shortcut {
             sequence: "Ctrl+C"
             onActivated: {
-                let sel = splitContainer.currentSelectedPath;
-                if (sel && sel.length > 0) FileOperations.copyPaths([sel]);
+                let paths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : (splitContainer.currentSelectedPath ? [splitContainer.currentSelectedPath] : []);
+                if (paths.length > 0) FileOperations.copyPaths(paths);
             }
         }
 
         Shortcut {
             sequence: "Ctrl+X"
             onActivated: {
-                let sel = splitContainer.currentSelectedPath;
-                if (sel && sel.length > 0) FileOperations.cutPaths([sel]);
+                let paths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : (splitContainer.currentSelectedPath ? [splitContainer.currentSelectedPath] : []);
+                if (paths.length > 0) FileOperations.cutPaths(paths);
             }
         }
 
@@ -309,16 +309,16 @@ ApplicationWindow {
         Shortcut {
             sequence: "Delete"
             onActivated: {
-                let sel = splitContainer.currentSelectedPath;
-                if (sel && sel.length > 0) FileOperations.moveToTrash([sel]);
+                let paths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : (splitContainer.currentSelectedPath ? [splitContainer.currentSelectedPath] : []);
+                if (paths.length > 0) FileOperations.moveToTrash(paths);
             }
         }
 
         Shortcut {
             sequence: "Shift+Delete"
             onActivated: {
-                let sel = splitContainer.currentSelectedPath;
-                if (sel && sel.length > 0) FileOperations.deletePermanently([sel]);
+                let paths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : (splitContainer.currentSelectedPath ? [splitContainer.currentSelectedPath] : []);
+                if (paths.length > 0) FileOperations.deletePermanently(paths);
             }
         }
 

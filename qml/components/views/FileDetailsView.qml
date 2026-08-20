@@ -12,20 +12,30 @@ Item {
     required property var activeTab
     property int currentIndex: listView.currentIndex
     readonly property var currentItem: listView.currentItem ? listView.currentItem.modelData : null
+    property var selectedPaths: []
 
     signal openItem(var item)
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
 
-    // Rubberband Marquee Selection Box
-    Rectangle {
-        id: rubberBand
-        visible: false
-        color: Qt.alpha(Colours.palette.m3primary, 0.2)
-        border.color: Colours.palette.m3primary
-        border.width: 1
-        radius: 3
-        z: 90
+    function isSelected(path) {
+        return selectedPaths.indexOf(path) !== -1;
+    }
+
+    function toggleSelection(path) {
+        let idx = selectedPaths.indexOf(path);
+        let arr = selectedPaths.slice();
+        if (idx === -1) {
+            arr.push(path);
+        } else {
+            arr.splice(idx, 1);
+        }
+        selectedPaths = arr;
+    }
+
+    function selectSingle(path, index) {
+        listView.currentIndex = index;
+        selectedPaths = [path];
     }
 
     ColumnLayout {
@@ -231,42 +241,45 @@ Item {
                 flickable: listView
             }
 
-            // Drag to Select Multiple Files / Rubberband Marquee
+            // Rubber Band Selection Area
             MouseArea {
+                id: dragSelectArea
                 anchors.fill: parent
                 z: -1
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
 
                 property real startX: 0
                 property real startY: 0
+                property real currentX: 0
+                property real currentY: 0
                 property bool isSelecting: false
 
                 onPressed: mouse => {
                     if (mouse.button === Qt.LeftButton) {
                         startX = mouse.x;
                         startY = mouse.y;
+                        currentX = mouse.x;
+                        currentY = mouse.y;
                         isSelecting = false;
-                        listView.currentIndex = -1;
+                        if (!(mouse.modifiers & Qt.ControlModifier)) {
+                            root.selectedPaths = [];
+                            listView.currentIndex = -1;
+                        }
                     }
                 }
 
                 onPositionChanged: mouse => {
-                    if (pressed && (Math.abs(mouse.x - startX) > 5 || Math.abs(mouse.y - startY) > 5)) {
-                        isSelecting = true;
-                        rubberBand.x = Math.min(startX, mouse.x) + listView.x;
-                        rubberBand.y = Math.min(startY, mouse.y) + listView.y;
-                        rubberBand.width = Math.abs(mouse.x - startX);
-                        rubberBand.height = Math.abs(mouse.y - startY);
-                        rubberBand.visible = true;
-
-                        let idx = listView.indexAt(mouse.x, mouse.y + listView.contentY);
-                        if (idx >= 0) listView.currentIndex = idx;
+                    if (pressed && (mouse.buttons & Qt.LeftButton)) {
+                        currentX = mouse.x;
+                        currentY = mouse.y;
+                        if (Math.abs(currentX - startX) > 4 || Math.abs(currentY - startY) > 4) {
+                            isSelecting = true;
+                            updateRubberBandSelection();
+                        }
                     }
                 }
 
                 onReleased: mouse => {
-                    rubberBand.visible = false;
-                    isSelecting = false;
                     if (mouse.button === Qt.BackButton) {
                         if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
                     } else if (mouse.button === Qt.ForwardButton) {
@@ -275,6 +288,36 @@ Item {
                         let globalPos = mapToItem(null, mouse.x, mouse.y);
                         root.blankContextMenu(globalPos.x, globalPos.y);
                     }
+                    isSelecting = false;
+                }
+
+                function updateRubberBandSelection() {
+                    let ry = Math.min(startY, currentY);
+                    let rh = Math.abs(currentY - startY);
+
+                    let newlySelected = [];
+                    for (let i = 0; i < listView.count; ++i) {
+                        let item = listView.itemAtIndex(i);
+                        if (item && item.modelData) {
+                            if (item.y + item.height > ry && item.y < ry + rh) {
+                                newlySelected.push(item.modelData.path);
+                            }
+                        }
+                    }
+                    root.selectedPaths = newlySelected;
+                }
+
+                Rectangle {
+                    visible: dragSelectArea.isSelecting
+                    x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
+                    y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
+                    width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
+                    height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
+                    color: Qt.alpha(Colours.palette.m3primary, 0.2)
+                    border.color: Colours.palette.m3primary
+                    border.width: 1.5
+                    radius: Tokens.rounding.extraSmall
+                    z: 100
                 }
             }
 
@@ -284,23 +327,22 @@ Item {
                 required property int index
                 required property var modelData
 
+                readonly property bool isSelected: root.isSelected(modelData.path) || ListView.isCurrentItem
+                readonly property bool isCut: FileOperations.isPathCut(modelData.path)
+
                 width: listView.width
                 implicitHeight: 36
 
                 radius: Tokens.rounding.small
-                color: ListView.isCurrentItem ? Colours.palette.m3secondaryContainer : (rowHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : (index % 2 === 1 ? Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0.3) : "transparent"))
+                color: isSelected ? Colours.palette.m3secondaryContainer : (rowHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : (index % 2 === 1 ? Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0.3) : "transparent"))
 
-                // Cut Indicator: Dim item when marked for cut
-                readonly property bool isCut: rowItem.modelData ? FileOperations.isPathCut(rowItem.modelData.path) : false
-                opacity: isCut ? 0.45 : (populated ? 1.0 : 0.0)
-                property bool populated: false
-
-                Component.onCompleted: {
-                    populated = true;
-                }
+                // Cut Indication: Darkened / Ghosted Opacity
+                opacity: isCut ? 0.42 : 1.0
 
                 Behavior on opacity {
-                    Anim { type: Anim.DefaultEffects }
+                    Anim {
+                        type: Anim.FastEffects
+                    }
                 }
 
                 MouseArea {
@@ -315,11 +357,17 @@ Item {
                         } else if (mouse.button === Qt.ForwardButton) {
                             if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
                         } else if (mouse.button === Qt.RightButton) {
-                            listView.currentIndex = rowItem.index;
+                            if (!root.isSelected(rowItem.modelData.path)) {
+                                root.selectSingle(rowItem.modelData.path, rowItem.index);
+                            }
                             let globalPos = mapToItem(null, mouse.x, mouse.y);
                             root.itemContextMenu(rowItem.modelData, globalPos.x, globalPos.y);
                         } else {
-                            listView.currentIndex = rowItem.index;
+                            if (mouse.modifiers & Qt.ControlModifier) {
+                                root.toggleSelection(rowItem.modelData.path);
+                            } else {
+                                root.selectSingle(rowItem.modelData.path, rowItem.index);
+                            }
                         }
                     }
 
@@ -373,7 +421,7 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: rowItem.modelData ? (rowItem.modelData.isSymLink ? `${rowItem.modelData.name} ↳` : rowItem.modelData.name) : ""
-                            color: rowItem.ListView.isCurrentItem ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                            color: rowItem.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                             font: Tokens.font.body.small
                             elide: Text.ElideRight
                         }

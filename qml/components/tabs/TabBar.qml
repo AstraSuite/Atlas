@@ -45,30 +45,6 @@ StyledRect {
                     anchors.bottom: parent ? parent.bottom : undefined
                     z: tabDragArea.pressed ? 50 : (selected ? 10 : 1)
 
-                    // Tab Opening & Switching Animation
-                    scale: 1.0
-                    opacity: 1.0
-
-                    Component.onCompleted: {
-                        tabItem.scale = 0.7;
-                        tabItem.opacity = 0.0;
-                        openAnim.start();
-                    }
-
-                    ParallelAnimation {
-                        id: openAnim
-                        NumberAnimation { target: tabItem; property: "scale"; from: 0.7; to: 1.0; duration: 200; easing.type: Easing.OutBack }
-                        NumberAnimation { target: tabItem; property: "opacity"; from: 0.0; to: 1.0; duration: 160; easing.type: Easing.OutCubic }
-                    }
-
-                    Behavior on scale {
-                        Anim { type: Anim.FastSpatial }
-                    }
-
-                    Behavior on opacity {
-                        Anim { type: Anim.FastEffects }
-                    }
-
                     // Active Tab Google Chrome Continuous Shape with Antialiased Fillets
                     Canvas {
                         id: activeTabShape
@@ -130,14 +106,14 @@ StyledRect {
                         color: Colours.tPalette.m3surfaceContainerHigh
                     }
 
-                    // Drag & Tab Click Area (Behind content, underneath close button)
+                    // Drag & Drop Area for Tab selection & reordering (z: 1)
                     MouseArea {
                         id: tabDragArea
                         anchors.fill: parent
+                        z: 1
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
                         cursorShape: pressed ? Qt.ClosedHandCursor : Qt.PointingHandCursor
-                        z: 1
 
                         drag.target: tabItem
                         drag.axis: Drag.XAxis
@@ -178,16 +154,16 @@ StyledRect {
                         }
                     }
 
-                    // Tab Content (Icon, Label, Close Button)
+                    // Tab Content (Icon, Label, Close Button) (z: 10)
                     RowLayout {
                         id: tabContent
 
                         anchors.fill: parent
                         anchors.leftMargin: 18
-                        anchors.rightMargin: 12
+                        anchors.rightMargin: 14
                         anchors.bottomMargin: 2
                         spacing: Tokens.spacing.small
-                        z: 2
+                        z: 10
 
                         MaterialIcon {
                             text: "folder"
@@ -203,25 +179,29 @@ StyledRect {
                             elide: Text.ElideRight
                         }
 
-                        // Close Button with Distinct Circle Hover Highlight
-                        StyledRect {
-                            id: closeBtn
+                        // Close Button with Distinct Circle Hover Highlight (z: 20)
+                        Item {
                             implicitWidth: 24
                             implicitHeight: 24
-                            radius: Tokens.rounding.full
                             visible: TabManager.count > 1
-                            color: closeMouse.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.12) : "transparent"
                             z: 20
 
-                            MaterialIcon {
-                                anchors.centerIn: parent
-                                text: "close"
-                                fontStyle: Tokens.font.icon.small
-                                color: closeMouse.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                            StyledRect {
+                                id: closeBg
+                                anchors.fill: parent
+                                radius: Tokens.rounding.full
+                                color: closeHover.containsMouse ? (tabItem.selected ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainerHighest) : "transparent"
+
+                                MaterialIcon {
+                                    anchors.centerIn: parent
+                                    text: "close"
+                                    fontStyle: Tokens.font.icon.small
+                                    color: closeHover.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                                }
                             }
 
                             MouseArea {
-                                id: closeMouse
+                                id: closeHover
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 preventStealing: true

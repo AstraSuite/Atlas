@@ -15,6 +15,8 @@ StyledRect {
         }
         return activeTab ? activeTab.currentPath : "";
     }
+    readonly property var selectedPaths: (mainViewLoader && mainViewLoader.item && mainViewLoader.item.selectedPaths) ? mainViewLoader.item.selectedPaths : []
+    readonly property var activeModel: mainModel
 
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
