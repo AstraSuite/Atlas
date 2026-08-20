@@ -2,9 +2,14 @@
 #include "config/font.hpp"
 #include "config/fontbuilder.hpp"
 #include "config/tokens.hpp"
+#include "controllers/tabmanager.hpp"
 #include "core/appcontroller.hpp"
+#include "core/appintegration.hpp"
+#include "core/filemetadata.hpp"
+#include "core/fileoperations.hpp"
 #include "core/fileutils.hpp"
 #include "core/iconprovider.hpp"
+#include "core/placesmodel.hpp"
 #include "models/filesystemmodel.hpp"
 
 #include <QCommandLineOption>
@@ -12,9 +17,9 @@
 #include <QDir>
 #include <QFontDatabase>
 #include <QGuiApplication>
+#include <QIcon>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QIcon>
 #include <QQuickWindow>
 #include <QString>
 #include <QStringList>
@@ -46,10 +51,11 @@ int main(int argc, char* argv[]) {
 
     // Command line parser
     QCommandLineParser parser;
-    parser.setApplicationDescription("Prism: Material 3 Standalone File Picker");
+    parser.setApplicationDescription("Prism: Modern Material 3 File Manager & File Picker");
     parser.addHelpOption();
     parser.addVersionOption();
 
+    QCommandLineOption pickerOption(QStringList{ "p", "picker" }, "Launch in file picker mode");
     QCommandLineOption titleOption(QStringList{ "t", "title" }, "Dialog title", "title", "Select a file");
     QCommandLineOption dirOption(QStringList{ "d", "directory" }, "Initial directory", "dir", QDir::homePath());
     QCommandLineOption filterOption(QStringList{ "f", "filter" }, "File extensions filter, e.g. 'png,jpg' or '*.png,*.jpg'", "filter", "*");
@@ -59,6 +65,7 @@ int main(int argc, char* argv[]) {
     QCommandLineOption lightOption(QStringList{ "light" }, "Force light theme");
     QCommandLineOption darkOption(QStringList{ "dark" }, "Force dark theme");
 
+    parser.addOption(pickerOption);
     parser.addOption(titleOption);
     parser.addOption(dirOption);
     parser.addOption(filterOption);
@@ -67,12 +74,26 @@ int main(int argc, char* argv[]) {
     parser.addOption(hiddenOption);
     parser.addOption(lightOption);
     parser.addOption(darkOption);
+    parser.addPositionalArgument("path", "Directory or file path to open", "[path]");
 
     parser.process(app);
 
+    QString initialDir = parser.value(dirOption);
+    const QStringList posArgs = parser.positionalArguments();
+    if (!posArgs.isEmpty()) {
+        QString p = posArgs.first();
+        if (QDir(p).exists()) {
+            initialDir = QFileInfo(p).absoluteFilePath();
+        } else if (QFile::exists(p)) {
+            initialDir = QFileInfo(p).absolutePath();
+        }
+    }
+
+    bool isPickerMode = parser.isSet(pickerOption) || parser.isSet(titleOption) || parser.isSet(filterOption) || parser.isSet(dirOnlyOption);
+
     auto* controller = prism::core::AppController::instance();
     controller->setTitle(parser.value(titleOption));
-    controller->setInitialDirectory(parser.value(dirOption));
+    controller->setInitialDirectory(initialDir);
     controller->setFilterLabel(parser.value(filterLabelOption));
 
     QString filterStr = parser.value(filterOption);
@@ -101,6 +122,13 @@ int main(int argc, char* argv[]) {
 
     auto* tokens = prism::config::TokensSingleton::instance();
     auto* fileUtils = new prism::core::FileUtils(&app);
+    auto* fileOps = prism::core::FileOperations::instance();
+    auto* tabManager = prism::controllers::TabManager::instance();
+    if (!initialDir.isEmpty() && tabManager->currentTab()) {
+        tabManager->currentTab()->setCurrentPath(initialDir);
+    }
+    auto* appIntegration = prism::core::AppIntegration::instance();
+    auto* placesModel = new prism::core::PlacesModel(&app);
 
     QQmlApplicationEngine engine;
     engine.addImageProvider("icon", new prism::core::IconImageProvider());
@@ -110,6 +138,11 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("Tokens", tokens);
     engine.rootContext()->setContextProperty("AppController", controller);
     engine.rootContext()->setContextProperty("FileUtils", fileUtils);
+    engine.rootContext()->setContextProperty("FileOperations", fileOps);
+    engine.rootContext()->setContextProperty("TabManager", tabManager);
+    engine.rootContext()->setContextProperty("AppIntegration", appIntegration);
+    engine.rootContext()->setContextProperty("PlacesModel", placesModel);
+    engine.rootContext()->setContextProperty("isPickerMode", isPickerMode);
 
     const QUrl url(QStringLiteral("qrc:/qt/qml/prism/qml/main.qml"));
     QObject::connect(

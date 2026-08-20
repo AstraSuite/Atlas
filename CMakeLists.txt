@@ -28,8 +28,18 @@ qt_add_executable(prism_app
     src/config/colours.cpp
     src/models/filesystemmodel.hpp
     src/models/filesystemmodel.cpp
+    src/controllers/tabmanager.hpp
+    src/controllers/tabmanager.cpp
     src/core/fileutils.hpp
     src/core/fileutils.cpp
+    src/core/fileoperations.hpp
+    src/core/fileoperations.cpp
+    src/core/placesmodel.hpp
+    src/core/placesmodel.cpp
+    src/core/filemetadata.hpp
+    src/core/filemetadata.cpp
+    src/core/appintegration.hpp
+    src/core/appintegration.cpp
     src/core/iconprovider.hpp
     src/core/iconprovider.cpp
     src/core/appcontroller.hpp
@@ -45,6 +55,7 @@ target_include_directories(prism_app PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config
     ${CMAKE_CURRENT_SOURCE_DIR}/src/models
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/controllers
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
 )
 

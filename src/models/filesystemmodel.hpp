@@ -1,63 +1,84 @@
 #pragma once
 
 #include <QAbstractListModel>
-#include <QDir>
-#include <QFileInfo>
+#include <QDateTime>
 #include <QFileSystemWatcher>
-#include <QFuture>
-#include <QImageReader>
-#include <QMimeDatabase>
-#include <QObject>
-#include <QQmlListProperty>
+#include <QList>
+#include <QString>
+#include <QStringList>
 #include <qqmlintegration.h>
 
 namespace prism::models {
 
 class FileSystemEntry : public QObject {
     Q_OBJECT
-    QML_ELEMENT
-    QML_UNCREATABLE("FileSystemEntry instances can only be retrieved from a FileSystemModel")
+    QML_ANONYMOUS
 
-    Q_PROPERTY(QString path READ path CONSTANT)
-    Q_PROPERTY(QString relativePath READ relativePath NOTIFY relativePathChanged)
     Q_PROPERTY(QString name READ name CONSTANT)
-    Q_PROPERTY(QString baseName READ baseName CONSTANT)
-    Q_PROPERTY(QString parentDir READ parentDir CONSTANT)
-    Q_PROPERTY(QString suffix READ suffix CONSTANT)
-    Q_PROPERTY(qint64 size READ size CONSTANT)
+    Q_PROPERTY(QString path READ path CONSTANT)
     Q_PROPERTY(bool isDir READ isDir CONSTANT)
-    Q_PROPERTY(bool isImage READ isImage CONSTANT)
+    Q_PROPERTY(bool isSymLink READ isSymLink CONSTANT)
+    Q_PROPERTY(QString symLinkTarget READ symLinkTarget CONSTANT)
+    Q_PROPERTY(qint64 size READ size CONSTANT)
+    Q_PROPERTY(QString formattedSize READ formattedSize CONSTANT)
     Q_PROPERTY(QString mimeType READ mimeType CONSTANT)
+    Q_PROPERTY(QString mimeDescription READ mimeDescription CONSTANT)
+    Q_PROPERTY(QDateTime lastModified READ lastModified CONSTANT)
+    Q_PROPERTY(QString formattedDate READ formattedDate CONSTANT)
+    Q_PROPERTY(QString permissions READ permissions CONSTANT)
+    Q_PROPERTY(QString owner READ owner CONSTANT)
+    Q_PROPERTY(QString group READ group CONSTANT)
+    Q_PROPERTY(QString suffix READ suffix CONSTANT)
+    Q_PROPERTY(bool isHidden READ isHidden CONSTANT)
+    Q_PROPERTY(bool isImage READ isImage CONSTANT)
+    Q_PROPERTY(bool isAudio READ isAudio CONSTANT)
+    Q_PROPERTY(bool isVideo READ isVideo CONSTANT)
+    Q_PROPERTY(bool isText READ isText CONSTANT)
 
 public:
-    explicit FileSystemEntry(const QString& path, const QString& relativePath, QObject* parent = nullptr);
+    explicit FileSystemEntry(QObject* parent = nullptr) : QObject(parent) {}
 
-    [[nodiscard]] QString path() const;
-    [[nodiscard]] QString relativePath() const;
-    [[nodiscard]] QString name() const;
-    [[nodiscard]] QString baseName() const;
-    [[nodiscard]] QString parentDir() const;
-    [[nodiscard]] QString suffix() const;
-    [[nodiscard]] qint64 size() const;
-    [[nodiscard]] bool isDir() const;
-    [[nodiscard]] bool isImage() const;
-    [[nodiscard]] QString mimeType() const;
+    QString name() const { return m_name; }
+    QString path() const { return m_path; }
+    bool isDir() const { return m_isDir; }
+    bool isSymLink() const { return m_isSymLink; }
+    QString symLinkTarget() const { return m_symLinkTarget; }
+    qint64 size() const { return m_size; }
+    QString formattedSize() const { return m_formattedSize; }
+    QString mimeType() const { return m_mimeType; }
+    QString mimeDescription() const { return m_mimeDescription; }
+    QDateTime lastModified() const { return m_lastModified; }
+    QString formattedDate() const { return m_formattedDate; }
+    QString permissions() const { return m_permissions; }
+    QString owner() const { return m_owner; }
+    QString group() const { return m_group; }
+    QString suffix() const { return m_suffix; }
+    bool isHidden() const { return m_isHidden; }
+    bool isImage() const { return m_isImage; }
+    bool isAudio() const { return m_isAudio; }
+    bool isVideo() const { return m_isVideo; }
+    bool isText() const { return m_isText; }
 
-    void updateRelativePath(const QDir& dir);
-
-signals:
-    void relativePathChanged();
-
-private:
-    const QFileInfo m_fileInfo;
-    const QString m_path;
-    QString m_relativePath;
-
-    mutable bool m_isImage;
-    mutable bool m_isImageInitialised;
-
-    mutable QString m_mimeType;
-    mutable bool m_mimeTypeInitialised;
+    QString m_name;
+    QString m_path;
+    bool m_isDir = false;
+    bool m_isSymLink = false;
+    QString m_symLinkTarget;
+    qint64 m_size = 0;
+    QString m_formattedSize;
+    QString m_mimeType;
+    QString m_mimeDescription;
+    QDateTime m_lastModified;
+    QString m_formattedDate;
+    QString m_permissions;
+    QString m_owner;
+    QString m_group;
+    QString m_suffix;
+    bool m_isHidden = false;
+    bool m_isImage = false;
+    bool m_isAudio = false;
+    bool m_isVideo = false;
+    bool m_isText = false;
 };
 
 class FileSystemModel : public QAbstractListModel {
@@ -65,84 +86,111 @@ class FileSystemModel : public QAbstractListModel {
     QML_ELEMENT
 
     Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
-    Q_PROPERTY(bool recursive READ recursive WRITE setRecursive NOTIFY recursiveChanged)
-    Q_PROPERTY(bool watchChanges READ watchChanges WRITE setWatchChanges NOTIFY watchChangesChanged)
-    Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
-    Q_PROPERTY(bool sortReverse READ sortReverse WRITE setSortReverse NOTIFY sortReverseChanged)
-    Q_PROPERTY(Filter filter READ filter WRITE setFilter NOTIFY filterChanged)
+    Q_PROPERTY(QString filterText READ filterText WRITE setFilterText NOTIFY filterTextChanged)
+    Q_PROPERTY(QString searchQuery READ searchQuery WRITE setSearchQuery NOTIFY searchQueryChanged)
+    Q_PROPERTY(bool isSearching READ isSearching NOTIFY isSearchingChanged)
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters NOTIFY nameFiltersChanged)
-    Q_PROPERTY(QQmlListProperty<prism::models::FileSystemEntry> entries READ entries NOTIFY entriesChanged)
+    Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
+    Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst NOTIFY showDirsFirstChanged)
+    Q_PROPERTY(SortField sortField READ sortField WRITE setSortField NOTIFY sortFieldChanged)
+    Q_PROPERTY(Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder NOTIFY sortOrderChanged)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
-    enum Filter {
-        NoFilter,
-        Images,
-        Videos,
-        Files,
-        Dirs
+    enum SortField {
+        SortByName,
+        SortBySize,
+        SortByDate,
+        SortByType
     };
-    Q_ENUM(Filter)
+    Q_ENUM(SortField)
+
+    enum Roles {
+        EntryRole = Qt::UserRole + 1,
+        NameRole,
+        PathRole,
+        IsDirRole,
+        SizeRole,
+        SizeFormattedRole,
+        MimeTypeRole,
+        MimeDescriptionRole,
+        DateModifiedRole,
+        DateModifiedFormattedRole,
+        PermissionsRole,
+        OwnerRole,
+        IsImageRole,
+        IsHiddenRole
+    };
+    Q_ENUM(Roles)
 
     explicit FileSystemModel(QObject* parent = nullptr);
+    ~FileSystemModel() override;
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-    [[nodiscard]] QString path() const;
+    QString path() const { return m_path; }
     void setPath(const QString& path);
 
-    [[nodiscard]] bool recursive() const;
-    void setRecursive(bool recursive);
+    QString filterText() const { return m_filterText; }
+    void setFilterText(const QString& text);
 
-    [[nodiscard]] bool watchChanges() const;
-    void setWatchChanges(bool watchChanges);
+    QString searchQuery() const { return m_searchQuery; }
+    void setSearchQuery(const QString& query);
+    bool isSearching() const { return m_isSearching; }
 
-    [[nodiscard]] bool showHidden() const;
-    void setShowHidden(bool showHidden);
+    QStringList nameFilters() const { return m_nameFilters; }
+    void setNameFilters(const QStringList& filters);
 
-    [[nodiscard]] bool sortReverse() const;
-    void setSortReverse(bool sortReverse);
+    bool showHidden() const { return m_showHidden; }
+    void setShowHidden(bool show);
 
-    [[nodiscard]] Filter filter() const;
-    void setFilter(Filter filter);
+    bool showDirsFirst() const { return m_showDirsFirst; }
+    void setShowDirsFirst(bool dirsFirst);
 
-    [[nodiscard]] QStringList nameFilters() const;
-    void setNameFilters(const QStringList& nameFilters);
+    SortField sortField() const { return m_sortField; }
+    void setSortField(SortField field);
 
-    [[nodiscard]] QQmlListProperty<FileSystemEntry> entries();
+    Qt::SortOrder sortOrder() const { return m_sortOrder; }
+    void setSortOrder(Qt::SortOrder order);
+
+    int count() const { return static_cast<int>(m_filteredEntries.size()); }
+
+    Q_INVOKABLE prism::models::FileSystemEntry* get(int index) const;
+    Q_INVOKABLE int indexOfPath(const QString& path) const;
+    Q_INVOKABLE void refresh();
 
 signals:
     void pathChanged();
-    void recursiveChanged();
-    void watchChangesChanged();
-    void showHiddenChanged();
-    void sortReverseChanged();
-    void filterChanged();
+    void filterTextChanged();
+    void searchQueryChanged();
+    void isSearchingChanged();
     void nameFiltersChanged();
-    void entriesChanged();
+    void showHiddenChanged();
+    void showDirsFirstChanged();
+    void sortFieldChanged();
+    void sortOrderChanged();
+    void countChanged();
 
 private:
-    QDir m_dir;
-    QFileSystemWatcher m_watcher;
-    QList<FileSystemEntry*> m_entries;
-    QHash<QString, QFuture<QPair<QSet<QString>, QSet<QString>>>> m_futures;
+    void scanDirectory();
+    void applyFilterAndSort();
+    void performSearch(const QString& rootPath, const QString& query);
 
     QString m_path;
-    bool m_recursive = false;
-    bool m_watchChanges = true;
-    bool m_showHidden = false;
-    bool m_sortReverse = false;
-    Filter m_filter = NoFilter;
+    QString m_filterText;
+    QString m_searchQuery;
+    bool m_isSearching = false;
     QStringList m_nameFilters;
+    bool m_showHidden = false;
+    bool m_showDirsFirst = true;
+    SortField m_sortField = SortByName;
+    Qt::SortOrder m_sortOrder = Qt::AscendingOrder;
 
-    void watchDirIfRecursive(const QString& path);
-    void update();
-    void updateWatcher();
-    void updateEntries();
-    void updateEntriesForDir(const QString& dir);
-    void applyChanges(const QSet<QString>& removedPaths, const QSet<QString>& addedPaths);
-    [[nodiscard]] bool compareEntries(const FileSystemEntry* a, const FileSystemEntry* b) const;
+    QList<FileSystemEntry*> m_rawEntries;
+    QList<FileSystemEntry*> m_filteredEntries;
+    QFileSystemWatcher m_watcher;
 };
 
 } // namespace prism::models
