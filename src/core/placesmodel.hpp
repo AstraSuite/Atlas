@@ -1,14 +1,14 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QObject>
 #include <QString>
 #include <QVector>
-#include <QStorageInfo>
 #include <qqmlintegration.h>
 
 namespace prism::core {
 
-struct PlaceEntry {
+struct PlaceItem {
     QString name;
     QString path;
     QString iconName;
@@ -23,6 +23,9 @@ struct PlaceEntry {
 class PlacesModel : public QAbstractListModel {
     Q_OBJECT
     QML_ELEMENT
+    QML_SINGLETON
+
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
     enum PlaceRoles {
@@ -40,22 +43,31 @@ public:
     Q_ENUM(PlaceRoles)
 
     explicit PlacesModel(QObject* parent = nullptr);
+    ~PlacesModel() override = default;
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
 
+    int count() const { return static_cast<int>(m_places.size()); }
+
     Q_INVOKABLE void refresh();
-    Q_INVOKABLE void addBookmark(const QString& path, const QString& name = "");
+    Q_INVOKABLE void addBookmark(const QString& path, const QString& name = QString(), const QString& icon = QString());
     Q_INVOKABLE void removeBookmark(int index);
+    Q_INVOKABLE void removeBookmarkByPath(const QString& path);
+    Q_INVOKABLE void updatePlace(int index, const QString& name, const QString& iconName);
+    Q_INVOKABLE bool isBookmarked(const QString& path) const;
+    Q_INVOKABLE void toggleBookmark(const QString& path);
+
+signals:
+    void countChanged();
 
 private:
     void loadStandardPlaces();
-    void loadStorageDevices();
     void loadBookmarks();
     void saveBookmarks();
 
-    QVector<PlaceEntry> m_places;
+    QVector<PlaceItem> m_places;
 };
 
 } // namespace prism::core

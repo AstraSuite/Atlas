@@ -5,7 +5,6 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QStandardPaths>
-#include <QStorageInfo>
 #include <QUrl>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
@@ -23,18 +22,21 @@ static QString mapXbelIconToMaterial(const QString& iconName, const QString& pat
     if (n.contains("picture") || n.contains("image") || n.contains("photo")) return "image";
     if (n.contains("video") || n.contains("movie")) return "video_library";
     if (n.contains("trash") || n.contains("delete")) return "delete";
-    if (n.contains("drive") || n.contains("disk") || n.contains("hdd") || n.contains("ssd")) return "hard_drive";
-    if (n.contains("usb") || n.contains("flash") || n.contains("removable")) return "usb";
-    if (n.contains("network") || n.contains("cloud") || n.contains("remote")) return "cloud";
     if (n.contains("game")) return "sports_esports";
-    if (n.contains("development") || n.contains("code") || n.contains("project")) return "terminal";
+    if (n.contains("development") || n.contains("code") || n.contains("project") || n.contains("terminal")) return "terminal";
+    if (n.contains("star")) return "star";
+    if (n.contains("favorite") || n.contains("heart")) return "favorite";
+    if (n.contains("cloud")) return "cloud";
+    if (n.contains("work") || n.contains("briefcase")) return "work";
+    if (n.contains("lock")) return "lock";
+    if (n.contains("tag") || n.contains("label")) return "sell";
+    if (!iconName.isEmpty() && !iconName.contains("-")) return iconName; // Directly valid M3 icon name
     return isDir ? "folder" : "bookmark";
 }
 
 PlacesModel::PlacesModel(QObject* parent)
     : QAbstractListModel(parent) {
     
-    // Watch user-places.xbel and gtk bookmarks for live external syncing
     auto* watcher = new QFileSystemWatcher(this);
     QString xbelPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/user-places.xbel";
     QString gtkPath = QDir::homePath() + "/.config/gtk-3.0/bookmarks";
@@ -48,8 +50,7 @@ PlacesModel::PlacesModel(QObject* parent)
 }
 
 int PlacesModel::rowCount(const QModelIndex& parent) const {
-    if (parent.isValid())
-        return 0;
+    if (parent.isValid()) return 0;
     return static_cast<int>(m_places.size());
 }
 
@@ -74,8 +75,7 @@ QVariant PlacesModel::data(const QModelIndex& index, int role) const {
         }
         return QString();
     }
-    default:
-        return {};
+    default: return {};
     }
 }
 
@@ -142,10 +142,7 @@ void PlacesModel::refresh() {
                                 localPath = currentHref;
                             }
 
-                            // Skip root '/' and internal mount paths from XBEL bookmarks if any
-                            if (localPath == "/" || localPath == "/root") {
-                                continue;
-                            }
+                            if (localPath == "/" || localPath == "/root") continue;
 
                             if (!localPath.isEmpty() && (QFile::exists(localPath) || currentHref.startsWith("trash:"))) {
                                 if (currentTitle.isEmpty()) {
@@ -154,15 +151,14 @@ void PlacesModel::refresh() {
                                 }
 
                                 bool isTrash = currentHref.startsWith("trash:") || localPath.contains("Trash");
-                                bool isDev = localPath.startsWith("/media/") || localPath.startsWith("/run/media/");
                                 QString icon = mapXbelIconToMaterial(currentIcon, localPath, QFileInfo(localPath).isDir());
 
                                 m_places.append({
                                     currentTitle,
                                     localPath,
                                     icon,
-                                    isDev,
-                                    isDev,
+                                    false,
+                                    false,
                                     isTrash,
                                     !isSystem,
                                     0,
@@ -177,18 +173,14 @@ void PlacesModel::refresh() {
         }
     }
 
-    // 2. Fallback to standard directories if XBEL was not present
     if (!loadedXbel || m_places.isEmpty()) {
         loadStandardPlaces();
     }
 
-    // 3. Load GTK Bookmarks if any custom bookmarks are in ~/.config/gtk-3.0/bookmarks
     loadBookmarks();
 
-    // 4. Load external removable drives ONLY
-    loadStorageDevices();
-
     endResetModel();
+    emit countChanged();
 }
 
 void PlacesModel::loadStandardPlaces() {
@@ -201,58 +193,6 @@ void PlacesModel::loadStandardPlaces() {
     m_places.append({ tr("Music"), QStandardPaths::writableLocation(QStandardPaths::MusicLocation), "music_note", false, false, false, false, 0, 0 });
     m_places.append({ tr("Videos"), QStandardPaths::writableLocation(QStandardPaths::MoviesLocation), "video_library", false, false, false, false, 0, 0 });
     m_places.append({ tr("Trash"), home + "/.local/share/Trash/files", "delete", false, false, true, false, 0, 0 });
-}
-
-void PlacesModel::loadStorageDevices() {
-    const auto volumes = QStorageInfo::mountedVolumes();
-    for (const auto& vol : volumes) {
-        if (!vol.isValid() || !vol.isReady() || vol.isReadOnly())
-            continue;
-
-        QString rootPath = vol.rootPath();
-        
-        // Exclude system mounts: root, boot, efi, tmp, run, docker, flatpak, snap, var, etc.
-        bool isExternal = rootPath.startsWith("/media/") 
-                       || rootPath.startsWith("/run/media/") 
-                       || (rootPath.startsWith("/mnt/") && rootPath != "/mnt");
-                       
-        if (!isExternal)
-            continue;
-
-        if (rootPath.contains("docker") || rootPath.contains("container") || rootPath.contains("overlay")
-            || rootPath.contains("flatpak") || rootPath.contains("snap") || rootPath.contains("tmp")
-            || rootPath.contains("kube") || rootPath.contains("cgroup"))
-            continue;
-
-        // Check if already in places
-        bool alreadyPresent = false;
-        for (const auto& p : m_places) {
-            if (p.path == rootPath) {
-                alreadyPresent = true;
-                break;
-            }
-        }
-        if (alreadyPresent)
-            continue;
-
-        QString name = vol.name();
-        if (name.isEmpty()) {
-            name = QFileInfo(rootPath).fileName();
-            if (name.isEmpty()) name = rootPath;
-        }
-
-        m_places.append({
-            name,
-            rootPath,
-            "usb",
-            true,
-            true,
-            false,
-            false,
-            vol.bytesFree(),
-            vol.bytesTotal()
-        });
-    }
 }
 
 void PlacesModel::loadBookmarks() {
@@ -299,7 +239,6 @@ void PlacesModel::saveBookmarks() {
         xml.writeAttribute("xmlns:mime", "http://www.freedesktop.org/standards/shared-mime-info");
 
         for (const auto& p : m_places) {
-            if (p.isDevice) continue;
             xml.writeStartElement("bookmark");
             xml.writeAttribute("href", QUrl::fromLocalFile(p.path).toString());
             xml.writeTextElement("title", p.name);
@@ -310,6 +249,10 @@ void PlacesModel::saveBookmarks() {
             xml.writeAttribute("name", p.iconName);
             xml.writeEndElement(); // bookmark:icon
             xml.writeEndElement(); // metadata
+            xml.writeStartElement("metadata");
+            xml.writeAttribute("owner", "http://www.kde.org");
+            xml.writeTextElement("isSystemItem", p.isCustom ? "false" : "true");
+            xml.writeEndElement(); // metadata
             xml.writeEndElement(); // info
             xml.writeEndElement(); // bookmark
         }
@@ -319,23 +262,59 @@ void PlacesModel::saveBookmarks() {
     }
 }
 
-void PlacesModel::addBookmark(const QString& path, const QString& name) {
+bool PlacesModel::isBookmarked(const QString& path) const {
+    for (const auto& p : m_places) {
+        if (p.path == path) return true;
+    }
+    return false;
+}
+
+void PlacesModel::addBookmark(const QString& path, const QString& name, const QString& icon) {
+    if (path.isEmpty() || isBookmarked(path)) return;
     QString n = name.isEmpty() ? QFileInfo(path).fileName() : name;
+    if (n.isEmpty()) n = path;
+    QString ic = icon.isEmpty() ? "bookmark" : icon;
+
     beginInsertRows(QModelIndex(), m_places.size(), m_places.size());
-    m_places.append({ n, path, "bookmark", false, false, false, true, 0, 0 });
+    m_places.append({ n, path, ic, false, false, false, true, 0, 0 });
     endInsertRows();
+    emit countChanged();
     saveBookmarks();
 }
 
 void PlacesModel::removeBookmark(int index) {
-    if (index < 0 || index >= m_places.size())
-        return;
-    if (!m_places[index].isCustom)
-        return;
-
+    if (index < 0 || index >= m_places.size()) return;
     beginRemoveRows(QModelIndex(), index, index);
     m_places.removeAt(index);
     endRemoveRows();
+    emit countChanged();
+    saveBookmarks();
+}
+
+void PlacesModel::removeBookmarkByPath(const QString& path) {
+    for (int i = 0; i < m_places.size(); ++i) {
+        if (m_places[i].path == path) {
+            removeBookmark(i);
+            return;
+        }
+    }
+}
+
+void PlacesModel::toggleBookmark(const QString& path) {
+    if (isBookmarked(path)) {
+        removeBookmarkByPath(path);
+    } else {
+        addBookmark(path);
+    }
+}
+
+void PlacesModel::updatePlace(int index, const QString& name, const QString& iconName) {
+    if (index < 0 || index >= m_places.size()) return;
+    if (!name.isEmpty()) m_places[index].name = name;
+    if (!iconName.isEmpty()) m_places[index].iconName = iconName;
+
+    auto modelIdx = this->index(index, 0);
+    emit dataChanged(modelIdx, modelIdx, { NameRole, IconNameRole });
     saveBookmarks();
 }
 

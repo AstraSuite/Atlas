@@ -1,6 +1,14 @@
+#include <QCommandLineParser>
+#include <QDir>
+#include <QFileInfo>
+#include <QFontDatabase>
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include <QQuickStyle>
+#include <QSurfaceFormat>
+
 #include "config/colours.hpp"
-#include "config/font.hpp"
-#include "config/fontbuilder.hpp"
 #include "config/tokens.hpp"
 #include "controllers/tabmanager.hpp"
 #include "core/appcontroller.hpp"
@@ -10,23 +18,11 @@
 #include "core/fileutils.hpp"
 #include "core/iconprovider.hpp"
 #include "core/placesmodel.hpp"
+#include "core/drivemanager.hpp"
 #include "models/filesystemmodel.hpp"
 
-#include <QCommandLineOption>
-#include <QCommandLineParser>
-#include <QDir>
-#include <QFontDatabase>
-#include <QGuiApplication>
-#include <QIcon>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QQuickWindow>
-#include <QString>
-#include <QStringList>
-#include <QSurfaceFormat>
-
 int main(int argc, char* argv[]) {
-    // Explicitly configure 32-bit RGBA8888 color buffer format to avoid 16-bit RGB565 quantization
+    // Explicitly configure 32-bit RGBA8888 surface format to avoid RGB565 color quantization
     QSurfaceFormat format;
     format.setRedBufferSize(8);
     format.setGreenBufferSize(8);
@@ -35,21 +31,17 @@ int main(int argc, char* argv[]) {
     format.setDepthBufferSize(24);
     format.setStencilBufferSize(8);
     QSurfaceFormat::setDefaultFormat(format);
-    QQuickWindow::setDefaultAlphaBuffer(true);
 
     QGuiApplication app(argc, argv);
     app.setApplicationName("Prism");
-    app.setApplicationVersion("1.0.0");
+    app.setApplicationDisplayName("Prism");
     app.setOrganizationName("Caelestia");
-    app.setOrganizationDomain("caelestia.org");
+    app.setApplicationVersion("1.0.0");
 
     // Load fonts
-    QFontDatabase::addApplicationFont(":/prism/assets/fonts/GoogleSansFlex.ttf");
-    QFontDatabase::addApplicationFont(":/prism/assets/fonts/MaterialSymbolsRounded.ttf");
-    QFontDatabase::addApplicationFont("assets/fonts/GoogleSansFlex.ttf");
-    QFontDatabase::addApplicationFont("assets/fonts/MaterialSymbolsRounded.ttf");
+    QFontDatabase::addApplicationFont(":/qt/qml/prism/assets/fonts/GoogleSansFlex.ttf");
+    QFontDatabase::addApplicationFont(":/qt/qml/prism/assets/fonts/MaterialSymbolsRounded.ttf");
 
-    // Command line parser
     QCommandLineParser parser;
     parser.setApplicationDescription("Prism: Modern Material 3 File Manager & File Picker");
     parser.addHelpOption();
@@ -129,6 +121,7 @@ int main(int argc, char* argv[]) {
     }
     auto* appIntegration = prism::core::AppIntegration::instance();
     auto* placesModel = new prism::core::PlacesModel(&app);
+    auto* driveManager = new prism::core::DriveManager(&app);
 
     QQmlApplicationEngine engine;
     engine.addImageProvider("icon", new prism::core::IconImageProvider());
@@ -142,6 +135,7 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("TabManager", tabManager);
     engine.rootContext()->setContextProperty("AppIntegration", appIntegration);
     engine.rootContext()->setContextProperty("PlacesModel", placesModel);
+    engine.rootContext()->setContextProperty("DriveManager", driveManager);
     engine.rootContext()->setContextProperty("isPickerMode", isPickerMode);
 
     const QUrl url(QStringLiteral("qrc:/qt/qml/prism/qml/main.qml"));

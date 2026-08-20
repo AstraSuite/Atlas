@@ -14,7 +14,7 @@ MouseArea {
     signal actionTriggered(string action, var item)
 
     anchors.fill: parent
-    visible: expanded
+    visible: opacity > 0.01
     enabled: expanded
     hoverEnabled: expanded
     cursorShape: expanded ? Qt.ArrowCursor : undefined
@@ -24,7 +24,7 @@ MouseArea {
     opacity: expanded ? 1 : 0
     Behavior on opacity {
         Anim {
-            type: Anim.DefaultEffects
+            type: Anim.FastEffects
         }
     }
 
@@ -39,6 +39,14 @@ MouseArea {
 
         radius: Tokens.rounding.large
         color: Colours.palette.m3surfaceContainerLow
+
+        scale: root.expanded ? 1.0 : 0.94
+        Behavior on scale {
+            Anim {
+                type: Anim.FastEffects
+                easing: Tokens.anim.standard
+            }
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -61,6 +69,7 @@ MouseArea {
                             { text: qsTr("Cut"), icon: "content_cut", action: "cut" },
                             { text: qsTr("Copy"), icon: "content_copy", action: "copy" },
                             { text: qsTr("Paste"), icon: "content_paste", action: "paste", visible: FileOperations.canPaste },
+                            { text: qsTr("Create Symlink"), icon: "link", action: "symlink" },
                             { text: qsTr("Rename"), icon: "drive_file_rename_outline", action: "rename" },
                             { text: qsTr("Duplicate"), icon: "control_point_duplicate", action: "duplicate" },
                             { text: qsTr("Move to Trash"), icon: "delete", action: "trash" },
@@ -71,6 +80,7 @@ MouseArea {
                             { text: qsTr("New Folder"), icon: "create_new_folder", action: "newFolder" },
                             { text: qsTr("New Text File"), icon: "note_add", action: "newFile" },
                             { text: qsTr("Paste"), icon: "content_paste", action: "paste", visible: FileOperations.canPaste },
+                            { text: qsTr("Paste as Symlink"), icon: "link", action: "pasteSymlink", visible: FileOperations.canPaste },
                             { text: qsTr("Add to Bookmarks"), icon: "bookmark_add", action: "bookmark" },
                             { text: qsTr("Open in Terminal"), icon: "terminal", action: "terminal" },
                             { text: qsTr("Properties"), icon: "info", action: "propertiesDir" }

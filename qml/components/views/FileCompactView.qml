@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import prism
 
 Item {
     id: root
@@ -19,29 +20,50 @@ Item {
         id: gridView
 
         anchors.fill: parent
-        anchors.margins: Tokens.padding.medium
-
+        anchors.margins: Tokens.padding.small
         cellWidth: 220
-        cellHeight: 36
+        cellHeight: 38
         flow: GridView.FlowTopToBottom
-
         clip: true
         focus: true
         currentIndex: -1
 
+        ScrollBar.horizontal: StyledScrollBar {
+            flickable: gridView
+        }
+
         model: root.model
 
-        ScrollBar.vertical: StyledScrollBar {
-            flickable: gridView
+        add: Transition {
+            Anim {
+                properties: "opacity,scale"
+                from: 0
+                to: 1
+                type: Anim.FastEffects
+            }
+        }
+
+        remove: Transition {
+            Anim {
+                property: "opacity"
+                to: 0
+                type: Anim.FastEffects
+            }
         }
 
         MouseArea {
             anchors.fill: parent
             z: -1
-            acceptedButtons: Qt.RightButton
+            acceptedButtons: Qt.RightButton | Qt.BackButton | Qt.ForwardButton
             onClicked: mouse => {
-                let globalPos = mapToItem(null, mouse.x, mouse.y);
-                root.blankContextMenu(globalPos.x, globalPos.y);
+                if (mouse.button === Qt.BackButton) {
+                    if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
+                } else if (mouse.button === Qt.ForwardButton) {
+                    if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
+                } else if (mouse.button === Qt.RightButton) {
+                    let globalPos = mapToItem(null, mouse.x, mouse.y);
+                    root.blankContextMenu(globalPos.x, globalPos.y);
+                }
             }
         }
 
@@ -61,13 +83,19 @@ Item {
                 id: compHover
                 anchors.fill: parent
                 hoverEnabled: true
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
 
                 onClicked: mouse => {
-                    gridView.currentIndex = compItem.index;
-                    if (mouse.button === Qt.RightButton) {
+                    if (mouse.button === Qt.BackButton) {
+                        if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
+                    } else if (mouse.button === Qt.ForwardButton) {
+                        if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
+                    } else if (mouse.button === Qt.RightButton) {
+                        gridView.currentIndex = compItem.index;
                         let globalPos = mapToItem(null, mouse.x, mouse.y);
                         root.itemContextMenu(compItem.modelData, globalPos.x, globalPos.y);
+                    } else {
+                        gridView.currentIndex = compItem.index;
                     }
                 }
 
@@ -84,16 +112,31 @@ Item {
                 anchors.rightMargin: Tokens.padding.small
                 spacing: Tokens.spacing.small
 
-                CachingIconImage {
-                    implicitSize: 20
+                Item {
+                    implicitWidth: 20
+                    implicitHeight: 20
 
-                    Component.onCompleted: {
-                        const file = compItem.modelData;
-                        if (file.isImage) {
-                            source = Qt.resolvedUrl("file://" + file.path);
-                        } else {
-                            source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
+                    CachingIconImage {
+                        anchors.fill: parent
+                        implicitSize: 20
+
+                        Component.onCompleted: {
+                            const file = compItem.modelData;
+                            if (file.isImage) {
+                                source = Qt.resolvedUrl("file://" + file.path);
+                            } else {
+                                source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
+                            }
                         }
+                    }
+
+                    MaterialIcon {
+                        anchors.bottom: parent.bottom
+                        anchors.right: parent.right
+                        visible: compItem.modelData ? compItem.modelData.isSymLink : false
+                        text: "link"
+                        fontStyle: Tokens.font.icon.small
+                        color: Colours.palette.m3primary
                     }
                 }
 

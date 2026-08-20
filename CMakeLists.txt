@@ -36,6 +36,8 @@ qt_add_executable(prism_app
     src/core/fileoperations.cpp
     src/core/placesmodel.hpp
     src/core/placesmodel.cpp
+    src/core/drivemanager.hpp
+    src/core/drivemanager.cpp
     src/core/filemetadata.hpp
     src/core/filemetadata.cpp
     src/core/appintegration.hpp
@@ -90,6 +92,7 @@ qt_add_qml_module(prism_app
         qml/components/views/SplitViewContainer.qml
         qml/components/menus/ContextMenu.qml
         qml/components/dialogs/NewItemModal.qml
+        qml/components/dialogs/EditPlaceModal.qml
         qml/components/dialogs/PropertiesModal.qml
         qml/components/statusbar/StatusBar.qml
     RESOURCES

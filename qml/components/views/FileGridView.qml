@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import prism
 
 Item {
     id: root
@@ -30,12 +31,8 @@ Item {
         currentIndex: -1
 
         Keys.onEscapePressed: currentIndex = -1
-        Keys.onReturnPressed: {
-            if (currentItem) root.openItem(currentItem)
-        }
-        Keys.onEnterPressed: {
-            if (currentItem) root.openItem(currentItem)
-        }
+        Keys.onReturnPressed: if (currentItem) root.openItem(currentItem)
+        Keys.onEnterPressed: if (currentItem) root.openItem(currentItem)
 
         ScrollBar.vertical: StyledScrollBar {
             flickable: view
@@ -43,13 +40,46 @@ Item {
 
         model: root.model
 
+        add: Transition {
+            Anim {
+                properties: "opacity,scale"
+                from: 0
+                to: 1
+                type: Anim.FastEffects
+                easing: Tokens.anim.standard
+            }
+        }
+
+        remove: Transition {
+            Anim {
+                property: "opacity"
+                to: 0
+                type: Anim.FastEffects
+            }
+        }
+
+        displaced: Transition {
+            Anim {
+                properties: "x,y,opacity,scale"
+                to: 1
+                type: Anim.FastEffects
+                easing: Tokens.anim.standard
+            }
+        }
+
         MouseArea {
             anchors.fill: parent
             z: -1
-            acceptedButtons: Qt.RightButton
+            acceptedButtons: Qt.RightButton | Qt.BackButton | Qt.ForwardButton
             onClicked: mouse => {
-                let globalPos = mapToItem(null, mouse.x, mouse.y);
-                root.blankContextMenu(globalPos.x, globalPos.y);
+                if (mouse.button === Qt.BackButton) {
+                    if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
+                } else if (mouse.button === Qt.ForwardButton) {
+                    if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
+                } else if (mouse.button === Qt.RightButton) {
+                    let globalPos = mapToItem(null, mouse.x, mouse.y);
+                    root.blankContextMenu(globalPos.x, globalPos.y);
+                }
             }
         }
 
@@ -71,13 +101,19 @@ Item {
                 id: itemHover
                 anchors.fill: parent
                 hoverEnabled: true
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
 
                 onClicked: mouse => {
-                    view.currentIndex = item.index;
-                    if (mouse.button === Qt.RightButton) {
+                    if (mouse.button === Qt.BackButton) {
+                        if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
+                    } else if (mouse.button === Qt.ForwardButton) {
+                        if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
+                    } else if (mouse.button === Qt.RightButton) {
+                        view.currentIndex = item.index;
                         let globalPos = mapToItem(null, mouse.x, mouse.y);
                         root.itemContextMenu(item.modelData, globalPos.x, globalPos.y);
+                    } else {
+                        view.currentIndex = item.index;
                     }
                 }
 
@@ -88,21 +124,44 @@ Item {
                 }
             }
 
-            CachingIconImage {
-                id: icon
-
+            Item {
+                id: iconContainer
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 anchors.topMargin: Tokens.padding.medium
+                width: root.zoomSize
+                height: root.zoomSize
 
-                implicitSize: root.zoomSize
+                CachingIconImage {
+                    id: icon
+                    anchors.fill: parent
+                    implicitSize: root.zoomSize
 
-                Component.onCompleted: {
-                    const file = item.modelData;
-                    if (file.isImage) {
-                        source = Qt.resolvedUrl("file://" + file.path);
-                    } else {
-                        source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
+                    Component.onCompleted: {
+                        const file = item.modelData;
+                        if (file.isImage) {
+                            source = Qt.resolvedUrl("file://" + file.path);
+                        } else {
+                            source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
+                        }
+                    }
+                }
+
+                // Symlink Indicator Badge
+                StyledRect {
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                    implicitWidth: 20
+                    implicitHeight: 20
+                    radius: Tokens.rounding.full
+                    color: Qt.alpha(Colours.palette.m3surface, 0.85)
+                    visible: item.modelData ? item.modelData.isSymLink : false
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "link"
+                        fontStyle: Tokens.font.icon.small
+                        color: Colours.palette.m3primary
                     }
                 }
             }
@@ -110,7 +169,7 @@ Item {
             StyledText {
                 id: name
 
-                anchors.top: icon.bottom
+                anchors.top: iconContainer.bottom
                 anchors.topMargin: Tokens.padding.small
                 anchors.left: parent.left
                 anchors.right: parent.right

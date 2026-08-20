@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Controls
 import "components"
@@ -11,50 +10,21 @@ import "components/views"
 import "components/menus"
 import "components/dialogs"
 import "components/statusbar"
+import prism
 
-ApplicationWindow {
+Item {
     id: root
 
-    width: isPickerMode ? 820 : 1060
-    height: isPickerMode ? 540 : 700
-    minimumWidth: isPickerMode ? 640 : 640
-    minimumHeight: isPickerMode ? 420 : 420
+    property bool pickerActive: typeof isPickerMode !== "undefined" ? isPickerMode : false
+    property real zoomLevel: 80
 
-    visible: true
-    title: isPickerMode ? (AppController.title.length > 0 ? AppController.title : qsTr("Select a file")) : qsTr("Prism")
-
-    color: Colours.palette.m3surface
-
-    // File Picker Mode
-    Loader {
-        anchors.fill: parent
-        active: isPickerMode
-        visible: isPickerMode
-
-        sourceComponent: FileDialog {
-            id: fileDialog
-
-            title: AppController.title
-            initialDirectory: AppController.initialDirectory
-            filters: AppController.filters
-            filterLabel: AppController.filterLabel
-            showHidden: AppController.showHidden
-            directoryOnly: AppController.directoryOnly
-
-            onAccepted: path => {
-                AppController.accept(path);
-            }
-
-            onRejected: {
-                AppController.reject();
-            }
-        }
-    }
+    implicitWidth: 1060
+    implicitHeight: 680
 
     // Full File Manager Mode
     Item {
         anchors.fill: parent
-        visible: !isPickerMode
+        visible: !pickerActive
 
         ColumnLayout {
             anchors.fill: parent
@@ -100,6 +70,10 @@ ApplicationWindow {
                         TabManager.currentTab.currentPath = TabManager.currentTab.currentPath;
                     }
                 }
+
+                onSearchRequested: query => {
+                    splitContainer.searchQuery = query;
+                }
             }
 
             // 3. Central Workspace (Sidebar + Split Views + Preview Panel)
@@ -112,6 +86,15 @@ ApplicationWindow {
                 PlacesSidebar {
                     Layout.fillHeight: true
                     activeTab: TabManager.currentTab
+
+                    onEditPlaceRequested: (index, name, path, iconName, isCustom) => {
+                        editPlaceModal.targetIndex = index;
+                        editPlaceModal.placeName = name;
+                        editPlaceModal.placePath = path;
+                        editPlaceModal.selectedIcon = iconName;
+                        editPlaceModal.isCustom = isCustom;
+                        editPlaceModal.expanded = true;
+                    }
                 }
 
                 // Split View Container (Main Pane + Split Pane)
@@ -141,8 +124,7 @@ ApplicationWindow {
                 PreviewPanel {
                     id: previewPanel
                     Layout.fillHeight: true
-                    targetPath: contextMenu.targetItem ? contextMenu.targetItem.path : ""
-                    onCloseRequested: expanded = false
+                    targetPath: splitContainer.currentSelectedPath
                 }
             }
 
@@ -176,6 +158,12 @@ ApplicationWindow {
                     FileOperations.copyToClipboard([item.path]);
                 } else if (action === "paste") {
                     FileOperations.paste(currentDir);
+                } else if (action === "symlink" && item) {
+                    symlinkModal.targetPath = item.path;
+                    symlinkModal.initialText = item.name + " (link)";
+                    symlinkModal.expanded = true;
+                } else if (action === "pasteSymlink") {
+                    FileOperations.pasteAsSymlink(currentDir);
                 } else if (action === "rename" && item) {
                     renameModal.targetPath = item.path;
                     renameModal.initialText = item.name;
@@ -231,6 +219,27 @@ ApplicationWindow {
             }
         }
 
+        NewItemModal {
+            id: symlinkModal
+            property string targetPath: ""
+            title: qsTr("Create Symlink")
+            icon: "link"
+            onAccepted: text => {
+                let currentDir = TabManager.currentTab ? TabManager.currentTab.currentPath : "";
+                FileOperations.createSymlink(targetPath, currentDir + "/" + text);
+            }
+        }
+
+        EditPlaceModal {
+            id: editPlaceModal
+            onAccepted: (index, name, iconName) => {
+                PlacesModel.updatePlace(index, name, iconName);
+            }
+            onRemoveRequested: index => {
+                PlacesModel.removeBookmark(index);
+            }
+        }
+
         PropertiesModal {
             id: propertiesModal
         }
@@ -244,6 +253,102 @@ ApplicationWindow {
         Shortcut {
             sequence: "Ctrl+W"
             onActivated: TabManager.closeTab(TabManager.currentIndex)
+        }
+
+        Shortcut {
+            sequence: "Ctrl+C"
+            onActivated: {
+                if (splitContainer.currentSelectedPath.length > 0) {
+                    FileOperations.copyToClipboard([splitContainer.currentSelectedPath]);
+                }
+            }
+        }
+
+        Shortcut {
+            sequence: "Ctrl+X"
+            onActivated: {
+                if (splitContainer.currentSelectedPath.length > 0) {
+                    FileOperations.cutToClipboard([splitContainer.currentSelectedPath]);
+                }
+            }
+        }
+
+        Shortcut {
+            sequence: "Ctrl+V"
+            onActivated: {
+                if (TabManager.currentTab) {
+                    FileOperations.paste(TabManager.currentTab.currentPath);
+                }
+            }
+        }
+
+        Shortcut {
+            sequence: "Delete"
+            onActivated: {
+                if (splitContainer.currentSelectedPath.length > 0) {
+                    FileOperations.moveToTrash([splitContainer.currentSelectedPath]);
+                }
+            }
+        }
+
+        Shortcut {
+            sequence: "Shift+Delete"
+            onActivated: {
+                if (splitContainer.currentSelectedPath.length > 0) {
+                    FileOperations.deleteFiles([splitContainer.currentSelectedPath], true);
+                }
+            }
+        }
+
+        Shortcut {
+            sequence: "F2"
+            onActivated: {
+                if (splitContainer.currentSelectedPath.length > 0) {
+                    renameModal.targetPath = splitContainer.currentSelectedPath;
+                    renameModal.initialText = splitContainer.currentSelectedPath.split("/").pop();
+                    renameModal.expanded = true;
+                }
+            }
+        }
+
+        Shortcut {
+            sequence: "Alt+Return"
+            onActivated: {
+                if (splitContainer.currentSelectedPath.length > 0) {
+                    propertiesModal.targetPath = splitContainer.currentSelectedPath;
+                    propertiesModal.expanded = true;
+                }
+            }
+        }
+
+        Shortcut {
+            sequence: "Alt+Left"
+            onActivated: if (TabManager.currentTab && TabManager.currentTab.canGoBack) TabManager.currentTab.goBack()
+        }
+
+        Shortcut {
+            sequence: "Backspace"
+            onActivated: if (TabManager.currentTab && TabManager.currentTab.canGoBack) TabManager.currentTab.goBack()
+        }
+
+        Shortcut {
+            sequence: "Alt+Right"
+            onActivated: if (TabManager.currentTab && TabManager.currentTab.canGoForward) TabManager.currentTab.goForward()
+        }
+
+        Shortcut {
+            sequence: "Alt+Up"
+            onActivated: if (TabManager.currentTab) TabManager.currentTab.goUp()
+        }
+
+        Shortcut {
+            sequence: "Ctrl+F"
+            onActivated: navBar.openSearch()
+        }
+
+        Shortcut {
+            sequence: "Ctrl+L"
+            onActivated: navBar.openAddressEdit()
         }
 
         Shortcut {
@@ -261,23 +366,38 @@ ApplicationWindow {
         }
 
         Shortcut {
+            sequence: "F5"
+            onActivated: {
+                if (TabManager.currentTab) {
+                    TabManager.currentTab.currentPath = TabManager.currentTab.currentPath;
+                }
+            }
+        }
+
+        Shortcut {
             sequence: "F11"
             onActivated: previewPanel.expanded = !previewPanel.expanded
         }
+    }
 
-        Shortcut {
-            sequence: "Ctrl+H"
-            onActivated: AppController.showHidden = !AppController.showHidden
+    // Modal File Picker Dialog Mode (--picker)
+    FileDialog {
+        id: fileDialog
+        visible: pickerActive
+        anchors.centerIn: parent
+        title: AppController.title.length > 0 ? AppController.title : qsTr("Select a file")
+        filterLabel: AppController.filterLabel.length > 0 ? AppController.filterLabel : qsTr("All files")
+        filters: AppController.filters
+        showHidden: AppController.showHidden
+        directoryOnly: AppController.directoryOnly
+        initialDirectory: AppController.initialDirectory
+
+        onAccepted: path => {
+            AppController.acceptFile(path);
         }
 
-        Shortcut {
-            sequence: "Ctrl+Shift+N"
-            onActivated: {
-                newItemModal.title = qsTr("Create New Folder");
-                newItemModal.icon = "create_new_folder";
-                newItemModal.initialText = qsTr("New Folder");
-                newItemModal.expanded = true;
-            }
+        onRejected: {
+            AppController.cancelPicker();
         }
     }
 }

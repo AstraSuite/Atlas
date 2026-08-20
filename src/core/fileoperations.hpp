@@ -80,6 +80,7 @@ public:
     Q_INVOKABLE void createFile(const QString& parentDir, const QString& name, const QString& content = "");
     Q_INVOKABLE void duplicateFile(const QString& path);
     Q_INVOKABLE void createSymlink(const QString& target, const QString& linkPath);
+    Q_INVOKABLE void pasteAsSymlink(const QString& destinationDir);
 
     Q_INVOKABLE void cancelOperation();
 

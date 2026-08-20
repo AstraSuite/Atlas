@@ -8,6 +8,14 @@ StyledRect {
 
     required property var activeTab
     property real zoomSize: 80
+    property string searchQuery: ""
+    readonly property var currentSelectedPath: {
+        let loader = (activeTab && activeTab.activePane === 1) ? splitViewLoader : mainViewLoader;
+        if (loader && loader.item && loader.item.currentItem) {
+            return loader.item.currentItem.path;
+        }
+        return activeTab ? activeTab.currentPath : "";
+    }
 
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
@@ -29,6 +37,7 @@ StyledRect {
             FileSystemModel {
                 id: mainModel
                 path: root.activeTab ? root.activeTab.currentPath : ""
+                searchQuery: root.searchQuery
                 showHidden: AppController.showHidden
             }
 

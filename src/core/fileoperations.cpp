@@ -384,6 +384,24 @@ void FileOperations::createSymlink(const QString& target, const QString& linkPat
     emit operationFinished(success, success ? tr("Link created") : tr("Failed to create link"));
 }
 
+void FileOperations::pasteAsSymlink(const QString& destinationDir) {
+    if (m_clipboardFiles.isEmpty() || destinationDir.isEmpty()) return;
+
+    int successCount = 0;
+    for (const QString& src : m_clipboardFiles) {
+        QFileInfo fi(src);
+        QString linkPath = destinationDir + "/" + fi.fileName();
+        if (QFile::exists(linkPath)) {
+            linkPath = destinationDir + "/" + fi.completeBaseName() + " (symlink)." + fi.suffix();
+        }
+        if (QFile::link(src, linkPath)) {
+            successCount++;
+        }
+    }
+    bool allSuccess = (successCount == m_clipboardFiles.size());
+    emit operationFinished(allSuccess, allSuccess ? tr("Created symlink(s)") : tr("Failed to create some symlinks"));
+}
+
 void FileOperations::cancelOperation() {
     m_cancelRequested = true;
 }
