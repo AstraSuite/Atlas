@@ -14,6 +14,7 @@ Item {
     property int currentIndex: view.currentIndex
     readonly property var currentItem: view.currentItem ? view.currentItem.modelData : null
     property var selectedPaths: []
+    property int anchorIndex: -1
 
     signal openItem(var item)
     signal itemContextMenu(var item, real mouseX, real mouseY)
@@ -65,8 +66,25 @@ Item {
     }
 
     function selectSingle(path, index) {
+        anchorIndex = index;
         view.currentIndex = index;
         selectedPaths = [path];
+    }
+
+    function selectRange(targetIndex) {
+        if (!root.model || root.model.count === 0) return;
+        let start = anchorIndex !== -1 ? anchorIndex : (view.currentIndex !== -1 ? view.currentIndex : 0);
+        let minIdx = Math.max(0, Math.min(start, targetIndex));
+        let maxIdx = Math.min(root.model.count - 1, Math.max(start, targetIndex));
+        let arr = [];
+        for (let i = minIdx; i <= maxIdx; ++i) {
+            let entry = root.model.get(i);
+            if (entry) {
+                arr.push(entry.path);
+            }
+        }
+        selectedPaths = arr;
+        view.currentIndex = targetIndex;
     }
 
     VerticalFadeGridView {
@@ -167,12 +185,22 @@ Item {
                     }
                 }
 
-                Behavior on scale {
-                    Anim {
-                        type: Anim.FastEffects
+                // Pop in animation on folder entry / reload
+                scale: 0.6
+                Component.onCompleted: popInAnim.start()
+
+                ParallelAnimation {
+                    id: popInAnim
+                    NumberAnimation {
+                        target: itemCard
+                        property: "scale"
+                        from: 0.6
+                        to: 1.0
+                        duration: 250
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 1.3
                     }
                 }
-                scale: folderDropArea.containsDrag ? 1.05 : 1.0
 
                 MouseArea {
                     id: itemHover
@@ -216,8 +244,11 @@ Item {
                             let globalPos = mapToItem(null, mouse.x, mouse.y);
                             root.itemContextMenu(delegateContainer.modelData, globalPos.x, globalPos.y);
                         } else {
-                            if (mouse.modifiers & Qt.ControlModifier) {
+                            if (mouse.modifiers & Qt.ShiftModifier) {
+                                root.selectRange(delegateContainer.index);
+                            } else if (mouse.modifiers & Qt.ControlModifier) {
                                 root.toggleSelection(delegateContainer.modelData.path);
+                                root.anchorIndex = delegateContainer.index;
                             } else {
                                 root.selectSingle(delegateContainer.modelData.path, delegateContainer.index);
                             }
@@ -316,13 +347,12 @@ Item {
         }
     }
 
-    // Top-Level Rubber Band Selection Overlay (renders ABOVE everything)
+    // Background Mouse Area for Deselection, Context Menu on empty space, and Rubber Band Selection
     MouseArea {
         id: dragSelectArea
         anchors.fill: parent
-        z: 999
+        z: 0
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
-        propagateComposedEvents: true
 
         onWheel: wheel => {
             view.flick(0, wheel.angleDelta.y * 6);
@@ -340,7 +370,6 @@ Item {
             currentX = mouse.x;
             currentY = mouse.y;
             isSelecting = false;
-            mouse.accepted = false;
         }
 
         onPositionChanged: mouse => {
@@ -365,9 +394,19 @@ Item {
         onReleased: mouse => {
             if (isSelecting) {
                 isSelecting = false;
-                mouse.accepted = true;
-            } else {
-                mouse.accepted = false;
+            }
+        }
+
+        onClicked: mouse => {
+            if (!isSelecting) {
+                if (mouse.button === Qt.RightButton) {
+                    let globalPos = mapToItem(null, mouse.x, mouse.y);
+                    root.blankContextMenu(globalPos.x, globalPos.y);
+                } else if (mouse.button === Qt.LeftButton) {
+                    root.selectedPaths = [];
+                    view.currentIndex = -1;
+                    root.anchorIndex = -1;
+                }
             }
         }
 
@@ -377,29 +416,39 @@ Item {
             let rw = Math.abs(currentX - startX);
             let rh = Math.abs(currentY - startY);
 
+            let cols = Math.max(1, Math.floor(view.width / view.cellWidth));
             let newlySelected = [];
-            for (let i = 0; i < view.count; ++i) {
-                let item = view.itemAtIndex(i);
-                if (item && item.modelData) {
-                    if (item.x < rx + rw && item.x + item.width > rx &&
-                        item.y < ry + rh && item.y + item.height > ry) {
-                        newlySelected.push(item.modelData.path);
+            let total = root.model ? root.model.count : 0;
+            for (let i = 0; i < total; ++i) {
+                let col = i % cols;
+                let row = Math.floor(i / cols);
+                let ix = col * view.cellWidth;
+                let iy = row * view.cellHeight;
+                let iw = view.cellWidth;
+                let ih = view.cellHeight;
+
+                if (ix < rx + rw && ix + iw > rx && iy < ry + rh && iy + ih > ry) {
+                    let entry = root.model.get(i);
+                    if (entry) {
+                        newlySelected.push(entry.path);
                     }
                 }
             }
             root.selectedPaths = newlySelected;
         }
+    }
 
-        Rectangle {
-            visible: dragSelectArea.isSelecting
-            x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
-            y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
-            width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
-            height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
-            color: Qt.alpha(Colours.palette.m3primary, 0.22)
-            border.color: Colours.palette.m3primary
-            border.width: 1.5
-            radius: Tokens.rounding.extraSmall
-        }
+    // Rubber Band Visual Rectangle (renders on top of everything)
+    Rectangle {
+        z: 999
+        visible: dragSelectArea.isSelecting
+        x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
+        y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
+        width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
+        height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
+        color: Qt.alpha(Colours.palette.m3primary, 0.18)
+        border.color: Colours.palette.m3primary
+        border.width: 1.5
+        radius: Tokens.rounding.extraSmall
     }
 }

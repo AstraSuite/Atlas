@@ -13,6 +13,7 @@ Item {
     property int currentIndex: listView.currentIndex
     readonly property var currentItem: listView.currentItem ? listView.currentItem.modelData : null
     property var selectedPaths: []
+    property int anchorIndex: -1
     readonly property bool isTrash: root.activeTab && (root.activeTab.currentPath.indexOf("Trash") !== -1 || root.activeTab.currentPath.indexOf("trash:") !== -1)
 
     signal openItem(var item)
@@ -65,8 +66,25 @@ Item {
     }
 
     function selectSingle(path, index) {
+        anchorIndex = index;
         listView.currentIndex = index;
         selectedPaths = [path];
+    }
+
+    function selectRange(targetIndex) {
+        if (!root.model || root.model.count === 0) return;
+        let start = anchorIndex !== -1 ? anchorIndex : (listView.currentIndex !== -1 ? listView.currentIndex : 0);
+        let minIdx = Math.max(0, Math.min(start, targetIndex));
+        let maxIdx = Math.min(root.model.count - 1, Math.max(start, targetIndex));
+        let arr = [];
+        for (let i = minIdx; i <= maxIdx; ++i) {
+            let entry = root.model.get(i);
+            if (entry) {
+                arr.push(entry.path);
+            }
+        }
+        selectedPaths = arr;
+        listView.currentIndex = targetIndex;
     }
 
     ColumnLayout {
@@ -404,8 +422,11 @@ Item {
                             let globalPos = mapToItem(null, mouse.x, mouse.y);
                             root.itemContextMenu(rowItem.modelData, globalPos.x, globalPos.y);
                         } else {
-                            if (mouse.modifiers & Qt.ControlModifier) {
+                            if (mouse.modifiers & Qt.ShiftModifier) {
+                                root.selectRange(rowItem.index);
+                            } else if (mouse.modifiers & Qt.ControlModifier) {
                                 root.toggleSelection(rowItem.modelData.path);
+                                root.anchorIndex = rowItem.index;
                             } else {
                                 root.selectSingle(rowItem.modelData.path, rowItem.index);
                             }
@@ -539,13 +560,12 @@ Item {
         }
     }
 
-    // Top-Level Rubber Band Selection Overlay
+    // Background Mouse Area for Deselection, Context Menu on empty space, and Rubber Band Selection
     MouseArea {
         id: dragSelectArea
         anchors.fill: parent
-        z: 999
+        z: 0
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
-        propagateComposedEvents: true
 
         onWheel: wheel => {
             listView.flick(0, wheel.angleDelta.y * 6);
@@ -563,7 +583,6 @@ Item {
             currentX = mouse.x;
             currentY = mouse.y;
             isSelecting = false;
-            mouse.accepted = false;
         }
 
         onPositionChanged: mouse => {
@@ -588,40 +607,53 @@ Item {
         onReleased: mouse => {
             if (isSelecting) {
                 isSelecting = false;
-                mouse.accepted = true;
-            } else {
-                mouse.accepted = false;
+            }
+        }
+
+        onClicked: mouse => {
+            if (!isSelecting) {
+                if (mouse.button === Qt.RightButton) {
+                    let globalPos = mapToItem(null, mouse.x, mouse.y);
+                    root.blankContextMenu(globalPos.x, globalPos.y);
+                } else if (mouse.button === Qt.LeftButton) {
+                    root.selectedPaths = [];
+                    listView.currentIndex = -1;
+                    root.anchorIndex = -1;
+                }
             }
         }
 
         function updateRubberBandSelection() {
-            let rx = Math.min(startX, currentX) - listView.x + listView.contentX;
             let ry = Math.min(startY, currentY) - listView.y + listView.contentY;
-            let rw = Math.abs(currentX - startX);
             let rh = Math.abs(currentY - startY);
 
             let newlySelected = [];
-            for (let i = 0; i < listView.count; ++i) {
-                let item = listView.itemAtIndex(i);
-                if (item && item.modelData) {
-                    if (item.y < ry + rh && item.y + item.height > ry) {
-                        newlySelected.push(item.modelData.path);
+            let total = root.model ? root.model.count : 0;
+            for (let i = 0; i < total; ++i) {
+                let iy = i * 36;
+                let ih = 36;
+                if (iy < ry + rh && iy + ih > ry) {
+                    let entry = root.model.get(i);
+                    if (entry) {
+                        newlySelected.push(entry.path);
                     }
                 }
             }
             root.selectedPaths = newlySelected;
         }
+    }
 
-        Rectangle {
-            visible: dragSelectArea.isSelecting
-            x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
-            y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
-            width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
-            height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
-            color: Qt.alpha(Colours.palette.m3primary, 0.22)
-            border.color: Colours.palette.m3primary
-            border.width: 1.5
-            radius: Tokens.rounding.extraSmall
-        }
+    // Rubber Band Visual Rectangle (renders on top of everything)
+    Rectangle {
+        z: 999
+        visible: dragSelectArea.isSelecting
+        x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
+        y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
+        width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
+        height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
+        color: Qt.alpha(Colours.palette.m3primary, 0.18)
+        border.color: Colours.palette.m3primary
+        border.width: 1.5
+        radius: Tokens.rounding.extraSmall
     }
 }
