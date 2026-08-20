@@ -66,21 +66,23 @@ Item {
         // Helpful Action Buttons (visible when not in Trash and not searching)
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: Tokens.spacing.small
-            spacing: Tokens.spacing.small
+            Layout.topMargin: Tokens.spacing.medium
+            spacing: Tokens.spacing.medium
             visible: !root.isTrash && !root.isSearching
 
+            // New Folder Button
             StyledRect {
-                implicitHeight: 36
-                implicitWidth: b1Text.implicitWidth + 32
+                implicitHeight: 42
+                implicitWidth: b1Content.implicitWidth + 36
                 radius: Tokens.rounding.full
                 color: b1Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
 
                 RowLayout {
+                    id: b1Content
                     anchors.centerIn: parent
-                    spacing: 6
+                    spacing: 8
                     MaterialIcon { text: "create_new_folder"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3primary }
-                    StyledText { id: b1Text; text: qsTr("New Folder"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurface }
+                    StyledText { text: qsTr("New Folder"); font: Tokens.font.label.large; color: Colours.palette.m3onSurface }
                 }
 
                 MouseArea {
@@ -92,17 +94,19 @@ Item {
                 }
             }
 
+            // New File Button
             StyledRect {
-                implicitHeight: 36
-                implicitWidth: b2Text.implicitWidth + 32
+                implicitHeight: 42
+                implicitWidth: b2Content.implicitWidth + 36
                 radius: Tokens.rounding.full
                 color: b2Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
 
                 RowLayout {
+                    id: b2Content
                     anchors.centerIn: parent
-                    spacing: 6
+                    spacing: 8
                     MaterialIcon { text: "note_add"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3primary }
-                    StyledText { id: b2Text; text: qsTr("New File"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurface }
+                    StyledText { text: qsTr("New File"); font: Tokens.font.label.large; color: Colours.palette.m3onSurface }
                 }
 
                 MouseArea {
