@@ -120,7 +120,7 @@ StyledRect {
                         radius: Tokens.rounding.full
                         color: placeDropArea.containsDrag
                             ? Colours.palette.m3primaryContainer
-                            : (selected ? Colours.palette.m3secondaryContainer : (placeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"))
+                            : (selected ? Colours.palette.m3secondaryContainer : "transparent")
 
                         Behavior on color {
                             Anim { type: Anim.FastEffects }
@@ -176,12 +176,12 @@ StyledRect {
                             }
                         }
 
-                        MouseArea {
+                        StateLayer {
                             id: placeHover
                             anchors.fill: parent
-                            hoverEnabled: true
+                            radius: Tokens.rounding.full
+                            color: placeItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                             acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                            cursorShape: Qt.PointingHandCursor
 
                             onClicked: mouse => {
                                 if (mouse.button === Qt.MiddleButton) {
@@ -238,7 +238,7 @@ StyledRect {
                         radius: Tokens.rounding.full
                         color: driveDropArea.containsDrag
                             ? Colours.palette.m3primaryContainer
-                            : (selected ? Colours.palette.m3secondaryContainer : (driveHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"))
+                            : (selected ? Colours.palette.m3secondaryContainer : "transparent")
 
                         Behavior on color {
                             Anim { type: Anim.FastEffects }
@@ -333,12 +333,12 @@ StyledRect {
                             }
                         }
 
-                        MouseArea {
+                        StateLayer {
                             id: driveHover
                             anchors.fill: parent
-                            hoverEnabled: true
+                            radius: Tokens.rounding.full
+                            color: driveItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                             acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                            cursorShape: Qt.PointingHandCursor
 
                             onClicked: mouse => {
                                 if (mouse.button === Qt.MiddleButton) {
