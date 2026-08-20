@@ -11,6 +11,7 @@ StyledRect {
     property real zoomSize: 80
     property string searchQuery: ""
     readonly property bool isSplit: activeTab && activeTab.isSplit
+    property real splitRatio: 0.5
 
     readonly property var currentSelectedPath: {
         if (mainViewLoader && mainViewLoader.item && mainViewLoader.item.currentItem) {
@@ -28,15 +29,18 @@ StyledRect {
 
     color: Colours.tPalette.m3surfaceContainer
 
-    RowLayout {
+    Item {
         anchors.fill: parent
         anchors.margins: Tokens.padding.extraSmall
-        spacing: Tokens.spacing.extraSmall
 
         // Left / Main Pane
         StyledRect {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+            id: pane1
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: root.isSplit ? Math.max(120, Math.min(parent.width - 120, (parent.width - resizer.width) * root.splitRatio)) : parent.width
+
             radius: Tokens.rounding.large
             color: Colours.tPalette.m3surface
             clip: true
@@ -69,74 +73,66 @@ StyledRect {
                 onCreateFolder: root.createNewFolder()
                 onCreateFile: root.createNewFile()
             }
+        }
 
-            // Floating Bottom-Right Pane Close Pill (media_1787207433898.png)
-            StyledRect {
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.margins: 12
-                implicitHeight: 28
-                implicitWidth: pane1Row.implicitWidth + 16
-                radius: Tokens.rounding.full
-                color: Colours.palette.m3surfaceContainerLowest
-                border.color: Colours.palette.m3outlineVariant
-                border.width: 1
-                visible: root.isSplit
-                z: 100
+        // Resizable Splitter Divider Bar
+        Item {
+            id: resizer
+            visible: root.isSplit
+            anchors.left: pane1.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: 8
+            z: 20
 
-                RowLayout {
-                    id: pane1Row
-                    anchors.centerIn: parent
-                    spacing: 6
+            Rectangle {
+                anchors.centerIn: parent
+                width: 2
+                height: parent.height - 16
+                radius: 1
+                color: (resizeMouse.containsMouse || resizeMouse.drag.active) ? Colours.palette.m3primary : Colours.palette.m3outlineVariant
+                opacity: (resizeMouse.containsMouse || resizeMouse.drag.active) ? 1.0 : 0.45
 
-                    StyledText {
-                        text: (root.activeTab && root.activeTab.title) ? root.activeTab.title : ""
-                        font: Tokens.font.label.small
-                        color: Colours.palette.m3onSurface
-                        elide: Text.ElideRight
-                    }
+                Behavior on color { Anim { type: Anim.FastEffects } }
+                Behavior on opacity { Anim { type: Anim.FastEffects } }
+            }
 
-                    Item {
-                        implicitWidth: 16
-                        implicitHeight: 16
+            MouseArea {
+                id: resizeMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.SizeHorCursor
 
-                        MaterialIcon {
-                            anchors.centerIn: parent
-                            text: "close"
-                            fontStyle: Tokens.font.icon.small
-                            color: closePane1Hover.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
-                        }
+                property real startMouseX: 0
+                property real startRatio: 0.5
 
-                        MouseArea {
-                            id: closePane1Hover
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (TabManager.currentTab) {
-                                    TabManager.closeSplitPane(TabManager.currentIndex, 0);
-                                }
-                            }
+                onPressed: mouse => {
+                    startMouseX = mouse.x;
+                    startRatio = root.splitRatio;
+                }
+
+                onPositionChanged: mouse => {
+                    if (pressed) {
+                        let totalW = root.width - resizer.width - Tokens.padding.extraSmall * 2;
+                        if (totalW > 200) {
+                            let currentPos = pane1.width + (mouse.x - startMouseX);
+                            let newRatio = currentPos / totalW;
+                            root.splitRatio = Math.max(0.15, Math.min(0.85, newRatio));
                         }
                     }
                 }
             }
         }
 
-        // Split Divider Bar
-        Rectangle {
-            visible: root.isSplit
-            Layout.fillHeight: true
-            implicitWidth: 2
-            color: Colours.palette.m3outlineVariant
-            opacity: 0.5
-        }
-
-        // Right / Secondary Pane (media_1787207433898.png)
+        // Right / Secondary Pane
         StyledRect {
+            id: pane2
             visible: root.isSplit
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+            anchors.left: resizer.right
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+
             radius: Tokens.rounding.large
             color: Colours.tPalette.m3surface
             clip: true
@@ -166,58 +162,6 @@ StyledRect {
                 isSearching: false
                 onCreateFolder: root.createNewFolder()
                 onCreateFile: root.createNewFile()
-            }
-
-            // Floating Bottom-Right Secondary Pane Close Pill
-            StyledRect {
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.margins: 12
-                implicitHeight: 28
-                implicitWidth: pane2Row.implicitWidth + 16
-                radius: Tokens.rounding.full
-                color: Colours.palette.m3surfaceContainerLowest
-                border.color: Colours.palette.m3outlineVariant
-                border.width: 1
-                visible: root.isSplit
-                z: 100
-
-                RowLayout {
-                    id: pane2Row
-                    anchors.centerIn: parent
-                    spacing: 6
-
-                    StyledText {
-                        text: (root.activeTab && root.activeTab.splitTitle) ? root.activeTab.splitTitle : ""
-                        font: Tokens.font.label.small
-                        color: Colours.palette.m3onSurface
-                        elide: Text.ElideRight
-                    }
-
-                    Item {
-                        implicitWidth: 16
-                        implicitHeight: 16
-
-                        MaterialIcon {
-                            anchors.centerIn: parent
-                            text: "close"
-                            fontStyle: Tokens.font.icon.small
-                            color: closePane2Hover.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
-                        }
-
-                        MouseArea {
-                            id: closePane2Hover
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (TabManager.currentTab) {
-                                    TabManager.closeSplitPane(TabManager.currentIndex, 1);
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
     }

@@ -52,7 +52,7 @@ Item {
         clip: true
         focus: true
         currentIndex: -1
-        interactive: false
+        interactive: true
 
         Keys.onEscapePressed: {
             currentIndex = -1;
@@ -222,6 +222,10 @@ Item {
         z: 999
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
         propagateComposedEvents: true
+
+        onWheel: wheel => {
+            view.flick(0, wheel.angleDelta.y * 6);
+        }
 
         property real startX: 0
         property real startY: 0
