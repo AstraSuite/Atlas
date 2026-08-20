@@ -281,6 +281,8 @@ Item {
                 readonly property bool isSelected: root.isSelected(modelData.path) || (listView.currentIndex === index)
                 // Reactive Cut state
                 readonly property bool isCut: FileOperations.isCutOperation && FileOperations.clipboardFiles.indexOf(modelData.path) !== -1
+                // Unhidden hidden files (dotfiles) visual distinction
+                readonly property bool isHidden: rowItem.modelData ? (rowItem.modelData.isHidden || rowItem.modelData.name.startsWith('.')) : false
 
                 width: listView.width
                 implicitHeight: 36
@@ -288,8 +290,8 @@ Item {
                 radius: Tokens.rounding.small
                 color: isSelected ? Colours.palette.m3secondaryContainer : (rowHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : (index % 2 === 1 ? Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0.3) : "transparent"))
 
-                // Cut Indication: Darkened / Ghosted Opacity
-                opacity: isCut ? 0.42 : 1.0
+                // Cut & Hidden Files Indication: Darkened / Ghosted Opacity
+                opacity: isCut ? 0.38 : (isHidden ? 0.58 : 1.0)
 
                 Behavior on opacity {
                     Anim {

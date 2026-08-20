@@ -35,7 +35,7 @@ MouseArea {
         x: Math.min(Math.max(8, root.menuX), root.width - width - 8)
         y: Math.min(Math.max(8, root.menuY), root.height - height - 8)
 
-        implicitWidth: 220
+        implicitWidth: 260
         implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
 
         radius: Tokens.rounding.large

@@ -269,12 +269,47 @@ void TabManager::toggleSplitView() {
 }
 
 void TabManager::splitTabWith(int tabIndex, const QString& secondaryPath) {
-    if (tabIndex >= 0 && tabIndex < m_tabs.size()) {
+    if (tabIndex < 0 || tabIndex >= m_tabs.size()) return;
+
+    if (!secondaryPath.isEmpty()) {
         auto* tab = m_tabs.at(tabIndex);
-        tab->setSplitPath(secondaryPath.isEmpty() ? tab->currentPath() : secondaryPath);
+        tab->setSplitPath(secondaryPath);
         tab->setIsSplit(true);
         setCurrentIndex(tabIndex);
+        return;
     }
+
+    // When right-clicking a tab to split side-by-side with currently selected tab:
+    if (m_currentIndex != tabIndex && m_currentIndex >= 0 && m_currentIndex < m_tabs.size()) {
+        auto* active = m_tabs.at(m_currentIndex);
+        auto* target = m_tabs.at(tabIndex);
+        QString targetPath = target->currentPath();
+
+        active->setSplitPath(targetPath);
+        active->setIsSplit(true);
+
+        // Remove the right-clicked tab since it is now joined in the split view
+        closeTab(tabIndex);
+        return;
+    }
+
+    // If right-clicked the current tab and other tabs exist, merge an adjacent tab
+    if (m_tabs.size() > 1) {
+        int otherIndex = (tabIndex == 0) ? 1 : tabIndex - 1;
+        auto* active = m_tabs.at(tabIndex);
+        auto* other = m_tabs.at(otherIndex);
+        QString otherPath = other->currentPath();
+
+        active->setSplitPath(otherPath);
+        active->setIsSplit(true);
+        closeTab(otherIndex);
+        return;
+    }
+
+    // Fallback if only 1 tab exists
+    auto* tab = m_tabs.at(tabIndex);
+    tab->setSplitPath(tab->currentPath());
+    tab->setIsSplit(true);
 }
 
 void TabManager::closeSplitPane(int tabIndex, int paneIndex) {

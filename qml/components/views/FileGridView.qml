@@ -79,6 +79,8 @@ Item {
             readonly property bool isSelected: root.isSelected(modelData.path) || (view.currentIndex === index)
             // Reactive Cut state: updates instantly on clipboard change
             readonly property bool isCut: FileOperations.isCutOperation && FileOperations.clipboardFiles.indexOf(modelData.path) !== -1
+            // Unhidden hidden files (dotfiles) visual distinction
+            readonly property bool isHidden: delegateContainer.modelData ? (delegateContainer.modelData.isHidden || delegateContainer.modelData.name.startsWith('.')) : false
 
             // Uniform Card Highlight Size
             StyledRect {
@@ -91,8 +93,8 @@ Item {
                 color: delegateContainer.isSelected ? Colours.palette.m3secondaryContainer : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
                 clip: true
 
-                // Cut Indication: Darkened / Ghosted Opacity
-                opacity: delegateContainer.isCut ? 0.42 : 1.0
+                // Cut & Hidden Files Indication: Darkened / Ghosted Opacity
+                opacity: delegateContainer.isCut ? 0.38 : (delegateContainer.isHidden ? 0.58 : 1.0)
 
                 Behavior on opacity {
                     Anim {
