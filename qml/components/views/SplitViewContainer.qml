@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import "../"
 import prism
 
-Item {
+StyledRect {
     id: root
 
     required property var activeTab
@@ -12,8 +12,11 @@ Item {
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
 
+    color: Colours.tPalette.m3surfaceContainer
+
     RowLayout {
         anchors.fill: parent
+        anchors.margins: Tokens.padding.extraSmall
         spacing: Tokens.spacing.small
 
         // Primary Pane
@@ -21,7 +24,7 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: Tokens.rounding.large
-            color: Colours.tPalette.m3surfaceContainer
+            color: Colours.tPalette.m3surface
 
             FileSystemModel {
                 id: mainModel
@@ -47,7 +50,7 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: Tokens.rounding.large
-            color: Colours.tPalette.m3surfaceContainer
+            color: Colours.tPalette.m3surface
             visible: root.activeTab && root.activeTab.isSplit
 
             FileSystemModel {

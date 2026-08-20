@@ -290,7 +290,6 @@ void FileSystemModel::scanDirectory() {
             if (m_path != scanPath)
                 return;
 
-            beginResetModel();
             qDeleteAll(m_rawEntries);
             m_rawEntries.clear();
             m_rawEntries.reserve(rawData.size());
@@ -298,7 +297,6 @@ void FileSystemModel::scanDirectory() {
             for (const auto& d : rawData) {
                 m_rawEntries.append(createEntryFromRawData(d, this));
             }
-            endResetModel();
 
             applyFilterAndSort();
         });
@@ -326,7 +324,6 @@ void FileSystemModel::performSearch(const QString& rootPath, const QString& quer
             if (m_searchQuery != query)
                 return;
 
-            beginResetModel();
             qDeleteAll(m_rawEntries);
             m_rawEntries.clear();
             m_rawEntries.reserve(foundRawData.size());
@@ -334,7 +331,6 @@ void FileSystemModel::performSearch(const QString& rootPath, const QString& quer
             for (const auto& d : foundRawData) {
                 m_rawEntries.append(createEntryFromRawData(d, this));
             }
-            endResetModel();
 
             applyFilterAndSort();
         });
