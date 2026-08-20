@@ -129,6 +129,14 @@ ApplicationWindow {
                                 editPlaceModal.isCustom = isCustom;
                                 editPlaceModal.expanded = true;
                             }
+
+                            onFilesDropped: (sources, destDir, x, y) => {
+                                dropActionMenu.sourceFiles = sources;
+                                dropActionMenu.targetDir = destDir;
+                                dropActionMenu.menuX = x;
+                                dropActionMenu.menuY = y;
+                                dropActionMenu.expanded = true;
+                            }
                         }
 
                         // View Container (Main Pane)
@@ -639,8 +647,28 @@ ApplicationWindow {
         }
 
         Shortcut {
+            sequence: "F1"
+            onActivated: previewPanel.expanded = !previewPanel.expanded
+        }
+
+        Shortcut {
             sequence: "F11"
             onActivated: previewPanel.expanded = !previewPanel.expanded
+        }
+
+        Shortcut {
+            sequence: "Ctrl+Z"
+            onActivated: FileOperations.undo()
+        }
+
+        Shortcut {
+            sequence: "Ctrl+Shift+Z"
+            onActivated: FileOperations.redo()
+        }
+
+        Shortcut {
+            sequence: "Ctrl+Y"
+            onActivated: FileOperations.redo()
         }
 
         Shortcut {
@@ -661,6 +689,26 @@ ApplicationWindow {
         Shortcut {
             sequence: "Ctrl+0"
             onActivated: zoomLevel = 1.0
+        }
+
+        // Global MouseArea for Back/Forward Extra Mouse Buttons
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+            acceptedButtons: Qt.BackButton | Qt.ForwardButton | Qt.ExtraButton1 | Qt.ExtraButton2
+            onPressed: mouse => {
+                if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
+                    if (TabManager.currentTab && TabManager.currentTab.canGoBack) {
+                        TabManager.currentTab.goBack();
+                        mouse.accepted = true;
+                    }
+                } else if (mouse.button === Qt.ForwardButton || mouse.button === Qt.ExtraButton2) {
+                    if (TabManager.currentTab && TabManager.currentTab.canGoForward) {
+                        TabManager.currentTab.goForward();
+                        mouse.accepted = true;
+                    }
+                }
+            }
         }
     }
 

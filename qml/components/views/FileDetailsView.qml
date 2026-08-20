@@ -385,13 +385,20 @@ Item {
                     id: rowHover
                     anchors.fill: parent
                     hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton | Qt.ExtraButton1 | Qt.ExtraButton2
 
                     property real pressX: 0
                     property real pressY: 0
                     property bool isDragging: false
 
                     onPressed: mouse => {
+                        if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
+                            if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
+                            return;
+                        } else if (mouse.button === Qt.ForwardButton || mouse.button === Qt.ExtraButton2) {
+                            if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
+                            return;
+                        }
                         pressX = mouse.x;
                         pressY = mouse.y;
                         isDragging = false;
@@ -412,9 +419,9 @@ Item {
 
                     onClicked: mouse => {
                         if (isDragging || dragSelectArea.isSelecting) return;
-                        if (mouse.button === Qt.BackButton) {
+                        if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
                             if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
-                        } else if (mouse.button === Qt.ForwardButton) {
+                        } else if (mouse.button === Qt.ForwardButton || mouse.button === Qt.ExtraButton2) {
                             if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
                         } else if (mouse.button === Qt.RightButton) {
                             if (!root.isSelected(rowItem.modelData.path)) {
@@ -566,10 +573,19 @@ Item {
         id: dragSelectArea
         anchors.fill: parent
         z: 0
-        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton | Qt.ExtraButton1 | Qt.ExtraButton2
 
         onWheel: wheel => {
-            listView.flick(0, wheel.angleDelta.y * 6);
+            if (wheel.modifiers & Qt.ControlModifier) {
+                if (wheel.angleDelta.y > 0) {
+                    zoomLevel = Math.min(2.0, zoomLevel + 0.15);
+                } else if (wheel.angleDelta.y < 0) {
+                    zoomLevel = Math.max(0.4, zoomLevel - 0.15);
+                }
+                wheel.accepted = true;
+            } else {
+                listView.flick(0, wheel.angleDelta.y * 6);
+            }
         }
 
         property real startX: 0
@@ -580,6 +596,13 @@ Item {
         property bool wasSelecting: false
 
         onPressed: mouse => {
+            if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
+                if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
+                return;
+            } else if (mouse.button === Qt.ForwardButton || mouse.button === Qt.ExtraButton2) {
+                if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
+                return;
+            }
             startX = mouse.x;
             startY = mouse.y;
             currentX = mouse.x;

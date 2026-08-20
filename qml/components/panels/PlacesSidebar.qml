@@ -14,6 +14,7 @@ StyledRect {
     signal editPlaceRequested(int index, string name, string path, string iconName, bool isCustom)
     signal placeContextMenuRequested(real globalX, real globalY, int index, string name, string path, string iconName, bool isCustom, bool isTrash)
     signal deviceContextMenuRequested(real globalX, real globalY, string devPath, string name, string mountPt, bool isMounted)
+    signal filesDropped(var sourceFiles, string targetDir, real mouseX, real mouseY)
 
     implicitWidth: sidebarWidth
     color: Colours.tPalette.m3surfaceContainer
@@ -72,7 +73,38 @@ StyledRect {
                         implicitHeight: placeRow.implicitHeight + Tokens.padding.small * 2
 
                         radius: Tokens.rounding.full
-                        color: selected ? Colours.palette.m3secondaryContainer : (placeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
+                        color: placeDropArea.containsDrag
+                            ? Colours.palette.m3primaryContainer
+                            : (selected ? Colours.palette.m3secondaryContainer : (placeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"))
+
+                        Behavior on color {
+                            Anim { type: Anim.FastEffects }
+                        }
+
+                        DropArea {
+                            id: placeDropArea
+                            anchors.fill: parent
+                            onDropped: drop => {
+                                if (drop.hasUrls) {
+                                    let urls = [];
+                                    for (let i = 0; i < drop.urls.length; ++i) {
+                                        urls.push(FileUtils.toLocalFile(drop.urls[i]));
+                                    }
+                                    let filtered = urls.filter(u => u !== placeItem.path);
+                                    if (filtered.length > 0) {
+                                        let globalPos = mapToItem(null, drop.x, drop.y);
+                                        if (drop.modifiers & Qt.ShiftModifier) {
+                                            FileOperations.moveFiles(filtered, placeItem.path);
+                                        } else if (drop.modifiers & Qt.ControlModifier) {
+                                            FileOperations.copyFiles(filtered, placeItem.path);
+                                        } else {
+                                            root.filesDropped(filtered, placeItem.path, globalPos.x, globalPos.y);
+                                        }
+                                        drop.accept();
+                                    }
+                                }
+                            }
+                        }
 
                         RowLayout {
                             id: placeRow
@@ -159,7 +191,39 @@ StyledRect {
                         implicitHeight: driveRow.implicitHeight + Tokens.padding.small * 2
 
                         radius: Tokens.rounding.full
-                        color: selected ? Colours.palette.m3secondaryContainer : (driveHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
+                        color: driveDropArea.containsDrag
+                            ? Colours.palette.m3primaryContainer
+                            : (selected ? Colours.palette.m3secondaryContainer : (driveHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"))
+
+                        Behavior on color {
+                            Anim { type: Anim.FastEffects }
+                        }
+
+                        DropArea {
+                            id: driveDropArea
+                            anchors.fill: parent
+                            enabled: driveItem.isMounted && driveItem.mountPoint.length > 0
+                            onDropped: drop => {
+                                if (drop.hasUrls) {
+                                    let urls = [];
+                                    for (let i = 0; i < drop.urls.length; ++i) {
+                                        urls.push(FileUtils.toLocalFile(drop.urls[i]));
+                                    }
+                                    let filtered = urls.filter(u => u !== driveItem.mountPoint);
+                                    if (filtered.length > 0) {
+                                        let globalPos = mapToItem(null, drop.x, drop.y);
+                                        if (drop.modifiers & Qt.ShiftModifier) {
+                                            FileOperations.moveFiles(filtered, driveItem.mountPoint);
+                                        } else if (drop.modifiers & Qt.ControlModifier) {
+                                            FileOperations.copyFiles(filtered, driveItem.mountPoint);
+                                        } else {
+                                            root.filesDropped(filtered, driveItem.mountPoint, globalPos.x, globalPos.y);
+                                        }
+                                        drop.accept();
+                                    }
+                                }
+                            }
+                        }
 
                         RowLayout {
                             id: driveRow

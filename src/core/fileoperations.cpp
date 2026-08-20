@@ -506,12 +506,32 @@ void FileOperations::renameFile(const QString& oldPath, const QString& newName) 
     QFileInfo fi(oldPath);
     QString newPath = fi.absolutePath() + "/" + newName;
     bool success = QFile::rename(oldPath, newPath);
+    if (success) {
+        UndoAction action;
+        action.type = UndoAction::Rename;
+        action.oldPath = oldPath;
+        action.newPath = newPath;
+        action.name = newName;
+        m_undoStack.push_back(action);
+        m_redoStack.clear();
+        emit undoStackChanged();
+    }
     emit operationFinished(success, success ? tr("Renamed successfully") : tr("Rename failed"));
 }
 
 void FileOperations::createDirectory(const QString& parentDir, const QString& name) {
     QDir dir(parentDir);
     bool success = dir.mkdir(name);
+    if (success) {
+        UndoAction action;
+        action.type = UndoAction::CreateDirectory;
+        action.parentDir = parentDir;
+        action.name = name;
+        action.newPath = parentDir + "/" + name;
+        m_undoStack.push_back(action);
+        m_redoStack.clear();
+        emit undoStackChanged();
+    }
     emit operationFinished(success, success ? tr("Folder created") : tr("Failed to create folder"));
 }
 
@@ -525,8 +545,81 @@ void FileOperations::createFile(const QString& parentDir, const QString& name, c
         }
         file.close();
         success = true;
+        UndoAction action;
+        action.type = UndoAction::CreateFile;
+        action.parentDir = parentDir;
+        action.name = name;
+        action.content = content;
+        action.newPath = filePath;
+        m_undoStack.push_back(action);
+        m_redoStack.clear();
+        emit undoStackChanged();
     }
     emit operationFinished(success, success ? tr("File created") : tr("Failed to create file"));
+}
+
+void FileOperations::undo() {
+    if (m_undoStack.isEmpty()) return;
+    UndoAction action = m_undoStack.takeLast();
+    emit undoStackChanged();
+
+    if (action.type == UndoAction::Rename) {
+        if (QFile::rename(action.newPath, action.oldPath)) {
+            m_redoStack.push_back(action);
+            emit undoStackChanged();
+            emit operationFinished(true, tr("Undid rename"));
+        }
+    } else if (action.type == UndoAction::CreateDirectory) {
+        if (removeRecursively(action.newPath)) {
+            m_redoStack.push_back(action);
+            emit undoStackChanged();
+            emit operationFinished(true, tr("Undid folder creation"));
+        }
+    } else if (action.type == UndoAction::CreateFile) {
+        if (QFile::remove(action.newPath)) {
+            m_redoStack.push_back(action);
+            emit undoStackChanged();
+            emit operationFinished(true, tr("Undid file creation"));
+        }
+    } else if (action.type == UndoAction::Move) {
+        for (int i = 0; i < action.destPaths.size(); ++i) {
+            if (i < action.sourcePaths.size()) {
+                QFile::rename(action.destPaths[i], action.sourcePaths[i]);
+            }
+        }
+        m_redoStack.push_back(action);
+        emit undoStackChanged();
+        emit operationFinished(true, tr("Undid move"));
+    } else if (action.type == UndoAction::MoveToTrash) {
+        for (const QString& info : action.trashInfoPaths) {
+            restoreFromTrash(info);
+        }
+        m_redoStack.push_back(action);
+        emit undoStackChanged();
+        emit operationFinished(true, tr("Undid trash"));
+    }
+}
+
+void FileOperations::redo() {
+    if (m_redoStack.isEmpty()) return;
+    UndoAction action = m_redoStack.takeLast();
+    emit undoStackChanged();
+
+    if (action.type == UndoAction::Rename) {
+        if (QFile::rename(action.oldPath, action.newPath)) {
+            m_undoStack.push_back(action);
+            emit undoStackChanged();
+            emit operationFinished(true, tr("Redid rename"));
+        }
+    } else if (action.type == UndoAction::CreateDirectory) {
+        createDirectory(action.parentDir, action.name);
+    } else if (action.type == UndoAction::CreateFile) {
+        createFile(action.parentDir, action.name, action.content);
+    } else if (action.type == UndoAction::Move) {
+        moveFiles(action.sourcePaths, action.targetDir);
+    } else if (action.type == UndoAction::MoveToTrash) {
+        moveToTrash(action.sourcePaths);
+    }
 }
 
 void FileOperations::duplicateFile(const QString& path) {

@@ -53,6 +53,8 @@ class FileOperations : public QObject {
     Q_PROPERTY(QStringList clipboardFiles READ clipboardFiles NOTIFY clipboardChanged)
     Q_PROPERTY(bool isCutOperation READ isCutOperation NOTIFY clipboardChanged)
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY clipboardChanged)
+    Q_PROPERTY(bool canUndo READ canUndo NOTIFY undoStackChanged)
+    Q_PROPERTY(bool canRedo READ canRedo NOTIFY undoStackChanged)
     Q_PROPERTY(QStringList activeDragFiles READ activeDragFiles NOTIFY activeDragFilesChanged)
 
 public:
@@ -65,6 +67,11 @@ public:
     QStringList activeDragFiles() const { return m_activeDragFiles; }
     bool isCutOperation() const { return m_isCut; }
     bool canPaste() const { return !m_clipboardFiles.isEmpty(); }
+    bool canUndo() const { return !m_undoStack.isEmpty(); }
+    bool canRedo() const { return !m_redoStack.isEmpty(); }
+
+    Q_INVOKABLE void undo();
+    Q_INVOKABLE void redo();
 
     Q_INVOKABLE bool isPathCut(const QString& path) const {
         return m_isCut && m_clipboardFiles.contains(path);
@@ -117,10 +124,31 @@ signals:
     void activeDragFilesChanged();
     void transferEngineChanged();
     void customCommandChanged();
+    void undoStackChanged();
     void operationFinished(bool success, const QString& message);
     void conflictOccurred(const QString& source, const QString& destination);
 
 private:
+    struct UndoAction {
+        enum Type {
+            Rename,
+            CreateFile,
+            CreateDirectory,
+            Move,
+            Copy,
+            MoveToTrash
+        } type;
+        QString oldPath;
+        QString newPath;
+        QString parentDir;
+        QString name;
+        QString content;
+        QStringList sourcePaths;
+        QStringList destPaths;
+        QString targetDir;
+        QStringList trashInfoPaths;
+    };
+
     bool copyRecursively(const QString& src, const QString& dest, std::atomic<bool>& cancelFlag, qint64& processedBytes, qint64 totalBytes);
     bool removeRecursively(const QString& path);
     qint64 calculateTotalSize(const QStringList& paths);
@@ -128,6 +156,8 @@ private:
     FileOperationProgress* m_progress = nullptr;
     QStringList m_clipboardFiles;
     QStringList m_activeDragFiles;
+    QList<UndoAction> m_undoStack;
+    QList<UndoAction> m_redoStack;
     bool m_isCut = false;
     int m_transferEngine = StandardEngine;
     QString m_customCommand;
