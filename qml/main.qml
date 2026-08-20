@@ -166,6 +166,14 @@ ApplicationWindow {
                                 newItemModal.initialText = "untitled.txt";
                                 newItemModal.expanded = true;
                             }
+
+                            onFilesDropped: (sources, destDir, x, y) => {
+                                dropActionMenu.sourceFiles = sources;
+                                dropActionMenu.targetDir = destDir;
+                                dropActionMenu.menuX = x;
+                                dropActionMenu.menuY = y;
+                                dropActionMenu.expanded = true;
+                            }
                         }
 
                         // Information / Preview Panel (F11)
@@ -333,6 +341,27 @@ ApplicationWindow {
             }
             onEmptyTrashRequested: {
                 FileOperations.emptyTrash();
+            }
+        }
+
+        // Drop Action Menu (Dolphin-style DND modal popup)
+        DropActionMenu {
+            id: dropActionMenu
+            onActionTriggered: (action, sources, dest) => {
+                if (action === "moveNewFolder") {
+                    newItemModal.title = qsTr("Create New Folder");
+                    newItemModal.icon = "create_new_folder";
+                    newItemModal.initialText = qsTr("New Folder");
+                    newItemModal.expanded = true;
+                    let pendingMove = sources.slice();
+                    let handler = function(folderName) {
+                        newItemModal.accepted.disconnect(handler);
+                        let fullPath = dest + "/" + folderName;
+                        FileOperations.createDirectory(dest, folderName);
+                        FileOperations.moveFiles(pendingMove, fullPath);
+                    };
+                    newItemModal.accepted.connect(handler);
+                }
             }
         }
 

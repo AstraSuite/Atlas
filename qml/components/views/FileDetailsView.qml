@@ -18,6 +18,36 @@ Item {
     signal openItem(var item)
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
+    signal filesDropped(var sourceFiles, string targetDir, real mouseX, real mouseY)
+
+    // Background Drop Area (Dropping into current folder empty space)
+    DropArea {
+        id: backgroundDropArea
+        anchors.fill: parent
+        z: 0
+
+        onDropped: drop => {
+            if (drop.hasUrls) {
+                let urls = [];
+                for (let i = 0; i < drop.urls.length; ++i) {
+                    urls.push(FileUtils.toLocalFile(drop.urls[i]));
+                }
+                let destDir = root.activeTab ? root.activeTab.currentPath : "";
+                let filtered = urls.filter(u => u !== destDir);
+                if (filtered.length > 0 && destDir) {
+                    let globalPos = mapToItem(null, drop.x, drop.y);
+                    if (drop.modifiers & Qt.ShiftModifier) {
+                        FileOperations.moveFiles(filtered, destDir);
+                    } else if (drop.modifiers & Qt.ControlModifier) {
+                        FileOperations.copyFiles(filtered, destDir);
+                    } else {
+                        root.filesDropped(filtered, destDir, globalPos.x, globalPos.y);
+                    }
+                    drop.accept();
+                }
+            }
+        }
+    }
 
     function isSelected(path) {
         return selectedPaths.indexOf(path) !== -1;
@@ -318,7 +348,14 @@ Item {
                             let destDir = rowItem.modelData.path;
                             let filtered = urls.filter(u => u !== destDir);
                             if (filtered.length > 0) {
-                                FileOperations.moveFiles(filtered, destDir);
+                                let globalPos = mapToItem(null, drop.x, drop.y);
+                                if (drop.modifiers & Qt.ShiftModifier) {
+                                    FileOperations.moveFiles(filtered, destDir);
+                                } else if (drop.modifiers & Qt.ControlModifier) {
+                                    FileOperations.copyFiles(filtered, destDir);
+                                } else {
+                                    root.filesDropped(filtered, destDir, globalPos.x, globalPos.y);
+                                }
                                 drop.accept();
                             }
                         }

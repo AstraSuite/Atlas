@@ -24,6 +24,7 @@ StyledRect {
 
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
+    signal filesDropped(var sources, string destDir, real mouseX, real mouseY)
     signal createNewFolder()
     signal createNewFile()
 
@@ -176,6 +177,7 @@ StyledRect {
             onOpenItem: item => root.handleOpen(item, 0)
             onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
             onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
+            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
         }
     }
 
@@ -187,6 +189,7 @@ StyledRect {
             onOpenItem: item => root.handleOpen(item, 0)
             onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
             onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
+            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
         }
     }
 
@@ -198,6 +201,7 @@ StyledRect {
             onOpenItem: item => root.handleOpen(item, 0)
             onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
             onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
+            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
         }
     }
 
@@ -211,6 +215,7 @@ StyledRect {
             onOpenItem: item => root.handleOpen(item, 1)
             onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
             onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
+            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
         }
     }
 
@@ -222,6 +227,7 @@ StyledRect {
             onOpenItem: item => root.handleOpen(item, 1)
             onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
             onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
+            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
         }
     }
 
@@ -233,6 +239,7 @@ StyledRect {
             onOpenItem: item => root.handleOpen(item, 1)
             onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
             onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
+            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
         }
     }
 

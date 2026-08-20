@@ -101,6 +101,7 @@ qt_add_qml_module(prism_app
         qml/components/menus/ContextMenu.qml
         qml/components/menus/TabContextMenu.qml
         qml/components/menus/PlaceContextMenu.qml
+        qml/components/menus/DropActionMenu.qml
         qml/components/dialogs/NewItemModal.qml
         qml/components/dialogs/EditPlaceModal.qml
         qml/components/dialogs/PropertiesModal.qml
