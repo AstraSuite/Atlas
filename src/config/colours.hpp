@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QColor>
+#include <QFileSystemWatcher>
 #include <qqmlintegration.h>
 
 namespace prism::config {
@@ -83,6 +84,7 @@ public:
     M3Palette* palette() const { return m_palette; }
     M3Palette* tPalette() const { return m_tPalette; }
 
+    Q_INVOKABLE void reload();
     void loadSchemeFile(const QString& filePath);
 
 signals:
@@ -92,6 +94,8 @@ private:
     bool m_light = false;
     M3Palette* m_palette = nullptr;
     M3Palette* m_tPalette = nullptr;
+    QFileSystemWatcher m_watcher;
+    QString m_schemeFilePath;
 };
 
 } // namespace prism::config

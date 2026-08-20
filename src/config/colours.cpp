@@ -1,9 +1,11 @@
 #include "colours.hpp"
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QStandardPaths>
 #include <QDir>
+#include <QTimer>
 
 namespace prism::config {
 
@@ -97,11 +99,36 @@ ColoursSingleton::ColoursSingleton(QObject* parent)
     : QObject(parent)
     , m_palette(new M3Palette(false, this))
     , m_tPalette(new M3Palette(false, this)) {
-    // Check for scheme.json in ~/.local/state/caelestia/scheme.json
     QString home = QDir::homePath();
-    QString stateScheme = home + "/.local/state/caelestia/scheme.json";
-    if (QFile::exists(stateScheme)) {
-        loadSchemeFile(stateScheme);
+    m_schemeFilePath = home + "/.local/state/caelestia/scheme.json";
+    QString stateDir = home + "/.local/state/caelestia";
+
+    reload();
+
+    if (QDir(stateDir).exists()) {
+        m_watcher.addPath(stateDir);
+    }
+    if (QFile::exists(m_schemeFilePath)) {
+        m_watcher.addPath(m_schemeFilePath);
+    }
+
+    auto onFileChange = [this]() {
+        // Small delay to allow file write/flush to finish
+        QTimer::singleShot(20, this, [this]() {
+            if (QFile::exists(m_schemeFilePath) && !m_watcher.files().contains(m_schemeFilePath)) {
+                m_watcher.addPath(m_schemeFilePath);
+            }
+            reload();
+        });
+    };
+
+    connect(&m_watcher, &QFileSystemWatcher::fileChanged, this, onFileChange);
+    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, onFileChange);
+}
+
+void ColoursSingleton::reload() {
+    if (QFile::exists(m_schemeFilePath)) {
+        loadSchemeFile(m_schemeFilePath);
     }
 }
 
@@ -124,7 +151,11 @@ void ColoursSingleton::loadSchemeFile(const QString& filePath) {
         return;
 
     auto root = doc.object();
-    m_light = (root.value("mode").toString() == "light");
+    bool newLight = (root.value("mode").toString() == "light");
+    if (m_light != newLight) {
+        m_light = newLight;
+        emit lightChanged();
+    }
 
     auto colours = root.value("colours").toObject();
     for (auto it = colours.constBegin(); it != colours.constEnd(); ++it) {
@@ -135,6 +166,8 @@ void ColoursSingleton::loadSchemeFile(const QString& filePath) {
             m_tPalette->setProperty(propName.toUtf8().constData(), val);
         }
     }
+    emit m_palette->paletteChanged();
+    emit m_tPalette->paletteChanged();
 }
 
 } // namespace prism::config
