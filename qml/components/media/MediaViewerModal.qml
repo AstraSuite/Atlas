@@ -366,10 +366,34 @@ MouseArea {
                     onClicked: AppIntegration.openWithDefault(root.currentFilePath)
                 }
             }
+
+            // Fullscreen Toggle (Top Header)
+            StyledRect {
+                implicitWidth: 36
+                implicitHeight: 36
+                radius: Tokens.rounding.full
+                color: fsHover.containsMouse ? Colours.palette.m3surfaceContainerHigh : "transparent"
+
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    text: window.visibility === Window.FullScreen ? "fullscreen_exit" : "fullscreen"
+                    color: Colours.palette.m3onSurface
+                    fontStyle: Tokens.font.icon.small
+                }
+                MouseArea {
+                    id: fsHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        window.visibility = (window.visibility === Window.FullScreen ? Window.Windowed : Window.FullScreen);
+                    }
+                }
+            }
         }
     }
 
-    // Bottom Floating Control Bar
+    // Bottom Floating Control Bar (Video playback & Filmstrip toggle)
     StyledRect {
         id: bottomControls
         anchors.bottom: filmstrip.visible ? filmstrip.top : parent.bottom
@@ -379,6 +403,7 @@ MouseArea {
         implicitHeight: 48
         radius: Tokens.rounding.full
         color: Qt.alpha(Colours.palette.m3surfaceContainerHighest, 0.85)
+        visible: (root.isVideo || root.mediaList.length > 1)
         opacity: root.showControls ? 1.0 : 0.0
         Behavior on opacity { Anim { type: Anim.FastEffects } }
 
@@ -396,29 +421,6 @@ MouseArea {
             anchors.leftMargin: Tokens.padding.medium
             anchors.rightMargin: Tokens.padding.medium
             spacing: Tokens.spacing.small
-
-            // Previous
-            StyledRect {
-                implicitWidth: 32
-                implicitHeight: 32
-                radius: Tokens.rounding.full
-                color: prevHover.containsMouse ? Colours.palette.m3surfaceContainerHigh : "transparent"
-                visible: root.mediaList.length > 1
-
-                MaterialIcon {
-                    anchors.centerIn: parent
-                    text: "skip_previous"
-                    fontStyle: Tokens.font.icon.small
-                    color: Colours.palette.m3onSurface
-                }
-                MouseArea {
-                    id: prevHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.showPrevious()
-                }
-            }
 
             // Play / Pause (for Video)
             StyledRect {
@@ -440,29 +442,6 @@ MouseArea {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: videoPlayer.togglePlay()
-                }
-            }
-
-            // Next
-            StyledRect {
-                implicitWidth: 32
-                implicitHeight: 32
-                radius: Tokens.rounding.full
-                color: nextHover.containsMouse ? Colours.palette.m3surfaceContainerHigh : "transparent"
-                visible: root.mediaList.length > 1
-
-                MaterialIcon {
-                    anchors.centerIn: parent
-                    text: "skip_next"
-                    fontStyle: Tokens.font.icon.small
-                    color: Colours.palette.m3onSurface
-                }
-                MouseArea {
-                    id: nextHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.showNext()
                 }
             }
 
@@ -548,30 +527,6 @@ MouseArea {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.showFilmstrip = !root.showFilmstrip
-                }
-            }
-
-            // Fullscreen Toggle
-            StyledRect {
-                implicitWidth: 32
-                implicitHeight: 32
-                radius: Tokens.rounding.full
-                color: fsHover.containsMouse ? Colours.palette.m3surfaceContainerHigh : "transparent"
-
-                MaterialIcon {
-                    anchors.centerIn: parent
-                    text: window.visibility === Window.FullScreen ? "fullscreen_exit" : "fullscreen"
-                    fontStyle: Tokens.font.icon.small
-                    color: Colours.palette.m3onSurface
-                }
-                MouseArea {
-                    id: fsHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        window.visibility = (window.visibility === Window.FullScreen ? Window.Windowed : Window.FullScreen);
-                    }
                 }
             }
         }
