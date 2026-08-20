@@ -16,7 +16,7 @@ StyledRect {
         anchors.rightMargin: 8
         anchors.topMargin: 4
         anchors.bottomMargin: 0
-        contentWidth: tabsRow.implicitWidth + 20
+        contentWidth: tabsRow.implicitWidth + 40
         contentHeight: height
         flickableDirection: Flickable.HorizontalFlick
         boundsBehavior: Flickable.StopAtBounds
@@ -29,6 +29,7 @@ StyledRect {
             spacing: -6
 
             Repeater {
+                id: tabRepeater
                 model: TabManager
 
                 delegate: Item {
@@ -39,10 +40,10 @@ StyledRect {
                     required property string path
                     readonly property bool selected: TabManager.currentIndex === index
 
-                    implicitWidth: Math.min(220, Math.max(120, tabContent.implicitWidth + 40))
+                    implicitWidth: Math.min(220, Math.max(120, tabContent.implicitWidth + 44))
                     anchors.top: parent ? parent.top : undefined
                     anchors.bottom: parent ? parent.bottom : undefined
-                    z: selected ? 10 : 1
+                    z: tabDragArea.pressed ? 50 : (selected ? 10 : 1)
 
                     // Active Tab Google Chrome Continuous Shape with Antialiased Fillets
                     Canvas {
@@ -100,7 +101,7 @@ StyledRect {
                         anchors.leftMargin: 10
                         anchors.rightMargin: 10
                         anchors.bottomMargin: 4
-                        visible: !tabItem.selected && tabHover.containsMouse
+                        visible: !tabItem.selected && tabDragArea.containsMouse
                         radius: Tokens.rounding.small
                         color: Colours.tPalette.m3surfaceContainerHigh
                     }
@@ -111,7 +112,7 @@ StyledRect {
 
                         anchors.fill: parent
                         anchors.leftMargin: 18
-                        anchors.rightMargin: 16
+                        anchors.rightMargin: 14
                         anchors.bottomMargin: 2
                         spacing: Tokens.spacing.small
 
@@ -129,10 +130,13 @@ StyledRect {
                             elide: Text.ElideRight
                         }
 
-                        Item {
-                            implicitWidth: 20
-                            implicitHeight: 20
+                        // Close Button with Distinct Circle Hover Highlight
+                        StyledRect {
+                            implicitWidth: 22
+                            implicitHeight: 22
+                            radius: Tokens.rounding.full
                             visible: TabManager.count > 1
+                            color: closeHover.containsMouse ? (tabItem.selected ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainerHighest) : "transparent"
                             z: 20
 
                             MaterialIcon {
@@ -155,18 +159,49 @@ StyledRect {
                         }
                     }
 
+                    // Drag & Drop Area for Reorganizing Tabs
                     MouseArea {
-                        id: tabHover
+                        id: tabDragArea
                         anchors.fill: parent
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-                        cursorShape: Qt.PointingHandCursor
+                        cursorShape: pressed ? Qt.ClosedHandCursor : Qt.PointingHandCursor
 
-                        onClicked: mouse => {
+                        drag.target: tabItem
+                        drag.axis: Drag.XAxis
+
+                        property real startX: 0
+                        property bool dragging: false
+
+                        onPressed: mouse => {
+                            if (mouse.button === Qt.LeftButton) {
+                                TabManager.currentIndex = tabItem.index;
+                                startX = tabItem.x;
+                                dragging = false;
+                            }
+                        }
+
+                        onPositionChanged: mouse => {
+                            if (pressed && Math.abs(tabItem.x - startX) > 15) {
+                                dragging = true;
+                            }
+                        }
+
+                        onReleased: mouse => {
                             if (mouse.button === Qt.MiddleButton) {
                                 TabManager.closeTab(tabItem.index);
-                            } else {
-                                TabManager.currentIndex = tabItem.index;
+                                return;
+                            }
+                            if (dragging) {
+                                let totalItemW = tabItem.width - 6;
+                                let shift = tabItem.x - startX;
+                                let deltaIdx = Math.round(shift / totalItemW);
+                                let newIdx = Math.max(0, Math.min(TabManager.count - 1, tabItem.index + deltaIdx));
+                                if (newIdx !== tabItem.index) {
+                                    TabManager.moveTab(tabItem.index, newIdx);
+                                }
+                                tabItem.x = 0;
+                                dragging = false;
                             }
                         }
                     }

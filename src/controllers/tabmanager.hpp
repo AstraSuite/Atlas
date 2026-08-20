@@ -104,6 +104,7 @@ public:
     Q_INVOKABLE void newTab(const QString& path = "");
     Q_INVOKABLE void closeTab(int index);
     Q_INVOKABLE void duplicateTab(int index);
+    Q_INVOKABLE void moveTab(int fromIndex, int toIndex);
     Q_INVOKABLE void toggleSplitView();
 
 signals:

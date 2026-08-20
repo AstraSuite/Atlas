@@ -197,8 +197,36 @@ void TabManager::closeTab(int index) {
 }
 
 void TabManager::duplicateTab(int index) {
-    if (index >= 0 && index < m_tabs.size()) {
+    if (index >= 0 && index < static_cast<int>(m_tabs.size())) {
         newTab(m_tabs[index]->currentPath());
+    }
+}
+
+void TabManager::moveTab(int fromIndex, int toIndex) {
+    if (fromIndex < 0 || fromIndex >= static_cast<int>(m_tabs.size()) ||
+        toIndex < 0 || toIndex >= static_cast<int>(m_tabs.size()) ||
+        fromIndex == toIndex) {
+        return;
+    }
+
+    int destModelIndex = toIndex > fromIndex ? toIndex + 1 : toIndex;
+    beginMoveRows(QModelIndex(), fromIndex, fromIndex, QModelIndex(), destModelIndex);
+    auto* tab = m_tabs.takeAt(fromIndex);
+    m_tabs.insert(toIndex, tab);
+    endMoveRows();
+
+    if (m_currentIndex == fromIndex) {
+        m_currentIndex = toIndex;
+        emit currentIndexChanged();
+        emit currentTabChanged();
+    } else if (fromIndex < m_currentIndex && toIndex >= m_currentIndex) {
+        m_currentIndex--;
+        emit currentIndexChanged();
+        emit currentTabChanged();
+    } else if (fromIndex > m_currentIndex && toIndex <= m_currentIndex) {
+        m_currentIndex++;
+        emit currentIndexChanged();
+        emit currentTabChanged();
     }
 }
 
