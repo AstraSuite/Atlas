@@ -84,9 +84,9 @@ qt_add_qml_module(prism_app
         qml/components/navigation/NavigationBar.qml
         qml/components/panels/PlacesSidebar.qml
         qml/components/panels/PreviewPanel.qml
-        qml/components/views/GridView.qml
-        qml/components/views/DetailsView.qml
-        qml/components/views/CompactView.qml
+        qml/components/views/FileGridView.qml
+        qml/components/views/FileDetailsView.qml
+        qml/components/views/FileCompactView.qml
         qml/components/views/SplitViewContainer.qml
         qml/components/menus/ContextMenu.qml
         qml/components/dialogs/NewItemModal.qml

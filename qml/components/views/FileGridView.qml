@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
 
@@ -36,7 +37,7 @@ Item {
             if (currentItem) root.openItem(currentItem)
         }
 
-        StyledScrollBar.vertical: StyledScrollBar {
+        ScrollBar.vertical: StyledScrollBar {
             flickable: view
         }
 

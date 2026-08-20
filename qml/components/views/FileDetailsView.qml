@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
 import prism
@@ -208,7 +209,7 @@ Item {
 
             model: root.model
 
-            StyledScrollBar.vertical: StyledScrollBar {
+            ScrollBar.vertical: StyledScrollBar {
                 flickable: listView
             }
 
@@ -289,7 +290,7 @@ Item {
 
                     // Size
                     StyledText {
-                        implicitWidth: 100
+                        Layout.preferredWidth: 100
                         text: rowItem.modelData ? (rowItem.modelData.isDir ? "" : rowItem.modelData.formattedSize) : ""
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
@@ -297,7 +298,7 @@ Item {
 
                     // Type
                     StyledText {
-                        implicitWidth: 150
+                        Layout.preferredWidth: 150
                         text: rowItem.modelData ? rowItem.modelData.mimeDescription : ""
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
@@ -306,7 +307,7 @@ Item {
 
                     // Date
                     StyledText {
-                        implicitWidth: 140
+                        Layout.preferredWidth: 140
                         text: rowItem.modelData ? rowItem.modelData.formattedDate : ""
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
@@ -314,7 +315,7 @@ Item {
 
                     // Permissions
                     StyledText {
-                        implicitWidth: 90
+                        Layout.preferredWidth: 90
                         text: rowItem.modelData ? rowItem.modelData.permissions : ""
                         color: Colours.palette.m3outline
                         font: Tokens.font.mono.small

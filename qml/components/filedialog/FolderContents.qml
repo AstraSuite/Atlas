@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import prism
 import "../"
@@ -11,6 +12,25 @@ Item {
 
     Sizes {
         id: sizes
+    }
+
+    FileSystemModel {
+        id: fsModel
+        path: {
+            if (root.dialog.cwd.length === 0)
+                return FileUtils.home;
+            if (root.dialog.cwd[0] === "Home") {
+                if (root.dialog.cwd.length === 1)
+                    return FileUtils.home;
+                return FileUtils.home + "/" + root.dialog.cwd.slice(1).join("/");
+            } else if (root.dialog.cwd[0] === "") {
+                return "/" + root.dialog.cwd.slice(1).join("/");
+            } else {
+                return root.dialog.cwd.join("/");
+            }
+        }
+        showHidden: root.dialog.showHidden
+        onPathChanged: view.currentIndex = -1
     }
 
     StyledRect {
@@ -89,28 +109,11 @@ Item {
                 root.dialog.accepted(currentItem.modelData.path);
         }
 
-        StyledScrollBar.vertical: StyledScrollBar {
+        ScrollBar.vertical: StyledScrollBar {
             flickable: view
         }
 
-        model: FileSystemModel {
-            id: fsModel
-            path: {
-                if (root.dialog.cwd.length === 0)
-                    return FileUtils.home;
-                if (root.dialog.cwd[0] === "Home") {
-                    if (root.dialog.cwd.length === 1)
-                        return FileUtils.home;
-                    return FileUtils.home + "/" + root.dialog.cwd.slice(1).join("/");
-                } else if (root.dialog.cwd[0] === "") {
-                    return "/" + root.dialog.cwd.slice(1).join("/");
-                } else {
-                    return root.dialog.cwd.join("/");
-                }
-            }
-            showHidden: root.dialog.showHidden
-            onPathChanged: view.currentIndex = -1
-        }
+        model: fsModel
 
         delegate: StyledRect {
             id: item
@@ -181,37 +184,6 @@ Item {
             }
         }
 
-        add: Transition {
-            Anim {
-                properties: "opacity,scale"
-                from: 0
-                to: 1
-            }
-        }
-
-        remove: Transition {
-            Anim {
-                type: Anim.DefaultEffects
-                property: "opacity"
-                to: 0
-            }
-            Anim {
-                property: "scale"
-                to: 0.5
-            }
-        }
-
-        displaced: Transition {
-            Anim {
-                type: Anim.DefaultEffects
-                properties: "opacity,scale"
-                to: 1
-                easing: Tokens.anim.standardDecel
-            }
-            Anim {
-                properties: "x,y"
-            }
-        }
     }
 
     CurrentItem {

@@ -6,10 +6,12 @@ StyledRect {
     id: root
 
     property var cwd: ["Home"]
+    property string initialDirectory: ""
     property string filterLabel: "All files"
     property var filters: ["*"]
     property string title: qsTr("Select a file")
     property bool showHidden: false
+    property bool directoryOnly: false
 
     signal accepted(string path)
     signal rejected()

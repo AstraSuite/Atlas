@@ -151,7 +151,7 @@ MouseArea {
                         visible: modelData.visible !== false && modelData.value.length > 0
 
                         StyledText {
-                            implicitWidth: 100
+                            Layout.preferredWidth: 100
                             text: modelData.label
                             color: Colours.palette.m3onSurfaceVariant
                             font: Tokens.font.body.small

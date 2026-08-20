@@ -12,6 +12,29 @@
 
 namespace prism::models {
 
+struct RawEntryData {
+    QString name;
+    QString path;
+    bool isDir = false;
+    bool isSymLink = false;
+    QString symLinkTarget;
+    qint64 size = 0;
+    QString formattedSize;
+    QString mimeType;
+    QString mimeDescription;
+    QDateTime lastModified;
+    QString formattedDate;
+    QString permissions;
+    QString owner;
+    QString group;
+    QString suffix;
+    bool isHidden = false;
+    bool isImage = false;
+    bool isAudio = false;
+    bool isVideo = false;
+    bool isText = false;
+};
+
 FileSystemModel::FileSystemModel(QObject* parent)
     : QAbstractListModel(parent) {
     connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, &FileSystemModel::scanDirectory);
@@ -164,21 +187,21 @@ void FileSystemModel::refresh() {
     scanDirectory();
 }
 
-static FileSystemEntry* createEntryFromInfo(const QFileInfo& fi, const QMimeDatabase& mimeDb, QObject* parent) {
-    auto* entry = new FileSystemEntry(parent);
-    entry->m_name = fi.fileName();
-    entry->m_path = fi.absoluteFilePath();
-    entry->m_isDir = fi.isDir();
-    entry->m_isSymLink = fi.isSymLink();
-    entry->m_symLinkTarget = fi.symLinkTarget();
-    entry->m_size = fi.isDir() ? 0 : fi.size();
-    entry->m_formattedSize = fi.isDir() ? QString() : prism::core::FileUtils::formatSize(entry->m_size);
-    entry->m_suffix = fi.suffix();
-    entry->m_isHidden = fi.isHidden() || entry->m_name.startsWith('.');
-    entry->m_lastModified = fi.lastModified();
-    entry->m_formattedDate = entry->m_lastModified.toString("yyyy-MM-dd hh:mm");
-    entry->m_owner = fi.owner();
-    entry->m_group = fi.group();
+static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDatabase& mimeDb) {
+    RawEntryData d;
+    d.name = fi.fileName();
+    d.path = fi.absoluteFilePath();
+    d.isDir = fi.isDir();
+    d.isSymLink = fi.isSymLink();
+    d.symLinkTarget = fi.symLinkTarget();
+    d.size = fi.isDir() ? 0 : fi.size();
+    d.formattedSize = fi.isDir() ? QString() : prism::core::FileUtils::formatSize(d.size);
+    d.suffix = fi.suffix();
+    d.isHidden = fi.isHidden() || d.name.startsWith('.');
+    d.lastModified = fi.lastModified();
+    d.formattedDate = d.lastModified.toString("yyyy-MM-dd hh:mm");
+    d.owner = fi.owner();
+    d.group = fi.group();
 
     auto perms = fi.permissions();
     QString pStr;
@@ -191,22 +214,47 @@ static FileSystemEntry* createEntryFromInfo(const QFileInfo& fi, const QMimeData
     pStr += (perms & QFile::ReadOther) ? 'r' : '-';
     pStr += (perms & QFile::WriteOther) ? 'w' : '-';
     pStr += (perms & QFile::ExeOther) ? 'x' : '-';
-    entry->m_permissions = pStr;
+    d.permissions = pStr;
 
     QMimeType mime = mimeDb.mimeTypeForFile(fi);
-    entry->m_mimeType = mime.name();
-    entry->m_mimeDescription = mime.comment();
+    d.mimeType = mime.name();
+    d.mimeDescription = mime.comment();
 
-    if (entry->m_mimeType.startsWith("image/")) {
-        entry->m_isImage = true;
-    } else if (entry->m_mimeType.startsWith("audio/")) {
-        entry->m_isAudio = true;
-    } else if (entry->m_mimeType.startsWith("video/")) {
-        entry->m_isVideo = true;
-    } else if (entry->m_mimeType.startsWith("text/") || entry->m_mimeType.contains("json") || entry->m_mimeType.contains("xml")) {
-        entry->m_isText = true;
+    if (d.mimeType.startsWith("image/")) {
+        d.isImage = true;
+    } else if (d.mimeType.startsWith("audio/")) {
+        d.isAudio = true;
+    } else if (d.mimeType.startsWith("video/")) {
+        d.isVideo = true;
+    } else if (d.mimeType.startsWith("text/") || d.mimeType.contains("json") || d.mimeType.contains("xml")) {
+        d.isText = true;
     }
 
+    return d;
+}
+
+static FileSystemEntry* createEntryFromRawData(const RawEntryData& d, QObject* parent) {
+    auto* entry = new FileSystemEntry(parent);
+    entry->m_name = d.name;
+    entry->m_path = d.path;
+    entry->m_isDir = d.isDir;
+    entry->m_isSymLink = d.isSymLink;
+    entry->m_symLinkTarget = d.symLinkTarget;
+    entry->m_size = d.size;
+    entry->m_formattedSize = d.formattedSize;
+    entry->m_suffix = d.suffix;
+    entry->m_isHidden = d.isHidden;
+    entry->m_lastModified = d.lastModified;
+    entry->m_formattedDate = d.formattedDate;
+    entry->m_owner = d.owner;
+    entry->m_group = d.group;
+    entry->m_permissions = d.permissions;
+    entry->m_mimeType = d.mimeType;
+    entry->m_mimeDescription = d.mimeDescription;
+    entry->m_isImage = d.isImage;
+    entry->m_isAudio = d.isAudio;
+    entry->m_isVideo = d.isVideo;
+    entry->m_isText = d.isText;
     return entry;
 }
 
@@ -232,22 +280,24 @@ void FileSystemModel::scanDirectory() {
         QFileInfoList list = dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
         QMimeDatabase mimeDb;
 
-        QList<FileSystemEntry*> entries;
-        entries.reserve(list.size());
+        QList<RawEntryData> rawData;
+        rawData.reserve(list.size());
         for (const auto& fi : list) {
-            entries.append(createEntryFromInfo(fi, mimeDb, nullptr));
+            rawData.append(createRawDataFromInfo(fi, mimeDb));
         }
 
-        QMetaObject::invokeMethod(this, [this, entries, scanPath]() {
-            if (m_path != scanPath) {
-                qDeleteAll(entries);
+        QMetaObject::invokeMethod(this, [this, rawData, scanPath]() {
+            if (m_path != scanPath)
                 return;
-            }
 
             beginResetModel();
             qDeleteAll(m_rawEntries);
-            m_rawEntries = entries;
-            for (auto* e : m_rawEntries) e->setParent(this);
+            m_rawEntries.clear();
+            m_rawEntries.reserve(rawData.size());
+
+            for (const auto& d : rawData) {
+                m_rawEntries.append(createEntryFromRawData(d, this));
+            }
             endResetModel();
 
             applyFilterAndSort();
@@ -259,29 +309,31 @@ void FileSystemModel::performSearch(const QString& rootPath, const QString& quer
     (void)QtConcurrent::run([this, rootPath, query]() {
         QDirIterator it(rootPath, QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden, QDirIterator::Subdirectories);
         QMimeDatabase mimeDb;
-        QList<FileSystemEntry*> foundEntries;
+        QList<RawEntryData> foundRawData;
 
         QString lowerQuery = query.toLower();
         int maxResults = 500;
 
-        while (it.hasNext() && foundEntries.size() < maxResults) {
+        while (it.hasNext() && foundRawData.size() < maxResults) {
             it.next();
             QFileInfo fi = it.fileInfo();
             if (fi.fileName().toLower().contains(lowerQuery)) {
-                foundEntries.append(createEntryFromInfo(fi, mimeDb, nullptr));
+                foundRawData.append(createRawDataFromInfo(fi, mimeDb));
             }
         }
 
-        QMetaObject::invokeMethod(this, [this, foundEntries, query]() {
-            if (m_searchQuery != query) {
-                qDeleteAll(foundEntries);
+        QMetaObject::invokeMethod(this, [this, foundRawData, query]() {
+            if (m_searchQuery != query)
                 return;
-            }
 
             beginResetModel();
             qDeleteAll(m_rawEntries);
-            m_rawEntries = foundEntries;
-            for (auto* e : m_rawEntries) e->setParent(this);
+            m_rawEntries.clear();
+            m_rawEntries.reserve(foundRawData.size());
+
+            for (const auto& d : foundRawData) {
+                m_rawEntries.append(createEntryFromRawData(d, this));
+            }
             endResetModel();
 
             applyFilterAndSort();

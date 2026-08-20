@@ -73,7 +73,7 @@ Item {
     // Main Components
     Component {
         id: gridComp
-        GridView {
+        FileGridView {
             model: mainModel
             activeTab: root.activeTab
             zoomSize: root.zoomSize
@@ -85,7 +85,7 @@ Item {
 
     Component {
         id: detailsComp
-        DetailsView {
+        FileDetailsView {
             model: mainModel
             activeTab: root.activeTab
             onOpenItem: item => root.handleOpen(item, 0)
@@ -96,7 +96,7 @@ Item {
 
     Component {
         id: compactComp
-        CompactView {
+        FileCompactView {
             model: mainModel
             activeTab: root.activeTab
             onOpenItem: item => root.handleOpen(item, 0)
@@ -108,7 +108,7 @@ Item {
     // Split Pane Components
     Component {
         id: splitGridComp
-        GridView {
+        FileGridView {
             model: splitModel
             activeTab: root.activeTab
             zoomSize: root.zoomSize
@@ -120,7 +120,7 @@ Item {
 
     Component {
         id: splitDetailsComp
-        DetailsView {
+        FileDetailsView {
             model: splitModel
             activeTab: root.activeTab
             onOpenItem: item => root.handleOpen(item, 1)
@@ -131,7 +131,7 @@ Item {
 
     Component {
         id: splitCompactComp
-        CompactView {
+        FileCompactView {
             model: splitModel
             activeTab: root.activeTab
             onOpenItem: item => root.handleOpen(item, 1)

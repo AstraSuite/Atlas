@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
 
@@ -30,7 +31,7 @@ Item {
 
         model: root.model
 
-        StyledScrollBar.vertical: StyledScrollBar {
+        ScrollBar.vertical: StyledScrollBar {
             flickable: gridView
         }
 
