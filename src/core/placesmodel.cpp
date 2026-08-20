@@ -26,7 +26,8 @@ static QString mapXbelIconToMaterial(const QString& iconName, const QString& pat
     if (n.contains("drive") || n.contains("disk") || n.contains("hdd") || n.contains("ssd")) return "hard_drive";
     if (n.contains("usb") || n.contains("flash") || n.contains("removable")) return "usb";
     if (n.contains("network") || n.contains("cloud") || n.contains("remote")) return "cloud";
-    if (n.contains("root") || path == "/") return "storage";
+    if (n.contains("game")) return "sports_esports";
+    if (n.contains("development") || n.contains("code") || n.contains("project")) return "terminal";
     return isDir ? "folder" : "bookmark";
 }
 
@@ -97,7 +98,7 @@ void PlacesModel::refresh() {
     beginResetModel();
     m_places.clear();
     
-    // 1. Try reading standard XBEL places (KDE / Dolphin standard ~/.local/share/user-places.xbel)
+    // 1. Read standard XBEL places (KDE / Dolphin standard ~/.local/share/user-places.xbel)
     bool loadedXbel = false;
     QString xbelPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/user-places.xbel";
     if (QFile::exists(xbelPath)) {
@@ -141,6 +142,11 @@ void PlacesModel::refresh() {
                                 localPath = currentHref;
                             }
 
+                            // Skip root '/' and internal mount paths from XBEL bookmarks if any
+                            if (localPath == "/" || localPath == "/root") {
+                                continue;
+                            }
+
                             if (!localPath.isEmpty() && (QFile::exists(localPath) || currentHref.startsWith("trash:"))) {
                                 if (currentTitle.isEmpty()) {
                                     currentTitle = QFileInfo(localPath).fileName();
@@ -148,7 +154,7 @@ void PlacesModel::refresh() {
                                 }
 
                                 bool isTrash = currentHref.startsWith("trash:") || localPath.contains("Trash");
-                                bool isDev = localPath == "/" || localPath.startsWith("/media") || localPath.startsWith("/run/media");
+                                bool isDev = localPath.startsWith("/media/") || localPath.startsWith("/run/media/");
                                 QString icon = mapXbelIconToMaterial(currentIcon, localPath, QFileInfo(localPath).isDir());
 
                                 m_places.append({
@@ -156,7 +162,7 @@ void PlacesModel::refresh() {
                                     localPath,
                                     icon,
                                     isDev,
-                                    localPath.startsWith("/media") || localPath.startsWith("/run/media"),
+                                    isDev,
                                     isTrash,
                                     !isSystem,
                                     0,
@@ -179,7 +185,7 @@ void PlacesModel::refresh() {
     // 3. Load GTK Bookmarks if any custom bookmarks are in ~/.config/gtk-3.0/bookmarks
     loadBookmarks();
 
-    // 4. Load mounted storage devices
+    // 4. Load external removable drives ONLY
     loadStorageDevices();
 
     endResetModel();
@@ -200,11 +206,22 @@ void PlacesModel::loadStandardPlaces() {
 void PlacesModel::loadStorageDevices() {
     const auto volumes = QStorageInfo::mountedVolumes();
     for (const auto& vol : volumes) {
-        if (!vol.isValid() || !vol.isReady() || (vol.isReadOnly() && vol.rootPath() != "/"))
+        if (!vol.isValid() || !vol.isReady() || vol.isReadOnly())
             continue;
 
         QString rootPath = vol.rootPath();
-        if (rootPath.startsWith("/sys") || rootPath.startsWith("/proc") || rootPath.startsWith("/dev") || rootPath.startsWith("/run/user"))
+        
+        // Exclude system mounts: root, boot, efi, tmp, run, docker, flatpak, snap, var, etc.
+        bool isExternal = rootPath.startsWith("/media/") 
+                       || rootPath.startsWith("/run/media/") 
+                       || (rootPath.startsWith("/mnt/") && rootPath != "/mnt");
+                       
+        if (!isExternal)
+            continue;
+
+        if (rootPath.contains("docker") || rootPath.contains("container") || rootPath.contains("overlay")
+            || rootPath.contains("flatpak") || rootPath.contains("snap") || rootPath.contains("tmp")
+            || rootPath.contains("kube") || rootPath.contains("cgroup"))
             continue;
 
         // Check if already in places
@@ -220,23 +237,16 @@ void PlacesModel::loadStorageDevices() {
 
         QString name = vol.name();
         if (name.isEmpty()) {
-            if (rootPath == "/") {
-                name = tr("Root File System");
-            } else {
-                name = QFileInfo(rootPath).fileName();
-                if (name.isEmpty()) name = rootPath;
-            }
+            name = QFileInfo(rootPath).fileName();
+            if (name.isEmpty()) name = rootPath;
         }
-
-        bool isRemovable = rootPath.startsWith("/media") || rootPath.startsWith("/run/media") || rootPath.startsWith("/mnt");
-        QString icon = isRemovable ? "usb" : (rootPath == "/" ? "storage" : "hard_drive");
 
         m_places.append({
             name,
             rootPath,
-            icon,
+            "usb",
             true,
-            isRemovable,
+            true,
             false,
             false,
             vol.bytesFree(),
@@ -257,7 +267,7 @@ void PlacesModel::loadBookmarks() {
             QString name = parts.size() > 1 ? parts.mid(1).join(' ') : "";
             if (uri.startsWith("file://")) {
                 QString path = QUrl(uri).toLocalFile();
-                if (QDir(path).exists()) {
+                if (QDir(path).exists() && path != "/") {
                     bool alreadyPresent = false;
                     for (const auto& p : m_places) {
                         if (p.path == path) {
