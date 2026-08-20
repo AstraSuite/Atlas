@@ -97,6 +97,7 @@ qt_add_qml_module(prism_app
         qml/components/containers/VerticalFadeFlickable.qml
         qml/components/containers/VerticalFadeListView.qml
         qml/components/containers/VerticalFadeGridView.qml
+        qml/components/controls/StyledSlider.qml
         qml/components/statusbar/StatusBar.qml
     RESOURCES
         assets/fonts/GoogleSansFlex.ttf

@@ -12,47 +12,50 @@ ListView {
     function fadeShouldBeActive(isStart) {
         if (contentHeight <= height)
             return false;
-
         if (isStart)
-            return visibleArea.yPosition > 0.001;
-        return visibleArea.yPosition + visibleArea.heightRatio < 0.999;
+            return contentY > 2;
+        return (contentY + height) < (contentHeight - 2);
     }
 
     flickableDirection: Flickable.VerticalFlick
     orientation: ListView.Vertical
     boundsBehavior: Flickable.StopAtBounds
+    clip: true
 
     layer.enabled: true
     layer.effect: MultiEffect {
         maskEnabled: true
-        maskSource: mask
+        maskSource: maskItem
         maskSpreadAtMin: 0
         maskThresholdMin: 0
+    }
+
+    Item {
+        id: maskItem
+        parent: root
+        anchors.fill: parent
+        visible: false
+        layer.enabled: true
 
         Rectangle {
-            id: mask
-
             anchors.fill: parent
-            visible: false
-            layer.enabled: true
-
             gradient: Gradient {
                 orientation: Gradient.Vertical
 
                 GradientStop {
-                    position: 0
+                    position: 0.0
                     color: Qt.rgba(0, 0, 0, root.topFadeOpacity)
                 }
                 GradientStop {
                     position: root.fadeAmount
-                    color: Qt.rgba(0, 0, 0, 1)
+                    color: "black"
                 }
                 GradientStop {
-                    position: 1 - root.fadeAmount
-                    color: Qt.rgba(0, 0, 0, 1)
+                    position: 1.0 - root.fadeAmount
+                    color: "black"
                 }
                 GradientStop {
-                    position: 1
+                    position: 1.0
                     color: Qt.rgba(0, 0, 0, root.bottomFadeOpacity)
                 }
             }

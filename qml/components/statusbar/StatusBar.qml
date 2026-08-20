@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import "../"
+import "../controls"
+import prism
 
 StyledRect {
     id: root
@@ -42,19 +44,29 @@ StyledRect {
             Layout.fillWidth: true
         }
 
-        // Zoom Icons Slider
+        // Zoom Icons Slider with Material Icons
         RowLayout {
-            spacing: Tokens.spacing.extraSmall
+            spacing: Tokens.spacing.small
 
             MaterialIcon {
                 text: "photo_size_select_small"
                 fontStyle: Tokens.font.icon.small
-                color: Colours.palette.m3onSurfaceVariant
+                color: zoomSlider.value <= 60 ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        zoomSlider.value = 48;
+                        root.zoomChanged(48);
+                    }
+                }
             }
 
-            Slider {
+            StyledSlider {
                 id: zoomSlider
-                implicitWidth: 100
+                implicitWidth: 120
+                implicitHeight: 24
                 from: 48
                 to: 180
                 value: root.zoomLevel
@@ -64,7 +76,22 @@ StyledRect {
             MaterialIcon {
                 text: "photo_size_select_large"
                 fontStyle: Tokens.font.icon.small
-                color: Colours.palette.m3onSurfaceVariant
+                color: zoomSlider.value >= 160 ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        zoomSlider.value = 180;
+                        root.zoomChanged(180);
+                    }
+                }
+            }
+
+            StyledText {
+                text: `${Math.round((zoomSlider.value / 80) * 100)}%`
+                color: Colours.palette.m3outline
+                font: Tokens.font.label.small
             }
         }
     }
