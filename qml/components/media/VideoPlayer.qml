@@ -9,6 +9,10 @@ Item {
     id: root
 
     property url source: ""
+    property string filePath: ""
+    property bool loop: false
+    property bool hasStartedPlaying: false
+
     readonly property bool isPlaying: player.playbackState === MediaPlayer.PlayingState
     readonly property real position: player.position
     readonly property real duration: player.duration
@@ -46,22 +50,44 @@ Item {
         seek(Math.max(0, position - (ms || 5000)));
     }
 
+    onSourceChanged: {
+        hasStartedPlaying = false;
+        player.play();
+    }
+
     clip: true
 
     MediaPlayer {
         id: player
         source: root.source
+        loops: root.loop ? MediaPlayer.Infinite : MediaPlayer.Once
         audioOutput: AudioOutput {
             volume: root.muted ? 0.0 : root.volume
         }
         videoOutput: videoOutput
-        Component.onCompleted: play()
+
+        onPlaybackStateChanged: {
+            if (playbackState === MediaPlayer.PlayingState) {
+                root.hasStartedPlaying = true;
+            }
+        }
     }
 
     VideoOutput {
         id: videoOutput
         anchors.fill: parent
         fillMode: VideoOutput.PreserveAspectFit
+    }
+
+    // Initial Thumbnail Cover (Visible until first frame playback)
+    Image {
+        id: thumbnailCover
+        anchors.fill: parent
+        fillMode: Image.PreserveAspectFit
+        source: root.filePath ? ("image://thumb/" + root.filePath) : ""
+        visible: opacity > 0.001
+        opacity: root.hasStartedPlaying ? 0.0 : 1.0
+        Behavior on opacity { Anim { type: Anim.FastEffects } }
     }
 
     // Video Tap / Double-Click Area

@@ -116,17 +116,26 @@ T.Slider {
             widthBehavior.enabled = false;
             pressStartX = e.x;
             pressStartPos = root.visualPosition;
+            const clickPos = Math.min(Math.max(e.x / width, 0), 1);
+            const actualVal = root.from + clickPos * (root.to - root.from);
+            root.value = actualVal;
+            root.interaction(actualVal);
         }
         onPositionChanged: e => {
             dragMovement = (e.x - pressStartX) / width;
+            const curPos = Math.min(Math.max(pressStartPos + dragMovement, 0), 1);
+            const actualVal = root.from + curPos * (root.to - root.from);
+            root.value = actualVal;
             if (root.interactionOnMove)
-                root.interaction(posBinding.value);
+                root.interaction(actualVal);
         }
         onReleased: e => {
             const clickPos = e.x / width;
             const finalPos = mouse.dragMovement !== 0 ? posBinding.value : Math.min(Math.max(clickPos, 0), 1);
-            root.interaction(finalPos);
-            root.released(finalPos);
+            const actualVal = root.from + finalPos * (root.to - root.from);
+            root.value = actualVal;
+            root.interaction(actualVal);
+            root.released(actualVal);
             widthBehavior.enabled = true;
             dragMovement = 0;
         }

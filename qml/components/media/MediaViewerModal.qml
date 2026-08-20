@@ -134,6 +134,7 @@ MouseArea {
             id: videoPlayer
             anchors.fill: parent
             source: root.isVideo ? Qt.resolvedUrl("file://" + root.currentFilePath) : ""
+            filePath: root.currentFilePath
             visible: root.isVideo
             onToggleControlsRequested: root.showControls = !root.showControls
         }
@@ -504,6 +505,29 @@ MouseArea {
                         videoPlayer.volume = v;
                         videoPlayer.muted = false;
                     }
+                }
+            }
+
+            // Loop Toggle (for Video)
+            StyledRect {
+                implicitWidth: 32
+                implicitHeight: 32
+                radius: Tokens.rounding.full
+                color: videoPlayer.loop ? Colours.palette.m3primaryContainer : (loopHover.containsMouse ? Colours.palette.m3surfaceContainerHigh : "transparent")
+                visible: root.isVideo
+
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    text: "repeat"
+                    fontStyle: Tokens.font.icon.small
+                    color: videoPlayer.loop ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                }
+                MouseArea {
+                    id: loopHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: videoPlayer.loop = !videoPlayer.loop
                 }
             }
 
