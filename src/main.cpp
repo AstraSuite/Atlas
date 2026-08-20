@@ -15,10 +15,23 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QIcon>
+#include <QQuickWindow>
 #include <QString>
 #include <QStringList>
+#include <QSurfaceFormat>
 
 int main(int argc, char* argv[]) {
+    // Explicitly configure 32-bit RGBA8888 color buffer format to avoid 16-bit RGB565 quantization
+    QSurfaceFormat format;
+    format.setRedBufferSize(8);
+    format.setGreenBufferSize(8);
+    format.setBlueBufferSize(8);
+    format.setAlphaBufferSize(8);
+    format.setDepthBufferSize(24);
+    format.setStencilBufferSize(8);
+    QSurfaceFormat::setDefaultFormat(format);
+    QQuickWindow::setDefaultAlphaBuffer(true);
+
     QGuiApplication app(argc, argv);
     app.setApplicationName("Prism");
     app.setApplicationVersion("1.0.0");
