@@ -299,6 +299,23 @@ void PlacesModel::addBookmark(const QString& path, const QString& name, const QS
     saveBookmarks();
 }
 
+void PlacesModel::addCustomPlace(const QString& name, const QString& path, const QString& icon) {
+    addBookmark(path, name, icon);
+}
+
+void PlacesModel::movePlace(int fromIndex, int toIndex) {
+    if (fromIndex < 0 || fromIndex >= m_places.size() || toIndex < 0 || toIndex >= m_places.size() || fromIndex == toIndex)
+        return;
+
+    int dest = toIndex > fromIndex ? toIndex + 1 : toIndex;
+    if (!beginMoveRows(QModelIndex(), fromIndex, fromIndex, QModelIndex(), dest))
+        return;
+
+    m_places.move(fromIndex, toIndex);
+    endMoveRows();
+    saveBookmarks();
+}
+
 void PlacesModel::removeBookmark(int index) {
     if (index < 0 || index >= m_places.size()) return;
     beginRemoveRows(QModelIndex(), index, index);

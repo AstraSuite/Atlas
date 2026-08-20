@@ -346,6 +346,11 @@ Item {
                 // Cut & Hidden & Dragging Files Indication: Darkened / Ghosted Opacity
                 opacity: isDragged ? 0.35 : (isCut ? 0.38 : (isHidden ? 0.58 : 1.0))
 
+                scale: folderDropArea.containsDrag ? 1.02 : 1.0
+                Behavior on scale {
+                    Anim { type: Anim.FastEffects }
+                }
+
                 Behavior on opacity {
                     Anim {
                         type: Anim.FastEffects
@@ -470,8 +475,8 @@ Item {
 
                                 Component.onCompleted: {
                                     const file = rowItem.modelData;
-                                    if (file.isImage) {
-                                        source = Qt.resolvedUrl("file://" + file.path);
+                                    if (file.isImage || file.isVideo) {
+                                        source = "image://thumb/" + file.path;
                                     } else {
                                         source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
                                     }

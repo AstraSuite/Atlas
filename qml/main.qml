@@ -130,6 +130,10 @@ ApplicationWindow {
                                 editPlaceModal.expanded = true;
                             }
 
+                            onManagePlacesRequested: {
+                                placesManageModal.expanded = true;
+                            }
+
                             onFilesDropped: (sources, destDir, x, y) => {
                                 dropActionMenu.sourceFiles = sources;
                                 dropActionMenu.targetDir = destDir;
@@ -184,7 +188,7 @@ ApplicationWindow {
                             }
                         }
 
-                        // Information / Preview Panel (F11)
+                        // Information / Preview Panel (F1)
                         PreviewPanel {
                             id: previewPanel
                             Layout.fillHeight: true
@@ -203,6 +207,9 @@ ApplicationWindow {
                         onZoomChanged: level => zoomLevel = level
                         onGitRequested: {
                             gitModal.expanded = true;
+                        }
+                        onOperationsRequested: {
+                            operationsModal.expanded = !operationsModal.expanded;
                         }
                     }
                 }
@@ -266,7 +273,9 @@ ApplicationWindow {
                     let dest = item.path.replace(/\.[^/.]+$/, "");
                     FileOperations.extractArchive(item.path, dest);
                 } else if (action === "compress" && item) {
-                    FileOperations.createArchive([item.path], item.path + ".zip", "zip");
+                    compressModal.sourcePaths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : [item.path];
+                    compressModal.defaultName = item.name;
+                    compressModal.expanded = true;
                 } else if (action === "newFile") {
                     newItemModal.title = qsTr("Create New File");
                     newItemModal.icon = "note_add";
@@ -295,6 +304,33 @@ ApplicationWindow {
             id: openWithModal
         }
 
+        // Compress Modal
+        CompressModal {
+            id: compressModal
+            onAccepted: (sources, dest, fmt) => {
+                let curDir = TabManager.currentTab ? TabManager.currentTab.currentPath : "";
+                FileOperations.createArchive(sources, curDir + "/" + dest, fmt);
+            }
+        }
+
+        // Operations & Background Activity Modal
+        OperationsModal {
+            id: operationsModal
+        }
+
+        // Places & Devices Management Modal
+        PlacesManageModal {
+            id: placesManageModal
+            onEditPlaceRequested: (idx, name, path, iconName, custom) => {
+                editPlaceModal.targetIndex = idx;
+                editPlaceModal.placeName = name;
+                editPlaceModal.placePath = path;
+                editPlaceModal.selectedIcon = iconName;
+                editPlaceModal.isCustom = custom;
+                editPlaceModal.expanded = true;
+            }
+        }
+
         // Edit Place Modal
         EditPlaceModal {
             id: editPlaceModal
@@ -302,7 +338,7 @@ ApplicationWindow {
                 PlacesModel.updatePlace(idx, name, iconName);
             }
             onRemoveRequested: idx => {
-                PlacesModel.removePlace(idx);
+                PlacesModel.removeBookmark(idx);
             }
         }
 
@@ -653,7 +689,13 @@ ApplicationWindow {
 
         Shortcut {
             sequence: "F11"
-            onActivated: previewPanel.expanded = !previewPanel.expanded
+            onActivated: {
+                if (root.visibility === Window.FullScreen) {
+                    root.visibility = Window.Windowed;
+                } else {
+                    root.visibility = Window.FullScreen;
+                }
+            }
         }
 
         Shortcut {

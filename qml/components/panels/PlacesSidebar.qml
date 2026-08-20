@@ -15,6 +15,7 @@ StyledRect {
     signal placeContextMenuRequested(real globalX, real globalY, int index, string name, string path, string iconName, bool isCustom, bool isTrash)
     signal deviceContextMenuRequested(real globalX, real globalY, string devPath, string name, string mountPt, bool isMounted)
     signal filesDropped(var sourceFiles, string targetDir, real mouseX, real mouseY)
+    signal managePlacesRequested()
 
     implicitWidth: sidebarWidth
     color: Colours.tPalette.m3surfaceContainer
@@ -24,13 +25,40 @@ StyledRect {
         anchors.margins: Tokens.padding.medium
         spacing: Tokens.spacing.extraSmall
 
-        StyledText {
-            Layout.alignment: Qt.AlignHCenter
+        RowLayout {
+            Layout.fillWidth: true
             Layout.topMargin: Tokens.padding.extraSmall / 2
             Layout.bottomMargin: Tokens.spacing.small
-            text: qsTr("Places")
-            color: Colours.palette.m3onSurface
-            font: Tokens.font.body.builders.large.weight(Font.Bold).build()
+            spacing: Tokens.spacing.extraSmall
+
+            StyledText {
+                Layout.fillWidth: true
+                text: qsTr("Places")
+                color: Colours.palette.m3onSurface
+                font: Tokens.font.body.builders.large.weight(Font.Bold).build()
+            }
+
+            StyledRect {
+                implicitWidth: 26
+                implicitHeight: 26
+                radius: Tokens.rounding.full
+                color: cfgHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    text: "tune"
+                    fontStyle: Tokens.font.icon.small
+                    color: Colours.palette.m3onSurfaceVariant
+                }
+
+                MouseArea {
+                    id: cfgHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.managePlacesRequested()
+                }
+            }
         }
 
         // Scrollable Places & Devices List with vertical edge fade
@@ -44,6 +72,23 @@ StyledRect {
 
             ScrollBar.vertical: StyledScrollBar {
                 flickable: flickable
+            }
+
+            // Drop Area on empty sidebar background to pin folders as bookmarks
+            DropArea {
+                anchors.fill: parent
+                z: -1
+                onDropped: drop => {
+                    if (drop.hasUrls) {
+                        for (let i = 0; i < drop.urls.length; ++i) {
+                            let path = FileUtils.toLocalFile(drop.urls[i]);
+                            let name = FileUtils.baseName(path);
+                            if (!name || name.length === 0) name = path;
+                            PlacesModel.addCustomPlace(name, path, "folder");
+                        }
+                        drop.accept();
+                    }
+                }
             }
 
             ColumnLayout {

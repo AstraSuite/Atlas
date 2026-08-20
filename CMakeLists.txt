@@ -47,6 +47,8 @@ qt_add_executable(prism_app
     src/core/gitmanager.cpp
     src/core/appintegration.hpp
     src/core/appintegration.cpp
+    src/core/thumbnailprovider.hpp
+    src/core/thumbnailprovider.cpp
     src/core/iconprovider.hpp
     src/core/iconprovider.cpp
     src/core/iconcatalog.hpp
@@ -104,9 +106,12 @@ qt_add_qml_module(prism_app
         qml/components/menus/DropActionMenu.qml
         qml/components/dialogs/NewItemModal.qml
         qml/components/dialogs/EditPlaceModal.qml
+        qml/components/dialogs/PlacesManageModal.qml
         qml/components/dialogs/PropertiesModal.qml
         qml/components/dialogs/OpenWithModal.qml
         qml/components/dialogs/GitModal.qml
+        qml/components/dialogs/CompressModal.qml
+        qml/components/dialogs/OperationsModal.qml
         qml/components/containers/VerticalFadeFlickable.qml
         qml/components/containers/VerticalFadeListView.qml
         qml/components/containers/VerticalFadeGridView.qml

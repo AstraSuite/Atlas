@@ -8,6 +8,9 @@
 #include <QQuickStyle>
 #include <QSurfaceFormat>
 
+#include <QSettings>
+#include <QMouseEvent>
+
 #include "config/colours.hpp"
 #include "config/tokens.hpp"
 #include "controllers/tabmanager.hpp"
@@ -17,9 +20,41 @@
 #include "core/fileoperations.hpp"
 #include "core/fileutils.hpp"
 #include "core/iconprovider.hpp"
+#include "core/thumbnailprovider.hpp"
 #include "core/placesmodel.hpp"
 #include "core/drivemanager.hpp"
 #include "models/filesystemmodel.hpp"
+
+namespace {
+class GlobalMouseFilter : public QObject {
+public:
+    explicit GlobalMouseFilter(prism::controllers::TabManager* tm, QObject* parent = nullptr)
+        : QObject(parent), m_tabManager(tm) {}
+
+protected:
+    bool eventFilter(QObject* obj, QEvent* event) override {
+        Q_UNUSED(obj);
+        if (event->type() == QEvent::MouseButtonPress) {
+            auto* me = static_cast<QMouseEvent*>(event);
+            if (me->button() == Qt::BackButton || me->button() == Qt::ExtraButton1) {
+                if (m_tabManager && m_tabManager->currentTab() && m_tabManager->currentTab()->canGoBack()) {
+                    m_tabManager->currentTab()->goBack();
+                    return true;
+                }
+            } else if (me->button() == Qt::ForwardButton || me->button() == Qt::ExtraButton2) {
+                if (m_tabManager && m_tabManager->currentTab() && m_tabManager->currentTab()->canGoForward()) {
+                    m_tabManager->currentTab()->goForward();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+private:
+    prism::controllers::TabManager* m_tabManager = nullptr;
+};
+}
 
 int main(int argc, char* argv[]) {
     // Explicitly configure 32-bit RGBA8888 surface format to avoid RGB565 color quantization
@@ -118,15 +153,31 @@ int main(int argc, char* argv[]) {
     auto* fileUtils = new prism::core::FileUtils(&app);
     auto* fileOps = prism::core::FileOperations::instance();
     auto* tabManager = prism::controllers::TabManager::instance();
-    if (!initialDir.isEmpty() && tabManager->currentTab()) {
+
+    // Session restoration
+    if (!isPickerMode) {
+        if (!initialDir.isEmpty() && tabManager->currentTab()) {
+            tabManager->currentTab()->setCurrentPath(initialDir);
+        } else {
+            QSettings settings("Caelestia", "Prism");
+            QString lastPath = settings.value("session/lastPath", QDir::homePath()).toString();
+            int lastView = settings.value("session/viewMode", 0).toInt();
+            if (tabManager->currentTab()) {
+                tabManager->currentTab()->setCurrentPath(lastPath.isEmpty() ? QDir::homePath() : lastPath);
+                tabManager->currentTab()->setViewMode(lastView);
+            }
+        }
+    } else if (!initialDir.isEmpty() && tabManager->currentTab()) {
         tabManager->currentTab()->setCurrentPath(initialDir);
     }
+
     auto* appIntegration = prism::core::AppIntegration::instance();
     auto* placesModel = new prism::core::PlacesModel(&app);
     auto* driveManager = new prism::core::DriveManager(&app);
 
     QQmlApplicationEngine engine;
     engine.addImageProvider("icon", new prism::core::IconImageProvider());
+    engine.addImageProvider("thumb", new prism::core::ThumbnailImageProvider());
 
     // Register singletons and types into QML context
     engine.rootContext()->setContextProperty("Colours", colours);
@@ -152,6 +203,11 @@ int main(int argc, char* argv[]) {
         Qt::QueuedConnection);
 
     engine.load(url);
+
+    if (!engine.rootObjects().isEmpty()) {
+        auto* rootWin = engine.rootObjects().first();
+        rootWin->installEventFilter(new GlobalMouseFilter(tabManager, rootWin));
+    }
 
     return app.exec();
 }

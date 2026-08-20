@@ -15,6 +15,7 @@ StyledRect {
     property real zoomLevel: 80
     signal zoomChanged(real level)
     signal gitRequested()
+    signal operationsRequested()
 
     implicitHeight: statusRow.implicitHeight + Tokens.padding.extraSmall * 2
     color: Colours.tPalette.m3surfaceContainer
@@ -137,6 +138,39 @@ StyledRect {
                         root.zoomChanged(180);
                     }
                 }
+            }
+        }
+
+        // Operations / Background Activity Button
+        StyledRect {
+            implicitWidth: 28
+            implicitHeight: 28
+            radius: Tokens.rounding.full
+            color: opsHover.containsMouse
+                ? Colours.tPalette.m3surfaceContainerHighest
+                : (FileOperations.progress.running ? Qt.alpha(Colours.palette.m3primary, 0.2) : "transparent")
+
+            MaterialIcon {
+                anchors.centerIn: parent
+                text: FileOperations.progress.running ? "sync" : "pending_actions"
+                color: FileOperations.progress.running ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                fontStyle: Tokens.font.icon.small
+
+                RotationAnimation on rotation {
+                    loops: Animation.Infinite
+                    from: 0
+                    to: 360
+                    duration: 1200
+                    running: FileOperations.progress.running
+                }
+            }
+
+            MouseArea {
+                id: opsHover
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.operationsRequested()
             }
         }
     }

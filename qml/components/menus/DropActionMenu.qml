@@ -106,79 +106,59 @@ MouseArea {
                     { text: qsTr("Move Here"), icon: "drive_file_move", shortcut: "Shift", action: "move" },
                     { text: qsTr("Copy Here"), icon: "content_copy", shortcut: "Ctrl", action: "copy" },
                     { text: qsTr("Link Here"), icon: "link", shortcut: "Ctrl+Shift", action: "link" },
-                    { isSeparator: true },
                     { text: qsTr("Move Into New Folder"), icon: "create_new_folder", action: "moveNewFolder" },
-                    { isSeparator: true },
                     { text: qsTr("Cancel"), icon: "close", shortcut: "Esc", action: "cancel" }
                 ]
 
-                delegate: Item {
+                delegate: StyledRect {
                     id: menuItem
 
                     required property int index
                     required property var modelData
 
-                    implicitWidth: isSeparator ? 160 : (itemRow.implicitWidth + 32)
-                    implicitHeight: isSeparator ? 9 : 36
+                    implicitWidth: itemRow.implicitWidth + 32
+                    implicitHeight: 36
                     Layout.fillWidth: true
 
-                    readonly property bool isSeparator: modelData.isSeparator === true
+                    radius: Tokens.rounding.small
+                    color: itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
 
-                    // Separator line
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.margins: 8
-                        height: 1
-                        color: Qt.alpha(Colours.palette.m3outlineVariant, 0.4)
-                        visible: menuItem.isSeparator
-                    }
-
-                    // Clickable Menu Row
-                    StyledRect {
+                    RowLayout {
+                        id: itemRow
                         anchors.fill: parent
-                        radius: Tokens.rounding.small
-                        visible: !menuItem.isSeparator
-                        color: itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                        anchors.leftMargin: Tokens.padding.small
+                        anchors.rightMargin: Tokens.padding.small
+                        spacing: Tokens.spacing.small
 
-                        RowLayout {
-                            id: itemRow
-                            anchors.fill: parent
-                            anchors.leftMargin: Tokens.padding.small
-                            anchors.rightMargin: Tokens.padding.small
-                            spacing: Tokens.spacing.small
-
-                            MaterialIcon {
-                                text: menuItem.modelData.icon || ""
-                                color: itemHover.containsMouse ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-                                fontStyle: Tokens.font.icon.small
-                            }
-
-                            StyledText {
-                                text: menuItem.modelData.text || ""
-                                color: Colours.palette.m3onSurface
-                                font: Tokens.font.body.small
-                                Layout.fillWidth: true
-                            }
-
-                            StyledText {
-                                visible: menuItem.modelData.shortcut ? true : false
-                                text: menuItem.modelData.shortcut || ""
-                                color: Colours.palette.m3outline
-                                font: Tokens.font.label.small
-                                Layout.alignment: Qt.AlignRight
-                            }
+                        MaterialIcon {
+                            text: menuItem.modelData.icon || ""
+                            color: itemHover.containsMouse ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                            fontStyle: Tokens.font.icon.small
                         }
 
-                        MouseArea {
-                            id: itemHover
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.executeAction(menuItem.modelData.action);
-                            }
+                        StyledText {
+                            text: menuItem.modelData.text || ""
+                            color: Colours.palette.m3onSurface
+                            font: Tokens.font.body.small
+                            Layout.fillWidth: true
+                        }
+
+                        StyledText {
+                            visible: menuItem.modelData.shortcut ? true : false
+                            text: menuItem.modelData.shortcut || ""
+                            color: Colours.palette.m3outline
+                            font: Tokens.font.label.small
+                            Layout.alignment: Qt.AlignRight
+                        }
+                    }
+
+                    MouseArea {
+                        id: itemHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.executeAction(menuItem.modelData.action);
                         }
                     }
                 }

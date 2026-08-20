@@ -693,6 +693,7 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
     QPainter painter(&pixmap);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    painter.setRenderHint(QPainter::TextAntialiasing);
 
     prism::config::M3Palette pal(false);
     QColor cardBg = pal.m3secondaryContainer();
@@ -700,8 +701,7 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
     QColor primary = pal.m3primary();
     QColor onPrimary = pal.m3onPrimary();
 
-    // Card Background (Rounded card matching selection exactly, translucent 0.88, no borders)
-    cardBg.setAlpha(225);
+    // Card Background (Rounded card matching selection exactly, radius 16)
     painter.setBrush(cardBg);
     painter.setPen(Qt::NoPen);
     painter.drawRoundedRect(0, 0, cardW, cardH, 16, 16);
@@ -709,7 +709,7 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
     // Primary File Icon & Thumbnail
     QFileInfo firstFi(filePaths.first());
     QPixmap iconPix;
-    
+
     QString suffix = firstFi.suffix().toLower();
     if (suffix == "png" || suffix == "jpg" || suffix == "jpeg" || suffix == "webp" || suffix == "svg") {
         QImage img(firstFi.filePath());
@@ -719,21 +719,15 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
     }
 
     if (iconPix.isNull()) {
-        QIcon icon;
+        QString iconName = "text-plain";
         if (firstFi.isDir()) {
+            iconName = "inode-directory";
             QString name = firstFi.fileName();
             static const QStringList specialDirs = { "Desktop", "Documents", "Downloads", "Music", "Pictures", "Public", "Templates", "Videos" };
             if (specialDirs.contains(name)) {
-                QString iconName = QString("folder-%1").arg(name.toLower());
-                if (QIcon::hasThemeIcon(iconName)) {
-                    icon = QIcon::fromTheme(iconName);
-                }
-            }
-            if (icon.isNull()) {
-                if (QIcon::hasThemeIcon("inode-directory")) {
-                    icon = QIcon::fromTheme("inode-directory");
-                } else if (QIcon::hasThemeIcon("folder")) {
-                    icon = QIcon::fromTheme("folder");
+                QString spName = QString("folder-%1").arg(name.toLower());
+                if (QIcon::hasThemeIcon(spName)) {
+                    iconName = spName;
                 }
             }
         } else {
@@ -742,31 +736,38 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
             QString mimeIcon = mime.name();
             mimeIcon.replace('/', '-');
             if (QIcon::hasThemeIcon(mimeIcon)) {
-                icon = QIcon::fromTheme(mimeIcon);
+                iconName = mimeIcon;
             } else if (QIcon::hasThemeIcon(mime.iconName())) {
-                icon = QIcon::fromTheme(mime.iconName());
+                iconName = mime.iconName();
             } else if (QIcon::hasThemeIcon(mime.genericIconName())) {
-                icon = QIcon::fromTheme(mime.genericIconName());
+                iconName = mime.genericIconName();
             }
         }
+        QIcon icon = QIcon::fromTheme(iconName);
         if (icon.isNull()) {
-            icon = QIcon::fromTheme("text-x-generic");
+            icon = QIcon::fromTheme("folder");
+        }
+        if (icon.isNull()) {
+            icon = QIcon::fromTheme("text-plain");
         }
         iconPix = icon.pixmap(iSize, iSize);
     }
-    painter.drawPixmap((cardW - iconPix.width()) / 2, 10, iconPix);
+
+    int iconX = (cardW - iconPix.width()) / 2;
+    int iconY = 8;
+    painter.drawPixmap(iconX, iconY, iconPix);
 
     // Label Text
     painter.setPen(onCard);
-    QFont font = painter.font();
-    font.setPointSize(9);
-    font.setBold(true);
+    QFont font = qApp->font();
+    font.setPixelSize(12);
+    font.setWeight(QFont::Normal);
     painter.setFont(font);
 
     QString label = firstFi.fileName();
     if (label.isEmpty()) label = firstFi.filePath();
-    QRect textRect(6, cardH - 36, cardW - 12, 30);
-    painter.drawText(textRect, Qt::AlignHCenter | Qt::AlignTop, painter.fontMetrics().elidedText(label, Qt::ElideMiddle, cardW - 12));
+    QRect textRect(8, iconY + iSize + 6, cardW - 16, cardH - (iconY + iSize + 6) - 4);
+    painter.drawText(textRect, Qt::AlignHCenter | Qt::AlignTop, painter.fontMetrics().elidedText(label, Qt::ElideMiddle, cardW - 16));
 
     // If multiple items, render a badge (+N) in the top-right
     if (filePaths.size() > 1) {

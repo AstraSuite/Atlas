@@ -186,9 +186,14 @@ Item {
                     }
                 }
 
-                // Pop in animation on folder entry / reload
-                scale: 0.6
+                // Pop in animation on folder entry / reload and grow animation when hovered during drag
+                scale: folderDropArea.containsDrag ? 1.08 : 1.0
                 Component.onCompleted: popInAnim.start()
+
+                Behavior on scale {
+                    enabled: !popInAnim.running
+                    Anim { type: Anim.FastEffects }
+                }
 
                 ParallelAnimation {
                     id: popInAnim
@@ -285,8 +290,8 @@ Item {
 
                         Component.onCompleted: {
                             const file = delegateContainer.modelData;
-                            if (file.isImage) {
-                                source = Qt.resolvedUrl("file://" + file.path);
+                            if (file.isImage || file.isVideo) {
+                                source = "image://thumb/" + file.path;
                             } else {
                                 source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
                             }

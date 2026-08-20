@@ -2,6 +2,7 @@
 
 #include <QDir>
 #include <QFileInfo>
+#include <QSettings>
 
 namespace prism::controllers {
 
@@ -53,6 +54,9 @@ void TabItem::setCurrentPath(const QString& path) {
         emit currentPathChanged();
         emit historyChanged();
         if (m_activePane == 0) updateTitle();
+
+        QSettings settings("Caelestia", "Prism");
+        settings.setValue("session/lastPath", m_currentPath);
     }
 }
 
@@ -86,6 +90,9 @@ void TabItem::setViewMode(int mode) {
     if (m_viewMode != mode) {
         m_viewMode = mode;
         emit viewModeChanged();
+
+        QSettings settings("Caelestia", "Prism");
+        settings.setValue("session/viewMode", m_viewMode);
     }
 }
 
