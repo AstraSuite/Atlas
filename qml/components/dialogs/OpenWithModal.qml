@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import "../controls"
 import prism
 
 MouseArea {
@@ -211,19 +212,10 @@ MouseArea {
             }
 
             // Always use as default checkbox
-            RowLayout {
+            StyledCheckBox {
+                id: alwaysDefaultCheck
                 Layout.fillWidth: true
-                spacing: 8
-
-                CheckBox {
-                    id: alwaysDefaultCheck
-                }
-
-                StyledText {
-                    text: qsTr("Always use this application for this file type")
-                    font: Tokens.font.body.small
-                    color: Colours.palette.m3onSurface
-                }
+                text: qsTr("Always use this application for this file type")
             }
 
             // Bottom Buttons

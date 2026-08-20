@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import "../controls"
 import prism
 
 MouseArea {
@@ -245,19 +246,19 @@ MouseArea {
                     StyledText { text: qsTr("Execute"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
 
                     StyledText { text: qsTr("Owner"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-                    CheckBox { id: uR; checked: meta.permissions.length >= 3 && meta.permissions[0] === 'r' }
-                    CheckBox { id: uW; checked: meta.permissions.length >= 3 && meta.permissions[1] === 'w' }
-                    CheckBox { id: uX; checked: meta.permissions.length >= 3 && meta.permissions[2] === 'x' }
+                    StyledCheckBox { id: uR; checked: meta.permissions.length >= 3 && meta.permissions[0] === 'r' }
+                    StyledCheckBox { id: uW; checked: meta.permissions.length >= 3 && meta.permissions[1] === 'w' }
+                    StyledCheckBox { id: uX; checked: meta.permissions.length >= 3 && meta.permissions[2] === 'x' }
 
                     StyledText { text: qsTr("Group"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-                    CheckBox { id: gR; checked: meta.permissions.length >= 6 && meta.permissions[3] === 'r' }
-                    CheckBox { id: gW; checked: meta.permissions.length >= 6 && meta.permissions[4] === 'w' }
-                    CheckBox { id: gX; checked: meta.permissions.length >= 6 && meta.permissions[5] === 'x' }
+                    StyledCheckBox { id: gR; checked: meta.permissions.length >= 6 && meta.permissions[3] === 'r' }
+                    StyledCheckBox { id: gW; checked: meta.permissions.length >= 6 && meta.permissions[4] === 'w' }
+                    StyledCheckBox { id: gX; checked: meta.permissions.length >= 6 && meta.permissions[5] === 'x' }
 
                     StyledText { text: qsTr("Others"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-                    CheckBox { id: oR; checked: meta.permissions.length >= 9 && meta.permissions[6] === 'r' }
-                    CheckBox { id: oW; checked: meta.permissions.length >= 9 && meta.permissions[7] === 'w' }
-                    CheckBox { id: oX; checked: meta.permissions.length >= 9 && meta.permissions[8] === 'x' }
+                    StyledCheckBox { id: oR; checked: meta.permissions.length >= 9 && meta.permissions[6] === 'r' }
+                    StyledCheckBox { id: oW; checked: meta.permissions.length >= 9 && meta.permissions[7] === 'w' }
+                    StyledCheckBox { id: oX; checked: meta.permissions.length >= 9 && meta.permissions[8] === 'x' }
                 }
 
                 StyledRect {
