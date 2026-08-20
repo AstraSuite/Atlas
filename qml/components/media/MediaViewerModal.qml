@@ -397,8 +397,8 @@ MouseArea {
     // Bottom Floating Control Bar (Video playback & Filmstrip toggle)
     StyledRect {
         id: bottomControls
-        anchors.bottom: filmstrip.visible ? filmstrip.top : parent.bottom
-        anchors.bottomMargin: Tokens.padding.medium
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Tokens.padding.medium + (filmstrip.visible ? (filmstrip.height + Tokens.padding.small) : 0)
         anchors.horizontalCenter: parent.horizontalCenter
         implicitWidth: root.isVideo ? Math.min(parent.width - 40, 560) : 48
         implicitHeight: 48
@@ -408,6 +408,7 @@ MouseArea {
         opacity: root.showControls ? 1.0 : 0.0
         Behavior on opacity { Anim { type: Anim.FastEffects } }
         Behavior on implicitWidth { Anim { type: Anim.FastSpatial } }
+        Behavior on anchors.bottomMargin { Anim { type: Anim.FastSpatial } }
 
         MouseArea {
             id: controlHover
@@ -592,7 +593,8 @@ MouseArea {
         anchors.margins: Tokens.padding.medium
         mediaList: root.mediaList
         currentIndex: root.currentIndex
-        visible: root.showFilmstrip && root.mediaList.length > 1 && root.showControls
+        active: root.showFilmstrip && root.mediaList.length > 1
+        showControls: root.showControls
         onItemSelected: idx => {
             root.currentIndex = idx;
             root.currentFilePath = root.mediaList[idx].path;

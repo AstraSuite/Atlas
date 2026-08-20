@@ -130,7 +130,16 @@ void TabItem::goUp() {
 // TabManager
 TabManager::TabManager(QObject* parent)
     : QAbstractListModel(parent) {
-    newTab(QDir::homePath());
+    QSettings settings("Caelestia", "Prism");
+    QString lastPath = settings.value("session/lastPath", QDir::homePath()).toString();
+    int lastViewMode = settings.value("session/viewMode", 0).toInt();
+    if (lastPath.isEmpty() || !QDir(lastPath).exists()) {
+        lastPath = QDir::homePath();
+    }
+    newTab(lastPath);
+    if (!m_tabs.isEmpty()) {
+        m_tabs.first()->setViewMode(lastViewMode);
+    }
 }
 
 TabManager* TabManager::instance() {

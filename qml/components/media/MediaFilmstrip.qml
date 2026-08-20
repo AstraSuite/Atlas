@@ -9,10 +9,22 @@ StyledRect {
 
     property var mediaList: []
     property int currentIndex: -1
+    property bool active: false
+    property bool showControls: true
 
     signal itemSelected(int index)
 
-    implicitHeight: 76
+    implicitHeight: (active && showControls) ? 76 : 0
+    opacity: (active && showControls) ? 1.0 : 0.0
+    scale: (active && showControls) ? 1.0 : 0.92
+    transformOrigin: Item.Bottom
+    visible: opacity > 0.001
+    clip: true
+
+    Behavior on implicitHeight { Anim { type: Anim.FastSpatial } }
+    Behavior on opacity { Anim { type: Anim.FastEffects } }
+    Behavior on scale { Anim { type: Anim.FastSpatial } }
+
     radius: Tokens.rounding.medium
     color: Qt.alpha(Colours.palette.m3surfaceContainerHighest, 0.85)
 
