@@ -35,6 +35,9 @@ public:
     Q_INVOKABLE static QString shortenHome(const QString& path);
     Q_INVOKABLE static QString toLocalFile(const QUrl& url);
     Q_INVOKABLE static QString baseName(const QString& path);
+    Q_INVOKABLE static bool isImage(const QString& path);
+    Q_INVOKABLE static bool isVideo(const QString& path);
+    Q_INVOKABLE static bool isAudio(const QString& path);
     Q_INVOKABLE static QString iconForName(const QString& name, const QString& fallback = QString());
     Q_INVOKABLE static QString iconForFile(const QString& name, bool isDir, const QString& mimeType);
 };

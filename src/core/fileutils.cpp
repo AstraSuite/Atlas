@@ -1,5 +1,7 @@
 #include "fileutils.hpp"
 #include <QDir>
+#include <QFileInfo>
+#include <QMimeDatabase>
 #include <QStandardPaths>
 #include <QIcon>
 
@@ -60,6 +62,27 @@ QString FileUtils::toLocalFile(const QUrl& url) {
 QString FileUtils::baseName(const QString& path) {
     if (path.isEmpty()) return QString();
     return QFileInfo(path).fileName();
+}
+
+bool FileUtils::isImage(const QString& path) {
+    if (path.isEmpty()) return false;
+    static const QMimeDatabase db;
+    QMimeType mime = db.mimeTypeForFile(path);
+    return mime.name().startsWith(QLatin1String("image/"));
+}
+
+bool FileUtils::isVideo(const QString& path) {
+    if (path.isEmpty()) return false;
+    static const QMimeDatabase db;
+    QMimeType mime = db.mimeTypeForFile(path);
+    return mime.name().startsWith(QLatin1String("video/"));
+}
+
+bool FileUtils::isAudio(const QString& path) {
+    if (path.isEmpty()) return false;
+    static const QMimeDatabase db;
+    QMimeType mime = db.mimeTypeForFile(path);
+    return mime.name().startsWith(QLatin1String("audio/"));
 }
 
 QString FileUtils::iconForName(const QString& name, const QString& fallback) {
