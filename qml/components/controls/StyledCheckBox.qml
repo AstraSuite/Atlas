@@ -48,7 +48,7 @@ Item {
                 width: 18
                 height: 18
                 radius: 2
-                color: Colours.palette.m3surfaceContainerLowest
+                color: "transparent"
                 border.color: root.checked
                     ? Colours.palette.m3primary
                     : (checkArea.containsMouse ? Colours.palette.m3onSurface : Colours.palette.m3outline)
