@@ -56,15 +56,6 @@ StyledRect {
                 radius: Tokens.rounding.full
                 color: selected ? Colours.palette.m3secondaryContainer : "transparent"
 
-                StateLayer {
-                    color: placeItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                    onClicked: {
-                        if (root.activeTab) {
-                            root.activeTab.currentPath = placeItem.path;
-                        }
-                    }
-                }
-
                 RowLayout {
                     id: placeRow
 
@@ -107,7 +98,8 @@ StyledRect {
                     Item {
                         implicitWidth: 20
                         implicitHeight: 20
-                        visible: placeItem.isCustom && placeHover.containsMouse
+                        visible: placeItem.isCustom && itemCloseMouse.containsMouse
+                        z: 2
 
                         MaterialIcon {
                             anchors.centerIn: parent
@@ -117,10 +109,24 @@ StyledRect {
                         }
 
                         MouseArea {
-                            id: placeHover
+                            id: itemCloseMouse
                             anchors.fill: parent
                             hoverEnabled: true
-                            onClicked: PlacesModel.removeBookmark(placeItem.index)
+                            onClicked: mouse => {
+                                mouse.accepted = true;
+                                PlacesModel.removeBookmark(placeItem.index);
+                            }
+                        }
+                    }
+                }
+
+                StateLayer {
+                    anchors.fill: parent
+                    z: 1
+                    color: placeItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                    onClicked: {
+                        if (root.activeTab) {
+                            root.activeTab.currentPath = placeItem.path;
                         }
                     }
                 }
