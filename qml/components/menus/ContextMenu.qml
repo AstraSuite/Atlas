@@ -82,10 +82,17 @@ MouseArea {
                     }
 
                     if (root.targetItem) {
-                        let list = [
-                            { text: qsTr("Open"), icon: "open_in_new", action: "open" },
-                            { text: qsTr("Open With..."), icon: "open_with", action: "openWith" }
-                        ];
+                        let list = [];
+                        if (root.targetItem.isDir) {
+                            list.push({ text: qsTr("Open"), icon: "folder_open", action: "open" });
+                            list.push({ text: qsTr("Open in New Tab"), icon: "tab", action: "openNewTab" });
+                            list.push({ text: qsTr("Open in New Window"), icon: "open_in_new", action: "openNewWindow" });
+                            list.push({ text: qsTr("Open in Split View"), icon: "splitscreen", action: "openSplit" });
+                            list.push({ text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminalItem" });
+                        } else {
+                            list.push({ text: qsTr("Open"), icon: "open_in_new", action: "open" });
+                            list.push({ text: qsTr("Open With..."), icon: "open_with", action: "openWith" });
+                        }
 
                         if (root.isArchive) {
                             list.push({ text: qsTr("Extract Here"), icon: "unarchive", action: "extractHere" });

@@ -22,6 +22,7 @@ public:
     Q_INVOKABLE void openWithDefault(const QString& filePath);
     Q_INVOKABLE void openWithApp(const QString& execLine, const QString& filePath);
     Q_INVOKABLE void openInTerminal(const QString& directoryPath);
+    Q_INVOKABLE void openNewWindow(const QString& path = QString());
 
 private:
     void scanDesktopFiles();

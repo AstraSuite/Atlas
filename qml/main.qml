@@ -198,6 +198,17 @@ ApplicationWindow {
                     } else {
                         AppIntegration.openWithDefault(item.path);
                     }
+                } else if (action === "openNewTab" && item) {
+                    TabManager.newTab(item.path);
+                } else if (action === "openNewWindow" && item) {
+                    AppIntegration.openNewWindow(item.path);
+                } else if (action === "openSplit" && item) {
+                    if (TabManager.currentTab) {
+                        TabManager.currentTab.splitPath = item.path;
+                        TabManager.currentTab.isSplit = true;
+                    }
+                } else if (action === "openTerminalItem" && item) {
+                    AppIntegration.openInTerminal(item.path);
                 } else if (action === "cut" && item) {
                     FileOperations.cutPaths([item.path]);
                 } else if (action === "copy" && item) {

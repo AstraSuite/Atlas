@@ -10,6 +10,7 @@
 #include <QSettings>
 #include <QStandardPaths>
 #include <QSet>
+#include <QCoreApplication>
 
 namespace prism::core {
 
@@ -123,10 +124,16 @@ void AppIntegration::openInTerminal(const QString& directoryPath) {
     }
     if (term.isEmpty()) term = "xterm";
 
-    QProcess process;
-    process.setProgram(term);
-    process.setWorkingDirectory(directoryPath);
     QProcess::startDetached(term, QStringList(), directoryPath);
+}
+
+void AppIntegration::openNewWindow(const QString& path) {
+    QString appPath = QCoreApplication::applicationFilePath();
+    QStringList args;
+    if (!path.isEmpty()) {
+        args << path;
+    }
+    QProcess::startDetached(appPath, args);
 }
 
 } // namespace prism::core
