@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import "../containers"
 import prism
 
 Item {
@@ -202,8 +203,8 @@ Item {
             }
         }
 
-        // Details List View
-        ListView {
+        // Details List View with vertical edge fade
+        VerticalFadeListView {
             id: listView
 
             Layout.fillWidth: true
@@ -213,23 +214,6 @@ Item {
             currentIndex: -1
 
             model: root.model
-
-            add: Transition {
-                Anim {
-                    properties: "opacity,y"
-                    from: 0
-                    to: 1
-                    type: Anim.FastEffects
-                }
-            }
-
-            remove: Transition {
-                Anim {
-                    property: "opacity"
-                    to: 0
-                    type: Anim.FastEffects
-                }
-            }
 
             ScrollBar.vertical: StyledScrollBar {
                 flickable: listView
@@ -262,6 +246,21 @@ Item {
 
                 radius: Tokens.rounding.small
                 color: ListView.isCurrentItem ? Colours.palette.m3secondaryContainer : (rowHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : (index % 2 === 1 ? Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0.3) : "transparent"))
+
+                // Pop in animation
+                opacity: 0.0
+
+                Component.onCompleted: rowAnim.start()
+
+                NumberAnimation {
+                    id: rowAnim
+                    target: rowItem
+                    property: "opacity"
+                    from: 0.0
+                    to: 1.0
+                    duration: 180
+                    easing.type: Easing.OutCubic
+                }
 
                 MouseArea {
                     id: rowHover

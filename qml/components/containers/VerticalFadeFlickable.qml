@@ -5,12 +5,12 @@ import "../"
 Flickable {
     id: root
 
-    property real fadeAmount: 0.1
+    property real fadeAmount: 0.12
     property real topFadeOpacity: fadeShouldBeActive(true) ? 0 : 1
     property real bottomFadeOpacity: fadeShouldBeActive(false) ? 0 : 1
 
     function fadeShouldBeActive(isStart) {
-        if (contentHeight + topMargin + bottomMargin < height)
+        if (contentHeight <= height)
             return false;
 
         if (isStart)
@@ -25,6 +25,8 @@ Flickable {
     layer.effect: MultiEffect {
         maskEnabled: true
         maskSource: mask
+        maskSpreadAtMin: 0
+        maskThresholdMin: 0
 
         Rectangle {
             id: mask

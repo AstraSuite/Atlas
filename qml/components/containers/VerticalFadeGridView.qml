@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import "../"
 
-ListView {
+GridView {
     id: root
 
     property real fadeAmount: 0.12
@@ -18,8 +18,6 @@ ListView {
         return visibleArea.yPosition + visibleArea.heightRatio < 0.999;
     }
 
-    flickableDirection: Flickable.VerticalFlick
-    orientation: ListView.Vertical
     boundsBehavior: Flickable.StopAtBounds
 
     layer.enabled: true

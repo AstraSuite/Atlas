@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import "../containers"
 import prism
 
 Item {
@@ -17,7 +18,7 @@ Item {
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
 
-    GridView {
+    VerticalFadeGridView {
         id: view
 
         anchors.fill: parent
@@ -39,33 +40,6 @@ Item {
         }
 
         model: root.model
-
-        add: Transition {
-            Anim {
-                properties: "opacity,scale"
-                from: 0
-                to: 1
-                type: Anim.FastEffects
-                easing: Tokens.anim.standard
-            }
-        }
-
-        remove: Transition {
-            Anim {
-                property: "opacity"
-                to: 0
-                type: Anim.FastEffects
-            }
-        }
-
-        displaced: Transition {
-            Anim {
-                properties: "x,y,opacity,scale"
-                to: 1
-                type: Anim.FastEffects
-                easing: Tokens.anim.standard
-            }
-        }
 
         MouseArea {
             anchors.fill: parent
@@ -96,6 +70,35 @@ Item {
             color: GridView.isCurrentItem ? Colours.palette.m3secondaryContainer : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
             z: GridView.isCurrentItem ? 1 : 0
             clip: true
+
+            // Pop in animation on directory switch / item load
+            scale: 0.6
+            opacity: 0.0
+
+            Component.onCompleted: popInAnim.start()
+
+            ParallelAnimation {
+                id: popInAnim
+
+                NumberAnimation {
+                    target: item
+                    property: "scale"
+                    from: 0.5
+                    to: 1.0
+                    duration: 250
+                    easing.type: Easing.OutBack
+                    easing.overshoot: 1.3
+                }
+
+                NumberAnimation {
+                    target: item
+                    property: "opacity"
+                    from: 0.0
+                    to: 1.0
+                    duration: 180
+                    easing.type: Easing.OutCubic
+                }
+            }
 
             MouseArea {
                 id: itemHover

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import "../containers"
 import prism
 
 Item {
@@ -34,23 +35,6 @@ Item {
 
         model: root.model
 
-        add: Transition {
-            Anim {
-                properties: "opacity,scale"
-                from: 0
-                to: 1
-                type: Anim.FastEffects
-            }
-        }
-
-        remove: Transition {
-            Anim {
-                property: "opacity"
-                to: 0
-                type: Anim.FastEffects
-            }
-        }
-
         MouseArea {
             anchors.fill: parent
             z: -1
@@ -78,6 +62,34 @@ Item {
 
             radius: Tokens.rounding.small
             color: compItem.GridView.isCurrentItem ? Colours.palette.m3secondaryContainer : (compHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
+
+            // Pop in animation
+            scale: 0.7
+            opacity: 0.0
+
+            Component.onCompleted: popAnim.start()
+
+            ParallelAnimation {
+                id: popAnim
+
+                NumberAnimation {
+                    target: compItem
+                    property: "scale"
+                    from: 0.6
+                    to: 1.0
+                    duration: 230
+                    easing.type: Easing.OutBack
+                }
+
+                NumberAnimation {
+                    target: compItem
+                    property: "opacity"
+                    from: 0.0
+                    to: 1.0
+                    duration: 180
+                    easing.type: Easing.OutCubic
+                }
+            }
 
             MouseArea {
                 id: compHover
