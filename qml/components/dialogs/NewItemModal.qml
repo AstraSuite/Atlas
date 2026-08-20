@@ -49,7 +49,7 @@ MouseArea {
         id: modalCard
 
         anchors.centerIn: parent
-        implicitWidth: 380
+        implicitWidth: Math.min(parent.width - 48, 440)
         implicitHeight: modalCol.implicitHeight + Tokens.padding.large * 2
 
         radius: Tokens.rounding.large
@@ -102,6 +102,7 @@ MouseArea {
                 color: Colours.palette.m3surfaceContainerHighest
                 border.color: input.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outlineVariant, 0.5)
                 border.width: input.activeFocus ? 2 : 1
+                clip: true
 
                 MouseArea {
                     anchors.fill: parent
@@ -120,6 +121,8 @@ MouseArea {
                     font: Tokens.font.body.medium
                     selectByMouse: true
                     cursorVisible: focus
+                    clip: true
+                    verticalAlignment: TextInput.AlignVCenter
 
                     onAccepted: {
                         if (text.trim().length > 0) {

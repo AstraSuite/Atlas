@@ -91,16 +91,22 @@ MouseArea {
                 implicitHeight: 40
                 radius: Tokens.rounding.small
                 color: Colours.tPalette.m3surfaceContainer
+                clip: true
 
                 TextInput {
                     id: nameInput
                     anchors.fill: parent
                     anchors.margins: Tokens.padding.small
+                    anchors.leftMargin: 12
                     text: root.defaultName
                     color: Colours.palette.m3onSurface
+                    selectionColor: Colours.palette.m3primaryContainer
+                    selectedTextColor: Colours.palette.m3onPrimaryContainer
                     font: Tokens.font.body.medium
                     selectByMouse: true
                     cursorVisible: activeFocus
+                    clip: true
+                    verticalAlignment: TextInput.AlignVCenter
                 }
             }
 

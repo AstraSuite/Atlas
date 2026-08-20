@@ -128,6 +128,7 @@ MouseArea {
                     color: Colours.palette.m3surfaceContainerHighest
                     border.color: nameInput.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outlineVariant, 0.5)
                     border.width: nameInput.activeFocus ? 2 : 1
+                    clip: true
 
                     MouseArea {
                         anchors.fill: parent
@@ -147,6 +148,8 @@ MouseArea {
                         font: Tokens.font.body.medium
                         selectByMouse: true
                         cursorVisible: focus
+                        clip: true
+                        verticalAlignment: TextInput.AlignVCenter
                         onAccepted: root.save()
                     }
                 }
