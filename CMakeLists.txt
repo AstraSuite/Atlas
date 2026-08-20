@@ -80,6 +80,18 @@ qt_add_qml_module(prism_app
         qml/components/filedialog/Sidebar.qml
         qml/components/filedialog/FolderContents.qml
         qml/components/filedialog/FileDialog.qml
+        qml/components/tabs/TabBar.qml
+        qml/components/navigation/NavigationBar.qml
+        qml/components/panels/PlacesSidebar.qml
+        qml/components/panels/PreviewPanel.qml
+        qml/components/views/GridView.qml
+        qml/components/views/DetailsView.qml
+        qml/components/views/CompactView.qml
+        qml/components/views/SplitViewContainer.qml
+        qml/components/menus/ContextMenu.qml
+        qml/components/dialogs/NewItemModal.qml
+        qml/components/dialogs/PropertiesModal.qml
+        qml/components/statusbar/StatusBar.qml
     RESOURCES
         assets/fonts/GoogleSansFlex.ttf
         assets/fonts/MaterialSymbolsRounded.ttf
