@@ -26,13 +26,15 @@ FontBuilder FontBuilders::small() const {
 }
 
 // FontStyleBase
-FontStyleBase::FontStyleBase(const QString& family, int smallSize, int mediumSize, int largeSize, int extraLargeSize, QObject* parent)
+FontStyleBase::FontStyleBase(const QString& family, int smallSize, int mediumSize, int largeSize, int extraLargeSize,
+                             QFont::Weight defaultWeight, QObject* parent)
     : QObject(parent)
     , m_family(family)
     , m_smallSize(smallSize)
     , m_mediumSize(mediumSize)
     , m_largeSize(largeSize)
     , m_extraLargeSize(extraLargeSize)
+    , m_defaultWeight(defaultWeight)
     , m_builders(new FontBuilders(this, this)) {
     rebuild();
 }
@@ -51,29 +53,43 @@ void FontStyleBase::setScale(qreal scale) {
     }
 }
 
-void FontStyleBase::rebuild() {
-    auto makeFont = [this](int baseSize) {
-        QFont f;
-        if (!m_family.isEmpty()) {
-            f.setFamily(m_family);
-        }
-        int pt = std::max(1, static_cast<int>(baseSize * m_scale));
-        f.setPointSize(pt);
-        f.setVariableAxis("opsz", static_cast<float>(pt));
-        return f;
-    };
+void FontStyleBase::setSizes(int smallSize, int mediumSize, int largeSize, int extraLargeSize) {
+    m_smallSize = smallSize;
+    m_mediumSize = mediumSize;
+    m_largeSize = largeSize;
+    m_extraLargeSize = extraLargeSize;
+    rebuild();
+}
 
-    m_small = makeFont(m_smallSize);
-    m_medium = makeFont(m_mediumSize);
-    m_large = makeFont(m_largeSize);
-    m_extraLarge = makeFont(m_extraLargeSize);
+QFont FontStyleBase::makeFont(int baseSize, QFont::Weight weight) {
+    QFont f;
+    if (!m_family.isEmpty()) {
+        f.setFamily(m_family);
+    }
+    const int scaledSize = static_cast<int>(baseSize * m_scale);
+    const int cappedSize = scaledSize > 0 ? scaledSize : 1;
+    f.setPointSize(cappedSize);
+    f.setVariableAxis("opsz", static_cast<float>(cappedSize));
+    f.setWeight(weight);
+    f.setVariableAxis("wght", static_cast<float>(f.weight()));
+    if (m_family.contains("Google", Qt::CaseInsensitive)) {
+        f.setVariableAxis("ROND", 25.0f);
+    }
+    return f;
+}
+
+void FontStyleBase::rebuild() {
+    m_small = makeFont(m_smallSize, m_defaultWeight);
+    m_medium = makeFont(m_mediumSize, m_defaultWeight);
+    m_large = makeFont(m_largeSize, m_defaultWeight);
+    m_extraLarge = makeFont(m_extraLargeSize, m_defaultWeight);
 
     emit fontsChanged();
 }
 
 // IconFontStyle
 IconFontStyle::IconFontStyle(const QString& family, QObject* parent)
-    : FontStyleBase(family, 18, 24, 28, 48, parent) {}
+    : FontStyleBase(family, 15, 18, 24, 36, QFont::Normal, parent) {}
 
 FontBuilder IconFontStyle::size(int pointSize) {
     return FontBuilder(m_small).size(pointSize);
@@ -82,11 +98,11 @@ FontBuilder IconFontStyle::size(int pointSize) {
 // FontTokens
 FontTokens::FontTokens(QObject* parent)
     : QObject(parent)
-    , m_headline(new FontStyle("Google Sans Flex", 24, 28, 32, 36, this))
-    , m_title(new FontStyle("Google Sans Flex", 14, 16, 22, 24, this))
-    , m_body(new FontStyle("Google Sans Flex", 12, 14, 16, 18, this))
-    , m_label(new FontStyle("Google Sans Flex", 11, 12, 14, 16, this))
-    , m_mono(new FontStyle("monospace", 11, 13, 15, 18, this))
+    , m_headline(new FontStyle("Google Sans Flex", 24, 28, 32, 36, QFont::Medium, this))
+    , m_title(new FontStyle("Google Sans Flex", 14, 16, 22, 24, QFont::Medium, this))
+    , m_body(new FontStyle("Google Sans Flex", 12, 14, 16, 18, QFont::Normal, this))
+    , m_label(new FontStyle("Google Sans Flex", 11, 12, 14, 16, QFont::Medium, this))
+    , m_mono(new FontStyle("monospace", 12, 14, 16, 18, QFont::Normal, this))
     , m_icon(new IconFontStyle("Material Symbols Rounded", this)) {}
 
 void FontTokens::setFamily(const QString& family) {

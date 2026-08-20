@@ -29,25 +29,19 @@ StyledRect {
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: Tokens.padding.extraSmall / 2
             Layout.bottomMargin: Tokens.spacing.medium
-            text: qsTr("Places")
+            text: qsTr("Files")
             color: Colours.palette.m3onSurface
             font: Tokens.font.body.builders.large.weight(Font.Bold).build()
         }
 
         Repeater {
-            model: ["Home", "Downloads", "Desktop", "Documents", "Music", "Pictures", "Videos", "Root"]
+            model: ["Home", "Downloads", "Desktop", "Documents", "Music", "Pictures", "Videos"]
 
             StyledRect {
                 id: place
 
                 required property string modelData
-                readonly property bool selected: {
-                    if (modelData === "Home" && root.dialog.cwd.length === 1 && root.dialog.cwd[0] === "Home")
-                        return true;
-                    if (modelData === "Root" && (root.dialog.cwd.length === 1 && root.dialog.cwd[0] === ""))
-                        return true;
-                    return modelData === root.dialog.cwd[root.dialog.cwd.length - 1];
-                }
+                readonly property bool selected: modelData === root.dialog.cwd[root.dialog.cwd.length - 1]
 
                 Layout.fillWidth: true
                 implicitHeight: placeInner.implicitHeight + Tokens.padding.medium * 2
@@ -60,8 +54,6 @@ StyledRect {
                     onClicked: {
                         if (place.modelData === "Home")
                             root.dialog.cwd = ["Home"];
-                        else if (place.modelData === "Root")
-                            root.dialog.cwd = [""];
                         else
                             root.dialog.cwd = ["Home", place.modelData];
                     }
@@ -94,8 +86,6 @@ StyledRect {
                                 return "image";
                             if (p === "Videos")
                                 return "video_library";
-                            if (p === "Root")
-                                return "storage";
                             return "folder";
                         }
                         color: place.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface

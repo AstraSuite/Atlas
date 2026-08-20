@@ -44,7 +44,8 @@ class FontStyleBase : public QObject {
     Q_PROPERTY(prism::config::FontBuilders* builders READ builders CONSTANT FINAL)
 
 public:
-    explicit FontStyleBase(const QString& family, int smallSize, int mediumSize, int largeSize, int extraLargeSize, QObject* parent = nullptr);
+    explicit FontStyleBase(const QString& family, int smallSize, int mediumSize, int largeSize, int extraLargeSize,
+                           QFont::Weight defaultWeight = QFont::Normal, QObject* parent = nullptr);
 
     [[nodiscard]] QFont extraLarge() const { return m_extraLarge; }
     [[nodiscard]] QFont large() const { return m_large; }
@@ -58,17 +59,21 @@ public:
     [[nodiscard]] qreal scale() const { return m_scale; }
     void setScale(qreal scale);
 
+    void setSizes(int smallSize, int mediumSize, int largeSize, int extraLargeSize);
+
 signals:
     void fontsChanged();
 
 protected:
     void rebuild();
+    QFont makeFont(int baseSize, QFont::Weight weight);
 
     QString m_family;
     int m_smallSize;
     int m_mediumSize;
     int m_largeSize;
     int m_extraLargeSize;
+    QFont::Weight m_defaultWeight = QFont::Normal;
     qreal m_scale = 1.0;
 
     QFont m_small;
@@ -83,8 +88,9 @@ class FontStyle : public FontStyleBase {
     QML_ANONYMOUS
 
 public:
-    explicit FontStyle(const QString& family, int smallSize, int mediumSize, int largeSize, int extraLargeSize = 24, QObject* parent = nullptr)
-        : FontStyleBase(family, smallSize, mediumSize, largeSize, extraLargeSize, parent) {}
+    explicit FontStyle(const QString& family, int smallSize, int mediumSize, int largeSize, int extraLargeSize = 24,
+                       QFont::Weight defaultWeight = QFont::Normal, QObject* parent = nullptr)
+        : FontStyleBase(family, smallSize, mediumSize, largeSize, extraLargeSize, defaultWeight, parent) {}
 };
 
 class IconFontStyle : public FontStyleBase {
