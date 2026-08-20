@@ -144,6 +144,20 @@ ApplicationWindow {
                                 contextMenu.menuY = y;
                                 contextMenu.expanded = true;
                             }
+
+                            onCreateNewFolder: {
+                                newItemModal.title = qsTr("Create New Folder");
+                                newItemModal.icon = "create_new_folder";
+                                newItemModal.initialText = qsTr("New Folder");
+                                newItemModal.expanded = true;
+                            }
+
+                            onCreateNewFile: {
+                                newItemModal.title = qsTr("Create New File");
+                                newItemModal.icon = "note_add";
+                                newItemModal.initialText = "untitled.txt";
+                                newItemModal.expanded = true;
+                            }
                         }
 
                         // Information / Preview Panel (F11)

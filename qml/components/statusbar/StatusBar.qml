@@ -42,7 +42,11 @@ StyledRect {
             font: Tokens.font.label.medium
         }
 
-        // Git Branch Chip (no outline, sits in bottom panel)
+        Item {
+            Layout.fillWidth: true
+        }
+
+        // Git Branch Chip (no outline, sits in bottom panel to the left of slider)
         Item {
             implicitWidth: gitChipContent.implicitWidth + 20
             implicitHeight: 26
@@ -85,10 +89,6 @@ StyledRect {
                     onClicked: root.gitRequested()
                 }
             }
-        }
-
-        Item {
-            Layout.fillWidth: true
         }
 
         // Compact Zoom Slider with Material Icons
