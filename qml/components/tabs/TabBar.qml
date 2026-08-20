@@ -7,14 +7,14 @@ StyledRect {
     id: root
 
     implicitHeight: 40
-    color: Colours.tPalette.m3surfaceContainerLowest
+    color: "transparent"
 
     RowLayout {
         id: tabRow
 
         anchors.fill: parent
-        anchors.leftMargin: Tokens.padding.extraSmall
-        anchors.rightMargin: Tokens.padding.small
+        anchors.leftMargin: 12
+        anchors.rightMargin: 12
         anchors.topMargin: 4
         anchors.bottomMargin: 0
         spacing: 0
@@ -60,7 +60,7 @@ StyledRect {
                         var ctx = getContext("2d");
                         ctx.clearRect(0, 0, width, height);
 
-                        var r = 10; // corner fillet radius
+                        var r = 10;
                         var w = width;
                         var h = height;
 
@@ -170,34 +170,37 @@ StyledRect {
                     }
                 }
             }
-        }
 
-        // New Tab (+) Button
-        Item {
-            implicitWidth: 28
-            implicitHeight: 28
-            Layout.alignment: Qt.AlignVCenter
-            Layout.leftMargin: 4
-            Layout.rightMargin: 8
+            // New Tab (+) Button right next to the rightmost tab
+            footer: Item {
+                width: 36
+                height: tabList.height
 
-            StyledRect {
-                anchors.fill: parent
-                radius: Tokens.rounding.full
-                color: addHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
-
-                MaterialIcon {
+                Item {
                     anchors.centerIn: parent
-                    text: "add"
-                    color: Colours.palette.m3onSurface
-                    fontStyle: Tokens.font.icon.small
-                }
+                    implicitWidth: 28
+                    implicitHeight: 28
 
-                MouseArea {
-                    id: addHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: TabManager.newTab()
+                    StyledRect {
+                        anchors.fill: parent
+                        radius: Tokens.rounding.full
+                        color: addHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: "add"
+                            color: Colours.palette.m3onSurface
+                            fontStyle: Tokens.font.icon.small
+                        }
+
+                        MouseArea {
+                            id: addHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: TabManager.newTab()
+                        }
+                    }
                 }
             }
         }
