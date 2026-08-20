@@ -41,6 +41,10 @@ qt_add_executable(prism_app
     src/core/drivemanager.cpp
     src/core/filemetadata.hpp
     src/core/filemetadata.cpp
+    src/core/mimeservice.hpp
+    src/core/mimeservice.cpp
+    src/core/gitmanager.hpp
+    src/core/gitmanager.cpp
     src/core/appintegration.hpp
     src/core/appintegration.cpp
     src/core/iconprovider.hpp
@@ -91,10 +95,12 @@ qt_add_qml_module(prism_app
         qml/components/views/FileDetailsView.qml
         qml/components/views/FileCompactView.qml
         qml/components/views/SplitViewContainer.qml
+        qml/components/views/EmptyStateView.qml
         qml/components/menus/ContextMenu.qml
         qml/components/dialogs/NewItemModal.qml
         qml/components/dialogs/EditPlaceModal.qml
         qml/components/dialogs/PropertiesModal.qml
+        qml/components/dialogs/OpenWithModal.qml
         qml/components/containers/VerticalFadeFlickable.qml
         qml/components/containers/VerticalFadeListView.qml
         qml/components/containers/VerticalFadeGridView.qml

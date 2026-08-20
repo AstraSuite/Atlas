@@ -461,6 +461,45 @@ StyledRect {
             }
         }
 
+        // Git Branch Chip (visible when in git repository)
+        Item {
+            implicitWidth: gitChipContent.implicitWidth + 16
+            implicitHeight: 28
+            visible: GitManager.isGitRepo && GitManager.branchName.length > 0
+
+            Binding {
+                target: GitManager
+                property: "currentPath"
+                value: root.activeTab ? root.activeTab.currentPath : ""
+            }
+
+            StyledRect {
+                anchors.fill: parent
+                radius: Tokens.rounding.full
+                color: Qt.alpha(Colours.palette.m3tertiary, 0.15)
+                border.color: Qt.alpha(Colours.palette.m3tertiary, 0.3)
+                border.width: 1
+
+                RowLayout {
+                    id: gitChipContent
+                    anchors.centerIn: parent
+                    spacing: 4
+
+                    MaterialIcon {
+                        text: "fork_right"
+                        fontStyle: Tokens.font.icon.small
+                        color: Colours.palette.m3tertiary
+                    }
+
+                    StyledText {
+                        text: GitManager.branchName
+                        font: Tokens.font.label.small
+                        color: Colours.palette.m3tertiary
+                    }
+                }
+            }
+        }
+
         // Search Toggle Button (Ctrl+F)
         Item {
             implicitWidth: 32

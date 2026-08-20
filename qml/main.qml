@@ -197,6 +197,16 @@ ApplicationWindow {
                     newItemModal.icon = "create_new_folder";
                     newItemModal.initialText = qsTr("New Folder");
                     newItemModal.expanded = true;
+                } else if (action === "openWith" && item) {
+                    openWithModal.targetPath = item.path;
+                    openWithModal.expanded = true;
+                } else if (action === "extractHere" && item) {
+                    FileOperations.extractArchive(item.path);
+                } else if (action === "extractTo" && item) {
+                    let dest = item.path.replace(/\.[^/.]+$/, "");
+                    FileOperations.extractArchive(item.path, dest);
+                } else if (action === "compress" && item) {
+                    FileOperations.createArchive([item.path], item.path + ".zip", "zip");
                 } else if (action === "newFile") {
                     newItemModal.title = qsTr("Create New File");
                     newItemModal.icon = "note_add";
@@ -218,6 +228,11 @@ ApplicationWindow {
                     propertiesModal.expanded = true;
                 }
             }
+        }
+
+        // Open With Modal
+        OpenWithModal {
+            id: openWithModal
         }
 
         // Edit Place Modal

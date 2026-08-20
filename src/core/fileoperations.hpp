@@ -76,6 +76,24 @@ public:
     Q_INVOKABLE void paste(const QString& destinationDir);
     Q_INVOKABLE void copyTextToClipboard(const QString& text);
 
+    enum TransferEngine {
+        StandardEngine = 0,
+        RsyncEngine = 1,
+        CustomEngine = 2
+    };
+    Q_ENUM(TransferEngine)
+
+    Q_PROPERTY(int transferEngine READ transferEngine WRITE setTransferEngine NOTIFY transferEngineChanged)
+    Q_PROPERTY(QString customCommand READ customCommand WRITE setCustomCommand NOTIFY customCommandChanged)
+
+    int transferEngine() const { return m_transferEngine; }
+    void setTransferEngine(int engine);
+    QString customCommand() const { return m_customCommand; }
+    void setCustomCommand(const QString& cmd);
+
+    Q_INVOKABLE void extractArchive(const QString& archivePath, const QString& destinationDir = "");
+    Q_INVOKABLE void createArchive(const QStringList& sourcePaths, const QString& destinationFile, const QString& format = "zip");
+
     Q_INVOKABLE void copyFiles(const QStringList& sources, const QString& destinationDir);
     Q_INVOKABLE void moveFiles(const QStringList& sources, const QString& destinationDir);
     Q_INVOKABLE void deleteFiles(const QStringList& paths, bool permanent = false);
@@ -93,6 +111,8 @@ public:
 
 signals:
     void clipboardChanged();
+    void transferEngineChanged();
+    void customCommandChanged();
     void operationFinished(bool success, const QString& message);
     void conflictOccurred(const QString& source, const QString& destination);
 
@@ -104,6 +124,8 @@ private:
     FileOperationProgress* m_progress = nullptr;
     QStringList m_clipboardFiles;
     bool m_isCut = false;
+    int m_transferEngine = StandardEngine;
+    QString m_customCommand;
     std::atomic<bool> m_cancelRequested{false};
 };
 

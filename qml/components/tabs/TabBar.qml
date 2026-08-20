@@ -38,9 +38,12 @@ StyledRect {
                     required property int index
                     required property string title
                     required property string path
+                    required property bool isSplit
+                    required property string splitTitle
+                    required property string splitPath
                     readonly property bool selected: TabManager.currentIndex === index
 
-                    implicitWidth: Math.min(220, Math.max(120, tabContent.implicitWidth + 44))
+                    implicitWidth: isSplit ? Math.min(360, Math.max(240, tabContent.implicitWidth + 50)) : Math.min(220, Math.max(120, tabContent.implicitWidth + 44))
                     anchors.top: parent ? parent.top : undefined
                     anchors.bottom: parent ? parent.bottom : undefined
                     z: tabDragArea.pressed ? 50 : (selected ? 10 : 1)
@@ -106,13 +109,13 @@ StyledRect {
                         color: Colours.tPalette.m3surfaceContainerHigh
                     }
 
-                    // Drag & Drop Area for Tab selection & reordering (z: 1)
+                    // Drag & Click MouseArea for Tab selection & reordering (z: 1)
                     MouseArea {
                         id: tabDragArea
                         anchors.fill: parent
                         z: 1
                         hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                         cursorShape: pressed ? Qt.ClosedHandCursor : Qt.PointingHandCursor
 
                         drag.target: tabItem
@@ -136,6 +139,10 @@ StyledRect {
                         }
 
                         onReleased: mouse => {
+                            if (mouse.button === Qt.RightButton) {
+                                tabMenu.openMenu(mapToItem(root, mouse.x, mouse.y).x, mapToItem(root, mouse.x, mouse.y).y, tabItem.index);
+                                return;
+                            }
                             if (mouse.button === Qt.MiddleButton) {
                                 TabManager.closeTab(tabItem.index);
                                 return;
@@ -154,61 +161,131 @@ StyledRect {
                         }
                     }
 
-                    // Tab Content (Icon, Label, Close Button) (z: 10)
+                    // Single vs Joined Split Tab Content (z: 10)
                     RowLayout {
                         id: tabContent
-
                         anchors.fill: parent
                         anchors.leftMargin: 18
                         anchors.rightMargin: 14
                         anchors.bottomMargin: 2
-                        spacing: Tokens.spacing.small
+                        spacing: 6
                         z: 10
 
-                        MaterialIcon {
-                            text: "folder"
-                            color: tabItem.selected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-                            fontStyle: Tokens.font.icon.small
-                        }
-
-                        StyledText {
+                        // Primary Pane
+                        RowLayout {
                             Layout.fillWidth: true
-                            text: tabItem.title
-                            color: tabItem.selected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
-                            font: Tokens.font.body.small
-                            elide: Text.ElideRight
-                        }
+                            spacing: 4
 
-                        // Close Button with Distinct Circle Hover Highlight (z: 20)
-                        Item {
-                            implicitWidth: 24
-                            implicitHeight: 24
-                            visible: TabManager.count > 1
-                            z: 20
-
-                            StyledRect {
-                                id: closeBg
-                                anchors.fill: parent
-                                radius: Tokens.rounding.full
-                                color: closeHover.containsMouse ? (tabItem.selected ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainerHighest) : "transparent"
-
-                                MaterialIcon {
-                                    anchors.centerIn: parent
-                                    text: "close"
-                                    fontStyle: Tokens.font.icon.small
-                                    color: closeHover.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
-                                }
+                            MaterialIcon {
+                                text: "folder"
+                                color: tabItem.selected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                                fontStyle: Tokens.font.icon.small
                             }
 
-                            MouseArea {
-                                id: closeHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                preventStealing: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: mouse => {
-                                    mouse.accepted = true;
-                                    TabManager.closeTab(tabItem.index);
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: tabItem.title
+                                color: tabItem.selected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                                font: Tokens.font.body.small
+                                elide: Text.ElideRight
+                            }
+
+                            // Close Left / Main Pane Button (z: 20)
+                            Item {
+                                implicitWidth: 20
+                                implicitHeight: 20
+                                visible: tabItem.isSplit || TabManager.count > 1
+                                z: 20
+
+                                StyledRect {
+                                    anchors.fill: parent
+                                    radius: Tokens.rounding.full
+                                    color: closeHover1.containsMouse ? (tabItem.selected ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainerHighest) : "transparent"
+
+                                    MaterialIcon {
+                                        anchors.centerIn: parent
+                                        text: "close"
+                                        fontStyle: Tokens.font.icon.small
+                                        color: closeHover1.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: closeHover1
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    preventStealing: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: mouse => {
+                                        mouse.accepted = true;
+                                        if (tabItem.isSplit) {
+                                            TabManager.closeSplitPane(tabItem.index, 0);
+                                        } else {
+                                            TabManager.closeTab(tabItem.index);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Split Tab Joined Divider
+                        Rectangle {
+                            visible: tabItem.isSplit
+                            implicitWidth: 1
+                            implicitHeight: 14
+                            color: Colours.palette.m3outlineVariant
+                            opacity: 0.6
+                        }
+
+                        // Secondary Split Pane
+                        RowLayout {
+                            visible: tabItem.isSplit
+                            Layout.fillWidth: true
+                            spacing: 4
+
+                            MaterialIcon {
+                                text: "folder"
+                                color: tabItem.selected ? Colours.palette.m3tertiary : Colours.palette.m3onSurfaceVariant
+                                fontStyle: Tokens.font.icon.small
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: tabItem.splitTitle
+                                color: tabItem.selected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                                font: Tokens.font.body.small
+                                elide: Text.ElideRight
+                            }
+
+                            // Close Secondary Pane Button
+                            Item {
+                                implicitWidth: 20
+                                implicitHeight: 20
+                                z: 20
+
+                                StyledRect {
+                                    anchors.fill: parent
+                                    radius: Tokens.rounding.full
+                                    color: closeHover2.containsMouse ? (tabItem.selected ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainerHighest) : "transparent"
+
+                                    MaterialIcon {
+                                        anchors.centerIn: parent
+                                        text: "close"
+                                        fontStyle: Tokens.font.icon.small
+                                        color: closeHover2.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: closeHover2
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    preventStealing: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: mouse => {
+                                        mouse.accepted = true;
+                                        TabManager.closeSplitPane(tabItem.index, 1);
+                                    }
                                 }
                             }
                         }
@@ -216,7 +293,21 @@ StyledRect {
                 }
             }
 
-            // New Tab (+) Button IMMEDIATELY next to the rightmost tab
+            // Sleek Separator Line between rightmost tab and + button (media_1787207500035.png)
+            Item {
+                width: 14
+                height: tabsRow.height
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 1
+                    height: 16
+                    color: Colours.palette.m3outlineVariant
+                    opacity: 0.6
+                }
+            }
+
+            // New Tab (+) Button
             Item {
                 width: 36
                 height: tabsRow.height
@@ -242,6 +333,133 @@ StyledRect {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: TabManager.newTab()
+                    }
+                }
+            }
+        }
+    }
+
+    // Tab Context Menu
+    MouseArea {
+        id: tabMenu
+        anchors.fill: parent
+        z: 999
+        visible: menuRect.opacity > 0.01
+        enabled: visible
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: menuRect.expanded = false
+
+        property real menuX: 0
+        property real menuY: 0
+        property int targetTabIndex: -1
+
+        function openMenu(x, y, idx) {
+            menuX = x;
+            menuY = y;
+            targetTabIndex = idx;
+            menuRect.expanded = true;
+        }
+
+        StyledRect {
+            id: menuRect
+            property bool expanded: false
+            x: Math.min(Math.max(8, tabMenu.menuX), root.width - width - 8)
+            y: Math.min(Math.max(8, tabMenu.menuY), root.height - height - 8)
+            implicitWidth: 200
+            implicitHeight: tabMenuCol.implicitHeight + Tokens.padding.extraSmall * 2
+            radius: Tokens.rounding.large
+            color: Colours.palette.m3surfaceContainerLow
+            opacity: expanded ? 1 : 0
+            scale: expanded ? 1 : 0.94
+
+            Behavior on opacity { Anim { type: Anim.FastEffects } }
+            Behavior on scale { Anim { type: Anim.FastEffects } }
+
+            ColumnLayout {
+                id: tabMenuCol
+                anchors.fill: parent
+                anchors.margins: Tokens.padding.extraSmall
+                spacing: 0
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    implicitHeight: 34
+                    radius: Tokens.rounding.medium
+                    color: mi1Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        spacing: 8
+                        MaterialIcon { text: "splitscreen"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3onSurfaceVariant }
+                        StyledText { text: qsTr("Split Tab Side-by-Side"); font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
+                    }
+
+                    MouseArea {
+                        id: mi1Hover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            menuRect.expanded = false;
+                            TabManager.splitTabWith(tabMenu.targetTabIndex, "");
+                        }
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    implicitHeight: 34
+                    radius: Tokens.rounding.medium
+                    color: mi2Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        spacing: 8
+                        MaterialIcon { text: "content_copy"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3onSurfaceVariant }
+                        StyledText { text: qsTr("Duplicate Tab"); font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
+                    }
+
+                    MouseArea {
+                        id: mi2Hover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            menuRect.expanded = false;
+                            TabManager.duplicateTab(tabMenu.targetTabIndex);
+                        }
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    implicitHeight: 34
+                    radius: Tokens.rounding.medium
+                    color: mi3Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                    visible: TabManager.count > 1
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        spacing: 8
+                        MaterialIcon { text: "close"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3error }
+                        StyledText { text: qsTr("Close Tab"); font: Tokens.font.body.medium; color: Colours.palette.m3error }
+                    }
+
+                    MouseArea {
+                        id: mi3Hover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            menuRect.expanded = false;
+                            TabManager.closeTab(tabMenu.targetTabIndex);
+                        }
                     }
                 }
             }

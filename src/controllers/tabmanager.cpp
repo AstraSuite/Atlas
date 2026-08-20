@@ -14,6 +14,18 @@ TabItem::TabItem(const QString& initialPath, QObject* parent)
     updateTitle();
 }
 
+QString TabItem::splitTitle() const {
+    QString p = m_splitPath.isEmpty() ? m_currentPath : m_splitPath;
+    if (p == QDir::homePath()) {
+        return tr("Home");
+    } else if (p == "/") {
+        return tr("Root");
+    } else {
+        QString fName = QFileInfo(p).fileName();
+        return fName.isEmpty() ? p : fName;
+    }
+}
+
 void TabItem::updateTitle() {
     QString p = m_activePane == 1 ? m_splitPath : m_currentPath;
     if (p == QDir::homePath()) {
@@ -133,6 +145,9 @@ QVariant TabManager::data(const QModelIndex& index, int role) const {
     switch (role) {
     case TitleRole: return tab->title();
     case PathRole: return tab->currentPath();
+    case IsSplitRole: return tab->isSplit();
+    case SplitTitleRole: return tab->splitTitle();
+    case SplitPathRole: return tab->splitPath();
     case TabItemRole: return QVariant::fromValue(tab);
     default:
         return {};
@@ -143,6 +158,9 @@ QHash<int, QByteArray> TabManager::roleNames() const {
     return {
         { TitleRole, "title" },
         { PathRole, "path" },
+        { IsSplitRole, "isSplit" },
+        { SplitTitleRole, "splitTitle" },
+        { SplitPathRole, "splitPath" },
         { TabItemRole, "tabItem" }
     };
 }
@@ -171,6 +189,20 @@ void TabManager::newTab(const QString& path) {
         if (i >= 0) {
             auto mi = index(i, 0);
             emit dataChanged(mi, mi, { TitleRole });
+        }
+    });
+    connect(tab, &TabItem::splitPathChanged, this, [this, tab]() {
+        int i = m_tabs.indexOf(tab);
+        if (i >= 0) {
+            auto mi = index(i, 0);
+            emit dataChanged(mi, mi, { SplitTitleRole, SplitPathRole });
+        }
+    });
+    connect(tab, &TabItem::isSplitChanged, this, [this, tab]() {
+        int i = m_tabs.indexOf(tab);
+        if (i >= 0) {
+            auto mi = index(i, 0);
+            emit dataChanged(mi, mi, { IsSplitRole });
         }
     });
     m_tabs.append(tab);
@@ -233,6 +265,25 @@ void TabManager::moveTab(int fromIndex, int toIndex) {
 void TabManager::toggleSplitView() {
     if (auto* tab = currentTab()) {
         tab->setIsSplit(!tab->isSplit());
+    }
+}
+
+void TabManager::splitTabWith(int tabIndex, const QString& secondaryPath) {
+    if (tabIndex >= 0 && tabIndex < m_tabs.size()) {
+        auto* tab = m_tabs.at(tabIndex);
+        tab->setSplitPath(secondaryPath.isEmpty() ? tab->currentPath() : secondaryPath);
+        tab->setIsSplit(true);
+        setCurrentIndex(tabIndex);
+    }
+}
+
+void TabManager::closeSplitPane(int tabIndex, int paneIndex) {
+    if (tabIndex >= 0 && tabIndex < m_tabs.size()) {
+        auto* tab = m_tabs.at(tabIndex);
+        if (paneIndex == 0) {
+            tab->setCurrentPath(tab->splitPath());
+        }
+        tab->setIsSplit(false);
     }
 }
 

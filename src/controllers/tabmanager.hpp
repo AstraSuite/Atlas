@@ -13,7 +13,7 @@ class TabItem : public QObject {
     Q_OBJECT
     QML_ANONYMOUS
 
-    Q_PROPERTY(QString title READ title NOTIFY titleChanged)
+    Q_PROPERTY(QString splitTitle READ splitTitle NOTIFY splitPathChanged)
     Q_PROPERTY(QString currentPath READ currentPath WRITE setCurrentPath NOTIFY currentPathChanged)
     Q_PROPERTY(QString splitPath READ splitPath WRITE setSplitPath NOTIFY splitPathChanged)
     Q_PROPERTY(bool isSplit READ isSplit WRITE setIsSplit NOTIFY isSplitChanged)
@@ -26,6 +26,7 @@ public:
     explicit TabItem(const QString& initialPath, QObject* parent = nullptr);
 
     QString title() const { return m_title; }
+    QString splitTitle() const;
     QString currentPath() const { return m_currentPath; }
     void setCurrentPath(const QString& path);
 
@@ -83,6 +84,9 @@ public:
     enum TabRoles {
         TitleRole = Qt::UserRole + 1,
         PathRole,
+        IsSplitRole,
+        SplitTitleRole,
+        SplitPathRole,
         TabItemRole
     };
     Q_ENUM(TabRoles)
@@ -106,6 +110,8 @@ public:
     Q_INVOKABLE void duplicateTab(int index);
     Q_INVOKABLE void moveTab(int fromIndex, int toIndex);
     Q_INVOKABLE void toggleSplitView();
+    Q_INVOKABLE void splitTabWith(int tabIndex, const QString& secondaryPath);
+    Q_INVOKABLE void closeSplitPane(int tabIndex, int paneIndex);
 
 signals:
     void currentIndexChanged();

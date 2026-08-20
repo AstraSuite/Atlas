@@ -2,6 +2,7 @@
 #include "fileutils.hpp"
 
 #include <QCryptographicHash>
+#include <QtConcurrent>
 #include <QDir>
 #include <QFileInfo>
 #include <QImageReader>
@@ -151,6 +152,75 @@ void FileMetadata::reload() {
     }
 
     emit metadataChanged();
+}
+
+void FileMetadata::calculateChecksums() {
+    if (m_path.isEmpty() || m_isDir || !QFile::exists(m_path)) return;
+
+    m_checksumsLoading = true;
+    emit checksumsChanged();
+
+    QString p = m_path;
+    (void)QtConcurrent::run([this, p]() {
+        QFile file(p);
+        if (!file.open(QIODevice::ReadOnly)) {
+            QMetaObject::invokeMethod(this, [this]() {
+                m_checksumsLoading = false;
+                emit checksumsChanged();
+            });
+            return;
+        }
+
+        QCryptographicHash md5Hash(QCryptographicHash::Md5);
+        QCryptographicHash sha1Hash(QCryptographicHash::Sha1);
+        QCryptographicHash sha256Hash(QCryptographicHash::Sha256);
+
+        char buffer[65536];
+        while (!file.atEnd()) {
+            qint64 bytesRead = file.read(buffer, sizeof(buffer));
+            if (bytesRead > 0) {
+                QByteArrayView view(buffer, bytesRead);
+                md5Hash.addData(view);
+                sha1Hash.addData(view);
+                sha256Hash.addData(view);
+            }
+        }
+        file.close();
+
+        QString md5Str = QString::fromUtf8(md5Hash.result().toHex());
+        QString sha1Str = QString::fromUtf8(sha1Hash.result().toHex());
+        QString sha256Str = QString::fromUtf8(sha256Hash.result().toHex());
+
+        QMetaObject::invokeMethod(this, [this, md5Str, sha1Str, sha256Str]() {
+            m_md5 = md5Str;
+            m_sha1 = sha1Str;
+            m_sha256 = sha256Str;
+            m_checksumsLoading = false;
+            emit checksumsChanged();
+        });
+    });
+}
+
+bool FileMetadata::applyPermissions(int userRead, int userWrite, int userExec,
+                                    int groupRead, int groupWrite, int groupExec,
+                                    int otherRead, int otherWrite, int otherExec,
+                                    bool recursive) {
+    if (m_path.isEmpty() || !QFile::exists(m_path)) return false;
+
+    QFile::Permissions perms;
+    if (userRead) perms |= QFile::ReadUser;
+    if (userWrite) perms |= QFile::WriteUser;
+    if (userExec) perms |= QFile::ExeUser;
+    if (groupRead) perms |= QFile::ReadGroup;
+    if (groupWrite) perms |= QFile::WriteGroup;
+    if (groupExec) perms |= QFile::ExeGroup;
+    if (otherRead) perms |= QFile::ReadOther;
+    if (otherWrite) perms |= QFile::WriteOther;
+    if (otherExec) perms |= QFile::ExeOther;
+
+    bool success = QFile::setPermissions(m_path, perms);
+    reload();
+    return success;
 }
 
 } // namespace prism::core

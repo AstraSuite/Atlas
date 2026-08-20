@@ -8,6 +8,7 @@
 #include <QGuiApplication>
 #include <QClipboard>
 #include <QStandardPaths>
+#include <QProcess>
 #include <QLoggingCategory>
 
 namespace prism::core {
@@ -21,6 +22,20 @@ FileOperations::FileOperations(QObject* parent)
 FileOperations* FileOperations::instance() {
     static auto* s_instance = new FileOperations();
     return s_instance;
+}
+
+void FileOperations::setTransferEngine(int engine) {
+    if (m_transferEngine != engine) {
+        m_transferEngine = engine;
+        emit transferEngineChanged();
+    }
+}
+
+void FileOperations::setCustomCommand(const QString& cmd) {
+    if (m_customCommand != cmd) {
+        m_customCommand = cmd;
+        emit customCommandChanged();
+    }
 }
 
 void FileOperations::copyToClipboard(const QStringList& paths) {
@@ -141,30 +156,44 @@ void FileOperations::copyFiles(const QStringList& sources, const QString& destin
     m_progress->setStatusText(tr("Copying files..."));
 
     (void)QtConcurrent::run([this, sources, destinationDir]() {
-        qint64 total = calculateTotalSize(sources);
-        qint64 processed = 0;
         bool allSuccess = true;
 
-        for (const QString& src : sources) {
-            if (m_cancelRequested.load()) {
-                allSuccess = false;
-                break;
-            }
-            QFileInfo fi(src);
-            QString dest = destinationDir + "/" + fi.fileName();
-            if (QFile::exists(dest)) {
-                // Auto-rename with (copy)
-                QString base = fi.completeBaseName();
-                QString ext = fi.suffix().isEmpty() ? "" : "." + fi.suffix();
-                int counter = 1;
-                while (QFile::exists(dest)) {
-                    dest = QString("%1/%2 (copy %3)%4").arg(destinationDir, base, QString::number(counter++), ext);
-                }
-            }
+        if (m_transferEngine == RsyncEngine) {
+            // Rsync transfer with checksum verification and progress
+            QStringList args;
+            args << "-avh" << "--progress" << "--checksum";
+            args.append(sources);
+            args << destinationDir + "/";
 
-            if (!copyRecursively(src, dest, m_cancelRequested, processed, total)) {
-                allSuccess = false;
-                break;
+            QProcess proc;
+            proc.start("rsync", args);
+            proc.waitForFinished(-1);
+            allSuccess = (proc.exitCode() == 0);
+        } else {
+            qint64 total = calculateTotalSize(sources);
+            qint64 processed = 0;
+
+            for (const QString& src : sources) {
+                if (m_cancelRequested.load()) {
+                    allSuccess = false;
+                    break;
+                }
+                QFileInfo fi(src);
+                QString dest = destinationDir + "/" + fi.fileName();
+                if (QFile::exists(dest)) {
+                    // Auto-rename with (copy)
+                    QString base = fi.completeBaseName();
+                    QString ext = fi.suffix().isEmpty() ? "" : "." + fi.suffix();
+                    int counter = 1;
+                    while (QFile::exists(dest)) {
+                        dest = QString("%1/%2 (copy %3)%4").arg(destinationDir, base, QString::number(counter++), ext);
+                    }
+                }
+
+                if (!copyRecursively(src, dest, m_cancelRequested, processed, total)) {
+                    allSuccess = false;
+                    break;
+                }
             }
         }
 
@@ -184,24 +213,37 @@ void FileOperations::moveFiles(const QStringList& sources, const QString& destin
 
     (void)QtConcurrent::run([this, sources, destinationDir]() {
         bool allSuccess = true;
-        qint64 total = calculateTotalSize(sources);
-        qint64 processed = 0;
 
-        for (const QString& src : sources) {
-            if (m_cancelRequested.load()) {
-                allSuccess = false;
-                break;
-            }
-            QFileInfo fi(src);
-            QString dest = destinationDir + "/" + fi.fileName();
+        if (m_transferEngine == RsyncEngine) {
+            QStringList args;
+            args << "-avh" << "--remove-source-files" << "--progress" << "--checksum";
+            args.append(sources);
+            args << destinationDir + "/";
 
-            // Try fast filesystem rename
-            if (!QFile::rename(src, dest)) {
-                // Fallback to copy and remove
-                if (copyRecursively(src, dest, m_cancelRequested, processed, total)) {
-                    removeRecursively(src);
-                } else {
+            QProcess proc;
+            proc.start("rsync", args);
+            proc.waitForFinished(-1);
+            allSuccess = (proc.exitCode() == 0);
+        } else {
+            qint64 total = calculateTotalSize(sources);
+            qint64 processed = 0;
+
+            for (const QString& src : sources) {
+                if (m_cancelRequested.load()) {
                     allSuccess = false;
+                    break;
+                }
+                QFileInfo fi(src);
+                QString dest = destinationDir + "/" + fi.fileName();
+
+                // Try fast filesystem rename
+                if (!QFile::rename(src, dest)) {
+                    // Fallback to copy and remove
+                    if (copyRecursively(src, dest, m_cancelRequested, processed, total)) {
+                        removeRecursively(src);
+                    } else {
+                        allSuccess = false;
+                    }
                 }
             }
         }
@@ -210,6 +252,105 @@ void FileOperations::moveFiles(const QStringList& sources, const QString& destin
             m_progress->setRunning(false);
             m_progress->setProgress(1.0);
             emit operationFinished(allSuccess, allSuccess ? tr("Move completed") : tr("Move failed or cancelled"));
+        });
+    });
+}
+
+void FileOperations::extractArchive(const QString& archivePath, const QString& destinationDir) {
+    m_progress->setRunning(true);
+    m_progress->setStatusText(tr("Extracting archive..."));
+
+    (void)QtConcurrent::run([this, archivePath, destinationDir]() {
+        QFileInfo fi(archivePath);
+        QString dest = destinationDir.isEmpty() ? fi.absolutePath() : destinationDir;
+        QDir().mkpath(dest);
+
+        bool success = false;
+        QString name = fi.fileName().toLower();
+        QProcess proc;
+
+        if (name.endsWith(".zip")) {
+            proc.start("unzip", QStringList{ "-o", archivePath, "-d", dest });
+            proc.waitForFinished(-1);
+            success = (proc.exitCode() == 0);
+        } else if (name.endsWith(".tar.gz") || name.endsWith(".tgz")) {
+            proc.start("tar", QStringList{ "-xzf", archivePath, "-C", dest });
+            proc.waitForFinished(-1);
+            success = (proc.exitCode() == 0);
+        } else if (name.endsWith(".tar.xz") || name.endsWith(".txz")) {
+            proc.start("tar", QStringList{ "-xJf", archivePath, "-C", dest });
+            proc.waitForFinished(-1);
+            success = (proc.exitCode() == 0);
+        } else if (name.endsWith(".tar.zst")) {
+            proc.start("tar", QStringList{ "--zstd", "-xf", archivePath, "-C", dest });
+            proc.waitForFinished(-1);
+            success = (proc.exitCode() == 0);
+        } else if (name.endsWith(".tar.bz2") || name.endsWith(".tbz2")) {
+            proc.start("tar", QStringList{ "-xjf", archivePath, "-C", dest });
+            proc.waitForFinished(-1);
+            success = (proc.exitCode() == 0);
+        } else if (name.endsWith(".tar")) {
+            proc.start("tar", QStringList{ "-xf", archivePath, "-C", dest });
+            proc.waitForFinished(-1);
+            success = (proc.exitCode() == 0);
+        } else if (name.endsWith(".7z") || name.endsWith(".rar")) {
+            proc.start("7z", QStringList{ "x", "-y", QString("-o%1").arg(dest), archivePath });
+            proc.waitForFinished(-1);
+            success = (proc.exitCode() == 0);
+        }
+
+        QMetaObject::invokeMethod(this, [this, success, fi]() {
+            m_progress->setRunning(false);
+            emit operationFinished(success, success ? tr("Extracted %1").arg(fi.fileName()) : tr("Extraction failed"));
+        });
+    });
+}
+
+void FileOperations::createArchive(const QStringList& sourcePaths, const QString& destinationFile, const QString& format) {
+    m_progress->setRunning(true);
+    m_progress->setStatusText(tr("Creating archive..."));
+
+    (void)QtConcurrent::run([this, sourcePaths, destinationFile, format]() {
+        bool success = false;
+        QProcess proc;
+        QString fmt = format.toLower();
+
+        if (fmt == "zip" || destinationFile.endsWith(".zip", Qt::CaseInsensitive)) {
+            QStringList args;
+            args << "-r" << destinationFile;
+            for (const auto& s : sourcePaths) args << QFileInfo(s).fileName();
+            if (!sourcePaths.isEmpty()) proc.setWorkingDirectory(QFileInfo(sourcePaths.first()).absolutePath());
+            proc.start("zip", args);
+            proc.waitForFinished(-1);
+            success = (proc.exitCode() == 0);
+        } else if (fmt == "tar.gz" || fmt == "tgz" || destinationFile.endsWith(".tar.gz", Qt::CaseInsensitive)) {
+            QStringList args;
+            args << "-czf" << destinationFile;
+            for (const auto& s : sourcePaths) args << QFileInfo(s).fileName();
+            if (!sourcePaths.isEmpty()) proc.setWorkingDirectory(QFileInfo(sourcePaths.first()).absolutePath());
+            proc.start("tar", args);
+            proc.waitForFinished(-1);
+            success = (proc.exitCode() == 0);
+        } else if (fmt == "tar.zst" || destinationFile.endsWith(".tar.zst", Qt::CaseInsensitive)) {
+            QStringList args;
+            args << "--zstd" << "-cf" << destinationFile;
+            for (const auto& s : sourcePaths) args << QFileInfo(s).fileName();
+            if (!sourcePaths.isEmpty()) proc.setWorkingDirectory(QFileInfo(sourcePaths.first()).absolutePath());
+            proc.start("tar", args);
+            proc.waitForFinished(-1);
+            success = (proc.exitCode() == 0);
+        } else if (fmt == "7z" || destinationFile.endsWith(".7z", Qt::CaseInsensitive)) {
+            QStringList args;
+            args << "a" << destinationFile;
+            for (const auto& s : sourcePaths) args << s;
+            proc.start("7z", args);
+            proc.waitForFinished(-1);
+            success = (proc.exitCode() == 0);
+        }
+
+        QMetaObject::invokeMethod(this, [this, success, destinationFile]() {
+            m_progress->setRunning(false);
+            emit operationFinished(success, success ? tr("Created %1").arg(QFileInfo(destinationFile).fileName()) : tr("Archive creation failed"));
         });
     });
 }

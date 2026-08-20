@@ -34,6 +34,15 @@ class FileMetadata : public QObject {
     Q_PROPERTY(int imageWidth READ imageWidth NOTIFY metadataChanged)
     Q_PROPERTY(int imageHeight READ imageHeight NOTIFY metadataChanged)
     Q_PROPERTY(QString imageDimensions READ imageDimensions NOTIFY metadataChanged)
+    Q_PROPERTY(QString md5 READ md5 NOTIFY checksumsChanged)
+    Q_PROPERTY(QString sha1 READ sha1 NOTIFY checksumsChanged)
+    Q_PROPERTY(QString sha256 READ sha256 NOTIFY checksumsChanged)
+    Q_PROPERTY(bool checksumsLoading READ checksumsLoading NOTIFY checksumsChanged)
+    Q_PROPERTY(int octalPermissions READ octalPermissions NOTIFY metadataChanged)
+    Q_PROPERTY(QString audioTitle READ audioTitle NOTIFY metadataChanged)
+    Q_PROPERTY(QString audioArtist READ audioArtist NOTIFY metadataChanged)
+    Q_PROPERTY(QString audioAlbum READ audioAlbum NOTIFY metadataChanged)
+    Q_PROPERTY(QString durationFormatted READ durationFormatted NOTIFY metadataChanged)
 
 public:
     explicit FileMetadata(QObject* parent = nullptr);
@@ -64,11 +73,27 @@ public:
     int imageHeight() const { return m_imageHeight; }
     QString imageDimensions() const { return m_imageDimensions; }
 
+    QString md5() const { return m_md5; }
+    QString sha1() const { return m_sha1; }
+    QString sha256() const { return m_sha256; }
+    bool checksumsLoading() const { return m_checksumsLoading; }
+    int octalPermissions() const { return m_octalPermissions; }
+    QString audioTitle() const { return m_audioTitle; }
+    QString audioArtist() const { return m_audioArtist; }
+    QString audioAlbum() const { return m_audioAlbum; }
+    QString durationFormatted() const { return m_durationFormatted; }
+
     Q_INVOKABLE void reload();
+    Q_INVOKABLE void calculateChecksums();
+    Q_INVOKABLE bool applyPermissions(int userRead, int userWrite, int userExec,
+                                     int groupRead, int groupWrite, int groupExec,
+                                     int otherRead, int otherWrite, int otherExec,
+                                     bool recursive = false);
 
 signals:
     void pathChanged();
     void metadataChanged();
+    void checksumsChanged();
 
 private:
     QString findThumbnail(const QString& filePath);
@@ -96,6 +121,15 @@ private:
     int m_imageWidth = 0;
     int m_imageHeight = 0;
     QString m_imageDimensions;
+    QString m_md5;
+    QString m_sha1;
+    QString m_sha256;
+    bool m_checksumsLoading = false;
+    int m_octalPermissions = 0755;
+    QString m_audioTitle;
+    QString m_audioArtist;
+    QString m_audioAlbum;
+    QString m_durationFormatted;
 };
 
 } // namespace prism::core

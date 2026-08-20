@@ -12,6 +12,11 @@ MouseArea {
     property var targetItem: null
     property string currentDir: ""
     readonly property bool isTrash: currentDir.indexOf("Trash") !== -1 || currentDir.indexOf("trash:") !== -1 || (targetItem && targetItem.isTrashItem)
+    readonly property bool isArchive: targetItem && (
+        targetItem.name.endsWith(".zip") || targetItem.name.endsWith(".tar.gz") ||
+        targetItem.name.endsWith(".tar.xz") || targetItem.name.endsWith(".tar.zst") ||
+        targetItem.name.endsWith(".tgz") || targetItem.name.endsWith(".7z") || targetItem.name.endsWith(".rar")
+    )
 
     signal actionTriggered(string action, var item)
 
@@ -24,11 +29,7 @@ MouseArea {
     onClicked: expanded = false
 
     opacity: expanded ? 1 : 0
-    Behavior on opacity {
-        Anim {
-            type: Anim.FastEffects
-        }
-    }
+    Behavior on opacity { Anim { type: Anim.FastEffects } }
 
     StyledRect {
         id: menuRect
@@ -81,17 +82,27 @@ MouseArea {
                     }
 
                     if (root.targetItem) {
-                        return [
+                        let list = [
                             { text: qsTr("Open"), icon: "open_in_new", action: "open" },
-                            { text: qsTr("Cut"), icon: "content_cut", action: "cut" },
-                            { text: qsTr("Copy"), icon: "content_copy", action: "copy" },
-                            { text: qsTr("Paste"), icon: "content_paste", action: "paste", visible: FileOperations.canPaste },
-                            { text: qsTr("Create Symlink"), icon: "link", action: "symlink" },
-                            { text: qsTr("Rename"), icon: "drive_file_rename_outline", action: "rename" },
-                            { text: qsTr("Duplicate"), icon: "control_point_duplicate", action: "duplicate" },
-                            { text: qsTr("Move to Trash"), icon: "delete", action: "trash" },
-                            { text: qsTr("Properties"), icon: "info", action: "properties" }
+                            { text: qsTr("Open With..."), icon: "open_with", action: "openWith" }
                         ];
+
+                        if (root.isArchive) {
+                            list.push({ text: qsTr("Extract Here"), icon: "unarchive", action: "extractHere" });
+                            list.push({ text: qsTr("Extract to Folder"), icon: "folder_zip", action: "extractTo" });
+                        }
+
+                        list.push({ text: qsTr("Compress..."), icon: "archive", action: "compress" });
+                        list.push({ text: qsTr("Cut"), icon: "content_cut", action: "cut" });
+                        list.push({ text: qsTr("Copy"), icon: "content_copy", action: "copy" });
+                        list.push({ text: qsTr("Paste"), icon: "content_paste", action: "paste", visible: FileOperations.canPaste });
+                        list.push({ text: qsTr("Create Symlink"), icon: "link", action: "symlink" });
+                        list.push({ text: qsTr("Rename"), icon: "drive_file_rename_outline", action: "rename" });
+                        list.push({ text: qsTr("Duplicate"), icon: "control_point_duplicate", action: "duplicate" });
+                        list.push({ text: qsTr("Move to Trash"), icon: "delete", action: "trash" });
+                        list.push({ text: qsTr("Properties"), icon: "info", action: "properties" });
+
+                        return list;
                     } else {
                         return [
                             { text: qsTr("New Folder"), icon: "create_new_folder", action: "newFolder" },
