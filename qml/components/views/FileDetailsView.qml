@@ -264,7 +264,7 @@ Item {
             clip: true
             focus: true
             currentIndex: -1
-            interactive: true
+            interactive: false
 
             model: root.model
 
@@ -305,7 +305,30 @@ Item {
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
 
+                    property real pressX: 0
+                    property real pressY: 0
+                    property bool isDragging: false
+
+                    onPressed: mouse => {
+                        pressX = mouse.x;
+                        pressY = mouse.y;
+                        isDragging = false;
+                    }
+
+                    onPositionChanged: mouse => {
+                        if (mouse.buttons & Qt.LeftButton) {
+                            let dx = mouse.x - pressX;
+                            let dy = mouse.y - pressY;
+                            if (!isDragging && (dx * dx + dy * dy) > 64) {
+                                isDragging = true;
+                                let paths = root.isSelected(rowItem.modelData.path) ? root.selectedPaths : [rowItem.modelData.path];
+                                FileOperations.startNativeDrag(paths);
+                            }
+                        }
+                    }
+
                     onClicked: mouse => {
+                        if (isDragging) return;
                         if (mouse.button === Qt.BackButton) {
                             if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
                         } else if (mouse.button === Qt.ForwardButton) {
@@ -338,7 +361,7 @@ Item {
                     anchors.rightMargin: Tokens.padding.medium
                     spacing: Tokens.spacing.small
 
-                    // Name + Icon + Symlink
+                    // Name + Icon + Symlink / Lock
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: Tokens.spacing.small
@@ -362,13 +385,28 @@ Item {
                                 }
                             }
 
+                            // Lock Indicator (Top Left)
+                            MaterialIcon {
+                                anchors.top: parent.top
+                                anchors.left: parent.left
+                                anchors.margins: -4
+                                visible: rowItem.modelData ? rowItem.modelData.isReadOnly : false
+                                text: "lock"
+                                fontStyle: Tokens.font.icon.small
+                                color: Colours.palette.m3error
+                                z: 2
+                            }
+
+                            // Symlink Indicator (Bottom Right)
                             MaterialIcon {
                                 anchors.bottom: parent.bottom
                                 anchors.right: parent.right
+                                anchors.margins: -3
                                 visible: rowItem.modelData ? rowItem.modelData.isSymLink : false
                                 text: "link"
                                 fontStyle: Tokens.font.icon.small
                                 color: Colours.palette.m3primary
+                                z: 2
                             }
                         }
 

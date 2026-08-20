@@ -232,4 +232,25 @@ void DriveManager::unmountDevice(const QString& devicePath) {
     });
 }
 
+void DriveManager::ejectDevice(const QString& devicePath) {
+    (void)QtConcurrent::run([this, devicePath]() {
+        QProcess unmountProc;
+        unmountProc.start("udisksctl", { "unmount", "-b", devicePath });
+        unmountProc.waitForFinished(5000);
+
+        QProcess proc;
+        proc.start("udisksctl", { "power-off", "-b", devicePath });
+        if (!proc.waitForFinished(5000) || proc.exitCode() != 0) {
+            QProcess ejectProc;
+            ejectProc.start("eject", { devicePath });
+            ejectProc.waitForFinished(5000);
+        }
+
+        QMetaObject::invokeMethod(this, [this, devicePath]() {
+            refresh();
+            emit deviceUnmounted(devicePath);
+        });
+    });
+}
+
 } // namespace prism::core

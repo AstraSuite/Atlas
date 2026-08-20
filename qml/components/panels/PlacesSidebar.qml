@@ -222,36 +222,6 @@ StyledRect {
                                     elide: Text.ElideRight
                                 }
                             }
-
-                            // Unmount / Eject Button
-                            StyledRect {
-                                id: ejectBtn
-                                z: 10
-                                implicitWidth: 28
-                                implicitHeight: 28
-                                radius: Tokens.rounding.full
-                                visible: driveItem.isMounted
-                                color: ejectHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
-
-                                MaterialIcon {
-                                    anchors.centerIn: parent
-                                    text: "eject"
-                                    color: ejectHover.containsMouse ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-                                    fontStyle: Tokens.font.icon.small
-                                }
-
-                                MouseArea {
-                                    id: ejectHover
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    acceptedButtons: Qt.LeftButton
-                                    onClicked: mouse => {
-                                        mouse.accepted = true;
-                                        DriveManager.unmountDevice(driveItem.devicePath);
-                                    }
-                                }
-                            }
                         }
 
                         MouseArea {

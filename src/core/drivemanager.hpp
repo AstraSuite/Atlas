@@ -58,6 +58,7 @@ public:
     Q_INVOKABLE void refresh();
     Q_INVOKABLE void mountDevice(const QString& devicePath, int tabIndex = 0);
     Q_INVOKABLE void unmountDevice(const QString& devicePath);
+    Q_INVOKABLE void ejectDevice(const QString& devicePath);
 
 signals:
     void countChanged();

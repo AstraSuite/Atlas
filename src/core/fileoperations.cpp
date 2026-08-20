@@ -10,6 +10,11 @@
 #include <QStandardPaths>
 #include <QProcess>
 #include <QLoggingCategory>
+#include <QDrag>
+#include <QMimeData>
+#include <QUrl>
+#include <QPixmap>
+#include <QPainter>
 
 namespace prism::core {
 
@@ -560,6 +565,50 @@ void FileOperations::pasteAsSymlink(const QString& destinationDir) {
 
 void FileOperations::cancelOperation() {
     m_cancelRequested = true;
+}
+
+void FileOperations::startNativeDrag(const QStringList& filePaths) {
+    if (filePaths.isEmpty()) return;
+
+    QList<QUrl> urls;
+    for (const QString& path : filePaths) {
+        urls.append(QUrl::fromLocalFile(path));
+    }
+
+    auto* mimeData = new QMimeData();
+    mimeData->setUrls(urls);
+    mimeData->setText(filePaths.join("\n"));
+
+    auto* drag = new QDrag(this);
+    drag->setMimeData(mimeData);
+
+    // Create a drag visual pill pixmap
+    QPixmap pixmap(140, 40);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    QColor bg(30, 32, 40, 230);
+    painter.setBrush(bg);
+    painter.setPen(QPen(QColor(130, 170, 255), 1.5));
+    painter.drawRoundedRect(1, 1, 138, 38, 8, 8);
+
+    painter.setPen(Qt::white);
+    QFont font = painter.font();
+    font.setPointSize(9);
+    font.setBold(true);
+    painter.setFont(font);
+    
+    QString text = filePaths.size() == 1 
+        ? QFileInfo(filePaths.first()).fileName() 
+        : QString("%1 items").arg(filePaths.size());
+    painter.drawText(QRect(10, 0, 120, 40), Qt::AlignVCenter | Qt::AlignLeft, painter.fontMetrics().elidedText(text, Qt::ElideMiddle, 120));
+    painter.end();
+
+    drag->setPixmap(pixmap);
+    drag->setHotSpot(QPoint(pixmap.width() / 2, pixmap.height() / 2));
+
+    drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::CopyAction);
 }
 
 } // namespace prism::core

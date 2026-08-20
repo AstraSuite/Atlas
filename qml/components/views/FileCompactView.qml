@@ -49,7 +49,7 @@ Item {
         clip: true
         focus: true
         currentIndex: -1
-        interactive: true
+        interactive: false
 
         ScrollBar.horizontal: StyledScrollBar {
             flickable: gridView
@@ -96,7 +96,30 @@ Item {
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
 
+                    property real pressX: 0
+                    property real pressY: 0
+                    property bool isDragging: false
+
+                    onPressed: mouse => {
+                        pressX = mouse.x;
+                        pressY = mouse.y;
+                        isDragging = false;
+                    }
+
+                    onPositionChanged: mouse => {
+                        if (mouse.buttons & Qt.LeftButton) {
+                            let dx = mouse.x - pressX;
+                            let dy = mouse.y - pressY;
+                            if (!isDragging && (dx * dx + dy * dy) > 64) {
+                                isDragging = true;
+                                let paths = root.isSelected(compDelegate.modelData.path) ? root.selectedPaths : [compDelegate.modelData.path];
+                                FileOperations.startNativeDrag(paths);
+                            }
+                        }
+                    }
+
                     onClicked: mouse => {
+                        if (isDragging) return;
                         if (mouse.button === Qt.BackButton) {
                             if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
                         } else if (mouse.button === Qt.ForwardButton) {
@@ -147,13 +170,28 @@ Item {
                             }
                         }
 
+                        // Lock Indicator (Top Left)
+                        MaterialIcon {
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.margins: -4
+                            visible: compDelegate.modelData ? compDelegate.modelData.isReadOnly : false
+                            text: "lock"
+                            fontStyle: Tokens.font.icon.small
+                            color: Colours.palette.m3error
+                            z: 2
+                        }
+
+                        // Symlink Indicator (Bottom Right)
                         MaterialIcon {
                             anchors.bottom: parent.bottom
                             anchors.right: parent.right
+                            anchors.margins: -3
                             visible: compDelegate.modelData ? compDelegate.modelData.isSymLink : false
                             text: "link"
                             fontStyle: Tokens.font.icon.small
                             color: Colours.palette.m3primary
+                            z: 2
                         }
                     }
 

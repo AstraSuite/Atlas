@@ -108,6 +108,7 @@ public:
     Q_INVOKABLE void pasteAsSymlink(const QString& destinationDir);
 
     Q_INVOKABLE void cancelOperation();
+    Q_INVOKABLE void startNativeDrag(const QStringList& filePaths);
 
 signals:
     void clipboardChanged();

@@ -106,10 +106,12 @@ MouseArea {
                             list.push({ text: qsTr("Open in New Window"), icon: "open_in_new", action: "openWindow" });
                             list.push({ text: qsTr("Open in Split View"), icon: "splitscreen", action: "openSplit" });
                             list.push({ text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminal" });
-                            list.push({ text: qsTr("Unmount & Eject"), icon: "eject", action: "unmount" });
+                            list.push({ text: qsTr("Unmount"), icon: "eject", action: "unmount" });
+                            list.push({ text: qsTr("Eject & Power Off"), icon: "power_settings_new", action: "eject" });
                         } else {
                             list.push({ text: qsTr("Mount & Open"), icon: "hard_drive", action: "mount" });
                             list.push({ text: qsTr("Mount in New Tab"), icon: "tab", action: "mountTab" });
+                            list.push({ text: qsTr("Eject & Power Off"), icon: "power_settings_new", action: "eject" });
                         }
                         return list;
                     }
@@ -198,6 +200,8 @@ MouseArea {
                                 root.emptyTrashRequested();
                             } else if (act === "unmount") {
                                 DriveManager.unmountDevice(root.devicePath);
+                            } else if (act === "eject") {
+                                DriveManager.ejectDevice(root.devicePath);
                             } else if (act === "mount") {
                                 DriveManager.mountDevice(root.devicePath, TabManager.currentIndex);
                             } else if (act === "mountTab") {

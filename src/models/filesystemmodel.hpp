@@ -30,6 +30,8 @@ class FileSystemEntry : public QObject {
     Q_PROPERTY(QString group READ group CONSTANT)
     Q_PROPERTY(QString suffix READ suffix CONSTANT)
     Q_PROPERTY(bool isHidden READ isHidden CONSTANT)
+    Q_PROPERTY(bool isReadOnly READ isReadOnly CONSTANT)
+    Q_PROPERTY(bool isWritable READ isWritable CONSTANT)
     Q_PROPERTY(bool isImage READ isImage CONSTANT)
     Q_PROPERTY(bool isAudio READ isAudio CONSTANT)
     Q_PROPERTY(bool isVideo READ isVideo CONSTANT)
@@ -57,6 +59,8 @@ public:
     QString group() const { return m_group; }
     QString suffix() const { return m_suffix; }
     bool isHidden() const { return m_isHidden; }
+    bool isReadOnly() const { return m_isReadOnly; }
+    bool isWritable() const { return m_isWritable; }
     bool isImage() const { return m_isImage; }
     bool isAudio() const { return m_isAudio; }
     bool isVideo() const { return m_isVideo; }
@@ -84,6 +88,8 @@ public:
     QString m_group;
     QString m_suffix;
     bool m_isHidden = false;
+    bool m_isReadOnly = false;
+    bool m_isWritable = true;
     bool m_isImage = false;
     bool m_isAudio = false;
     bool m_isVideo = false;

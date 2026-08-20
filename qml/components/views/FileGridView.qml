@@ -45,14 +45,14 @@ Item {
         anchors.fill: parent
         anchors.margins: Tokens.padding.extraSmall + Tokens.padding.medium
 
-        // Exact uniform cell dimensions (tall enough for 4 lines of text)
-        cellWidth: root.zoomSize + 36
-        cellHeight: root.zoomSize + 88
+        // Exact uniform cell dimensions (padded for >= 16 characters per line)
+        cellWidth: Math.max(144, root.zoomSize + 48)
+        cellHeight: root.zoomSize + 84
 
         clip: true
         focus: true
         currentIndex: -1
-        interactive: true
+        interactive: false
 
         Keys.onEscapePressed: {
             currentIndex = -1;
@@ -125,7 +125,30 @@ Item {
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
 
+                    property real pressX: 0
+                    property real pressY: 0
+                    property bool isDragging: false
+
+                    onPressed: mouse => {
+                        pressX = mouse.x;
+                        pressY = mouse.y;
+                        isDragging = false;
+                    }
+
+                    onPositionChanged: mouse => {
+                        if (mouse.buttons & Qt.LeftButton) {
+                            let dx = mouse.x - pressX;
+                            let dy = mouse.y - pressY;
+                            if (!isDragging && (dx * dx + dy * dy) > 64) {
+                                isDragging = true;
+                                let paths = root.isSelected(delegateContainer.modelData.path) ? root.selectedPaths : [delegateContainer.modelData.path];
+                                FileOperations.startNativeDrag(paths);
+                            }
+                        }
+                    }
+
                     onClicked: mouse => {
+                        if (isDragging) return;
                         if (mouse.button === Qt.BackButton) {
                             if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
                         } else if (mouse.button === Qt.ForwardButton) {
@@ -175,15 +198,35 @@ Item {
                         }
                     }
 
-                    // Symlink Indicator Badge
+                    // Lock Indicator Badge (Top Left)
+                    StyledRect {
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        implicitWidth: 20
+                        implicitHeight: 20
+                        radius: Tokens.rounding.full
+                        color: Qt.alpha(Colours.palette.m3surface, 0.9)
+                        visible: delegateContainer.modelData ? delegateContainer.modelData.isReadOnly : false
+                        z: 5
+
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: "lock"
+                            fontStyle: Tokens.font.icon.small
+                            color: Colours.palette.m3error
+                        }
+                    }
+
+                    // Symlink Indicator Badge (Bottom Right)
                     StyledRect {
                         anchors.bottom: parent.bottom
                         anchors.right: parent.right
                         implicitWidth: 20
                         implicitHeight: 20
                         radius: Tokens.rounding.full
-                        color: Qt.alpha(Colours.palette.m3surface, 0.85)
+                        color: Qt.alpha(Colours.palette.m3surface, 0.9)
                         visible: delegateContainer.modelData ? delegateContainer.modelData.isSymLink : false
+                        z: 5
 
                         MaterialIcon {
                             anchors.centerIn: parent

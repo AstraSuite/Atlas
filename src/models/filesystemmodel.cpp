@@ -29,6 +29,8 @@ struct RawEntryData {
     QString group;
     QString suffix;
     bool isHidden = false;
+    bool isReadOnly = false;
+    bool isWritable = true;
     bool isImage = false;
     bool isAudio = false;
     bool isVideo = false;
@@ -201,6 +203,8 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
     d.formattedSize = fi.isDir() ? QString() : prism::core::FileUtils::formatSize(d.size);
     d.suffix = fi.suffix();
     d.isHidden = fi.isHidden() || d.name.startsWith('.');
+    d.isWritable = fi.isWritable();
+    d.isReadOnly = !d.isWritable;
     d.lastModified = fi.lastModified();
     d.formattedDate = d.lastModified.toString("yyyy-MM-dd hh:mm");
     d.owner = fi.owner();
@@ -269,6 +273,8 @@ static FileSystemEntry* createEntryFromRawData(const RawEntryData& d, QObject* p
     entry->m_formattedSize = d.formattedSize;
     entry->m_suffix = d.suffix;
     entry->m_isHidden = d.isHidden;
+    entry->m_isReadOnly = d.isReadOnly;
+    entry->m_isWritable = d.isWritable;
     entry->m_lastModified = d.lastModified;
     entry->m_formattedDate = d.formattedDate;
     entry->m_owner = d.owner;
