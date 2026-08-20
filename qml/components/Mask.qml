@@ -2,6 +2,6 @@ import QtQuick.Effects
 
 MultiEffect {
     maskEnabled: true
-    maskSpreadAtMin: 1
+    maskSpreadAtMin: 0
     maskThresholdMin: 0.5
 }
