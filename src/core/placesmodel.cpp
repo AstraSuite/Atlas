@@ -13,7 +13,14 @@
 namespace prism::core {
 
 static QString mapXbelIconToMaterial(const QString& iconName, const QString& path, bool isDir) {
+    if (iconName.isEmpty()) return isDir ? "folder" : "bookmark";
+
+    // If iconName has no hyphens (standard Material Symbol name saved by user), preserve it directly!
+    if (!iconName.contains("-")) return iconName;
+
     QString n = iconName.toLower();
+    if (n.contains("terminal")) return "terminal";
+    if (n.contains("development") || n.contains("code")) return "code";
     if (n.contains("home")) return "home";
     if (n.contains("download")) return "file_download";
     if (n.contains("desktop")) return "desktop_windows";
@@ -23,14 +30,13 @@ static QString mapXbelIconToMaterial(const QString& iconName, const QString& pat
     if (n.contains("video") || n.contains("movie")) return "video_library";
     if (n.contains("trash") || n.contains("delete")) return "delete";
     if (n.contains("game")) return "sports_esports";
-    if (n.contains("development") || n.contains("code") || n.contains("project") || n.contains("terminal")) return "terminal";
     if (n.contains("star")) return "star";
     if (n.contains("favorite") || n.contains("heart")) return "favorite";
     if (n.contains("cloud")) return "cloud";
     if (n.contains("work") || n.contains("briefcase")) return "work";
     if (n.contains("lock")) return "lock";
     if (n.contains("tag") || n.contains("label")) return "sell";
-    if (!iconName.isEmpty() && !iconName.contains("-")) return iconName; // Directly valid M3 icon name
+
     return isDir ? "folder" : "bookmark";
 }
 
