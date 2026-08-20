@@ -25,24 +25,26 @@ StyledRect {
         anchors.margins: Tokens.padding.medium
         spacing: Tokens.spacing.extraSmall
 
-        RowLayout {
+        Item {
             Layout.fillWidth: true
+            implicitHeight: 28
             Layout.topMargin: Tokens.padding.extraSmall / 2
             Layout.bottomMargin: Tokens.spacing.small
-            spacing: Tokens.spacing.extraSmall
 
             StyledText {
-                Layout.fillWidth: true
+                anchors.centerIn: parent
                 text: qsTr("Places")
                 color: Colours.palette.m3onSurface
                 font: Tokens.font.body.builders.large.weight(Font.Bold).build()
             }
 
             StyledRect {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
                 implicitWidth: 26
                 implicitHeight: 26
                 radius: Tokens.rounding.full
-                color: cfgHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                color: cfgHover.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.08) : "transparent"
 
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -118,12 +120,28 @@ StyledRect {
                         implicitHeight: placeRow.implicitHeight + Tokens.padding.small * 2
 
                         radius: Tokens.rounding.full
-                        color: placeDropArea.containsDrag
-                            ? Colours.palette.m3primaryContainer
-                            : (selected ? Colours.palette.m3secondaryContainer : "transparent")
+                        color: "transparent"
 
-                        Behavior on color {
-                            Anim { type: Anim.FastEffects }
+                        // Selection highlight
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Tokens.rounding.full
+                            color: Colours.palette.m3secondaryContainer
+                            opacity: placeItem.selected ? 1.0 : 0.0
+                            Behavior on opacity {
+                                Anim { type: Anim.FastEffects }
+                            }
+                        }
+
+                        // Drag over highlight
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Tokens.rounding.full
+                            color: Colours.palette.m3primaryContainer
+                            opacity: placeDropArea.containsDrag ? 1.0 : 0.0
+                            Behavior on opacity {
+                                Anim { type: Anim.FastEffects }
+                            }
                         }
 
                         DropArea {
@@ -236,12 +254,28 @@ StyledRect {
                         implicitHeight: driveRow.implicitHeight + Tokens.padding.small * 2
 
                         radius: Tokens.rounding.full
-                        color: driveDropArea.containsDrag
-                            ? Colours.palette.m3primaryContainer
-                            : (selected ? Colours.palette.m3secondaryContainer : "transparent")
+                        color: "transparent"
 
-                        Behavior on color {
-                            Anim { type: Anim.FastEffects }
+                        // Selection highlight
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Tokens.rounding.full
+                            color: Colours.palette.m3secondaryContainer
+                            opacity: driveItem.selected ? 1.0 : 0.0
+                            Behavior on opacity {
+                                Anim { type: Anim.FastEffects }
+                            }
+                        }
+
+                        // Drag over highlight
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Tokens.rounding.full
+                            color: Colours.palette.m3primaryContainer
+                            opacity: driveDropArea.containsDrag ? 1.0 : 0.0
+                            Behavior on opacity {
+                                Anim { type: Anim.FastEffects }
+                            }
                         }
 
                         DropArea {

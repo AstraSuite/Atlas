@@ -1,7 +1,9 @@
 #include "iconprovider.hpp"
 #include <QCache>
+#include <QCoreApplication>
 #include <QIcon>
 #include <QMutex>
+#include <QThread>
 
 namespace prism::core {
 
@@ -27,15 +29,25 @@ QImage IconImageProvider::requestImage(const QString& id, QSize* size, const QSi
         }
     }
 
-    QIcon icon = QIcon::fromTheme(id);
-    if (icon.isNull()) {
-        icon = QIcon::fromTheme("text-plain");
+    QImage img;
+    // Safely query QIcon::fromTheme on the main GUI thread
+    if (QThread::currentThread() == qApp->thread()) {
+        QIcon icon = QIcon::fromTheme(id);
+        if (icon.isNull()) icon = QIcon::fromTheme("text-plain");
+        if (!icon.isNull()) {
+            img = icon.pixmap(w, h).toImage();
+        }
+    } else {
+        QMetaObject::invokeMethod(qApp, [&img, id, w, h]() {
+            QIcon icon = QIcon::fromTheme(id);
+            if (icon.isNull()) icon = QIcon::fromTheme("text-plain");
+            if (!icon.isNull()) {
+                img = icon.pixmap(w, h).toImage();
+            }
+        }, Qt::BlockingQueuedConnection);
     }
 
-    QImage img;
-    if (!icon.isNull()) {
-        img = icon.pixmap(w, h).toImage();
-    } else {
+    if (img.isNull()) {
         img = QImage(w, h, QImage::Format_ARGB32_Premultiplied);
         img.fill(Qt::transparent);
     }

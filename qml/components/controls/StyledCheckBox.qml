@@ -33,11 +33,10 @@ Item {
                 width: 36
                 height: 36
                 radius: 18
-                color: checkArea.containsMouse
-                    ? (root.checked ? Qt.alpha(Colours.palette.m3primary, 0.12) : Qt.alpha(Colours.palette.m3onSurface, 0.08))
-                    : "transparent"
+                color: root.checked ? Colours.palette.m3primary : Colours.palette.m3onSurface
+                opacity: checkArea.containsMouse ? (root.checked ? 0.12 : 0.08) : 0.0
 
-                Behavior on color {
+                Behavior on opacity {
                     Anim { type: Anim.FastEffects }
                 }
             }
@@ -49,18 +48,25 @@ Item {
                 width: 18
                 height: 18
                 radius: 2
-
-                color: root.checked ? Colours.palette.m3primary : "transparent"
+                color: "transparent"
                 border.color: root.checked
                     ? Colours.palette.m3primary
                     : (checkArea.containsMouse ? Colours.palette.m3onSurface : Colours.palette.m3outline)
-                border.width: root.checked ? 0 : 2
+                border.width: 2
 
-                Behavior on color {
-                    Anim { type: Anim.FastEffects }
-                }
                 Behavior on border.color {
                     Anim { type: Anim.FastEffects }
+                }
+
+                // Checked fill background
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 2
+                    color: Colours.palette.m3primary
+                    opacity: root.checked ? 1.0 : 0.0
+                    Behavior on opacity {
+                        Anim { type: Anim.FastEffects }
+                    }
                 }
 
                 // Checkmark Icon
