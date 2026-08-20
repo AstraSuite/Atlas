@@ -23,6 +23,17 @@ StyledRect {
 
     implicitHeight: 48
     color: Colours.tPalette.m3surfaceContainer
+    radius: Tokens.rounding.large
+
+    // Square off bottom corners so only top-left and top-right are rounded
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: root.radius
+        color: root.color
+        z: -1
+    }
 
     RowLayout {
         id: navRow
