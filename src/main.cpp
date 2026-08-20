@@ -85,10 +85,10 @@ int main(int argc, char* argv[]) {
     parser.addVersionOption();
 
     QCommandLineOption pickerOption(QStringList{ "p", "picker" }, "Launch in file picker mode");
-    QCommandLineOption titleOption(QStringList{ "t", "title" }, "Dialog title", "title", "Select a file");
-    QCommandLineOption dirOption(QStringList{ "d", "directory" }, "Initial directory", "dir", QDir::homePath());
-    QCommandLineOption filterOption(QStringList{ "f", "filter" }, "File extensions filter, e.g. 'png,jpg' or '*.png,*.jpg'", "filter", "*");
-    QCommandLineOption filterLabelOption(QStringList{ "l", "filter-label" }, "Filter label, e.g. 'Images'", "label", "All files");
+    QCommandLineOption titleOption(QStringList{ "t", "title" }, "Dialog title", "title");
+    QCommandLineOption dirOption(QStringList{ "d", "directory" }, "Initial directory", "dir");
+    QCommandLineOption filterOption(QStringList{ "f", "filter" }, "File extensions filter, e.g. 'png,jpg' or '*.png,*.jpg'", "filter");
+    QCommandLineOption filterLabelOption(QStringList{ "l", "filter-label" }, "Filter label, e.g. 'Images'", "label");
     QCommandLineOption dirOnlyOption(QStringList{ "directory-only" }, "Select directories only");
     QCommandLineOption hiddenOption(QStringList{ "hidden" }, "Show hidden files by default");
     QCommandLineOption lightOption(QStringList{ "light" }, "Force light theme");
@@ -107,7 +107,10 @@ int main(int argc, char* argv[]) {
 
     parser.process(app);
 
-    QString initialDir = parser.value(dirOption);
+    QString initialDir;
+    if (parser.isSet(dirOption)) {
+        initialDir = parser.value(dirOption);
+    }
     const QStringList posArgs = parser.positionalArguments();
     if (!posArgs.isEmpty()) {
         QString p = posArgs.first();
@@ -118,29 +121,35 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    bool isPickerMode = parser.isSet(pickerOption) || parser.isSet(titleOption) || parser.isSet(filterOption) || parser.isSet(dirOnlyOption);
+    bool isPickerMode = parser.isSet(pickerOption) || parser.isSet(filterOption) || parser.isSet(dirOnlyOption);
 
     auto* controller = prism::core::AppController::instance();
-    controller->setTitle(parser.value(titleOption));
-    controller->setInitialDirectory(initialDir);
-    controller->setFilterLabel(parser.value(filterLabelOption));
-
-    QString filterStr = parser.value(filterOption);
-    QStringList filters;
-    for (QString f : filterStr.split(QChar(','), Qt::SkipEmptyParts)) {
-        f = f.trimmed();
-        if (f.startsWith("*."))
-            f = f.mid(2);
-        else if (f.startsWith('.'))
-            f = f.mid(1);
-        if (!f.isEmpty())
-            filters << f;
+    controller->setTitle(parser.isSet(titleOption) ? parser.value(titleOption) : QStringLiteral("Select a file"));
+    if (!initialDir.isEmpty()) {
+        controller->setInitialDirectory(initialDir);
     }
-    if (filters.isEmpty())
-        filters << "*";
-    controller->setFilters(filters);
+    controller->setFilterLabel(parser.isSet(filterLabelOption) ? parser.value(filterLabelOption) : QStringLiteral("All files"));
+
+    if (parser.isSet(filterOption)) {
+        QString filterStr = parser.value(filterOption);
+        QStringList filters;
+        for (QString f : filterStr.split(QChar(','), Qt::SkipEmptyParts)) {
+            f = f.trimmed();
+            if (f.startsWith("*."))
+                f = f.mid(2);
+            else if (f.startsWith('.'))
+                f = f.mid(1);
+            if (!f.isEmpty())
+                filters << f;
+        }
+        if (filters.isEmpty())
+            filters << "*";
+        controller->setFilters(filters);
+    }
     controller->setDirectoryOnly(parser.isSet(dirOnlyOption));
-    controller->setShowHidden(parser.isSet(hiddenOption));
+    if (parser.isSet(hiddenOption)) {
+        controller->setShowHidden(true);
+    }
 
     auto* colours = new prism::config::ColoursSingleton(&app);
     if (parser.isSet(lightOption)) {
@@ -154,20 +163,8 @@ int main(int argc, char* argv[]) {
     auto* fileOps = prism::core::FileOperations::instance();
     auto* tabManager = prism::controllers::TabManager::instance();
 
-    // Session restoration
-    if (!isPickerMode) {
-        if (!initialDir.isEmpty() && tabManager->currentTab()) {
-            tabManager->currentTab()->setCurrentPath(initialDir);
-        } else {
-            QSettings settings("Caelestia", "Prism");
-            QString lastPath = settings.value("session/lastPath", QDir::homePath()).toString();
-            int lastView = settings.value("session/viewMode", 0).toInt();
-            if (tabManager->currentTab()) {
-                tabManager->currentTab()->setCurrentPath(lastPath.isEmpty() ? QDir::homePath() : lastPath);
-                tabManager->currentTab()->setViewMode(lastView);
-            }
-        }
-    } else if (!initialDir.isEmpty() && tabManager->currentTab()) {
+    // If explicit path was provided on command line, navigate there
+    if (!initialDir.isEmpty() && tabManager->currentTab()) {
         tabManager->currentTab()->setCurrentPath(initialDir);
     }
 
