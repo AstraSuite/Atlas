@@ -80,16 +80,17 @@ MouseArea {
 
                 // Pull Button
                 StyledRect {
-                    implicitHeight: 32
-                    implicitWidth: pullText.implicitWidth + 24
+                    implicitHeight: 38
+                    implicitWidth: pullContent.implicitWidth + 32
                     radius: Tokens.rounding.full
                     color: pullHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
 
                     RowLayout {
+                        id: pullContent
                         anchors.centerIn: parent
-                        spacing: 4
+                        spacing: 8
                         MaterialIcon { text: "download"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3primary }
-                        StyledText { id: pullText; text: qsTr("Pull"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurface }
+                        StyledText { text: qsTr("Pull"); font: Tokens.font.label.large; color: Colours.palette.m3onSurface }
                     }
 
                     MouseArea {
@@ -103,16 +104,17 @@ MouseArea {
 
                 // Fetch Button
                 StyledRect {
-                    implicitHeight: 32
-                    implicitWidth: fetchText.implicitWidth + 24
+                    implicitHeight: 38
+                    implicitWidth: fetchContent.implicitWidth + 32
                     radius: Tokens.rounding.full
                     color: fetchHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
 
                     RowLayout {
+                        id: fetchContent
                         anchors.centerIn: parent
-                        spacing: 4
+                        spacing: 8
                         MaterialIcon { text: "sync"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3primary }
-                        StyledText { id: fetchText; text: qsTr("Fetch"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurface }
+                        StyledText { text: qsTr("Fetch"); font: Tokens.font.label.large; color: Colours.palette.m3onSurface }
                     }
 
                     MouseArea {

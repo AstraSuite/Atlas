@@ -9,10 +9,12 @@ StyledRect {
     id: root
 
     required property var activeModel
+    property var activeTab: null
     property int selectedCount: 0
     property string selectedSizeFormatted: ""
     property real zoomLevel: 80
     signal zoomChanged(real level)
+    signal gitRequested()
 
     implicitHeight: statusRow.implicitHeight + Tokens.padding.extraSmall * 2
     color: Colours.tPalette.m3surfaceContainer
@@ -38,6 +40,51 @@ StyledRect {
             text: qsTr("•  %1 selected %2").arg(root.selectedCount).arg(root.selectedSizeFormatted.length > 0 ? `(${root.selectedSizeFormatted})` : "")
             color: Colours.palette.m3primary
             font: Tokens.font.label.medium
+        }
+
+        // Git Branch Chip (no outline, sits in bottom panel)
+        Item {
+            implicitWidth: gitChipContent.implicitWidth + 20
+            implicitHeight: 26
+            visible: GitManager.isGitRepo && GitManager.branchName.length > 0
+
+            Binding {
+                target: GitManager
+                property: "currentPath"
+                value: root.activeTab ? root.activeTab.currentPath : ""
+            }
+
+            StyledRect {
+                anchors.fill: parent
+                radius: Tokens.rounding.full
+                color: gitChipHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.palette.m3tertiary, 0.15)
+
+                RowLayout {
+                    id: gitChipContent
+                    anchors.centerIn: parent
+                    spacing: 6
+
+                    MaterialIcon {
+                        text: "fork_right"
+                        fontStyle: Tokens.font.icon.small
+                        color: Colours.palette.m3tertiary
+                    }
+
+                    StyledText {
+                        text: GitManager.branchName
+                        font: Tokens.font.label.small
+                        color: Colours.palette.m3tertiary
+                    }
+                }
+
+                MouseArea {
+                    id: gitChipHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.gitRequested()
+                }
+            }
         }
 
         Item {

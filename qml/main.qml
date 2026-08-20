@@ -159,9 +159,13 @@ ApplicationWindow {
                         id: statusBar
                         Layout.fillWidth: true
                         activeModel: splitContainer.activeModel
+                        activeTab: TabManager.currentTab
                         selectedCount: splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths.length : (contextMenu.targetItem ? 1 : 0)
                         selectedSizeFormatted: contextMenu.targetItem ? (contextMenu.targetItem.isDir ? "" : contextMenu.targetItem.formattedSize) : ""
                         onZoomChanged: level => zoomLevel = level
+                        onGitRequested: {
+                            gitModal.expanded = true;
+                        }
                     }
                 }
             }
