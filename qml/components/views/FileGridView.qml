@@ -18,6 +18,17 @@ Item {
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
 
+    // Rubberband Marquee Selection Box
+    Rectangle {
+        id: rubberBand
+        visible: false
+        color: Qt.alpha(Colours.palette.m3primary, 0.2)
+        border.color: Colours.palette.m3primary
+        border.width: 1
+        radius: 3
+        z: 90
+    }
+
     VerticalFadeGridView {
         id: view
 
@@ -30,6 +41,7 @@ Item {
         clip: true
         focus: true
         currentIndex: -1
+        interactive: false
 
         Keys.onEscapePressed: currentIndex = -1
         Keys.onReturnPressed: if (currentItem) root.openItem(currentItem)
@@ -41,11 +53,45 @@ Item {
 
         model: root.model
 
+        // Drag to Select Multiple Files / Rubberband Marquee
         MouseArea {
             anchors.fill: parent
             z: -1
-            acceptedButtons: Qt.RightButton | Qt.BackButton | Qt.ForwardButton
-            onClicked: mouse => {
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
+
+            property real startX: 0
+            property real startY: 0
+            property bool isSelecting: false
+
+            onPressed: mouse => {
+                if (mouse.button === Qt.LeftButton) {
+                    startX = mouse.x;
+                    startY = mouse.y;
+                    isSelecting = false;
+                    view.currentIndex = -1;
+                }
+            }
+
+            onPositionChanged: mouse => {
+                if (pressed && (Math.abs(mouse.x - startX) > 5 || Math.abs(mouse.y - startY) > 5)) {
+                    isSelecting = true;
+                    rubberBand.x = Math.min(startX, mouse.x) + view.x;
+                    rubberBand.y = Math.min(startY, mouse.y) + view.y;
+                    rubberBand.width = Math.abs(mouse.x - startX);
+                    rubberBand.height = Math.abs(mouse.y - startY);
+                    rubberBand.visible = true;
+
+                    // Select intersecting item
+                    let midX = (startX + mouse.x) / 2;
+                    let midY = (startY + mouse.y) / 2;
+                    let idx = view.indexAt(midX, midY + view.contentY);
+                    if (idx >= 0) view.currentIndex = idx;
+                }
+            }
+
+            onReleased: mouse => {
+                rubberBand.visible = false;
+                isSelecting = false;
                 if (mouse.button === Qt.BackButton) {
                     if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
                 } else if (mouse.button === Qt.ForwardButton) {
@@ -71,32 +117,24 @@ Item {
             z: GridView.isCurrentItem ? 1 : 0
             clip: true
 
-            // Pop in animation on directory switch / item load
-            scale: 0.6
-            opacity: 0.0
+            // Cut Indicator: Darken / Dim item opacity when marked for cut
+            readonly property bool isCut: item.modelData ? FileOperations.isPathCut(item.modelData.path) : false
+            opacity: isCut ? 0.45 : (populated ? 1.0 : 0.0)
+            scale: populated ? 1.0 : 0.6
+            property bool populated: false
 
-            Component.onCompleted: popInAnim.start()
+            Component.onCompleted: {
+                populated = true;
+            }
 
-            ParallelAnimation {
-                id: popInAnim
+            Behavior on opacity {
+                Anim { type: Anim.DefaultEffects }
+            }
 
-                NumberAnimation {
-                    target: item
-                    property: "scale"
-                    from: 0.5
-                    to: 1.0
-                    duration: 250
-                    easing.type: Easing.OutBack
-                    easing.overshoot: 1.3
-                }
-
-                NumberAnimation {
-                    target: item
-                    property: "opacity"
-                    from: 0.0
-                    to: 1.0
-                    duration: 180
-                    easing.type: Easing.OutCubic
+            Behavior on scale {
+                Anim {
+                    type: Anim.SlowEffects
+                    easing: Tokens.anim.emphasizedDecel
                 }
             }
 

@@ -17,6 +17,17 @@ Item {
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
 
+    // Rubberband Marquee Selection Box
+    Rectangle {
+        id: rubberBand
+        visible: false
+        color: Qt.alpha(Colours.palette.m3primary, 0.2)
+        border.color: Colours.palette.m3primary
+        border.width: 1
+        radius: 3
+        z: 90
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: Tokens.padding.small
@@ -212,6 +223,7 @@ Item {
             clip: true
             focus: true
             currentIndex: -1
+            interactive: false
 
             model: root.model
 
@@ -219,11 +231,42 @@ Item {
                 flickable: listView
             }
 
+            // Drag to Select Multiple Files / Rubberband Marquee
             MouseArea {
                 anchors.fill: parent
                 z: -1
-                acceptedButtons: Qt.RightButton | Qt.BackButton | Qt.ForwardButton
-                onClicked: mouse => {
+                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
+
+                property real startX: 0
+                property real startY: 0
+                property bool isSelecting: false
+
+                onPressed: mouse => {
+                    if (mouse.button === Qt.LeftButton) {
+                        startX = mouse.x;
+                        startY = mouse.y;
+                        isSelecting = false;
+                        listView.currentIndex = -1;
+                    }
+                }
+
+                onPositionChanged: mouse => {
+                    if (pressed && (Math.abs(mouse.x - startX) > 5 || Math.abs(mouse.y - startY) > 5)) {
+                        isSelecting = true;
+                        rubberBand.x = Math.min(startX, mouse.x) + listView.x;
+                        rubberBand.y = Math.min(startY, mouse.y) + listView.y;
+                        rubberBand.width = Math.abs(mouse.x - startX);
+                        rubberBand.height = Math.abs(mouse.y - startY);
+                        rubberBand.visible = true;
+
+                        let idx = listView.indexAt(mouse.x, mouse.y + listView.contentY);
+                        if (idx >= 0) listView.currentIndex = idx;
+                    }
+                }
+
+                onReleased: mouse => {
+                    rubberBand.visible = false;
+                    isSelecting = false;
                     if (mouse.button === Qt.BackButton) {
                         if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
                     } else if (mouse.button === Qt.ForwardButton) {
@@ -247,19 +290,17 @@ Item {
                 radius: Tokens.rounding.small
                 color: ListView.isCurrentItem ? Colours.palette.m3secondaryContainer : (rowHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : (index % 2 === 1 ? Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0.3) : "transparent"))
 
-                // Pop in animation
-                opacity: 0.0
+                // Cut Indicator: Dim item when marked for cut
+                readonly property bool isCut: rowItem.modelData ? FileOperations.isPathCut(rowItem.modelData.path) : false
+                opacity: isCut ? 0.45 : (populated ? 1.0 : 0.0)
+                property bool populated: false
 
-                Component.onCompleted: rowAnim.start()
+                Component.onCompleted: {
+                    populated = true;
+                }
 
-                NumberAnimation {
-                    id: rowAnim
-                    target: rowItem
-                    property: "opacity"
-                    from: 0.0
-                    to: 1.0
-                    duration: 180
-                    easing.type: Easing.OutCubic
+                Behavior on opacity {
+                    Anim { type: Anim.DefaultEffects }
                 }
 
                 MouseArea {

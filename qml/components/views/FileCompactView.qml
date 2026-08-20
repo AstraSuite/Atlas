@@ -63,31 +63,24 @@ Item {
             radius: Tokens.rounding.small
             color: compItem.GridView.isCurrentItem ? Colours.palette.m3secondaryContainer : (compHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
 
-            // Pop in animation
-            scale: 0.7
-            opacity: 0.0
+            // Cut Indicator: Dim item when cut
+            readonly property bool isCut: compItem.modelData ? FileOperations.isPathCut(compItem.modelData.path) : false
+            opacity: isCut ? 0.45 : (populated ? 1.0 : 0.0)
+            scale: populated ? 1.0 : 0.6
+            property bool populated: false
 
-            Component.onCompleted: popAnim.start()
+            Component.onCompleted: {
+                populated = true;
+            }
 
-            ParallelAnimation {
-                id: popAnim
+            Behavior on opacity {
+                Anim { type: Anim.DefaultEffects }
+            }
 
-                NumberAnimation {
-                    target: compItem
-                    property: "scale"
-                    from: 0.6
-                    to: 1.0
-                    duration: 230
-                    easing.type: Easing.OutBack
-                }
-
-                NumberAnimation {
-                    target: compItem
-                    property: "opacity"
-                    from: 0.0
-                    to: 1.0
-                    duration: 180
-                    easing.type: Easing.OutCubic
+            Behavior on scale {
+                Anim {
+                    type: Anim.SlowEffects
+                    easing: Tokens.anim.emphasizedDecel
                 }
             }
 
