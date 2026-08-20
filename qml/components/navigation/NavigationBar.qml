@@ -497,16 +497,16 @@ StyledRect {
             }
         }
 
-        // Empty Trash Button (visible when inside Trash, exactly like Dolphin)
+        // Empty Trash Button (matching Dolphin header layout)
         Item {
-            implicitWidth: emptyTrashContent.implicitWidth + Tokens.padding.medium * 2
+            implicitWidth: emptyTrashContent.implicitWidth + 24
             implicitHeight: 32
             visible: root.activeTab && (root.activeTab.currentPath.indexOf("/Trash") !== -1 || root.activeTab.currentPath.indexOf("trash:") !== -1)
 
             StyledRect {
                 anchors.fill: parent
-                radius: Tokens.rounding.small
-                color: emptyHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
+                radius: Tokens.rounding.full
+                color: emptyHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
 
                 RowLayout {
                     id: emptyTrashContent
@@ -514,15 +514,15 @@ StyledRect {
                     spacing: 6
 
                     MaterialIcon {
-                        text: "delete_sweep"
+                        text: "delete"
                         fontStyle: Tokens.font.icon.small
-                        color: Colours.palette.m3error
+                        color: emptyHover.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurface
                     }
 
                     StyledText {
                         text: qsTr("Empty Trash")
                         font: Tokens.font.label.medium
-                        color: Colours.palette.m3onSurface
+                        color: emptyHover.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurface
                     }
                 }
 

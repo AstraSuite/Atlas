@@ -243,7 +243,7 @@ void FileOperations::moveToTrash(const QStringList& paths) {
     m_progress->setStatusText(tr("Moving to trash..."));
 
     (void)QtConcurrent::run([this, paths]() {
-        QString trashDir = QDir::homePath() + "/.local/share/Trash";
+        QString trashDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/Trash";
         QString filesDir = trashDir + "/files";
         QString infoDir = trashDir + "/info";
 
@@ -300,7 +300,7 @@ void FileOperations::moveToTrash(const QStringList& paths) {
 }
 
 void FileOperations::restoreFromTrash(const QString& targetPath) {
-    QString trashDir = QDir::homePath() + "/.local/share/Trash";
+    QString trashDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/Trash";
     QString infoPath = targetPath;
     QString trashedFile = targetPath;
 
@@ -344,7 +344,7 @@ void FileOperations::restoreFromTrash(const QString& targetPath) {
 }
 
 void FileOperations::emptyTrash() {
-    QString trashDir = QDir::homePath() + "/.local/share/Trash";
+    QString trashDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/Trash";
     removeRecursively(trashDir + "/files");
     removeRecursively(trashDir + "/info");
     QDir().mkpath(trashDir + "/files");
