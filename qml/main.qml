@@ -202,10 +202,19 @@ ApplicationWindow {
                     newItemModal.icon = "note_add";
                     newItemModal.initialText = "untitled.txt";
                     newItemModal.expanded = true;
+                } else if (action === "restore" && item) {
+                    FileOperations.restoreFromTrash(item.path);
+                } else if (action === "emptyTrash") {
+                    FileOperations.emptyTrash();
+                } else if (action === "bookmark") {
+                    PlacesModel.addBookmark(currentDir);
                 } else if (action === "openTerminal") {
                     AppIntegration.openInTerminal(currentDir);
                 } else if (action === "properties" && item) {
                     propertiesModal.targetPath = item.path;
+                    propertiesModal.expanded = true;
+                } else if (action === "propertiesDir") {
+                    propertiesModal.targetPath = currentDir;
                     propertiesModal.expanded = true;
                 }
             }

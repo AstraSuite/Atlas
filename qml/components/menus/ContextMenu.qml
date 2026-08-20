@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../"
+import prism
 
 MouseArea {
     id: root
@@ -10,6 +11,7 @@ MouseArea {
     property real menuY: 0
     property var targetItem: null
     property string currentDir: ""
+    readonly property bool isTrash: currentDir.indexOf("Trash") !== -1 || currentDir.indexOf("trash:") !== -1 || (targetItem && targetItem.isTrashItem)
 
     signal actionTriggered(string action, var item)
 
@@ -63,6 +65,21 @@ MouseArea {
 
             Repeater {
                 model: {
+                    if (root.isTrash) {
+                        if (root.targetItem) {
+                            return [
+                                { text: qsTr("Restore"), icon: "restore_from_trash", action: "restore" },
+                                { text: qsTr("Delete Permanently"), icon: "delete_forever", action: "delete" },
+                                { text: qsTr("Properties"), icon: "info", action: "properties" }
+                            ];
+                        } else {
+                            return [
+                                { text: qsTr("Empty Trash"), icon: "delete_sweep", action: "emptyTrash" },
+                                { text: qsTr("Properties"), icon: "info", action: "propertiesDir" }
+                            ];
+                        }
+                    }
+
                     if (root.targetItem) {
                         return [
                             { text: qsTr("Open"), icon: "open_in_new", action: "open" },
@@ -82,7 +99,7 @@ MouseArea {
                             { text: qsTr("Paste"), icon: "content_paste", action: "paste", visible: FileOperations.canPaste },
                             { text: qsTr("Paste as Symlink"), icon: "link", action: "pasteSymlink", visible: FileOperations.canPaste },
                             { text: qsTr("Add to Bookmarks"), icon: "bookmark_add", action: "bookmark" },
-                            { text: qsTr("Open in Terminal"), icon: "terminal", action: "terminal" },
+                            { text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminal" },
                             { text: qsTr("Properties"), icon: "info", action: "propertiesDir" }
                         ];
                     }
@@ -116,15 +133,15 @@ MouseArea {
 
                         MaterialIcon {
                             text: menuItem.modelData.icon
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: menuItem.modelData.action === "delete" || menuItem.modelData.action === "emptyTrash" ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
                             fontStyle: Tokens.font.icon.small
                         }
 
                         StyledText {
                             Layout.fillWidth: true
                             text: menuItem.modelData.text
-                            color: Colours.palette.m3onSurface
-                            font: Tokens.font.body.small
+                            font: Tokens.font.body.medium
+                            color: menuItem.modelData.action === "delete" || menuItem.modelData.action === "emptyTrash" ? Colours.palette.m3error : Colours.palette.m3onSurface
                         }
                     }
                 }

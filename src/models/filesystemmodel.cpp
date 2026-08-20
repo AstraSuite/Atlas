@@ -33,6 +33,9 @@ struct RawEntryData {
     bool isAudio = false;
     bool isVideo = false;
     bool isText = false;
+    QString originalPath;
+    QString deletionTime;
+    bool isTrashItem = false;
 };
 
 FileSystemModel::FileSystemModel(QObject* parent)
@@ -230,6 +233,28 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
         d.isText = true;
     }
 
+    if (fi.absolutePath().contains("/.local/share/Trash/files") || fi.absolutePath().contains("/Trash/files")) {
+        d.isTrashItem = true;
+        QString infoPath = QDir::homePath() + "/.local/share/Trash/info/" + fi.fileName() + ".trashinfo";
+        QFile infoFile(infoPath);
+        if (infoFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            while (!infoFile.atEnd()) {
+                QString line = QString::fromUtf8(infoFile.readLine()).trimmed();
+                if (line.startsWith("Path=")) {
+                    d.originalPath = line.mid(5);
+                } else if (line.startsWith("DeletionDate=")) {
+                    QString dStr = line.mid(13);
+                    QDateTime dt = QDateTime::fromString(dStr, Qt::ISODate);
+                    if (dt.isValid()) {
+                        d.deletionTime = dt.toString("M/d/yy 'at' h:mm AP");
+                    } else {
+                        d.deletionTime = dStr;
+                    }
+                }
+            }
+        }
+    }
+
     return d;
 }
 
@@ -255,6 +280,9 @@ static FileSystemEntry* createEntryFromRawData(const RawEntryData& d, QObject* p
     entry->m_isAudio = d.isAudio;
     entry->m_isVideo = d.isVideo;
     entry->m_isText = d.isText;
+    entry->m_originalPath = d.originalPath;
+    entry->m_deletionTime = d.deletionTime;
+    entry->m_isTrashItem = d.isTrashItem;
     return entry;
 }
 

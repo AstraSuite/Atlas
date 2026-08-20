@@ -34,6 +34,9 @@ class FileSystemEntry : public QObject {
     Q_PROPERTY(bool isAudio READ isAudio CONSTANT)
     Q_PROPERTY(bool isVideo READ isVideo CONSTANT)
     Q_PROPERTY(bool isText READ isText CONSTANT)
+    Q_PROPERTY(QString originalPath READ originalPath CONSTANT)
+    Q_PROPERTY(QString deletionTime READ deletionTime CONSTANT)
+    Q_PROPERTY(bool isTrashItem READ isTrashItem CONSTANT)
 
 public:
     explicit FileSystemEntry(QObject* parent = nullptr) : QObject(parent) {}
@@ -58,9 +61,15 @@ public:
     bool isAudio() const { return m_isAudio; }
     bool isVideo() const { return m_isVideo; }
     bool isText() const { return m_isText; }
+    QString originalPath() const { return m_originalPath; }
+    QString deletionTime() const { return m_deletionTime; }
+    bool isTrashItem() const { return m_isTrashItem; }
 
     QString m_name;
     QString m_path;
+    QString m_originalPath;
+    QString m_deletionTime;
+    bool m_isTrashItem = false;
     bool m_isDir = false;
     bool m_isSymLink = false;
     QString m_symLinkTarget;

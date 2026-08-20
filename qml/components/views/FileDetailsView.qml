@@ -13,6 +13,7 @@ Item {
     property int currentIndex: listView.currentIndex
     readonly property var currentItem: listView.currentItem ? listView.currentItem.modelData : null
     property var selectedPaths: []
+    readonly property bool isTrash: root.activeTab && (root.activeTab.currentPath.indexOf("Trash") !== -1 || root.activeTab.currentPath.indexOf("trash:") !== -1)
 
     signal openItem(var item)
     signal itemContextMenu(var item, real mouseX, real mouseY)
@@ -94,8 +95,9 @@ Item {
                     }
                 }
 
-                // Size Column
+                // Normal Mode Columns
                 Item {
+                    visible: !root.isTrash
                     Layout.preferredWidth: 100
                     implicitHeight: parent.height
 
@@ -132,8 +134,8 @@ Item {
                     }
                 }
 
-                // Type Column
                 Item {
+                    visible: !root.isTrash
                     Layout.preferredWidth: 150
                     implicitHeight: parent.height
 
@@ -170,8 +172,8 @@ Item {
                     }
                 }
 
-                // Date Modified Column
                 Item {
+                    visible: !root.isTrash
                     Layout.preferredWidth: 140
                     implicitHeight: parent.height
 
@@ -208,8 +210,8 @@ Item {
                     }
                 }
 
-                // Permissions Column
                 Item {
+                    visible: !root.isTrash
                     Layout.preferredWidth: 90
                     implicitHeight: parent.height
 
@@ -219,6 +221,35 @@ Item {
                         text: qsTr("Permissions")
                         font: Tokens.font.label.medium
                         color: Colours.palette.m3onSurfaceVariant
+                    }
+                }
+
+                // Trash Mode Columns (like Dolphin)
+                Item {
+                    visible: root.isTrash
+                    Layout.preferredWidth: 320
+                    implicitHeight: parent.height
+
+                    StyledText {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        text: qsTr("Original Path")
+                        font: Tokens.font.label.medium
+                        color: Colours.palette.m3onSurface
+                    }
+                }
+
+                Item {
+                    visible: root.isTrash
+                    Layout.preferredWidth: 180
+                    implicitHeight: parent.height
+
+                    StyledText {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        text: qsTr("Deletion Time")
+                        font: Tokens.font.label.medium
+                        color: Colours.palette.m3onSurface
                     }
                 }
             }
@@ -348,16 +379,17 @@ Item {
                         }
                     }
 
-                    // Size
+                    // Normal Mode Details
                     StyledText {
+                        visible: !root.isTrash
                         Layout.preferredWidth: 100
                         text: rowItem.modelData ? (rowItem.modelData.isDir ? "" : rowItem.modelData.formattedSize) : ""
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
                     }
 
-                    // Type
                     StyledText {
+                        visible: !root.isTrash
                         Layout.preferredWidth: 150
                         text: rowItem.modelData ? rowItem.modelData.mimeDescription : ""
                         color: Colours.palette.m3onSurfaceVariant
@@ -365,20 +397,38 @@ Item {
                         elide: Text.ElideRight
                     }
 
-                    // Date
                     StyledText {
+                        visible: !root.isTrash
                         Layout.preferredWidth: 140
                         text: rowItem.modelData ? rowItem.modelData.formattedDate : ""
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
                     }
 
-                    // Permissions
                     StyledText {
+                        visible: !root.isTrash
                         Layout.preferredWidth: 90
                         text: rowItem.modelData ? rowItem.modelData.permissions : ""
                         color: Colours.palette.m3outline
                         font: Tokens.font.mono.small
+                    }
+
+                    // Trash Mode Details
+                    StyledText {
+                        visible: root.isTrash
+                        Layout.preferredWidth: 320
+                        text: rowItem.modelData ? (rowItem.modelData.originalPath || "") : ""
+                        color: Colours.palette.m3onSurfaceVariant
+                        font: Tokens.font.body.small
+                        elide: Text.ElideMiddle
+                    }
+
+                    StyledText {
+                        visible: root.isTrash
+                        Layout.preferredWidth: 180
+                        text: rowItem.modelData ? (rowItem.modelData.deletionTime || rowItem.modelData.formattedDate) : ""
+                        color: Colours.palette.m3onSurfaceVariant
+                        font: Tokens.font.body.small
                     }
                 }
             }

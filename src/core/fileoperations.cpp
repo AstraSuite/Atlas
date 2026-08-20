@@ -299,12 +299,25 @@ void FileOperations::moveToTrash(const QStringList& paths) {
     });
 }
 
-void FileOperations::restoreFromTrash(const QString& trashInfoPath) {
-    QFileInfo fi(trashInfoPath);
+void FileOperations::restoreFromTrash(const QString& targetPath) {
+    QString trashDir = QDir::homePath() + "/.local/share/Trash";
+    QString infoPath = targetPath;
+    QString trashedFile = targetPath;
+
+    if (targetPath.contains("/Trash/files/")) {
+        QString name = QFileInfo(targetPath).fileName();
+        infoPath = trashDir + "/info/" + name + ".trashinfo";
+        trashedFile = targetPath;
+    } else if (targetPath.endsWith(".trashinfo")) {
+        QString baseName = QFileInfo(targetPath).completeBaseName();
+        trashedFile = trashDir + "/files/" + baseName;
+    }
+
+    QFileInfo fi(infoPath);
     if (!fi.exists())
         return;
 
-    QFile file(trashInfoPath);
+    QFile file(infoPath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return;
 
@@ -321,16 +334,12 @@ void FileOperations::restoreFromTrash(const QString& trashInfoPath) {
     if (origPath.isEmpty())
         return;
 
-    QString baseName = fi.completeBaseName();
-    QString trashFilesDir = QDir::homePath() + "/.local/share/Trash/files";
-    QString trashedFile = trashFilesDir + "/" + baseName;
-
     QFileInfo destFi(origPath);
     QDir().mkpath(destFi.absolutePath());
 
     if (QFile::rename(trashedFile, origPath)) {
-        QFile::remove(trashInfoPath);
-        emit operationFinished(true, tr("Restored file"));
+        QFile::remove(infoPath);
+        emit operationFinished(true, tr("Restored %1").arg(destFi.fileName()));
     }
 }
 

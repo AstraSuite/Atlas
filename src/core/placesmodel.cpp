@@ -153,18 +153,28 @@ void PlacesModel::refresh() {
                                 bool isTrash = currentHref.startsWith("trash:") || localPath.contains("Trash");
                                 QString icon = mapXbelIconToMaterial(currentIcon, localPath, QFileInfo(localPath).isDir());
 
-                                m_places.append({
-                                    currentTitle,
-                                    localPath,
-                                    icon,
-                                    false,
-                                    false,
-                                    isTrash,
-                                    !isSystem,
-                                    0,
-                                    0
-                                });
-                                loadedXbel = true;
+                                bool alreadyPresent = false;
+                                for (const auto& p : m_places) {
+                                    if (p.path == localPath || (p.isTrash && isTrash)) {
+                                        alreadyPresent = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!alreadyPresent) {
+                                    m_places.append({
+                                        currentTitle,
+                                        localPath,
+                                        icon,
+                                        false,
+                                        false,
+                                        isTrash,
+                                        !isSystem,
+                                        0,
+                                        0
+                                    });
+                                    loadedXbel = true;
+                                }
                             }
                         }
                     }
@@ -208,16 +218,17 @@ void PlacesModel::loadBookmarks() {
             if (uri.startsWith("file://")) {
                 QString path = QUrl(uri).toLocalFile();
                 if (QDir(path).exists() && path != "/") {
+                    bool isTrash = path.contains("/Trash") || uri.startsWith("trash:");
                     bool alreadyPresent = false;
                     for (const auto& p : m_places) {
-                        if (p.path == path) {
+                        if (p.path == path || (p.isTrash && isTrash)) {
                             alreadyPresent = true;
                             break;
                         }
                     }
                     if (!alreadyPresent) {
                         if (name.isEmpty()) name = QFileInfo(path).fileName();
-                        m_places.append({ name, path, "bookmark", false, false, false, true, 0, 0 });
+                        m_places.append({ name, path, isTrash ? "delete" : "bookmark", false, false, isTrash, true, 0, 0 });
                     }
                 }
             }

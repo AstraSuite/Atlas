@@ -181,26 +181,28 @@ StyledRect {
                         if (!root.activeTab || !root.activeTab.currentPath) return [];
                         let current = root.activeTab.currentPath;
                         let home = FileUtils.home;
-                        
-                        if (current === home) {
-                            return [{ name: qsTr("Home"), path: home, isHome: true }];
+
+                        if (current.indexOf("/.local/share/Trash") !== -1 || current.indexOf("trash:") !== -1) {
+                            return [{ name: qsTr("Trash"), path: current, isHome: false, isTrash: true }];
+                        } else if (current === home) {
+                            return [{ name: qsTr("Home"), path: home, isHome: true, isTrash: false }];
                         } else if (current.startsWith(home + "/")) {
                             let rel = current.substring(home.length + 1);
                             let parts = rel.split("/").filter(s => s.length > 0);
-                            let list = [{ name: qsTr("Home"), path: home, isHome: true }];
+                            let list = [{ name: qsTr("Home"), path: home, isHome: true, isTrash: false }];
                             let accum = home;
                             for (let part of parts) {
                                 accum += "/" + part;
-                                list.push({ name: part, path: accum, isHome: false });
+                                list.push({ name: part, path: accum, isHome: false, isTrash: false });
                             }
                             return list;
                         } else {
                             let parts = current.split("/").filter(s => s.length > 0);
-                            let list = [{ name: "/", path: "/", isHome: false }];
+                            let list = [{ name: "/", path: "/", isHome: false, isTrash: false }];
                             let accum = "";
                             for (let part of parts) {
                                 accum += "/" + part;
-                                list.push({ name: part, path: accum, isHome: false });
+                                list.push({ name: part, path: accum, isHome: false, isTrash: false });
                             }
                             return list;
                         }
@@ -236,8 +238,8 @@ StyledRect {
                                 spacing: 4
 
                                 MaterialIcon {
-                                    visible: crumb.modelData.isHome
-                                    text: "home"
+                                    visible: crumb.modelData.isHome || crumb.modelData.isTrash
+                                    text: crumb.modelData.isTrash ? "delete" : "home"
                                     fontStyle: Tokens.font.icon.small
                                     color: Colours.palette.m3onSurface
                                 }
@@ -491,6 +493,45 @@ StyledRect {
                             root.searchRequested("");
                         }
                     }
+                }
+            }
+        }
+
+        // Empty Trash Button (visible when inside Trash, exactly like Dolphin)
+        Item {
+            implicitWidth: emptyTrashContent.implicitWidth + Tokens.padding.medium * 2
+            implicitHeight: 32
+            visible: root.activeTab && (root.activeTab.currentPath.indexOf("/Trash") !== -1 || root.activeTab.currentPath.indexOf("trash:") !== -1)
+
+            StyledRect {
+                anchors.fill: parent
+                radius: Tokens.rounding.small
+                color: emptyHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
+
+                RowLayout {
+                    id: emptyTrashContent
+                    anchors.centerIn: parent
+                    spacing: 6
+
+                    MaterialIcon {
+                        text: "delete_sweep"
+                        fontStyle: Tokens.font.icon.small
+                        color: Colours.palette.m3error
+                    }
+
+                    StyledText {
+                        text: qsTr("Empty Trash")
+                        font: Tokens.font.label.medium
+                        color: Colours.palette.m3onSurface
+                    }
+                }
+
+                MouseArea {
+                    id: emptyHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: FileOperations.emptyTrash()
                 }
             }
         }
