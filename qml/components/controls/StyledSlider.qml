@@ -13,13 +13,13 @@ T.Slider {
     property color fgColour: enabled ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3onSurface, 0.38)
     property color bgColour: enabled ? Colours.palette.m3secondaryContainer : Qt.alpha(Colours.palette.m3onSurface, 0.1)
 
-    property real pos: visualPosition
-    property real filledWidth
+    property real pos: mouse.pressed
+        ? Math.min(Math.max(mouse.pressStartPos + mouse.dragMovement, 0), 1)
+        : visualPosition
+    property real filledWidth: (width - handle.implicitWidth - handle.anchors.leftMargin) * pos
 
     signal interaction(real v)
     signal released(real v)
-
-    Component.onCompleted: filledWidth = Qt.binding(() => (width - handle.implicitWidth - handle.anchors.leftMargin) * pos)
 
     implicitWidth: 80
     implicitHeight: 8
@@ -89,21 +89,12 @@ T.Slider {
         }
     }
 
-    Binding {
-        id: posBinding
-
-        target: root
-        property: "pos"
-        value: Math.min(Math.max(mouse.pressStartPos + mouse.dragMovement, 0), 1)
-        when: mouse.pressed
-    }
-
     MouseArea {
         id: mouse
 
-        property real pressStartX
-        property real pressStartPos
-        property real dragMovement
+        property real pressStartX: 0
+        property real pressStartPos: 0
+        property real dragMovement: 0
 
         anchors.left: parent.left
         anchors.right: parent.right
@@ -116,24 +107,22 @@ T.Slider {
             widthBehavior.enabled = false;
             pressStartX = e.x;
             pressStartPos = root.visualPosition;
-            const clickPos = Math.min(Math.max(e.x / width, 0), 1);
-            const actualVal = root.from + clickPos * (root.to - root.from);
-            root.value = actualVal;
+            dragMovement = 0;
+            const curPos = Math.min(Math.max(e.x / width, 0), 1);
+            const actualVal = root.from + curPos * (root.to - root.from);
             root.interaction(actualVal);
         }
         onPositionChanged: e => {
             dragMovement = (e.x - pressStartX) / width;
             const curPos = Math.min(Math.max(pressStartPos + dragMovement, 0), 1);
             const actualVal = root.from + curPos * (root.to - root.from);
-            root.value = actualVal;
             if (root.interactionOnMove)
                 root.interaction(actualVal);
         }
         onReleased: e => {
             const clickPos = e.x / width;
-            const finalPos = mouse.dragMovement !== 0 ? posBinding.value : Math.min(Math.max(clickPos, 0), 1);
+            const finalPos = mouse.dragMovement !== 0 ? Math.min(Math.max(pressStartPos + dragMovement, 0), 1) : Math.min(Math.max(clickPos, 0), 1);
             const actualVal = root.from + finalPos * (root.to - root.from);
-            root.value = actualVal;
             root.interaction(actualVal);
             root.released(actualVal);
             widthBehavior.enabled = true;
@@ -143,7 +132,7 @@ T.Slider {
 
     Behavior on filledWidth {
         id: widthBehavior
-
-        Anim {}
+        enabled: !mouse.pressed
+        Anim { type: Anim.FastEffects }
     }
 }

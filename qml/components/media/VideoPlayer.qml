@@ -23,6 +23,9 @@ Item {
     signal toggleControlsRequested()
 
     function play() {
+        if (player.mediaStatus === MediaPlayer.EndOfMedia || (player.duration > 0 && player.position >= player.duration - 200)) {
+            player.setPosition(0);
+        }
         player.play();
     }
 
@@ -34,7 +37,7 @@ Item {
         if (isPlaying) {
             player.pause();
         } else {
-            player.play();
+            root.play();
         }
     }
 
@@ -65,6 +68,14 @@ Item {
             volume: root.muted ? 0.0 : root.volume
         }
         videoOutput: videoOutput
+
+        onMediaStatusChanged: {
+            if (mediaStatus === MediaPlayer.EndOfMedia) {
+                if (!root.loop) {
+                    player.pause();
+                }
+            }
+        }
 
         onPlaybackStateChanged: {
             if (playbackState === MediaPlayer.PlayingState) {

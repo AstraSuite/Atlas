@@ -400,7 +400,7 @@ MouseArea {
         anchors.bottom: filmstrip.visible ? filmstrip.top : parent.bottom
         anchors.bottomMargin: Tokens.padding.medium
         anchors.horizontalCenter: parent.horizontalCenter
-        implicitWidth: Math.min(parent.width - 40, controlsRow.implicitWidth + Tokens.padding.large * 2)
+        implicitWidth: root.isVideo ? Math.min(parent.width - 40, 560) : Math.min(parent.width - 40, controlsRow.implicitWidth + Tokens.padding.large * 2)
         implicitHeight: 48
         radius: Tokens.rounding.full
         color: Qt.alpha(Colours.palette.m3surfaceContainerHighest, 0.85)
@@ -454,8 +454,10 @@ MouseArea {
 
                 StyledText {
                     text: root.formatTime(videoPlayer.position)
-                    font: Tokens.font.label.small
+                    font: Tokens.font.mono.small
                     color: Colours.palette.m3onSurface
+                    Layout.preferredWidth: 44
+                    horizontalAlignment: Text.AlignRight
                 }
 
                 StyledSlider {
@@ -473,8 +475,10 @@ MouseArea {
 
                 StyledText {
                     text: root.formatTime(videoPlayer.duration)
-                    font: Tokens.font.label.small
+                    font: Tokens.font.mono.small
                     color: Colours.palette.m3onSurfaceVariant
+                    Layout.preferredWidth: 44
+                    horizontalAlignment: Text.AlignLeft
                 }
             }
 
