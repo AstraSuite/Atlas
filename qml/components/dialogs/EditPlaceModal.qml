@@ -12,9 +12,23 @@ MouseArea {
     property string placePath: ""
     property string selectedIcon: "bookmark"
     property bool isCustom: true
+    property string iconSearchQuery: ""
+    property var displayedIcons: []
 
     signal accepted(int index, string name, string iconName)
     signal removeRequested(int index)
+
+    onExpandedChanged: {
+        if (expanded) {
+            iconSearchQuery = "";
+            iconSearchInput.text = "";
+            updateIcons();
+        }
+    }
+
+    function updateIcons() {
+        displayedIcons = IconCatalog.search(iconSearchQuery, 120);
+    }
 
     anchors.fill: parent
     visible: opacity > 0.001
@@ -24,39 +38,28 @@ MouseArea {
     z: 100
 
     opacity: expanded ? 1.0 : 0.0
-    Behavior on opacity {
-        Anim {
-            type: Anim.FastEffects
-        }
-    }
+    Behavior on opacity { Anim { type: Anim.FastEffects } }
 
     onClicked: root.expanded = false
-
     Keys.onEscapePressed: root.expanded = false
 
     Rectangle {
         anchors.fill: parent
-        color: Qt.alpha(Colours.palette.m3scrim, 0.4)
+        color: Qt.alpha(Colours.palette.m3scrim, 0.45)
     }
 
     StyledRect {
         id: modalCard
 
         anchors.centerIn: parent
-        implicitWidth: 440
-        implicitHeight: modalCol.implicitHeight + Tokens.padding.large * 2
+        implicitWidth: 480
+        implicitHeight: 560
 
         radius: Tokens.rounding.large
         color: Colours.palette.m3surfaceContainerHigh
 
         scale: root.expanded ? 1.0 : 0.94
-
-        Behavior on scale {
-            Anim {
-                type: Anim.FastEffects
-                easing: Tokens.anim.standard
-            }
-        }
+        Behavior on scale { Anim { type: Anim.FastEffects; easing: Tokens.anim.standard } }
 
         MouseArea {
             anchors.fill: parent
@@ -65,36 +68,45 @@ MouseArea {
 
         ColumnLayout {
             id: modalCol
-
             anchors.fill: parent
             anchors.margins: Tokens.padding.large
             spacing: Tokens.spacing.medium
 
-            // Header (no close button, only icon and title)
+            // Header with current selected icon preview
             RowLayout {
                 spacing: Tokens.spacing.small
 
-                MaterialIcon {
-                    text: root.selectedIcon
-                    color: Colours.palette.m3primary
-                    fontStyle: Tokens.font.icon.medium
+                StyledRect {
+                    implicitWidth: 40
+                    implicitHeight: 40
+                    radius: Tokens.rounding.full
+                    color: Colours.palette.m3primaryContainer
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: root.selectedIcon
+                        color: Colours.palette.m3onPrimaryContainer
+                        fontStyle: Tokens.font.icon.medium
+                    }
                 }
 
-                StyledText {
+                ColumnLayout {
                     Layout.fillWidth: true
-                    text: qsTr("Edit Place")
-                    color: Colours.palette.m3onSurface
-                    font: Tokens.font.title.medium
-                }
-            }
+                    spacing: 2
 
-            // Path indicator
-            StyledText {
-                Layout.fillWidth: true
-                text: root.placePath
-                color: Colours.palette.m3outline
-                font: Tokens.font.body.small
-                elide: Text.ElideMiddle
+                    StyledText {
+                        text: qsTr("Edit Place")
+                        color: Colours.palette.m3onSurface
+                        font: Tokens.font.title.medium
+                    }
+
+                    StyledText {
+                        text: root.placePath
+                        color: Colours.palette.m3outline
+                        font: Tokens.font.body.small
+                        elide: Text.ElideMiddle
+                    }
+                }
             }
 
             // Name Input Field
@@ -110,14 +122,15 @@ MouseArea {
 
                 StyledRect {
                     Layout.fillWidth: true
-                    implicitHeight: 42
+                    implicitHeight: 40
                     radius: Tokens.rounding.small
                     color: Colours.palette.m3surfaceContainerHighest
 
                     TextInput {
                         id: nameInput
                         anchors.fill: parent
-                        anchors.margins: Tokens.padding.medium
+                        anchors.margins: Tokens.padding.small
+                        anchors.leftMargin: 12
                         text: root.placeName
                         color: Colours.palette.m3onSurface
                         selectionColor: Colours.palette.m3primaryContainer
@@ -125,44 +138,113 @@ MouseArea {
                         font: Tokens.font.body.medium
                         selectByMouse: true
                         cursorVisible: focus
-
                         onAccepted: root.save()
                     }
                 }
             }
 
-            // Icon Picker
+            // Icon Search & Picker
             ColumnLayout {
                 Layout.fillWidth: true
+                Layout.fillHeight: true
                 spacing: 6
 
-                StyledText {
-                    text: qsTr("Icon")
-                    color: Colours.palette.m3onSurfaceVariant
-                    font: Tokens.font.label.medium
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: qsTr("Choose Icon (%1 selected)").arg(root.selectedIcon)
+                        color: Colours.palette.m3onSurfaceVariant
+                        font: Tokens.font.label.medium
+                    }
                 }
 
-                Flow {
+                // Icon Search Field
+                StyledRect {
                     Layout.fillWidth: true
-                    spacing: 8
+                    implicitHeight: 38
+                    radius: Tokens.rounding.full
+                    color: Colours.palette.m3surfaceContainerHighest
 
-                    Repeater {
-                        model: [
-                            "folder", "bookmark", "star", "favorite", "home",
-                            "sports_esports", "terminal", "code", "description",
-                            "image", "music_note", "video_library", "file_download",
-                            "work", "cloud", "lock", "sell", "storage"
-                        ]
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        spacing: 8
 
-                        StyledRect {
+                        MaterialIcon {
+                            text: "search"
+                            fontStyle: Tokens.font.icon.small
+                            color: Colours.palette.m3onSurfaceVariant
+                        }
+
+                        TextInput {
+                            id: iconSearchInput
+                            Layout.fillWidth: true
+                            color: Colours.palette.m3onSurface
+                            font: Tokens.font.body.medium
+                            clip: true
+                            selectByMouse: true
+                            onTextChanged: {
+                                root.iconSearchQuery = text;
+                                root.updateIcons();
+                            }
+
+                            Text {
+                                anchors.fill: parent
+                                text: qsTr("Search 3,700+ Material Symbols...")
+                                color: Colours.palette.m3outline
+                                font: parent.font
+                                visible: !iconSearchInput.text && !iconSearchInput.activeFocus
+                            }
+                        }
+
+                        MaterialIcon {
+                            visible: iconSearchInput.text.length > 0
+                            text: "close"
+                            fontStyle: Tokens.font.icon.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    iconSearchInput.text = "";
+                                    root.iconSearchQuery = "";
+                                    root.updateIcons();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Scrollable Icons Grid
+                StyledRect {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    radius: Tokens.rounding.medium
+                    color: Colours.palette.m3surfaceContainerLowest
+                    clip: true
+
+                    GridView {
+                        id: iconGrid
+                        anchors.fill: parent
+                        anchors.margins: 6
+                        cellWidth: 42
+                        cellHeight: 42
+                        clip: true
+                        model: root.displayedIcons
+
+                        delegate: StyledRect {
                             id: iconTile
-
                             required property string modelData
 
-                            implicitWidth: 36
-                            implicitHeight: 36
+                            width: 38
+                            height: 38
                             radius: Tokens.rounding.small
-                            color: root.selectedIcon === modelData ? Colours.palette.m3primaryContainer : (tileHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent")
+                            color: root.selectedIcon === modelData
+                                ? Colours.palette.m3primaryContainer
+                                : (tileHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent")
 
                             MaterialIcon {
                                 anchors.centerIn: parent
@@ -188,6 +270,7 @@ MouseArea {
                 Layout.fillWidth: true
                 implicitHeight: 1
                 color: Colours.palette.m3outlineVariant
+                opacity: 0.5
             }
 
             // Action Buttons
@@ -197,15 +280,16 @@ MouseArea {
 
                 // Remove Button
                 StyledRect {
+                    visible: root.isCustom
                     implicitWidth: removeRow.implicitWidth + Tokens.padding.medium * 2
                     implicitHeight: 36
                     radius: Tokens.rounding.full
-                    color: removeHover.containsMouse ? Qt.alpha(Colours.palette.m3error, 0.12) : "transparent"
+                    color: removeHover.containsMouse ? Qt.alpha(Colours.palette.m3error, 0.15) : "transparent"
 
                     RowLayout {
                         id: removeRow
                         anchors.centerIn: parent
-                        spacing: 4
+                        spacing: 6
 
                         MaterialIcon {
                             text: "delete"
@@ -232,47 +316,53 @@ MouseArea {
                     }
                 }
 
-                Item {
-                    Layout.fillWidth: true
-                }
+                Item { Layout.fillWidth: true }
 
                 // Cancel Button
                 StyledRect {
-                    implicitWidth: 70
+                    implicitWidth: cancelText.implicitWidth + Tokens.padding.large * 2
                     implicitHeight: 36
                     radius: Tokens.rounding.full
-                    color: "transparent"
-
-                    StateLayer {
-                        color: Colours.palette.m3onSurface
-                        onClicked: root.expanded = false
-                    }
+                    color: cancelHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
 
                     StyledText {
+                        id: cancelText
                         anchors.centerIn: parent
                         text: qsTr("Cancel")
-                        color: Colours.palette.m3primary
+                        color: Colours.palette.m3onSurface
                         font: Tokens.font.label.large
+                    }
+
+                    MouseArea {
+                        id: cancelHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.expanded = false
                     }
                 }
 
                 // Save Button
                 StyledRect {
-                    implicitWidth: 80
+                    implicitWidth: saveText.implicitWidth + Tokens.padding.large * 2
                     implicitHeight: 36
                     radius: Tokens.rounding.full
-                    color: Colours.palette.m3primary
-
-                    StateLayer {
-                        color: Colours.palette.m3onPrimary
-                        onClicked: root.save()
-                    }
+                    color: saveHover.containsMouse ? Qt.lighter(Colours.palette.m3primary, 1.1) : Colours.palette.m3primary
 
                     StyledText {
+                        id: saveText
                         anchors.centerIn: parent
                         text: qsTr("Save")
                         color: Colours.palette.m3onPrimary
                         font: Tokens.font.label.large
+                    }
+
+                    MouseArea {
+                        id: saveHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.save()
                     }
                 }
             }
@@ -280,9 +370,9 @@ MouseArea {
     }
 
     function save() {
-        let n = nameInput.text.trim();
-        if (n.length === 0) n = placeName;
-        root.accepted(targetIndex, n, selectedIcon);
+        let name = nameInput.text.trim();
+        if (name.length === 0) name = root.placeName;
+        root.accepted(root.targetIndex, name, root.selectedIcon);
         root.expanded = false;
     }
 }

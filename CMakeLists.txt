@@ -49,6 +49,8 @@ qt_add_executable(prism_app
     src/core/appintegration.cpp
     src/core/iconprovider.hpp
     src/core/iconprovider.cpp
+    src/core/iconcatalog.hpp
+    src/core/iconcatalog.cpp
     src/core/appcontroller.hpp
     src/core/appcontroller.cpp
 )
@@ -109,6 +111,7 @@ qt_add_qml_module(prism_app
     RESOURCES
         assets/fonts/GoogleSansFlex.ttf
         assets/fonts/MaterialSymbolsRounded.ttf
+        assets/material_icons.txt
         assets/prism.png
         assets/prism.svg
 )
