@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assets/prism.png" alt="Prism Logo" width="128" />
-</p>
-
 # Prism
 
 Prism is a fast, lightweight Material Design 3 file manager and file picker built with Qt 6 and QML.
