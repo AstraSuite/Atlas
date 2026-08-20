@@ -56,7 +56,9 @@ public:
     Q_INVOKABLE void addCustomPlace(const QString& name, const QString& path, const QString& icon = QString());
     Q_INVOKABLE void movePlace(int fromIndex, int toIndex);
     Q_INVOKABLE void removeBookmark(int index);
+    Q_INVOKABLE void removePlace(int index) { removeBookmark(index); }
     Q_INVOKABLE void removeBookmarkByPath(const QString& path);
+    Q_INVOKABLE void removePlaceByPath(const QString& path) { removeBookmarkByPath(path); }
     Q_INVOKABLE void updatePlace(int index, const QString& name, const QString& iconName);
     Q_INVOKABLE bool isBookmarked(const QString& path) const;
     Q_INVOKABLE void toggleBookmark(const QString& path);

@@ -690,10 +690,10 @@ ApplicationWindow {
         Shortcut {
             sequence: "F11"
             onActivated: {
-                if (root.visibility === Window.FullScreen) {
-                    root.visibility = Window.Windowed;
+                if (window.visibility === Window.FullScreen) {
+                    window.visibility = Window.Windowed;
                 } else {
-                    root.visibility = Window.FullScreen;
+                    window.visibility = Window.FullScreen;
                 }
             }
         }
