@@ -224,7 +224,7 @@ Item {
             }
         }
 
-        // Details List View with vertical edge fade
+        // Details List View
         VerticalFadeListView {
             id: listView
 
@@ -241,94 +241,15 @@ Item {
                 flickable: listView
             }
 
-            // Rubber Band Selection Area
-            MouseArea {
-                id: dragSelectArea
-                anchors.fill: parent
-                z: -1
-                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
-
-                property real startX: 0
-                property real startY: 0
-                property real currentX: 0
-                property real currentY: 0
-                property bool isSelecting: false
-
-                onPressed: mouse => {
-                    if (mouse.button === Qt.LeftButton) {
-                        startX = mouse.x;
-                        startY = mouse.y;
-                        currentX = mouse.x;
-                        currentY = mouse.y;
-                        isSelecting = false;
-                        if (!(mouse.modifiers & Qt.ControlModifier)) {
-                            root.selectedPaths = [];
-                            listView.currentIndex = -1;
-                        }
-                    }
-                }
-
-                onPositionChanged: mouse => {
-                    if (pressed && (mouse.buttons & Qt.LeftButton)) {
-                        currentX = mouse.x;
-                        currentY = mouse.y;
-                        if (Math.abs(currentX - startX) > 4 || Math.abs(currentY - startY) > 4) {
-                            isSelecting = true;
-                            updateRubberBandSelection();
-                        }
-                    }
-                }
-
-                onReleased: mouse => {
-                    if (mouse.button === Qt.BackButton) {
-                        if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
-                    } else if (mouse.button === Qt.ForwardButton) {
-                        if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
-                    } else if (mouse.button === Qt.RightButton) {
-                        let globalPos = mapToItem(null, mouse.x, mouse.y);
-                        root.blankContextMenu(globalPos.x, globalPos.y);
-                    }
-                    isSelecting = false;
-                }
-
-                function updateRubberBandSelection() {
-                    let ry = Math.min(startY, currentY);
-                    let rh = Math.abs(currentY - startY);
-
-                    let newlySelected = [];
-                    for (let i = 0; i < listView.count; ++i) {
-                        let item = listView.itemAtIndex(i);
-                        if (item && item.modelData) {
-                            if (item.y + item.height > ry && item.y < ry + rh) {
-                                newlySelected.push(item.modelData.path);
-                            }
-                        }
-                    }
-                    root.selectedPaths = newlySelected;
-                }
-
-                Rectangle {
-                    visible: dragSelectArea.isSelecting
-                    x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
-                    y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
-                    width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
-                    height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
-                    color: Qt.alpha(Colours.palette.m3primary, 0.2)
-                    border.color: Colours.palette.m3primary
-                    border.width: 1.5
-                    radius: Tokens.rounding.extraSmall
-                    z: 100
-                }
-            }
-
             delegate: StyledRect {
                 id: rowItem
 
                 required property int index
                 required property var modelData
 
-                readonly property bool isSelected: root.isSelected(modelData.path) || ListView.isCurrentItem
-                readonly property bool isCut: FileOperations.isPathCut(modelData.path)
+                readonly property bool isSelected: root.isSelected(modelData.path) || (listView.currentIndex === index)
+                // Reactive Cut state
+                readonly property bool isCut: FileOperations.isCutOperation && FileOperations.clipboardFiles.indexOf(modelData.path) !== -1
 
                 width: listView.width
                 implicitHeight: 36
@@ -461,6 +382,89 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    // Top-Level Rubber Band Selection Overlay
+    MouseArea {
+        id: dragSelectArea
+        anchors.fill: parent
+        z: 999
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
+        propagateComposedEvents: true
+
+        property real startX: 0
+        property real startY: 0
+        property real currentX: 0
+        property real currentY: 0
+        property bool isSelecting: false
+
+        onPressed: mouse => {
+            if (mouse.button === Qt.LeftButton) {
+                let item = listView.childAt(mouse.x - listView.x, mouse.y - listView.y + listView.contentY);
+                if (!item) {
+                    startX = mouse.x;
+                    startY = mouse.y;
+                    currentX = mouse.x;
+                    currentY = mouse.y;
+                    isSelecting = false;
+                    if (!(mouse.modifiers & Qt.ControlModifier)) {
+                        root.selectedPaths = [];
+                        listView.currentIndex = -1;
+                    }
+                } else {
+                    mouse.accepted = false;
+                }
+            } else {
+                mouse.accepted = false;
+            }
+        }
+
+        onPositionChanged: mouse => {
+            if (pressed && (mouse.buttons & Qt.LeftButton)) {
+                currentX = mouse.x;
+                currentY = mouse.y;
+                if (Math.abs(currentX - startX) > 6 || Math.abs(currentY - startY) > 6) {
+                    isSelecting = true;
+                    updateRubberBandSelection();
+                }
+            }
+        }
+
+        onReleased: mouse => {
+            if (isSelecting) {
+                isSelecting = false;
+            } else {
+                mouse.accepted = false;
+            }
+        }
+
+        function updateRubberBandSelection() {
+            let ry = Math.min(startY, currentY) - listView.y + listView.contentY;
+            let rh = Math.abs(currentY - startY);
+
+            let newlySelected = [];
+            for (let i = 0; i < listView.count; ++i) {
+                let item = listView.itemAtIndex(i);
+                if (item && item.modelData) {
+                    if (item.y + item.height > ry && item.y < ry + rh) {
+                        newlySelected.push(item.modelData.path);
+                    }
+                }
+            }
+            root.selectedPaths = newlySelected;
+        }
+
+        Rectangle {
+            visible: dragSelectArea.isSelecting
+            x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
+            y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
+            width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
+            height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
+            color: Qt.alpha(Colours.palette.m3primary, 0.22)
+            border.color: Colours.palette.m3primary
+            border.width: 1.5
+            radius: Tokens.rounding.extraSmall
         }
     }
 }

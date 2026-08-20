@@ -45,8 +45,9 @@ Item {
         anchors.fill: parent
         anchors.margins: Tokens.padding.extraSmall + Tokens.padding.medium
 
-        cellWidth: root.zoomSize + 24 + Tokens.spacing.small
-        cellHeight: root.zoomSize + 24 + Tokens.spacing.large + Tokens.padding.medium * 2 + 1
+        // Exact uniform cell dimensions
+        cellWidth: root.zoomSize + 32
+        cellHeight: root.zoomSize + 58
 
         clip: true
         focus: true
@@ -66,21 +67,173 @@ Item {
 
         model: root.model
 
-        // Multi-Selection Rubber Band Dragging Area
-        MouseArea {
-            id: dragSelectArea
-            anchors.fill: parent
-            z: -1
-            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
+        delegate: Item {
+            id: delegateContainer
 
-            property real startX: 0
-            property real startY: 0
-            property real currentX: 0
-            property real currentY: 0
-            property bool isSelecting: false
+            required property int index
+            required property var modelData
 
-            onPressed: mouse => {
-                if (mouse.button === Qt.LeftButton) {
+            width: view.cellWidth
+            height: view.cellHeight
+
+            readonly property bool isSelected: root.isSelected(modelData.path) || (view.currentIndex === index)
+            // Reactive Cut state: updates instantly on clipboard change
+            readonly property bool isCut: FileOperations.isCutOperation && FileOperations.clipboardFiles.indexOf(modelData.path) !== -1
+
+            // Uniform Card Highlight Size
+            StyledRect {
+                id: itemCard
+                anchors.centerIn: parent
+                width: parent.width - 8
+                height: parent.height - 8
+
+                radius: Tokens.rounding.large
+                color: delegateContainer.isSelected ? Colours.palette.m3secondaryContainer : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
+                clip: true
+
+                // Cut Indication: Darkened / Ghosted Opacity
+                opacity: delegateContainer.isCut ? 0.42 : 1.0
+
+                Behavior on opacity {
+                    Anim {
+                        type: Anim.FastEffects
+                    }
+                }
+
+                // Pop in animation
+                scale: 0.6
+                Component.onCompleted: popInAnim.start()
+
+                ParallelAnimation {
+                    id: popInAnim
+                    NumberAnimation {
+                        target: itemCard
+                        property: "scale"
+                        from: 0.5
+                        to: 1.0
+                        duration: 250
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 1.3
+                    }
+                }
+
+                MouseArea {
+                    id: itemHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
+
+                    onClicked: mouse => {
+                        if (mouse.button === Qt.BackButton) {
+                            if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
+                        } else if (mouse.button === Qt.ForwardButton) {
+                            if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
+                        } else if (mouse.button === Qt.RightButton) {
+                            if (!root.isSelected(delegateContainer.modelData.path)) {
+                                root.selectSingle(delegateContainer.modelData.path, delegateContainer.index);
+                            }
+                            let globalPos = mapToItem(null, mouse.x, mouse.y);
+                            root.itemContextMenu(delegateContainer.modelData, globalPos.x, globalPos.y);
+                        } else {
+                            if (mouse.modifiers & Qt.ControlModifier) {
+                                root.toggleSelection(delegateContainer.modelData.path);
+                            } else {
+                                root.selectSingle(delegateContainer.modelData.path, delegateContainer.index);
+                            }
+                        }
+                    }
+
+                    onDoubleClicked: mouse => {
+                        if (mouse.button === Qt.LeftButton) {
+                            root.openItem(delegateContainer.modelData);
+                        }
+                    }
+                }
+
+                Item {
+                    id: iconContainer
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 8
+                    width: root.zoomSize
+                    height: root.zoomSize
+
+                    CachingIconImage {
+                        id: icon
+                        anchors.fill: parent
+                        implicitSize: root.zoomSize
+
+                        Component.onCompleted: {
+                            const file = delegateContainer.modelData;
+                            if (file.isImage) {
+                                source = Qt.resolvedUrl("file://" + file.path);
+                            } else {
+                                source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
+                            }
+                        }
+                    }
+
+                    // Symlink Indicator Badge
+                    StyledRect {
+                        anchors.bottom: parent.bottom
+                        anchors.right: parent.right
+                        implicitWidth: 20
+                        implicitHeight: 20
+                        radius: Tokens.rounding.full
+                        color: Qt.alpha(Colours.palette.m3surface, 0.85)
+                        visible: delegateContainer.modelData ? delegateContainer.modelData.isSymLink : false
+
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: "link"
+                            fontStyle: Tokens.font.icon.small
+                            color: Colours.palette.m3primary
+                        }
+                    }
+                }
+
+                StyledText {
+                    id: name
+
+                    anchors.top: iconContainer.bottom
+                    anchors.topMargin: 4
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.margins: 4
+
+                    text: delegateContainer.modelData ? delegateContainer.modelData.name : ""
+                    color: delegateContainer.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                    font: Tokens.font.body.small
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignTop
+                    elide: Text.ElideMiddle
+                    maximumLineCount: 2
+                    wrapMode: Text.WrapAnywhere
+                }
+            }
+        }
+    }
+
+    // Top-Level Rubber Band Selection Overlay (renders ABOVE everything)
+    MouseArea {
+        id: dragSelectArea
+        anchors.fill: parent
+        z: 999
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
+        propagateComposedEvents: true
+
+        property real startX: 0
+        property real startY: 0
+        property real currentX: 0
+        property real currentY: 0
+        property bool isSelecting: false
+
+        onPressed: mouse => {
+            if (mouse.button === Qt.LeftButton) {
+                // Check if clicking directly on a child delegate
+                let item = view.childAt(mouse.x - view.x + view.contentX, mouse.y - view.y + view.contentY);
+                if (!item) {
                     startX = mouse.x;
                     startY = mouse.y;
                     currentX = mouse.x;
@@ -90,204 +243,62 @@ Item {
                         root.selectedPaths = [];
                         view.currentIndex = -1;
                     }
+                } else {
+                    mouse.accepted = false;
                 }
-            }
-
-            onPositionChanged: mouse => {
-                if (pressed && (mouse.buttons & Qt.LeftButton)) {
-                    currentX = mouse.x;
-                    currentY = mouse.y;
-                    if (Math.abs(currentX - startX) > 4 || Math.abs(currentY - startY) > 4) {
-                        isSelecting = true;
-                        updateRubberBandSelection();
-                    }
-                }
-            }
-
-            onReleased: mouse => {
-                if (mouse.button === Qt.BackButton) {
-                    if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
-                } else if (mouse.button === Qt.ForwardButton) {
-                    if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
-                } else if (mouse.button === Qt.RightButton) {
-                    let globalPos = mapToItem(null, mouse.x, mouse.y);
-                    root.blankContextMenu(globalPos.x, globalPos.y);
-                }
-                isSelecting = false;
-            }
-
-            function updateRubberBandSelection() {
-                let rx = Math.min(startX, currentX);
-                let ry = Math.min(startY, currentY);
-                let rw = Math.abs(currentX - startX);
-                let rh = Math.abs(currentY - startY);
-
-                let newlySelected = [];
-                for (let i = 0; i < view.count; ++i) {
-                    let item = view.itemAtIndex(i);
-                    if (item && item.modelData) {
-                        // Check rectangle overlap
-                        if (item.x + item.width > rx && item.x < rx + rw &&
-                            item.y + item.height > ry && item.y < ry + rh) {
-                            newlySelected.push(item.modelData.path);
-                        }
-                    }
-                }
-                root.selectedPaths = newlySelected;
-            }
-
-            // Visual Rubber Band Box
-            Rectangle {
-                visible: dragSelectArea.isSelecting
-                x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
-                y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
-                width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
-                height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
-                color: Qt.alpha(Colours.palette.m3primary, 0.2)
-                border.color: Colours.palette.m3primary
-                border.width: 1.5
-                radius: Tokens.rounding.extraSmall
-                z: 100
+            } else {
+                mouse.accepted = false;
             }
         }
 
-        delegate: StyledRect {
-            id: item
-
-            required property int index
-            required property var modelData
-
-            readonly property bool isSelected: root.isSelected(modelData.path) || GridView.isCurrentItem
-            readonly property bool isCut: FileOperations.isPathCut(modelData.path)
-
-            implicitWidth: root.zoomSize + 24
-            implicitHeight: icon.implicitHeight + name.anchors.topMargin + name.implicitHeight + Tokens.padding.medium * 2
-
-            radius: Tokens.rounding.large
-            color: isSelected ? Colours.palette.m3secondaryContainer : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
-            z: isSelected ? 1 : 0
-            clip: true
-
-            // Cut Indication: Darkened / Ghosted Opacity
-            opacity: isCut ? 0.42 : 1.0
-
-            Behavior on opacity {
-                Anim {
-                    type: Anim.FastEffects
+        onPositionChanged: mouse => {
+            if (pressed && (mouse.buttons & Qt.LeftButton)) {
+                currentX = mouse.x;
+                currentY = mouse.y;
+                if (Math.abs(currentX - startX) > 6 || Math.abs(currentY - startY) > 6) {
+                    isSelecting = true;
+                    updateRubberBandSelection();
                 }
             }
+        }
 
-            // Pop in animation on directory switch / item load
-            scale: 0.6
-
-            Component.onCompleted: popInAnim.start()
-
-            ParallelAnimation {
-                id: popInAnim
-
-                NumberAnimation {
-                    target: item
-                    property: "scale"
-                    from: 0.5
-                    to: 1.0
-                    duration: 250
-                    easing.type: Easing.OutBack
-                    easing.overshoot: 1.3
-                }
+        onReleased: mouse => {
+            if (isSelecting) {
+                isSelecting = false;
+            } else {
+                mouse.accepted = false;
             }
+        }
 
-            MouseArea {
-                id: itemHover
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton
+        function updateRubberBandSelection() {
+            let rx = Math.min(startX, currentX) - view.x + view.contentX;
+            let ry = Math.min(startY, currentY) - view.y + view.contentY;
+            let rw = Math.abs(currentX - startX);
+            let rh = Math.abs(currentY - startY);
 
-                onClicked: mouse => {
-                    if (mouse.button === Qt.BackButton) {
-                        if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
-                    } else if (mouse.button === Qt.ForwardButton) {
-                        if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
-                    } else if (mouse.button === Qt.RightButton) {
-                        if (!root.isSelected(item.modelData.path)) {
-                            root.selectSingle(item.modelData.path, item.index);
-                        }
-                        let globalPos = mapToItem(null, mouse.x, mouse.y);
-                        root.itemContextMenu(item.modelData, globalPos.x, globalPos.y);
-                    } else {
-                        if (mouse.modifiers & Qt.ControlModifier) {
-                            root.toggleSelection(item.modelData.path);
-                        } else {
-                            root.selectSingle(item.modelData.path, item.index);
-                        }
-                    }
-                }
-
-                onDoubleClicked: mouse => {
-                    if (mouse.button === Qt.LeftButton) {
-                        root.openItem(item.modelData);
+            let newlySelected = [];
+            for (let i = 0; i < view.count; ++i) {
+                let item = view.itemAtIndex(i);
+                if (item && item.modelData) {
+                    if (item.x + item.width > rx && item.x < rx + rw &&
+                        item.y + item.height > ry && item.y < ry + rh) {
+                        newlySelected.push(item.modelData.path);
                     }
                 }
             }
+            root.selectedPaths = newlySelected;
+        }
 
-            Item {
-                id: iconContainer
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top
-                anchors.topMargin: Tokens.padding.medium
-                width: root.zoomSize
-                height: root.zoomSize
-
-                CachingIconImage {
-                    id: icon
-                    anchors.fill: parent
-                    implicitSize: root.zoomSize
-
-                    Component.onCompleted: {
-                        const file = item.modelData;
-                        if (file.isImage) {
-                            source = Qt.resolvedUrl("file://" + file.path);
-                        } else {
-                            source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
-                        }
-                    }
-                }
-
-                // Symlink Indicator Badge
-                StyledRect {
-                    anchors.bottom: parent.bottom
-                    anchors.right: parent.right
-                    implicitWidth: 20
-                    implicitHeight: 20
-                    radius: Tokens.rounding.full
-                    color: Qt.alpha(Colours.palette.m3surface, 0.85)
-                    visible: item.modelData ? item.modelData.isSymLink : false
-
-                    MaterialIcon {
-                        anchors.centerIn: parent
-                        text: "link"
-                        fontStyle: Tokens.font.icon.small
-                        color: Colours.palette.m3primary
-                    }
-                }
-            }
-
-            StyledText {
-                id: name
-
-                anchors.top: iconContainer.bottom
-                anchors.topMargin: Tokens.padding.small
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.margins: Tokens.padding.small
-
-                text: item.modelData ? item.modelData.name : ""
-                color: item.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                font: Tokens.font.body.small
-                horizontalAlignment: Text.AlignHCenter
-                elide: Text.ElideMiddle
-                maximumLineCount: 2
-                wrapMode: Text.WrapAnywhere
-            }
+        Rectangle {
+            visible: dragSelectArea.isSelecting
+            x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
+            y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
+            width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
+            height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
+            color: Qt.alpha(Colours.palette.m3primary, 0.22)
+            border.color: Colours.palette.m3primary
+            border.width: 1.5
+            radius: Tokens.rounding.extraSmall
         }
     }
 }
