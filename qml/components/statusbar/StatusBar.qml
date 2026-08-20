@@ -44,20 +44,20 @@ StyledRect {
             Layout.fillWidth: true
         }
 
-        // Zoom Icons Slider with Material Icons
+        // Zoom Icons Slider matching Nexus
         RowLayout {
             spacing: Tokens.spacing.small
 
             MaterialIcon {
                 text: "photo_size_select_small"
                 fontStyle: Tokens.font.icon.small
-                color: zoomSlider.value <= 60 ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                color: zoomSlider.value <= 0.1 ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
 
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        zoomSlider.value = 48;
+                        zoomSlider.value = 0.0;
                         root.zoomChanged(48);
                     }
                 }
@@ -66,32 +66,30 @@ StyledRect {
             StyledSlider {
                 id: zoomSlider
                 implicitWidth: 120
-                implicitHeight: 24
-                from: 48
-                to: 180
-                value: root.zoomLevel
-                onMoved: root.zoomChanged(value)
+                implicitHeight: 12
+                from: 0.0
+                to: 1.0
+                value: (root.zoomLevel - 48) / (180 - 48)
+
+                onInteraction: v => {
+                    let level = 48 + v * (180 - 48);
+                    root.zoomChanged(level);
+                }
             }
 
             MaterialIcon {
                 text: "photo_size_select_large"
                 fontStyle: Tokens.font.icon.small
-                color: zoomSlider.value >= 160 ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                color: zoomSlider.value >= 0.9 ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
 
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        zoomSlider.value = 180;
+                        zoomSlider.value = 1.0;
                         root.zoomChanged(180);
                     }
                 }
-            }
-
-            StyledText {
-                text: `${Math.round((zoomSlider.value / 80) * 100)}%`
-                color: Colours.palette.m3outline
-                font: Tokens.font.label.small
             }
         }
     }
