@@ -113,6 +113,14 @@ ApplicationWindow {
                             Layout.fillHeight: true
                             activeTab: TabManager.currentTab
 
+                            onPlaceContextMenuRequested: (gx, gy, idx, name, path, iconName, custom, trash) => {
+                                placeContextMenu.openForPlace(gx, gy, idx, name, path, iconName, custom, trash);
+                            }
+
+                            onDeviceContextMenuRequested: (gx, gy, devPath, name, mountPt, mounted) => {
+                                placeContextMenu.openForDevice(gx, gy, devPath, name, mountPt, mounted);
+                            }
+
                             onEditPlaceRequested: (index, name, path, iconName, isCustom) => {
                                 editPlaceModal.targetIndex = index;
                                 editPlaceModal.placeName = name;
@@ -310,6 +318,22 @@ ApplicationWindow {
         // Tab Context Menu (Top-level window overlay)
         TabContextMenu {
             id: tabContextMenu
+        }
+
+        // Place & Device Context Menu (Top-level window overlay)
+        PlaceContextMenu {
+            id: placeContextMenu
+            onEditRequested: (idx, name, path, iconName, custom) => {
+                editPlaceModal.targetIndex = idx;
+                editPlaceModal.placeName = name;
+                editPlaceModal.placePath = path;
+                editPlaceModal.selectedIcon = iconName;
+                editPlaceModal.isCustom = custom;
+                editPlaceModal.expanded = true;
+            }
+            onEmptyTrashRequested: {
+                FileOperations.emptyTrash();
+            }
         }
 
         // Global Desktop Shortcuts

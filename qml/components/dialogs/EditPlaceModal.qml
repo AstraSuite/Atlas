@@ -155,7 +155,7 @@ MouseArea {
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: qsTr("Choose Icon (%1 of %2 available)").arg(root.displayedIcons.length).arg(IconCatalog.totalIcons)
+                        text: qsTr("Choose Icon")
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.label.medium
                     }

@@ -12,6 +12,8 @@ StyledRect {
     property int sidebarWidth: 230
 
     signal editPlaceRequested(int index, string name, string path, string iconName, bool isCustom)
+    signal placeContextMenuRequested(real globalX, real globalY, int index, string name, string path, string iconName, bool isCustom, bool isTrash)
+    signal deviceContextMenuRequested(real globalX, real globalY, string devPath, string name, string mountPt, bool isMounted)
 
     implicitWidth: sidebarWidth
     color: Colours.tPalette.m3surfaceContainer
@@ -108,7 +110,8 @@ StyledRect {
                                 if (mouse.button === Qt.MiddleButton) {
                                     TabManager.newTab(placeItem.path);
                                 } else if (mouse.button === Qt.RightButton) {
-                                    root.editPlaceRequested(placeItem.index, placeItem.name, placeItem.path, placeItem.iconName, placeItem.isCustom);
+                                    let globalPos = mapToItem(null, mouse.x, mouse.y);
+                                    root.placeContextMenuRequested(globalPos.x, globalPos.y, placeItem.index, placeItem.name, placeItem.path, placeItem.iconName, placeItem.isCustom, placeItem.isTrash);
                                 } else {
                                     if (root.activeTab) {
                                         root.activeTab.currentPath = placeItem.path;
@@ -232,11 +235,8 @@ StyledRect {
                                         DriveManager.mountDevice(driveItem.devicePath, -1);
                                     }
                                 } else if (mouse.button === Qt.RightButton) {
-                                    if (driveItem.isMounted) {
-                                        DriveManager.unmountDevice(driveItem.devicePath);
-                                    } else {
-                                        DriveManager.mountDevice(driveItem.devicePath, TabManager.currentIndex);
-                                    }
+                                    let globalPos = mapToItem(null, mouse.x, mouse.y);
+                                    root.deviceContextMenuRequested(globalPos.x, globalPos.y, driveItem.devicePath, driveItem.name, driveItem.mountPoint, driveItem.isMounted);
                                 } else {
                                     if (driveItem.isMounted && driveItem.mountPoint && driveItem.mountPoint.length > 0) {
                                         if (root.activeTab) {
@@ -250,15 +250,6 @@ StyledRect {
                         }
                     }
                 }
-            }
-        }
-    }
-
-    Connections {
-        target: DriveManager
-        function onDeviceMounted(mountPoint, tabIndex) {
-            if (TabManager.currentTab) {
-                TabManager.currentTab.currentPath = mountPoint;
             }
         }
     }
