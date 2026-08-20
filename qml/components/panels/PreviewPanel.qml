@@ -10,6 +10,7 @@ StyledRect {
     property string targetPath: ""
     property bool expanded: false
     property int panelWidth: 260
+    signal previewClicked(string path)
 
     implicitWidth: expanded ? panelWidth : 0
     visible: width > 0
@@ -69,7 +70,7 @@ StyledRect {
                 Layout.fillWidth: true
                 implicitHeight: 180
                 radius: Tokens.rounding.medium
-                color: Colours.tPalette.m3surfaceContainerHigh
+                color: previewCardHover.containsMouse ? Colours.palette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
                 clip: true
 
                 // Image Preview
@@ -87,7 +88,7 @@ StyledRect {
                     anchors.centerIn: parent
                     implicitSize: 72
                     visible: !meta.isImage
-                    source: FileUtils.iconForFile(meta.name, meta.isDir, meta.mimeType)
+                    source: meta.isVideo ? "image://thumb/" + meta.path : FileUtils.iconForFile(meta.name, meta.isDir, meta.mimeType)
                 }
 
                 // Video Badge Overlay
@@ -107,6 +108,15 @@ StyledRect {
                         color: Colours.palette.m3primary
                         fontStyle: Tokens.font.icon.small
                     }
+                }
+
+                MouseArea {
+                    id: previewCardHover
+                    anchors.fill: parent
+                    hoverEnabled: meta.isImage || meta.isVideo
+                    enabled: meta.isImage || meta.isVideo
+                    cursorShape: (meta.isImage || meta.isVideo) ? Qt.PointingHandCursor : undefined
+                    onClicked: root.previewClicked(meta.path)
                 }
             }
 

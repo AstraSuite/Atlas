@@ -90,6 +90,9 @@ MouseArea {
                             list.push({ text: qsTr("Open in Split View"), icon: "splitscreen", action: "openSplit" });
                             list.push({ text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminalItem" });
                         } else {
+                            if (root.targetItem.isImage || root.targetItem.isVideo || FileUtils.isImage(root.targetItem.path) || FileUtils.isVideo(root.targetItem.path)) {
+                                list.push({ text: qsTr("Preview (Space)"), icon: "visibility", action: "preview" });
+                            }
                             list.push({ text: qsTr("Open"), icon: "open_in_new", action: "open" });
                             list.push({ text: qsTr("Open With..."), icon: "open_with", action: "openWith" });
                         }

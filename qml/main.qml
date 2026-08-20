@@ -10,6 +10,7 @@ import "components/statusbar"
 import "components/menus"
 import "components/dialogs"
 import "components/filedialog"
+import "components/media"
 import prism
 
 ApplicationWindow {
@@ -186,6 +187,14 @@ ApplicationWindow {
                                 dropActionMenu.menuY = y;
                                 dropActionMenu.expanded = true;
                             }
+
+                            onItemOpened: (item, pane) => {
+                                if (item.isImage || item.isVideo || FileUtils.isImage(item.path) || FileUtils.isVideo(item.path)) {
+                                    mediaViewerModal.openFile(item.path, pane === 1 ? splitContainer.splitModel : splitContainer.activeModel);
+                                } else {
+                                    AppIntegration.openWithDefault(item.path);
+                                }
+                            }
                         }
 
                         // Information / Preview Panel (F1)
@@ -193,6 +202,9 @@ ApplicationWindow {
                             id: previewPanel
                             Layout.fillHeight: true
                             targetPath: splitContainer.currentSelectedPath
+                            onPreviewClicked: path => {
+                                mediaViewerModal.openFile(path, splitContainer.activeModel);
+                            }
                         }
                     }
 
@@ -223,9 +235,13 @@ ApplicationWindow {
 
             onActionTriggered: (action, item) => {
                 let currentDir = TabManager.currentTab ? TabManager.currentTab.currentPath : "";
-                if (action === "open" && item) {
+                if (action === "preview" && item) {
+                    mediaViewerModal.openFile(item.path, splitContainer.activeModel);
+                } else if (action === "open" && item) {
                     if (item.isDir) {
                         TabManager.currentTab.currentPath = item.path;
+                    } else if (item.isImage || item.isVideo || FileUtils.isImage(item.path) || FileUtils.isVideo(item.path)) {
+                        mediaViewerModal.openFile(item.path, splitContainer.activeModel);
                     } else {
                         AppIntegration.openWithDefault(item.path);
                     }
@@ -412,7 +428,25 @@ ApplicationWindow {
             }
         }
 
+        // In-App Media Viewer Modal (Images, Videos, Audio)
+        MediaViewerModal {
+            id: mediaViewerModal
+        }
+
         // Global Desktop Shortcuts
+        Shortcut {
+            sequence: "Space"
+            enabled: !mediaViewerModal.expanded && !newItemModal.expanded && !editPlaceModal.expanded && !placesManageModal.expanded && !compressModal.expanded && !openWithModal.expanded
+            onActivated: {
+                if (splitContainer.currentSelectedPath) {
+                    let path = splitContainer.currentSelectedPath;
+                    if (FileUtils.isImage(path) || FileUtils.isVideo(path)) {
+                        mediaViewerModal.openFile(path, splitContainer.activeModel);
+                    }
+                }
+            }
+        }
+
         Shortcut {
             sequence: "Ctrl+T"
             onActivated: TabManager.newTab()

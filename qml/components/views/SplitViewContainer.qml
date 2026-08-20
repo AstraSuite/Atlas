@@ -27,6 +27,7 @@ StyledRect {
     signal filesDropped(var sources, string destDir, real mouseX, real mouseY)
     signal createNewFolder()
     signal createNewFile()
+    signal itemOpened(var item, int pane)
 
     color: Colours.tPalette.m3surfaceContainer
 
@@ -252,7 +253,7 @@ StyledRect {
                 root.activeTab.currentPath = item.path;
             }
         } else {
-            AppIntegration.openWithDefault(item.path);
+            root.itemOpened(item, pane);
         }
     }
 }
