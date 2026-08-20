@@ -39,6 +39,9 @@ Item {
                 Behavior on opacity {
                     Anim { type: Anim.FastEffects }
                 }
+                Behavior on color {
+                    CAnim {}
+                }
             }
 
             // M3 Box Container (18x18 with 2px radius)
@@ -55,7 +58,7 @@ Item {
                 border.width: 2
 
                 Behavior on border.color {
-                    Anim { type: Anim.FastEffects }
+                    CAnim {}
                 }
 
                 // Checked fill background
