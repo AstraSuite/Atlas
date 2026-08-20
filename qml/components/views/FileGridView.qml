@@ -45,9 +45,9 @@ Item {
         anchors.fill: parent
         anchors.margins: Tokens.padding.extraSmall + Tokens.padding.medium
 
-        // Exact uniform cell dimensions
-        cellWidth: root.zoomSize + 32
-        cellHeight: root.zoomSize + 58
+        // Exact uniform cell dimensions (tall enough for 4 lines of text)
+        cellWidth: root.zoomSize + 36
+        cellHeight: root.zoomSize + 88
 
         clip: true
         focus: true
@@ -208,7 +208,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignTop
                     elide: Text.ElideMiddle
-                    maximumLineCount: 2
+                    maximumLineCount: 4
                     wrapMode: Text.WrapAnywhere
                 }
             }
