@@ -1,0 +1,90 @@
+cmake_minimum_required(VERSION 3.19)
+project(prism VERSION 1.0.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(Qt6 6.5 REQUIRED COMPONENTS
+    Core
+    Gui
+    Qml
+    Quick
+    QuickControls2
+    QuickEffects
+    Concurrent
+)
+
+qt_standard_project_setup(REQUIRES 6.5)
+
+qt_add_executable(prism_app
+    src/main.cpp
+    src/config/fontbuilder.hpp
+    src/config/fontbuilder.cpp
+    src/config/font.hpp
+    src/config/font.cpp
+    src/config/tokens.hpp
+    src/config/tokens.cpp
+    src/config/colours.hpp
+    src/config/colours.cpp
+    src/models/filesystemmodel.hpp
+    src/models/filesystemmodel.cpp
+    src/core/fileutils.hpp
+    src/core/fileutils.cpp
+    src/core/iconprovider.hpp
+    src/core/iconprovider.cpp
+    src/core/appcontroller.hpp
+    src/core/appcontroller.cpp
+)
+
+set_target_properties(prism_app PROPERTIES
+    OUTPUT_NAME "prism"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+target_include_directories(prism_app PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/config
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/models
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+)
+
+qt_add_qml_module(prism_app
+    URI "prism"
+    VERSION 1.0
+    QML_FILES
+        qml/main.qml
+        qml/components/Anim.qml
+        qml/components/CAnim.qml
+        qml/components/StyledRect.qml
+        qml/components/StyledText.qml
+        qml/components/MaterialIcon.qml
+        qml/components/StateLayer.qml
+        qml/components/Mask.qml
+        qml/components/StyledScrollBar.qml
+        qml/components/CachingIconImage.qml
+        qml/components/filedialog/Sizes.qml
+        qml/components/filedialog/CurrentItem.qml
+        qml/components/filedialog/DialogButtons.qml
+        qml/components/filedialog/HeaderBar.qml
+        qml/components/filedialog/Sidebar.qml
+        qml/components/filedialog/FolderContents.qml
+        qml/components/filedialog/FileDialog.qml
+    RESOURCES
+        assets/fonts/GoogleSansFlex.ttf
+        assets/fonts/MaterialSymbolsRounded.ttf
+)
+
+target_link_libraries(prism_app PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
+    Qt6::QuickControls2
+    Qt6::QuickEffects
+    Qt6::Concurrent
+)
+
+include(GNUInstallDirs)
+install(TARGETS prism_app
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
