@@ -607,11 +607,11 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
     QColor primary = pal.m3primary();
     QColor onPrimary = pal.m3onPrimary();
 
-    // Card Background (Rounded card matching selection exactly, translucent 0.88)
+    // Card Background (Rounded card matching selection exactly, translucent 0.88, no borders)
     cardBg.setAlpha(225);
     painter.setBrush(cardBg);
-    painter.setPen(QPen(cardBg.lighter(120), 1.0));
-    painter.drawRoundedRect(2, 2, cardW - 4, cardH - 4, 16, 16);
+    painter.setPen(Qt::NoPen);
+    painter.drawRoundedRect(0, 0, cardW, cardH, 16, 16);
 
     // Primary File Icon & Thumbnail
     QFileInfo firstFi(filePaths.first());
@@ -628,13 +628,33 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
     if (iconPix.isNull()) {
         QIcon icon;
         if (firstFi.isDir()) {
-            icon = QIcon::fromTheme("folder", QIcon::fromTheme("inode-directory"));
+            QString name = firstFi.fileName();
+            static const QStringList specialDirs = { "Desktop", "Documents", "Downloads", "Music", "Pictures", "Public", "Templates", "Videos" };
+            if (specialDirs.contains(name)) {
+                QString iconName = QString("folder-%1").arg(name.toLower());
+                if (QIcon::hasThemeIcon(iconName)) {
+                    icon = QIcon::fromTheme(iconName);
+                }
+            }
+            if (icon.isNull()) {
+                if (QIcon::hasThemeIcon("inode-directory")) {
+                    icon = QIcon::fromTheme("inode-directory");
+                } else if (QIcon::hasThemeIcon("folder")) {
+                    icon = QIcon::fromTheme("folder");
+                }
+            }
         } else {
             QMimeDatabase mimeDb;
             QMimeType mime = mimeDb.mimeTypeForFile(firstFi);
             QString mimeIcon = mime.name();
             mimeIcon.replace('/', '-');
-            icon = QIcon::fromTheme(mimeIcon, QIcon::fromTheme(mime.iconName(), QIcon::fromTheme("text-x-generic", QIcon::fromTheme("application-x-zerosize"))));
+            if (QIcon::hasThemeIcon(mimeIcon)) {
+                icon = QIcon::fromTheme(mimeIcon);
+            } else if (QIcon::hasThemeIcon(mime.iconName())) {
+                icon = QIcon::fromTheme(mime.iconName());
+            } else if (QIcon::hasThemeIcon(mime.genericIconName())) {
+                icon = QIcon::fromTheme(mime.genericIconName());
+            }
         }
         if (icon.isNull()) {
             icon = QIcon::fromTheme("text-x-generic");

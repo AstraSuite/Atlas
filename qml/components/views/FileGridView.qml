@@ -116,13 +116,8 @@ Item {
 
                 radius: Tokens.rounding.large
                 color: folderDropArea.containsDrag
-                    ? Qt.alpha(Colours.palette.m3primaryContainer, 0.9)
+                    ? Colours.palette.m3primaryContainer
                     : (delegateContainer.isSelected ? Colours.palette.m3secondaryContainer : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"))
-                
-                border.color: folderDropArea.containsDrag
-                    ? Colours.palette.m3primary
-                    : (delegateContainer.isDragged ? Colours.palette.m3outline : "transparent")
-                border.width: (folderDropArea.containsDrag || delegateContainer.isDragged) ? 2 : 0
 
                 clip: true
 

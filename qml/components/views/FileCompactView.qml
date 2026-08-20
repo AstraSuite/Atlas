@@ -105,13 +105,8 @@ Item {
 
                 radius: Tokens.rounding.small
                 color: folderDropArea.containsDrag
-                    ? Qt.alpha(Colours.palette.m3primaryContainer, 0.9)
+                    ? Colours.palette.m3primaryContainer
                     : (compDelegate.isSelected ? Colours.palette.m3secondaryContainer : (compHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"))
-
-                border.color: folderDropArea.containsDrag
-                    ? Colours.palette.m3primary
-                    : (compDelegate.isDragged ? Colours.palette.m3outline : "transparent")
-                border.width: (folderDropArea.containsDrag || compDelegate.isDragged) ? 1.5 : 0
 
                 // Cut & Hidden & Dragging Files Indication: Darkened / Ghosted Opacity
                 opacity: compDelegate.isDragged ? 0.35 : (compDelegate.isCut ? 0.38 : (compDelegate.isHidden ? 0.58 : 1.0))
