@@ -48,7 +48,8 @@ Item {
             z: -1
             acceptedButtons: Qt.RightButton
             onClicked: mouse => {
-                root.blankContextMenu(mouse.x, mouse.y)
+                let globalPos = mapToItem(null, mouse.x, mouse.y);
+                root.blankContextMenu(globalPos.x, globalPos.y);
             }
         }
 
@@ -109,42 +110,19 @@ Item {
             StyledText {
                 id: name
 
+                anchors.top: icon.bottom
+                anchors.topMargin: Tokens.padding.small
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.top: icon.bottom
-                anchors.topMargin: Tokens.spacing.small
-                anchors.margins: Tokens.padding.medium
-
-                horizontalAlignment: Text.AlignHCenter
-                elide: item.GridView.isCurrentItem ? Text.ElideNone : Text.ElideRight
-                wrapMode: item.GridView.isCurrentItem ? Text.WrapAtWordBoundaryOrAnywhere : Text.NoWrap
+                anchors.margins: Tokens.padding.small
 
                 text: item.modelData ? item.modelData.name : ""
                 color: item.GridView.isCurrentItem ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-            }
-        }
-    }
-
-    // Empty Folder State
-    Loader {
-        anchors.centerIn: parent
-        active: root.model && root.model.count === 0
-
-        sourceComponent: ColumnLayout {
-            spacing: Tokens.spacing.medium
-
-            MaterialIcon {
-                Layout.alignment: Qt.AlignHCenter
-                text: "folder_open"
-                color: Colours.palette.m3outline
-                fontStyle: Tokens.font.icon.builders.extraLarge.scale(2).weight(Font.Medium).build()
-            }
-
-            StyledText {
-                Layout.alignment: Qt.AlignHCenter
-                text: qsTr("This folder is empty")
-                color: Colours.palette.m3outline
-                font: Tokens.font.body.builders.large.weight(Font.Medium).build()
+                font: Tokens.font.body.small
+                horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideMiddle
+                maximumLineCount: 2
+                wrapMode: Text.WrapAnywhere
             }
         }
     }

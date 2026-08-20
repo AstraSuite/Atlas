@@ -40,7 +40,8 @@ Item {
             z: -1
             acceptedButtons: Qt.RightButton
             onClicked: mouse => {
-                root.blankContextMenu(mouse.x, mouse.y)
+                let globalPos = mapToItem(null, mouse.x, mouse.y);
+                root.blankContextMenu(globalPos.x, globalPos.y);
             }
         }
 

@@ -6,24 +6,20 @@ MouseArea {
     id: root
 
     property bool expanded: false
-    property string title: qsTr("Create New Folder")
-    property string initialText: ""
+    property string title: qsTr("New Item")
     property string icon: "create_new_folder"
+    property string initialText: ""
+    property string placeholder: qsTr("Enter name...")
 
     signal accepted(string text)
     signal rejected()
 
     anchors.fill: parent
+    visible: expanded
     enabled: expanded
     hoverEnabled: expanded
     cursorShape: expanded ? Qt.ArrowCursor : undefined
-
-    opacity: expanded ? 1 : 0
-    Behavior on opacity {
-        Anim {
-            type: Anim.DefaultEffects
-        }
-    }
+    z: 100
 
     onClicked: {
         root.rejected();
@@ -70,35 +66,51 @@ MouseArea {
                 StyledText {
                     Layout.fillWidth: true
                     text: root.title
-                    font: Tokens.font.title.medium
                     color: Colours.palette.m3onSurface
+                    font: Tokens.font.title.medium
+                }
+
+                Item {
+                    implicitWidth: 24
+                    implicitHeight: 24
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "close"
+                        color: Colours.palette.m3onSurfaceVariant
+                        fontStyle: Tokens.font.icon.small
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            root.rejected();
+                            root.expanded = false;
+                        }
+                    }
                 }
             }
 
-            // Text Input Box
+            // Input Field
             StyledRect {
                 Layout.fillWidth: true
-                implicitHeight: 40
-                radius: Tokens.rounding.medium
-                color: Colours.tPalette.m3surfaceContainer
+                implicitHeight: 44
+                radius: Tokens.rounding.small
+                color: Colours.palette.m3surfaceContainerHighest
 
                 TextInput {
-                    id: inputField
-
+                    id: input
                     anchors.fill: parent
-                    anchors.margins: Tokens.padding.small
-                    anchors.leftMargin: Tokens.padding.medium
-                    anchors.rightMargin: Tokens.padding.medium
-                    verticalAlignment: TextInput.AlignVCenter
-
+                    anchors.margins: Tokens.padding.medium
                     text: root.initialText
                     color: Colours.palette.m3onSurface
                     font: Tokens.font.body.medium
                     selectByMouse: true
+                    focus: root.expanded
 
                     onAccepted: {
-                        if (text.trimmed().length > 0) {
-                            root.accepted(text.trimmed());
+                        if (text.trim().length > 0) {
+                            root.accepted(text.trim());
                             root.expanded = false;
                         }
                     }
@@ -112,17 +124,22 @@ MouseArea {
 
             // Buttons
             RowLayout {
-                Layout.alignment: Qt.AlignRight
+                Layout.fillWidth: true
                 spacing: Tokens.spacing.small
+
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 // Cancel Button
                 StyledRect {
-                    implicitWidth: 90
+                    implicitWidth: 80
                     implicitHeight: 36
                     radius: Tokens.rounding.full
-                    color: Colours.tPalette.m3surfaceContainer
+                    color: "transparent"
 
                     StateLayer {
+                        color: Colours.palette.m3onSurface
                         onClicked: {
                             root.rejected();
                             root.expanded = false;
@@ -132,22 +149,23 @@ MouseArea {
                     StyledText {
                         anchors.centerIn: parent
                         text: qsTr("Cancel")
+                        color: Colours.palette.m3primary
                         font: Tokens.font.label.large
-                        color: Colours.palette.m3onSurface
                     }
                 }
 
-                // Confirm / Create Button
+                // Confirm Button
                 StyledRect {
-                    implicitWidth: 90
+                    implicitWidth: 80
                     implicitHeight: 36
                     radius: Tokens.rounding.full
                     color: Colours.palette.m3primary
 
                     StateLayer {
+                        color: Colours.palette.m3onPrimary
                         onClicked: {
-                            if (inputField.text.trimmed().length > 0) {
-                                root.accepted(inputField.text.trimmed());
+                            if (input.text.trim().length > 0) {
+                                root.accepted(input.text.trim());
                                 root.expanded = false;
                             }
                         }
@@ -155,20 +173,12 @@ MouseArea {
 
                     StyledText {
                         anchors.centerIn: parent
-                        text: qsTr("Confirm")
-                        font: Tokens.font.label.large
+                        text: qsTr("Create")
                         color: Colours.palette.m3onPrimary
+                        font: Tokens.font.label.large
                     }
                 }
             }
-        }
-    }
-
-    onExpandedChanged: {
-        if (expanded) {
-            inputField.text = root.initialText;
-            inputField.forceActiveFocus();
-            inputField.selectAll();
         }
     }
 }

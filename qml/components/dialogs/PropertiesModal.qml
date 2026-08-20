@@ -10,16 +10,11 @@ MouseArea {
     property string targetPath: ""
 
     anchors.fill: parent
+    visible: expanded
     enabled: expanded
     hoverEnabled: expanded
     cursorShape: expanded ? Qt.ArrowCursor : undefined
-
-    opacity: expanded ? 1 : 0
-    Behavior on opacity {
-        Anim {
-            type: Anim.DefaultEffects
-        }
-    }
+    z: 100
 
     onClicked: root.expanded = false
 
@@ -70,48 +65,40 @@ MouseArea {
                 StyledText {
                     Layout.fillWidth: true
                     text: qsTr("Properties")
-                    font: Tokens.font.title.medium
                     color: Colours.palette.m3onSurface
+                    font: Tokens.font.title.medium
                 }
 
                 Item {
-                    implicitWidth: 28
-                    implicitHeight: 28
+                    implicitWidth: 24
+                    implicitHeight: 24
 
-                    StyledRect {
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "close"
+                        color: Colours.palette.m3onSurfaceVariant
+                        fontStyle: Tokens.font.icon.small
+                    }
+
+                    MouseArea {
                         anchors.fill: parent
-                        radius: Tokens.rounding.full
-                        color: Colours.tPalette.m3surfaceContainer
-
-                        StateLayer {
-                            onClicked: root.expanded = false
-                        }
-
-                        MaterialIcon {
-                            anchors.centerIn: parent
-                            text: "close"
-                            fontStyle: Tokens.font.icon.small
-                            color: Colours.palette.m3onSurface
-                        }
+                        onClicked: root.expanded = false
                     }
                 }
             }
 
-            // Name & Icon
+            // File Icon & Name Preview
             RowLayout {
+                Layout.fillWidth: true
                 spacing: Tokens.spacing.medium
 
                 CachingIconImage {
                     implicitSize: 48
-
-                    Component.onCompleted: {
-                        if (meta.isDir) {
-                            source = FileUtils.iconForFile(meta.name, true, "");
-                        } else if (meta.mimeType.startsWith("image/")) {
-                            source = Qt.resolvedUrl("file://" + meta.path);
-                        } else {
-                            source = FileUtils.iconForFile(meta.name, false, meta.mimeType);
+                    source: {
+                        if (meta.isImage) {
+                            return Qt.resolvedUrl("file://" + root.targetPath);
                         }
+                        return FileUtils.iconForFile(meta.name, meta.isDir, meta.mimeType);
                     }
                 }
 
@@ -122,80 +109,94 @@ MouseArea {
                     StyledText {
                         Layout.fillWidth: true
                         text: meta.name
-                        font: Tokens.font.body.builders.large.weight(Font.Bold).build()
                         color: Colours.palette.m3onSurface
-                        elide: Text.ElideMiddle
+                        font: Tokens.font.title.small
+                        elide: Text.ElideRight
                     }
 
                     StyledText {
                         Layout.fillWidth: true
                         text: meta.path
-                        font: Tokens.font.label.small
                         color: Colours.palette.m3outline
+                        font: Tokens.font.body.small
                         elide: Text.ElideMiddle
                     }
                 }
             }
 
-            // Details List
-            ColumnLayout {
+            // Divider
+            Rectangle {
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.small
+                implicitHeight: 1
+                color: Colours.palette.m3outlineVariant
+            }
 
-                Repeater {
-                    model: [
-                        { label: qsTr("Size:"), value: meta.formattedSize },
-                        { label: qsTr("Type:"), value: meta.mimeDescription },
-                        { label: qsTr("Dimensions:"), value: meta.imageDimensions, visible: meta.imageDimensions.length > 0 },
-                        { label: qsTr("Modified:"), value: meta.modifiedFormatted },
-                        { label: qsTr("Created:"), value: meta.createdFormatted },
-                        { label: qsTr("Accessed:"), value: meta.accessedFormatted },
-                        { label: qsTr("Permissions:"), value: meta.permissions },
-                        { label: qsTr("Owner:"), value: `${meta.owner} : ${meta.group}` }
-                    ]
+            // Metadata key-value list
+            Repeater {
+                model: [
+                    { label: qsTr("Size:"), value: meta.isDir ? `${meta.itemCount} items` : meta.formattedSize },
+                    { label: qsTr("Type:"), value: meta.mimeDescription.length > 0 ? meta.mimeDescription : (meta.isDir ? "Folder" : "File") },
+                    { label: qsTr("Dimensions:"), value: meta.imageDimensions, visible: meta.isImage && meta.imageDimensions.length > 0 },
+                    { label: qsTr("Modified:"), value: meta.formattedModified },
+                    { label: qsTr("Created:"), value: meta.formattedCreated },
+                    { label: qsTr("Accessed:"), value: meta.formattedAccessed },
+                    { label: qsTr("Permissions:"), value: meta.permissions },
+                    { label: qsTr("Owner:"), value: `${meta.owner} : ${meta.group}` }
+                ]
 
-                    RowLayout {
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Tokens.spacing.medium
+                    visible: modelData.visible !== false && Boolean(modelData.value && String(modelData.value).length > 0)
+
+                    StyledText {
+                        Layout.preferredWidth: 100
+                        text: modelData.label || ""
+                        color: Colours.palette.m3onSurfaceVariant
+                        font: Tokens.font.body.small
+                    }
+
+                    StyledText {
                         Layout.fillWidth: true
-                        spacing: Tokens.spacing.medium
-                        visible: modelData.visible !== false && modelData.value.length > 0
-
-                        StyledText {
-                            Layout.preferredWidth: 100
-                            text: modelData.label
-                            color: Colours.palette.m3onSurfaceVariant
-                            font: Tokens.font.body.small
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: modelData.value
-                            color: Colours.palette.m3onSurface
-                            font: Tokens.font.body.small
-                            elide: Text.ElideRight
-                        }
+                        text: modelData.value ? String(modelData.value) : ""
+                        color: Colours.palette.m3onSurface
+                        font: Tokens.font.body.small
+                        elide: Text.ElideRight
                     }
                 }
             }
 
-            // Close Button
+            // Divider
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: 1
+                color: Colours.palette.m3outlineVariant
+            }
+
+            // Buttons
             RowLayout {
-                Layout.alignment: Qt.AlignRight
+                Layout.fillWidth: true
+
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 StyledRect {
-                    implicitWidth: 90
+                    implicitWidth: 80
                     implicitHeight: 36
                     radius: Tokens.rounding.full
                     color: Colours.palette.m3primary
 
                     StateLayer {
+                        color: Colours.palette.m3onPrimary
                         onClicked: root.expanded = false
                     }
 
                     StyledText {
                         anchors.centerIn: parent
                         text: qsTr("Close")
-                        font: Tokens.font.label.large
                         color: Colours.palette.m3onPrimary
+                        font: Tokens.font.label.large
                     }
                 }
             }

@@ -5,14 +5,15 @@ import "../"
 StyledRect {
     id: root
 
-    implicitHeight: tabRow.implicitHeight + Tokens.padding.extraSmall * 2
+    implicitHeight: 40
     color: Colours.tPalette.m3surfaceContainer
 
     RowLayout {
         id: tabRow
 
         anchors.fill: parent
-        anchors.margins: Tokens.padding.extraSmall
+        anchors.leftMargin: Tokens.padding.small
+        anchors.rightMargin: Tokens.padding.small
         spacing: Tokens.spacing.extraSmall
 
         ListView {
@@ -34,26 +35,12 @@ StyledRect {
                 required property string path
                 readonly property bool selected: TabManager.currentIndex === index
 
-                implicitWidth: Math.min(220, Math.max(120, tabContent.implicitWidth + Tokens.padding.medium * 2))
-                implicitHeight: tabList.height
+                implicitWidth: Math.min(200, Math.max(100, tabContent.implicitWidth + Tokens.padding.medium * 2))
+                implicitHeight: 32
+                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
 
                 radius: Tokens.rounding.medium
                 color: selected ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
-
-                StateLayer {
-                    color: tabItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                    onClicked: TabManager.currentIndex = tabItem.index
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    acceptedButtons: Qt.MiddleButton
-                    onClicked: mouse => {
-                        if (mouse.button === Qt.MiddleButton) {
-                            TabManager.closeTab(tabItem.index);
-                        }
-                    }
-                }
 
                 RowLayout {
                     id: tabContent
@@ -81,6 +68,7 @@ StyledRect {
                         implicitWidth: 20
                         implicitHeight: 20
                         visible: TabManager.count > 1
+                        z: 2
 
                         MaterialIcon {
                             anchors.centerIn: parent
@@ -93,7 +81,27 @@ StyledRect {
                             id: closeHover
                             anchors.fill: parent
                             hoverEnabled: true
-                            onClicked: TabManager.closeTab(tabItem.index)
+                            onClicked: mouse => {
+                                mouse.accepted = true;
+                                TabManager.closeTab(tabItem.index);
+                            }
+                        }
+                    }
+                }
+
+                StateLayer {
+                    anchors.fill: parent
+                    z: 1
+                    color: tabItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                    onClicked: TabManager.currentIndex = tabItem.index
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.MiddleButton
+                    onClicked: mouse => {
+                        if (mouse.button === Qt.MiddleButton) {
+                            TabManager.closeTab(tabItem.index);
                         }
                     }
                 }

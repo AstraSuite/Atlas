@@ -14,9 +14,11 @@ MouseArea {
     signal actionTriggered(string action, var item)
 
     anchors.fill: parent
+    visible: expanded
     enabled: expanded
     hoverEnabled: expanded
     cursorShape: expanded ? Qt.ArrowCursor : undefined
+    acceptedButtons: Qt.LeftButton | Qt.RightButton
     onClicked: expanded = false
 
     opacity: expanded ? 1 : 0
@@ -29,8 +31,8 @@ MouseArea {
     StyledRect {
         id: menuRect
 
-        x: Math.min(Math.max(0, root.menuX), root.width - width - 8)
-        y: Math.min(Math.max(0, root.menuY), root.height - height - 8)
+        x: Math.min(Math.max(8, root.menuX), root.width - width - 8)
+        y: Math.min(Math.max(8, root.menuY), root.height - height - 8)
 
         implicitWidth: Math.max(220, menuCol.implicitWidth + Tokens.padding.extraSmall * 2)
         implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
@@ -40,6 +42,7 @@ MouseArea {
 
         MouseArea {
             anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
             onClicked: mouse => mouse.accepted = true
         }
 
