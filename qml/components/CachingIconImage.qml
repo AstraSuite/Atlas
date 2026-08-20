@@ -16,7 +16,7 @@ Item {
 
         anchors.fill: parent
         source: root.source
-        asynchronous: true
+        asynchronous: false
         fillMode: Image.PreserveAspectFit
         sourceSize.width: root.implicitSize > 0 ? root.implicitSize * 2 : 128
         sourceSize.height: root.implicitSize > 0 ? root.implicitSize * 2 : 128

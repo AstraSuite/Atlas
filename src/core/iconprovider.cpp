@@ -1,13 +1,13 @@
 #include "iconprovider.hpp"
-#include <QPainter>
 #include <QIcon>
+#include <QPixmap>
 
 namespace prism::core {
 
 IconImageProvider::IconImageProvider()
-    : QQuickImageProvider(QQuickImageProvider::Image) {}
+    : QQuickImageProvider(QQuickImageProvider::Pixmap) {}
 
-QImage IconImageProvider::requestImage(const QString& id, QSize* size, const QSize& requestedSize) {
+QPixmap IconImageProvider::requestPixmap(const QString& id, QSize* size, const QSize& requestedSize) {
     int w = requestedSize.width() > 0 ? requestedSize.width() : 64;
     int h = requestedSize.height() > 0 ? requestedSize.height() : 64;
 
@@ -16,18 +16,17 @@ QImage IconImageProvider::requestImage(const QString& id, QSize* size, const QSi
     }
 
     QIcon icon = QIcon::fromTheme(id);
+    if (icon.isNull()) {
+        icon = QIcon::fromTheme("text-plain");
+    }
+
     if (!icon.isNull()) {
-        return icon.pixmap(w, h).toImage();
+        return icon.pixmap(w, h);
     }
 
-    QIcon fallbackIcon = QIcon::fromTheme("text-plain");
-    if (!fallbackIcon.isNull()) {
-        return fallbackIcon.pixmap(w, h).toImage();
-    }
-
-    QImage img(w, h, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    return img;
+    QPixmap px(w, h);
+    px.fill(Qt::transparent);
+    return px;
 }
 
 } // namespace prism::core
