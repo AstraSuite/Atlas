@@ -9,12 +9,14 @@
 #include <QJsonObject>
 #include <QProcess>
 #include <QStorageInfo>
+#include <QSettings>
 #include <QtConcurrent>
 
 namespace prism::core {
 
 DriveManager::DriveManager(QObject* parent)
     : QAbstractListModel(parent) {
+    loadHiddenDevices();
     if (QFile::exists("/proc/mounts")) {
         m_mountWatcher.addPath("/proc/mounts");
         connect(&m_mountWatcher, &QFileSystemWatcher::fileChanged, this, &DriveManager::refresh);
@@ -49,6 +51,7 @@ QVariant DriveManager::data(const QModelIndex& index, int role) const {
         }
         return d.sizeFormatted;
     }
+    case IsHiddenRole: return isDeviceHidden(d.devicePath, d.name);
     case Qt::DisplayRole: return d.name;
     default: return {};
     }
@@ -66,8 +69,96 @@ QHash<int, QByteArray> DriveManager::roleNames() const {
         { IsRemovableRole, "isRemovable" },
         { BytesFreeRole, "bytesFree" },
         { BytesTotalRole, "bytesTotal" },
-        { FreeSpaceFormattedRole, "freeSpaceFormatted" }
+        { FreeSpaceFormattedRole, "freeSpaceFormatted" },
+        { IsHiddenRole, "isHidden" }
     };
+}
+
+void DriveManager::loadHiddenDevices() {
+    QSettings settings("prism", "prism");
+    m_hiddenDevices = settings.value("devices/hiddenDevices").toStringList();
+}
+
+void DriveManager::saveHiddenDevices() {
+    QSettings settings("prism", "prism");
+    settings.setValue("devices/hiddenDevices", m_hiddenDevices);
+}
+
+void DriveManager::setShowHiddenDevices(bool show) {
+    if (m_showHiddenDevices != show) {
+        m_showHiddenDevices = show;
+        applyDeviceFilters();
+        emit showHiddenDevicesChanged();
+    }
+}
+
+void DriveManager::hideDevice(const QString& devicePath) {
+    if (!devicePath.isEmpty() && !m_hiddenDevices.contains(devicePath)) {
+        m_hiddenDevices.append(devicePath);
+        saveHiddenDevices();
+        applyDeviceFilters();
+    }
+}
+
+void DriveManager::unhideDevice(const QString& devicePath) {
+    if (!devicePath.isEmpty() && m_hiddenDevices.contains(devicePath)) {
+        m_hiddenDevices.removeAll(devicePath);
+        saveHiddenDevices();
+        applyDeviceFilters();
+    }
+}
+
+void DriveManager::toggleDeviceHidden(const QString& devicePath) {
+    if (isDeviceHidden(devicePath)) {
+        unhideDevice(devicePath);
+    } else {
+        hideDevice(devicePath);
+    }
+}
+
+bool DriveManager::isDeviceHidden(const QString& devicePath, const QString& name) const {
+    if (m_hiddenDevices.contains(devicePath)) return true;
+    if (!name.isEmpty() && m_hiddenDevices.contains(name)) return true;
+    return false;
+}
+
+void DriveManager::setHiddenDevices(const QStringList& list) {
+    m_hiddenDevices = list;
+    saveHiddenDevices();
+    applyDeviceFilters();
+}
+
+QVariantList DriveManager::allDevices() const {
+    QVariantList list;
+    for (const auto& d : m_allDrives) {
+        QVariantMap map;
+        map["name"] = d.name;
+        map["devicePath"] = d.devicePath;
+        map["mountPoint"] = d.mountPoint;
+        map["sizeFormatted"] = d.sizeFormatted;
+        map["fsType"] = d.fsType;
+        map["model"] = d.model;
+        map["isMounted"] = d.isMounted;
+        map["isRemovable"] = d.isRemovable;
+        map["freeSpaceFormatted"] = (d.bytesTotal > 0)
+            ? QString("%1 free of %2").arg(FileUtils::formatSize(d.bytesFree), FileUtils::formatSize(d.bytesTotal))
+            : d.sizeFormatted;
+        map["isHidden"] = isDeviceHidden(d.devicePath, d.name);
+        list.append(map);
+    }
+    return list;
+}
+
+void DriveManager::applyDeviceFilters() {
+    beginResetModel();
+    m_drives.clear();
+    for (const auto& d : m_allDrives) {
+        if (m_showHiddenDevices || !isDeviceHidden(d.devicePath, d.name)) {
+            m_drives.append(d);
+        }
+    }
+    endResetModel();
+    emit countChanged();
 }
 
 void DriveManager::refresh() {
@@ -109,17 +200,18 @@ void DriveManager::refresh() {
 
             QString devPath = "/dev/" + name;
 
-            // Filter out swap, efi, and root mountpoints
-            bool isSystem = (fstype == "swap") || (mountPoint == "/boot/efi") || (mountPoint == "/");
-            bool isValidFs = !fstype.isEmpty() && fstype != "swap";
+            // Filter out swap and unmounted loop devices
+            bool isLoopUnmounted = (type == "loop" && mountPoint.isEmpty());
+            bool isSwap = (fstype == "swap");
+            bool isValidFs = !fstype.isEmpty() && !isSwap && !isLoopUnmounted;
 
-            if ((type == "part" || type == "disk") && isValidFs && !isSystem) {
+            if ((type == "part" || type == "disk" || (type == "loop" && !mountPoint.isEmpty())) && isValidFs) {
                 QString displayName = label;
                 if (displayName.isEmpty()) {
                     if (!model.isEmpty()) {
-                        displayName = QString("%1 (%2)").arg(model.trimmed(), size);
+                        displayName = model.trimmed();
                     } else {
-                        displayName = QString("%1 (%2)").arg(name, size);
+                        displayName = name;
                     }
                 }
 
@@ -160,10 +252,8 @@ void DriveManager::refresh() {
         }
 
         QMetaObject::invokeMethod(this, [this, foundDrives]() {
-            beginResetModel();
-            m_drives = foundDrives;
-            endResetModel();
-            emit countChanged();
+            m_allDrives = foundDrives;
+            applyDeviceFilters();
         });
     });
 }

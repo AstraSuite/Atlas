@@ -123,7 +123,7 @@ StyledRect {
                         color: Colours.tPalette.m3surfaceContainerHigh
                     }
 
-                    // Drag & Click MouseArea for Tab selection & reordering (z: 1)
+                    // Drag & Click MouseArea for Tab selection & reordering
                     MouseArea {
                         id: tabDragArea
                         anchors.fill: parent
@@ -180,7 +180,7 @@ StyledRect {
                         }
                     }
 
-                    // Single vs Joined Split Tab Content (z: 10)
+                    // Single vs Joined Split Tab Content
                     RowLayout {
                         id: tabContent
                         anchors.fill: parent
@@ -211,12 +211,12 @@ StyledRect {
                                     ? (tabItem.isSplit && tabItem.activePane === 1 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface)
                                     : Colours.palette.m3onSurfaceVariant
                                 font: tabItem.selected && (!tabItem.isSplit || tabItem.activePane === 0)
-                                    ? Tokens.font.builders.body.small.weight(Font.DemiBold).build()
+                                    ? Tokens.font.body.builders.small.weight(Font.DemiBold).build()
                                     : Tokens.font.body.small
                                 elide: Text.ElideRight
                             }
 
-                            // Close Left / Main Pane Button (z: 20)
+                            // Close Left / Main Pane Button
                             Item {
                                 implicitWidth: 20
                                 implicitHeight: 20
@@ -285,7 +285,7 @@ StyledRect {
                                     ? (tabItem.activePane === 1 ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant)
                                     : Colours.palette.m3onSurfaceVariant
                                 font: tabItem.selected && tabItem.activePane === 1
-                                    ? Tokens.font.builders.body.small.weight(Font.DemiBold).build()
+                                    ? Tokens.font.body.builders.small.weight(Font.DemiBold).build()
                                     : Tokens.font.body.small
                                 elide: Text.ElideRight
                             }
@@ -326,7 +326,7 @@ StyledRect {
                 }
             }
 
-            // Sleek Separator Line between rightmost tab and + button (media_1787207500035.png)
+            // Sleek Separator Line between rightmost tab and + button
             Item {
                 width: 14
                 height: tabsRow.height
@@ -340,7 +340,7 @@ StyledRect {
                 }
             }
 
-            // New Tab (+) Button
+            // New Tab Button
             Item {
                 width: 36
                 height: tabsRow.height

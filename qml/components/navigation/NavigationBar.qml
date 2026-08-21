@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
 import prism
@@ -13,6 +14,53 @@ StyledRect {
     property bool isFiltering: false
     property string searchText: ""
     property string filterText: ""
+    property var pathSuggestions: []
+    property int selectedSuggestionIndex: -1
+    property bool showSuggestions: false
+
+    function updateSuggestions() {
+        if (!isEditingPath) {
+            showSuggestions = false;
+            return;
+        }
+        let cur = root.activeTab ? ((root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath) : "";
+        pathSuggestions = FileUtils.getPathSuggestions(pathInput.text, cur);
+        selectedSuggestionIndex = -1;
+        showSuggestions = pathSuggestions.length > 0;
+    }
+
+    function applySuggestion(index) {
+        if (index < 0 || index >= pathSuggestions.length) return;
+        let item = pathSuggestions[index];
+        pathInput.text = item.displayPath;
+        pathInput.cursorPosition = pathInput.text.length;
+        if (item.isDir) {
+            updateSuggestions();
+        } else {
+            showSuggestions = false;
+        }
+    }
+
+    function commitPath(customText) {
+        let textToUse = (typeof customText === "string") ? customText : pathInput.text;
+        if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < pathSuggestions.length && (!customText || customText.length === 0)) {
+            textToUse = pathSuggestions[selectedSuggestionIndex].displayPath;
+        }
+        let trimmed = textToUse.trim();
+        if (root.activeTab && trimmed.length > 0) {
+            let cur = (root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath;
+            let finalPath = FileUtils.expandPath(trimmed, cur);
+            if (finalPath.length > 0) {
+                if (root.activePane === 1 && root.activeTab.isSplit) {
+                    root.activeTab.splitPath = finalPath;
+                } else {
+                    root.activeTab.currentPath = finalPath;
+                }
+            }
+        }
+        showSuggestions = false;
+        isEditingPath = false;
+    }
 
     signal togglePreview()
     signal toggleTerminal()
@@ -22,6 +70,7 @@ StyledRect {
     signal searchRequested(string query)
     signal filterRequested(string filter)
     signal gitRequested()
+    signal preferencesRequested()
 
     implicitHeight: 48
     color: Colours.tPalette.m3surfaceContainer
@@ -315,7 +364,7 @@ StyledRect {
                 }
             }
 
-            // Editable Address Bar (Ctrl+L)
+            // Editable Address Bar
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: Tokens.padding.small
@@ -346,19 +395,61 @@ StyledRect {
                         acceptedButtons: Qt.NoButton
                     }
 
-                    onAccepted: {
-                        if (root.activeTab && text.trim().length > 0) {
-                            if (root.activePane === 1 && root.activeTab.isSplit) {
-                                root.activeTab.splitPath = text.trim();
-                            } else {
-                                root.activeTab.currentPath = text.trim();
-                            }
+                    onTextChanged: {
+                        if (root.isEditingPath && activeFocus) {
+                            root.updateSuggestions();
                         }
-                        root.isEditingPath = false;
                     }
 
-                    Keys.onEscapePressed: {
-                        root.isEditingPath = false;
+                    onActiveFocusChanged: {
+                        if (activeFocus && root.isEditingPath) {
+                            root.updateSuggestions();
+                        }
+                    }
+
+                    Keys.onTabPressed: event => {
+                        let cur = root.activeTab ? ((root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath) : "";
+                        let comp = FileUtils.getCompletedPath(pathInput.text, cur);
+                        if (comp !== pathInput.text) {
+                            pathInput.text = comp;
+                            pathInput.cursorPosition = pathInput.text.length;
+                            root.updateSuggestions();
+                        } else if (root.pathSuggestions.length > 0) {
+                            root.showSuggestions = true;
+                            root.selectedSuggestionIndex = (root.selectedSuggestionIndex + 1) % root.pathSuggestions.length;
+                            pathInput.text = root.pathSuggestions[root.selectedSuggestionIndex].displayPath;
+                            pathInput.cursorPosition = pathInput.text.length;
+                        }
+                        event.accepted = true;
+                    }
+
+                    Keys.onDownPressed: event => {
+                        if (root.pathSuggestions.length > 0) {
+                            root.showSuggestions = true;
+                            root.selectedSuggestionIndex = (root.selectedSuggestionIndex + 1) % root.pathSuggestions.length;
+                            event.accepted = true;
+                        }
+                    }
+
+                    Keys.onUpPressed: event => {
+                        if (root.pathSuggestions.length > 0) {
+                            root.showSuggestions = true;
+                            root.selectedSuggestionIndex = (root.selectedSuggestionIndex - 1 + root.pathSuggestions.length) % root.pathSuggestions.length;
+                            event.accepted = true;
+                        }
+                    }
+
+                    Keys.onEscapePressed: event => {
+                        if (root.showSuggestions) {
+                            root.showSuggestions = false;
+                            event.accepted = true;
+                        } else {
+                            root.isEditingPath = false;
+                        }
+                    }
+
+                    onAccepted: {
+                        root.commitPath();
                     }
                 }
 
@@ -377,7 +468,10 @@ StyledRect {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: pathInput.text = ""
+                        onClicked: {
+                            pathInput.text = "";
+                            root.updateSuggestions();
+                        }
                     }
                 }
 
@@ -388,7 +482,7 @@ StyledRect {
 
                     MaterialIcon {
                         anchors.centerIn: parent
-                        text: "expand_more"
+                        text: root.showSuggestions ? "expand_less" : "expand_more"
                         color: Colours.palette.m3onSurfaceVariant
                         fontStyle: Tokens.font.icon.small
                     }
@@ -396,6 +490,10 @@ StyledRect {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.showSuggestions = !root.showSuggestions;
+                            if (root.showSuggestions) root.updateSuggestions();
+                        }
                     }
                 }
 
@@ -415,20 +513,94 @@ StyledRect {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            if (root.activeTab && pathInput.text.trim().length > 0) {
-                                if (root.activePane === 1 && root.activeTab.isSplit) {
-                                    root.activeTab.splitPath = pathInput.text.trim();
-                                } else {
-                                    root.activeTab.currentPath = pathInput.text.trim();
-                                }
-                            }
-                            root.isEditingPath = false;
+                            root.commitPath();
                         }
                     }
                 }
             }
 
-            // Search Bar (Ctrl+F)
+            // Autocompletion Suggestions Dropdown Popup
+            StyledRect {
+                id: suggestionsPopup
+                visible: root.isEditingPath && root.showSuggestions && root.pathSuggestions.length > 0 && !root.isSearching
+                z: 300
+                y: parent.height + 4
+                anchors.left: parent.left
+                width: Math.max(parent.width, 360)
+                implicitHeight: Math.min(suggestionsList.contentHeight + Tokens.padding.extraSmall * 2, 240)
+                radius: Tokens.rounding.large
+                color: Colours.palette.m3surfaceContainerLow
+                border.color: Colours.palette.m3outlineVariant
+                border.width: 1
+
+                ListView {
+                    id: suggestionsList
+                    anchors.fill: parent
+                    anchors.margins: Tokens.padding.extraSmall
+                    clip: true
+                    model: root.pathSuggestions
+                    spacing: 2
+
+                    ScrollBar.vertical: StyledScrollBar {
+                        flickable: suggestionsList
+                    }
+
+                    delegate: StyledRect {
+                        id: suggItem
+                        required property int index
+                        required property var modelData
+
+                        width: suggestionsList.width
+                        implicitHeight: 32
+                        radius: Tokens.rounding.small
+                        color: (root.selectedSuggestionIndex === index || suggHover.containsMouse) ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: Tokens.padding.small
+                            anchors.rightMargin: Tokens.padding.small
+                            spacing: Tokens.spacing.small
+
+                            MaterialIcon {
+                                text: suggItem.modelData.icon || (suggItem.modelData.isDir ? "folder" : "description")
+                                color: suggItem.modelData.isDir ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                                fontStyle: Tokens.font.icon.small
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: suggItem.modelData.displayPath
+                                font: Tokens.font.body.small
+                                color: Colours.palette.m3onSurface
+                                elide: Text.ElideMiddle
+                            }
+
+                            StyledText {
+                                visible: suggItem.modelData.isDir
+                                text: qsTr("Folder")
+                                font: Tokens.font.label.small
+                                color: Colours.palette.m3outline
+                            }
+                        }
+
+                        MouseArea {
+                            id: suggHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.applySuggestion(suggItem.index);
+                                pathInput.forceActiveFocus();
+                            }
+                            onDoubleClicked: {
+                                root.commitPath(suggItem.modelData.displayPath);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Search Bar
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: Tokens.padding.medium
@@ -501,7 +673,7 @@ StyledRect {
             }
         }
 
-        // Search Toggle Button (Ctrl+F)
+        // Search Toggle Button
         Item {
             implicitWidth: 32
             implicitHeight: 32
@@ -537,7 +709,7 @@ StyledRect {
             }
         }
 
-        // Empty Trash Button (matching Dolphin header layout)
+        // Empty Trash Button
         Item {
             implicitWidth: emptyTrashContent.implicitWidth + 24
             implicitHeight: 32
@@ -591,7 +763,7 @@ StyledRect {
                 anchors.fill: parent
                 spacing: 0
 
-                // Grid View (0)
+                // Grid View
                 Item {
                     implicitWidth: 32
                     implicitHeight: 32
@@ -616,7 +788,7 @@ StyledRect {
                     }
                 }
 
-                // Details / List View (1)
+                // Details / List View
                 Item {
                     implicitWidth: 32
                     implicitHeight: 32
@@ -641,7 +813,7 @@ StyledRect {
                     }
                 }
 
-                // Compact View (2)
+                // Compact View
                 Item {
                     implicitWidth: 32
                     implicitHeight: 32
@@ -668,7 +840,7 @@ StyledRect {
             }
         }
 
-        // Terminal Toggle (F4)
+        // Terminal Toggle
         Item {
             implicitWidth: 32
             implicitHeight: 32
@@ -695,7 +867,7 @@ StyledRect {
             }
         }
 
-        // Info / Preview Toggle (F11)
+        // Info / Preview Toggle
         Item {
             implicitWidth: 32
             implicitHeight: 32
@@ -718,6 +890,33 @@ StyledRect {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.togglePreview()
+                }
+            }
+        }
+
+        // Settings / Preferences
+        Item {
+            implicitWidth: 32
+            implicitHeight: 32
+
+            StyledRect {
+                anchors.fill: parent
+                radius: Tokens.rounding.full
+                color: prefsHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
+
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    text: "settings"
+                    color: Colours.palette.m3onSurface
+                    fontStyle: Tokens.font.icon.small
+                }
+
+                MouseArea {
+                    id: prefsHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.preferencesRequested()
                 }
             }
         }

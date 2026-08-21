@@ -102,7 +102,7 @@ MouseArea {
                 }
             }
 
-            // Tab Bar Switcher (General, Permissions, Checksums)
+            // Tab Bar Switcher
             StyledRect {
                 Layout.fillWidth: true
                 implicitHeight: 36

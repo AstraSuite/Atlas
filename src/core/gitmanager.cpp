@@ -86,7 +86,7 @@ void GitManager::checkRepo() {
             }
         }
 
-        // 3. Get recent commits (last 20 commits)
+        // 3. Get recent commits
         QProcess logProc;
         logProc.setWorkingDirectory(root);
         logProc.start("git", QStringList{ "log", "-n", "20", "--format=%h|%s|%an|%cr" });

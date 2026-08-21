@@ -1,4 +1,5 @@
 #include "tabmanager.hpp"
+#include "../core/fileutils.hpp"
 
 #include <QDir>
 #include <QFileInfo>
@@ -8,7 +9,7 @@ namespace prism::controllers {
 
 TabItem::TabItem(const QString& initialPath, QObject* parent)
     : QObject(parent)
-    , m_currentPath(initialPath.isEmpty() ? QDir::homePath() : initialPath)
+    , m_currentPath(initialPath.isEmpty() ? QDir::homePath() : prism::core::FileUtils::expandPath(initialPath))
     , m_splitPath(m_currentPath) {
     m_history.append(m_currentPath);
     m_historyIndex = 0;
@@ -41,8 +42,9 @@ void TabItem::updateTitle() {
 }
 
 void TabItem::setCurrentPath(const QString& path) {
-    if (m_currentPath != path) {
-        m_currentPath = path;
+    QString expanded = prism::core::FileUtils::expandPath(path);
+    if (m_currentPath != expanded) {
+        m_currentPath = expanded;
 
         // Truncate forward history and append new path
         while (m_history.size() > m_historyIndex + 1) {
@@ -61,8 +63,9 @@ void TabItem::setCurrentPath(const QString& path) {
 }
 
 void TabItem::setSplitPath(const QString& path) {
-    if (m_splitPath != path) {
-        m_splitPath = path;
+    QString expanded = prism::core::FileUtils::expandPath(path);
+    if (m_splitPath != expanded) {
+        m_splitPath = expanded;
         emit splitPathChanged();
         if (m_activePane == 1) updateTitle();
     }
@@ -134,14 +137,25 @@ TabManager::TabManager(QObject* parent)
     QSettings legacy1("caelestia", "prism");
     QSettings legacy2("Caelestia", "Prism");
 
-    QString lastPath = settings.value("session/lastPath", legacy1.value("session/lastPath", legacy2.value("session/lastPath", QDir::homePath()))).toString();
-    int lastViewMode = settings.value("session/viewMode", legacy1.value("session/viewMode", legacy2.value("session/viewMode", 0))).toInt();
-    if (lastPath.isEmpty() || !QDir(lastPath).exists()) {
-        lastPath = QDir::homePath();
+    QString startupMode = settings.value("preferences/startupDirectory", "home").toString();
+    QString startupPath;
+    if (startupMode == "home") {
+        startupPath = QDir::homePath();
+    } else if (startupMode == "last") {
+        startupPath = settings.value("session/lastPath", legacy1.value("session/lastPath", legacy2.value("session/lastPath", QDir::homePath()))).toString();
+    } else if (QDir(startupMode).exists()) {
+        startupPath = startupMode;
+    } else {
+        startupPath = QDir::homePath();
     }
-    newTab(lastPath);
+
+    int defViewMode = settings.value("preferences/defaultViewMode", settings.value("session/viewMode", legacy1.value("session/viewMode", legacy2.value("session/viewMode", 0))).toInt()).toInt();
+    if (startupPath.isEmpty() || !QDir(startupPath).exists()) {
+        startupPath = QDir::homePath();
+    }
+    newTab(startupPath);
     if (!m_tabs.isEmpty()) {
-        m_tabs.first()->setViewMode(lastViewMode);
+        m_tabs.first()->setViewMode(defViewMode);
     }
 }
 

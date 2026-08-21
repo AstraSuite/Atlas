@@ -50,7 +50,7 @@ MouseArea {
             anchors.margins: Tokens.padding.large
             spacing: Tokens.spacing.medium
 
-            // Header Title with current branch & Action buttons (Pull & Fetch)
+            // Header Title with current branch & Action buttons
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Tokens.spacing.small
@@ -157,7 +157,7 @@ MouseArea {
                 }
             }
 
-            // Segmented Switcher (Branches vs Commits)
+            // Segmented Switcher
             StyledRect {
                 Layout.fillWidth: true
                 implicitHeight: 36
@@ -272,6 +272,7 @@ MouseArea {
 
             // Tab 1: Commits History Feed
             ListView {
+                id: commitsList
                 visible: root.currentTab === 1
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -283,7 +284,7 @@ MouseArea {
                     id: commitItem
                     required property var modelData
 
-                    width: parent.width
+                    width: commitsList.width
                     implicitHeight: commitCol.implicitHeight + 12
                     radius: Tokens.rounding.small
                     color: Colours.tPalette.m3surfaceContainerHigh

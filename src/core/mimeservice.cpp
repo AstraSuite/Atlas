@@ -113,7 +113,7 @@ QVariantMap MimeService::getDefaultApp(const QString& mimeType) {
 
     QString desktopId;
 
-    // 1. Query user's mimeapps.list (~/.config/mimeapps.list)
+    // 1. Query user's mimeapps.list
     QString configDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
     if (!configDir.isEmpty()) {
         QSettings settings(configDir + "/mimeapps.list", QSettings::IniFormat);
@@ -190,7 +190,7 @@ void MimeService::openWith(const QString& filePath, const QString& desktopFilePa
     if (map.isEmpty()) return;
 
     QString exec = map["exec"].toString();
-    // Strip standard desktop entry field codes (%f, %F, %u, %U, etc.)
+    // Strip standard desktop entry field codes
     exec.remove("%f").remove("%F").remove("%u").remove("%U").remove("%d").remove("%D").remove("%n").remove("%N").remove("%i").remove("%c").remove("%k").remove("%v").remove("%m");
     exec = exec.trimmed();
 

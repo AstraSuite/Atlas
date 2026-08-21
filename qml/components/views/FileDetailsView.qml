@@ -48,7 +48,7 @@ Item {
     signal blankContextMenu(real mouseX, real mouseY)
     signal filesDropped(var sourceFiles, string targetDir, real mouseX, real mouseY)
 
-    // Background Drop Area (Dropping into current folder empty space)
+    // Background Drop Area
     DropArea {
         id: backgroundDropArea
         anchors.fill: parent
@@ -303,7 +303,7 @@ Item {
                     }
                 }
 
-                // Trash Mode Columns (like Dolphin)
+                // Trash Mode Columns
                 Item {
                     visible: root.isTrash
                     Layout.preferredWidth: 320
@@ -374,6 +374,47 @@ Item {
             Keys.onSpacePressed: if (root.currentItem && typeof mediaViewerModal !== "undefined" && mediaViewerModal) mediaViewerModal.openFile(root.currentItem.path, root.model)
 
             Keys.onPressed: event => {
+                // F-Key Accelerators
+                if (event.key === Qt.Key_F2) {
+                    if (root.currentItem && typeof newItemModal !== "undefined" && newItemModal) {
+                        newItemModal.title = qsTr("Rename");
+                        newItemModal.icon = "drive_file_rename_outline";
+                        newItemModal.targetRenamePath = root.currentItem.path;
+                        newItemModal.initialText = FileUtils.baseName(root.currentItem.path);
+                        newItemModal.expanded = true;
+                        event.accepted = true;
+                        return;
+                    }
+                } else if (event.key === Qt.Key_F4) {
+                    let curDir = root.activeTab ? root.activeTab.currentPath : "";
+                    if (curDir.length > 0) {
+                        AppIntegration.openInTerminal(curDir);
+                        event.accepted = true;
+                        return;
+                    }
+                } else if (event.key === Qt.Key_F5) {
+                    if (root.model) {
+                        root.model.refresh();
+                        event.accepted = true;
+                        return;
+                    }
+                } else if (event.key === Qt.Key_F1) {
+                    if (typeof previewPanel !== "undefined" && previewPanel) {
+                        previewPanel.expanded = !previewPanel.expanded;
+                        event.accepted = true;
+                        return;
+                    }
+                } else if (event.key === Qt.Key_F3) {
+                    if (root.activeTab) {
+                        root.activeTab.isSplit = !root.activeTab.isSplit;
+                        if (root.activeTab.isSplit && !root.activeTab.splitPath) {
+                            root.activeTab.splitPath = root.activeTab.currentPath;
+                        }
+                        event.accepted = true;
+                        return;
+                    }
+                }
+
                 if (event.modifiers === Qt.NoModifier || event.modifiers === Qt.KeypadModifier) {
                     if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                         if (root.currentItem) {
@@ -446,7 +487,7 @@ Item {
                 readonly property bool isCut: FileOperations.isCutOperation && FileOperations.clipboardFiles.indexOf(modelData.path) !== -1
                 // Reactive Drag state
                 readonly property bool isDragged: FileOperations.activeDragFiles.indexOf(modelData.path) !== -1
-                // Unhidden hidden files (dotfiles) visual distinction
+                // Unhidden hidden files visual distinction
                 readonly property bool isHidden: rowItem.modelData ? (rowItem.modelData.isHidden || rowItem.modelData.name.startsWith('.')) : false
 
                 width: listView.width
@@ -537,6 +578,12 @@ Item {
                         }
                     }
 
+                    onContainsMouseChanged: {
+                        if (containsMouse && AppController.singleClick && !isDragging && !dragSelectArea.isSelecting) {
+                            root.selectSingle(rowItem.modelData.path, rowItem.index);
+                        }
+                    }
+
                     onClicked: mouse => {
                         root.notifyFocus();
                         if (isDragging || dragSelectArea.isSelecting) return;
@@ -557,14 +604,18 @@ Item {
                                 root.toggleSelection(rowItem.modelData.path);
                                 root.anchorIndex = rowItem.index;
                             } else {
-                                root.selectSingle(rowItem.modelData.path, rowItem.index);
+                                if (AppController.singleClick) {
+                                    root.openItem(rowItem.modelData);
+                                } else {
+                                    root.selectSingle(rowItem.modelData.path, rowItem.index);
+                                }
                             }
                         }
                     }
 
                     onDoubleClicked: mouse => {
                         root.notifyFocus();
-                        if (mouse.button === Qt.LeftButton) {
+                        if (mouse.button === Qt.LeftButton && !AppController.singleClick) {
                             root.openItem(rowItem.modelData);
                         }
                     }
@@ -602,7 +653,7 @@ Item {
                                 }
                             }
 
-                            // Lock Indicator (Top Left)
+                            // Lock Indicator
                             MaterialIcon {
                                 anchors.top: parent.top
                                 anchors.left: parent.left
@@ -614,7 +665,7 @@ Item {
                                 z: 2
                             }
 
-                            // Symlink Indicator (Bottom Right)
+                            // Symlink Indicator
                             MaterialIcon {
                                 anchors.bottom: parent.bottom
                                 anchors.right: parent.right
@@ -797,7 +848,7 @@ Item {
         }
     }
 
-    // Rubber Band Visual Rectangle (renders on top of everything)
+    // Rubber Band Visual Rectangle
     Rectangle {
         z: 999
         visible: dragSelectArea.isSelecting

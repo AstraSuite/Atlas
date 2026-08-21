@@ -63,7 +63,7 @@ Item {
             wrapMode: Text.Wrap
         }
 
-        // Helpful Action Buttons (visible when not in Trash and not searching)
+        // Helpful Action Buttons
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: Tokens.spacing.medium

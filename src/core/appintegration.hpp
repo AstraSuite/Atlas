@@ -26,8 +26,14 @@ public:
     Q_INVOKABLE void openInTerminal(const QString& directoryPath);
     Q_INVOKABLE void openNewWindow(const QString& path = QString());
 
+    Q_INVOKABLE QVariantList getCustomActions(const QString& currentDir, const QStringList& selectedPaths, bool isDir, const QString& mimeType);
+    Q_INVOKABLE void executeCustomAction(const QString& actionId, const QString& currentDir, const QStringList& selectedPaths);
+    Q_INVOKABLE void openScriptsFolder();
+    Q_INVOKABLE QString scriptsFolderPath() const;
+
 private:
     void scanDesktopFiles();
+    void scanCustomActions();
 
     struct DesktopApp {
         QString name;
@@ -36,7 +42,20 @@ private:
         QString desktopFile;
         QStringList mimeTypes;
     };
+
+    struct CustomActionItem {
+        QString id;
+        QString name;
+        QString icon;
+        QString exec;
+        QString target; // "all", "dir", "file", "archive"
+        QStringList mimeTypes;
+        bool isScript = false;
+        QString scriptPath;
+    };
+
     QList<DesktopApp> m_apps;
+    QList<CustomActionItem> m_customActions;
 };
 
 } // namespace prism::core

@@ -26,7 +26,7 @@ void FileMetadata::setPath(const QString& p) {
 QString FileMetadata::findThumbnail(const QString& filePath) {
     if (filePath.isEmpty()) return QString();
 
-    // FreeDesktop Thumbnail spec: MD5 of URI (file:///path/to/file)
+    // FreeDesktop Thumbnail spec: MD5 of URI
     QString uri = QUrl::fromLocalFile(filePath).toString();
     QByteArray hash = QCryptographicHash::hash(uri.toUtf8(), QCryptographicHash::Md5).toHex();
     QString filename = QString::fromUtf8(hash) + ".png";

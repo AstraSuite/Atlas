@@ -21,6 +21,7 @@ MouseArea {
 
     signal editRequested(int index, string name, string path, string iconName, bool isCustom)
     signal emptyTrashRequested()
+    signal manageRequested()
 
     function openForPlace(x, y, idx, name, path, iconName, custom, trash) {
         menuX = x;
@@ -113,6 +114,8 @@ MouseArea {
                             list.push({ text: qsTr("Mount in New Tab"), icon: "tab", action: "mountTab" });
                             list.push({ text: qsTr("Eject & Power Off"), icon: "power_settings_new", action: "eject" });
                         }
+                        list.push({ text: qsTr("Hide from Sidebar"), icon: "visibility_off", action: "hideDevice" });
+                        list.push({ text: qsTr("Manage Places & Devices..."), icon: "tune", action: "manage" });
                         return list;
                     }
 
@@ -122,12 +125,10 @@ MouseArea {
                         { text: qsTr("Open in New Window"), icon: "open_in_new", action: "openWindow" },
                         { text: qsTr("Open in Split View"), icon: "splitscreen", action: "openSplit" },
                         { text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminal" },
-                        { text: qsTr("Edit Place..."), icon: "edit", action: "edit" }
+                        { text: qsTr("Edit Place..."), icon: "edit", action: "edit" },
+                        { text: qsTr("Hide from Sidebar"), icon: "bookmark_remove", action: "remove" },
+                        { text: qsTr("Manage Places & Devices..."), icon: "tune", action: "manage" }
                     ];
-
-                    if (root.isCustom) {
-                        list.push({ text: qsTr("Remove from Places"), icon: "bookmark_remove", action: "remove" });
-                    }
 
                     return list;
                 }
@@ -206,6 +207,10 @@ MouseArea {
                                 DriveManager.mountDevice(root.devicePath, TabManager.currentIndex);
                             } else if (act === "mountTab") {
                                 DriveManager.mountDevice(root.devicePath, -1);
+                            } else if (act === "hideDevice") {
+                                DriveManager.hideDevice(root.devicePath);
+                            } else if (act === "manage") {
+                                root.manageRequested();
                             }
                         }
                     }

@@ -10,6 +10,12 @@ AppController::AppController(QObject* parent)
     QSettings legacy1("caelestia", "prism");
     QSettings legacy2("Caelestia", "Prism");
     m_showHidden = settings.value("session/showHidden", legacy1.value("session/showHidden", legacy2.value("session/showHidden", false))).toBool();
+    m_singleClick = settings.value("session/singleClick", legacy1.value("session/singleClick", legacy2.value("session/singleClick", false))).toBool();
+    m_defaultStartupDirectory = settings.value("preferences/startupDirectory", "home").toString();
+    m_defaultViewMode = settings.value("preferences/defaultViewMode", 0).toInt();
+    m_defaultSortField = settings.value("preferences/defaultSortField", 0).toInt();
+    m_defaultSortOrder = settings.value("preferences/defaultSortOrder", 0).toInt();
+    m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
 }
 
 AppController* AppController::instance() {
@@ -58,6 +64,60 @@ void AppController::setShowHidden(bool show) {
         QSettings settings("prism", "prism");
         settings.setValue("session/showHidden", show);
         emit showHiddenChanged();
+    }
+}
+
+void AppController::setSingleClick(bool single) {
+    if (m_singleClick != single) {
+        m_singleClick = single;
+        QSettings settings("prism", "prism");
+        settings.setValue("session/singleClick", single);
+        emit singleClickChanged();
+    }
+}
+
+void AppController::setDefaultStartupDirectory(const QString& dir) {
+    if (m_defaultStartupDirectory != dir) {
+        m_defaultStartupDirectory = dir;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/startupDirectory", dir);
+        emit defaultStartupDirectoryChanged();
+    }
+}
+
+void AppController::setDefaultViewMode(int mode) {
+    if (m_defaultViewMode != mode) {
+        m_defaultViewMode = mode;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/defaultViewMode", mode);
+        emit defaultViewModeChanged();
+    }
+}
+
+void AppController::setDefaultSortField(int field) {
+    if (m_defaultSortField != field) {
+        m_defaultSortField = field;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/defaultSortField", field);
+        emit defaultSortFieldChanged();
+    }
+}
+
+void AppController::setDefaultSortOrder(int order) {
+    if (m_defaultSortOrder != order) {
+        m_defaultSortOrder = order;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/defaultSortOrder", order);
+        emit defaultSortOrderChanged();
+    }
+}
+
+void AppController::setShowDirsFirst(bool dirsFirst) {
+    if (m_showDirsFirst != dirsFirst) {
+        m_showDirsFirst = dirsFirst;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showDirsFirst", dirsFirst);
+        emit showDirsFirstChanged();
     }
 }
 

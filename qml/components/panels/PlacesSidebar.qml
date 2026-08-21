@@ -343,7 +343,7 @@ StyledRect {
                                     elide: Text.ElideRight
                                 }
 
-                                // Visual Storage Bar (slider track without handle)
+                                // Visual Storage Bar
                                 StyledRect {
                                     Layout.fillWidth: true
                                     implicitHeight: 4

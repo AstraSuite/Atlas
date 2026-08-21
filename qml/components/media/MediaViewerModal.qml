@@ -145,7 +145,7 @@ MouseArea {
         }
     }
 
-    // Navigation Arrow Buttons (Left & Right Edges)
+    // Navigation Arrow Buttons
     StyledRect {
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
@@ -261,7 +261,7 @@ MouseArea {
                 }
             }
 
-            // Image specific actions (Rotate / Zoom)
+            // Image specific actions
             RowLayout {
                 visible: root.isImage
                 spacing: Tokens.spacing.extraSmall
@@ -373,7 +373,7 @@ MouseArea {
                 }
             }
 
-            // Fullscreen Toggle (Top Header)
+            // Fullscreen Toggle
             StyledRect {
                 implicitWidth: 36
                 implicitHeight: 36
@@ -399,7 +399,7 @@ MouseArea {
         }
     }
 
-    // Bottom Floating Control Bar (Video playback & Filmstrip toggle)
+    // Bottom Floating Control Bar
     StyledRect {
         id: bottomControls
         anchors.bottom: parent.bottom
@@ -423,7 +423,7 @@ MouseArea {
             onExited: activityTimer.restart()
         }
 
-        // Full Playback Row (when Video)
+        // Full Playback Row
         RowLayout {
             id: controlsRow
             visible: root.isVideo
@@ -432,7 +432,7 @@ MouseArea {
             anchors.rightMargin: Tokens.padding.medium
             spacing: Tokens.spacing.small
 
-            // Play / Pause (for Video)
+            // Play / Pause
             StyledRect {
                 implicitWidth: 36
                 implicitHeight: 36
@@ -489,7 +489,7 @@ MouseArea {
                 }
             }
 
-            // Volume Controls (for Video)
+            // Volume Controls
             RowLayout {
                 spacing: 4
 
@@ -518,7 +518,7 @@ MouseArea {
                 }
             }
 
-            // Loop Toggle (for Video)
+            // Loop Toggle
             StyledRect {
                 implicitWidth: 32
                 implicitHeight: 32
@@ -564,7 +564,7 @@ MouseArea {
             }
         }
 
-        // Single Centered Gallery Button (when Image)
+        // Single Centered Gallery Button
         StyledRect {
             anchors.centerIn: parent
             width: 36

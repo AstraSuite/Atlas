@@ -47,7 +47,7 @@ StyledRect {
             Layout.fillWidth: true
         }
 
-        // Git Branch Chip (no outline, sits in bottom panel to the left of slider)
+        // Git Branch Chip
         Item {
             implicitWidth: gitChipContent.implicitWidth + 20
             implicitHeight: 26

@@ -41,6 +41,10 @@ public:
     Q_INVOKABLE static QString iconForName(const QString& name, const QString& fallback = QString());
     Q_INVOKABLE static QString iconForFile(const QString& name, bool isDir, const QString& mimeType);
     Q_INVOKABLE static QString mimeTypeForFile(const QString& path);
+    Q_INVOKABLE static QString expandPath(const QString& input, const QString& currentDir = QString());
+    Q_INVOKABLE static QVariantList getPathSuggestions(const QString& input, const QString& currentDir = QString());
+    Q_INVOKABLE static QString getCompletedPath(const QString& input, const QString& currentDir = QString());
 };
 
 } // namespace prism::core
+

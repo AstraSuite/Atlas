@@ -12,13 +12,13 @@ Item {
     signal toggled(bool checked)
     signal clicked()
 
-    implicitWidth: rowLayout.implicitWidth
-    implicitHeight: Math.max(36, rowLayout.implicitHeight)
+    implicitWidth: root.text.length > 0 ? (rowLayout.implicitWidth + 4) : 36
+    implicitHeight: 36
     opacity: root.enabled ? 1.0 : 0.38
 
     RowLayout {
         id: rowLayout
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.centerIn: parent
         spacing: 4
 
         // Checkbox Touch / Hover Target & Box
@@ -27,7 +27,7 @@ Item {
             implicitHeight: 36
             Layout.alignment: Qt.AlignVCenter
 
-            // State Layer (Circular Hover / Ripple Circle - 36x36)
+            // State Layer
             Rectangle {
                 anchors.centerIn: parent
                 width: 36
@@ -44,7 +44,7 @@ Item {
                 }
             }
 
-            // M3 Box Container (18x18 with 2px radius)
+            // Box Container
             Rectangle {
                 id: box
                 anchors.centerIn: parent

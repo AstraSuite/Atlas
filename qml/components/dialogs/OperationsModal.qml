@@ -116,7 +116,7 @@ MouseArea {
                     width: flickable.width
                     spacing: Tokens.spacing.small
 
-                    // Active Operation Card (if running)
+                    // Active Operation Card
                     StyledRect {
                         Layout.fillWidth: true
                         implicitHeight: activeCol.implicitHeight + Tokens.padding.medium * 2

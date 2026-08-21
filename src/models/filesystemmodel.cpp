@@ -103,8 +103,9 @@ QHash<int, QByteArray> FileSystemModel::roleNames() const {
 }
 
 void FileSystemModel::setPath(const QString& path) {
-    if (m_path != path) {
-        m_path = path;
+    QString expanded = prism::core::FileUtils::expandPath(path);
+    if (m_path != expanded) {
+        m_path = expanded;
         emit pathChanged();
         scanDirectory();
     }

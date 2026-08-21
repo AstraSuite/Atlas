@@ -87,7 +87,7 @@ MouseArea {
             anchors.margins: Tokens.padding.large
             spacing: Tokens.spacing.medium
 
-            // Header (no close button)
+            // Header
             RowLayout {
                 spacing: Tokens.spacing.small
 

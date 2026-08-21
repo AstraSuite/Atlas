@@ -197,7 +197,7 @@ void FileOperations::copyFiles(const QStringList& sources, const QString& destin
                 QFileInfo fi(src);
                 QString dest = destinationDir + "/" + fi.fileName();
                 if (QFile::exists(dest)) {
-                    // Auto-rename with (copy)
+                    // Auto-rename with
                     QString base = fi.completeBaseName();
                     QString ext = fi.suffix().isEmpty() ? "" : "." + fi.suffix();
                     int counter = 1;
@@ -736,7 +736,7 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
     QColor primary = pal.m3primary();
     QColor onPrimary = pal.m3onPrimary();
 
-    // Card Background (Rounded card matching selection exactly, radius 16)
+    // Card Background
     painter.setBrush(cardBg);
     painter.setPen(Qt::NoPen);
     painter.drawRoundedRect(0, 0, cardW, cardH, 16, 16);
@@ -804,7 +804,7 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
     QRect textRect(8, iconY + iSize + 6, cardW - 16, cardH - (iconY + iSize + 6) - 4);
     painter.drawText(textRect, Qt::AlignHCenter | Qt::AlignTop, painter.fontMetrics().elidedText(label, Qt::ElideMiddle, cardW - 16));
 
-    // If multiple items, render a badge (+N) in the top-right
+    // If multiple items, render a badge in the top-right
     if (filePaths.size() > 1) {
         QString badgeText = QString("+%1").arg(filePaths.size() - 1);
         int badgeW = 26;

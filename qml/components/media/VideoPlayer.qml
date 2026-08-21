@@ -92,7 +92,7 @@ Item {
         fillMode: VideoOutput.PreserveAspectFit
     }
 
-    // Initial Thumbnail Cover (Visible until first frame playback)
+    // Initial Thumbnail Cover
     Image {
         id: thumbnailCover
         anchors.fill: parent

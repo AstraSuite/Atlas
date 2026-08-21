@@ -9,13 +9,15 @@
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 #include <QFileSystemWatcher>
+#include <QSettings>
+#include <QTimer>
 
 namespace prism::core {
 
 static QString mapXbelIconToMaterial(const QString& iconName, const QString& path, bool isDir) {
     if (iconName.isEmpty()) return isDir ? "folder" : "bookmark";
 
-    // If iconName has no hyphens (standard Material Symbol name saved by user), preserve it directly!
+    // If iconName has no hyphens, preserve it directly!
     if (!iconName.contains("-")) return iconName;
 
     QString n = iconName.toLower();
@@ -43,6 +45,8 @@ static QString mapXbelIconToMaterial(const QString& iconName, const QString& pat
 PlacesModel::PlacesModel(QObject* parent)
     : QAbstractListModel(parent) {
     
+    loadHiddenPlaces();
+
     auto* watcher = new QFileSystemWatcher(this);
     QString xbelPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/user-places.xbel";
     QString gtkPath = QDir::homePath() + "/.config/gtk-3.0/bookmarks";
@@ -50,9 +54,27 @@ PlacesModel::PlacesModel(QObject* parent)
     if (QFile::exists(xbelPath)) watcher->addPath(xbelPath);
     if (QFile::exists(gtkPath)) watcher->addPath(gtkPath);
     
-    connect(watcher, &QFileSystemWatcher::fileChanged, this, &PlacesModel::refresh);
+    connect(watcher, &QFileSystemWatcher::fileChanged, this, [this, watcher, xbelPath, gtkPath](const QString& path) {
+        if (m_isSaving) return;
+        // If file was replaced atomically, re-add to watcher
+        if (!watcher->files().contains(path)) {
+            if (QFile::exists(path)) watcher->addPath(path);
+        }
+        refresh();
+    });
     
     refresh();
+}
+
+void PlacesModel::loadHiddenPlaces() {
+    QSettings settings("prism", "prism");
+    QStringList hidden = settings.value("places/hiddenPlaces").toStringList();
+    m_hiddenPlaces = QSet<QString>(hidden.begin(), hidden.end());
+}
+
+void PlacesModel::saveHiddenPlaces() {
+    QSettings settings("prism", "prism");
+    settings.setValue("places/hiddenPlaces", QStringList(m_hiddenPlaces.begin(), m_hiddenPlaces.end()));
 }
 
 int PlacesModel::rowCount(const QModelIndex& parent) const {
@@ -104,7 +126,7 @@ void PlacesModel::refresh() {
     beginResetModel();
     m_places.clear();
     
-    // 1. Read standard XBEL places (KDE / Dolphin standard ~/.local/share/user-places.xbel)
+    // 1. Read standard XBEL places
     bool loadedXbel = false;
     QString xbelPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/user-places.xbel";
     if (QFile::exists(xbelPath)) {
@@ -201,14 +223,36 @@ void PlacesModel::refresh() {
 
 void PlacesModel::loadStandardPlaces() {
     QString home = QDir::homePath();
-    m_places.append({ tr("Home"), home, "home", false, false, false, false, 0, 0 });
-    m_places.append({ tr("Downloads"), QStandardPaths::writableLocation(QStandardPaths::DownloadLocation), "file_download", false, false, false, false, 0, 0 });
-    m_places.append({ tr("Documents"), QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation), "description", false, false, false, false, 0, 0 });
-    m_places.append({ tr("Desktop"), QStandardPaths::writableLocation(QStandardPaths::DesktopLocation), "desktop_windows", false, false, false, false, 0, 0 });
-    m_places.append({ tr("Pictures"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), "image", false, false, false, false, 0, 0 });
-    m_places.append({ tr("Music"), QStandardPaths::writableLocation(QStandardPaths::MusicLocation), "music_note", false, false, false, false, 0, 0 });
-    m_places.append({ tr("Videos"), QStandardPaths::writableLocation(QStandardPaths::MoviesLocation), "video_library", false, false, false, false, 0, 0 });
-    m_places.append({ tr("Trash"), home + "/.local/share/Trash/files", "delete", false, false, true, false, 0, 0 });
+    if (!m_hiddenPlaces.contains(home))
+        m_places.append({ tr("Home"), home, "home", false, false, false, false, 0, 0 });
+    
+    QString downloads = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    if (!m_hiddenPlaces.contains(downloads))
+        m_places.append({ tr("Downloads"), downloads, "file_download", false, false, false, false, 0, 0 });
+    
+    QString documents = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    if (!m_hiddenPlaces.contains(documents))
+        m_places.append({ tr("Documents"), documents, "description", false, false, false, false, 0, 0 });
+    
+    QString desktop = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+    if (!m_hiddenPlaces.contains(desktop))
+        m_places.append({ tr("Desktop"), desktop, "desktop_windows", false, false, false, false, 0, 0 });
+    
+    QString pictures = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+    if (!m_hiddenPlaces.contains(pictures))
+        m_places.append({ tr("Pictures"), pictures, "image", false, false, false, false, 0, 0 });
+    
+    QString music = QStandardPaths::writableLocation(QStandardPaths::MusicLocation);
+    if (!m_hiddenPlaces.contains(music))
+        m_places.append({ tr("Music"), music, "music_note", false, false, false, false, 0, 0 });
+    
+    QString videos = QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
+    if (!m_hiddenPlaces.contains(videos))
+        m_places.append({ tr("Videos"), videos, "video_library", false, false, false, false, 0, 0 });
+    
+    QString trash = home + "/.local/share/Trash/files";
+    if (!m_hiddenPlaces.contains(trash) && !m_hiddenPlaces.contains("trash:"))
+        m_places.append({ tr("Trash"), trash, "delete", false, false, true, false, 0, 0 });
 }
 
 void PlacesModel::loadBookmarks() {
@@ -223,7 +267,7 @@ void PlacesModel::loadBookmarks() {
             QString name = parts.size() > 1 ? parts.mid(1).join(' ') : "";
             if (uri.startsWith("file://")) {
                 QString path = QUrl(uri).toLocalFile();
-                if (QDir(path).exists() && path != "/") {
+                if (QDir(path).exists() && path != "/" && !m_hiddenPlaces.contains(path)) {
                     bool isTrash = path.contains("/Trash") || uri.startsWith("trash:");
                     bool alreadyPresent = false;
                     for (const auto& p : m_places) {
@@ -243,7 +287,13 @@ void PlacesModel::loadBookmarks() {
 }
 
 void PlacesModel::saveBookmarks() {
+    m_isSaving = true;
+
+    // 1. Write XBEL Bookmarks
     QString xbelPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/user-places.xbel";
+    QFileInfo xbelInfo(xbelPath);
+    QDir().mkpath(xbelInfo.absolutePath());
+
     QFile file(xbelPath);
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QXmlStreamWriter xml(&file);
@@ -277,6 +327,33 @@ void PlacesModel::saveBookmarks() {
         xml.writeEndElement(); // xbel
         xml.writeEndDocument();
     }
+
+    // 2. Write GTK-3.0 / GTK-4 Bookmarks
+    QString gtkBookmarksPath = QDir::homePath() + "/.config/gtk-3.0/bookmarks";
+    QFileInfo gtkInfo(gtkBookmarksPath);
+    QDir().mkpath(gtkInfo.absolutePath());
+
+    QFile gtkFile(gtkBookmarksPath);
+    if (gtkFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        for (const auto& p : m_places) {
+            if (p.isCustom && !p.isTrash && !p.path.isEmpty()) {
+                QString uri = QUrl::fromLocalFile(p.path).toString();
+                QString fileName = QFileInfo(p.path).fileName();
+                if (p.name.isEmpty() || p.name == fileName) {
+                    gtkFile.write((uri + "\n").toUtf8());
+                } else {
+                    gtkFile.write((uri + " " + p.name + "\n").toUtf8());
+                }
+            }
+        }
+        gtkFile.close();
+    }
+
+    saveHiddenPlaces();
+
+    QTimer::singleShot(300, this, [this]() {
+        m_isSaving = false;
+    });
 }
 
 bool PlacesModel::isBookmarked(const QString& path) const {
@@ -288,6 +365,9 @@ bool PlacesModel::isBookmarked(const QString& path) const {
 
 void PlacesModel::addBookmark(const QString& path, const QString& name, const QString& icon) {
     if (path.isEmpty() || isBookmarked(path)) return;
+    m_hiddenPlaces.remove(path);
+    saveHiddenPlaces();
+
     QString n = name.isEmpty() ? QFileInfo(path).fileName() : name;
     if (n.isEmpty()) n = path;
     QString ic = icon.isEmpty() ? "bookmark" : icon;
@@ -318,6 +398,17 @@ void PlacesModel::movePlace(int fromIndex, int toIndex) {
 
 void PlacesModel::removeBookmark(int index) {
     if (index < 0 || index >= m_places.size()) return;
+    QString path = m_places[index].path;
+    bool isTrash = m_places[index].isTrash;
+
+    if (!path.isEmpty()) {
+        m_hiddenPlaces.insert(path);
+    }
+    if (isTrash) {
+        m_hiddenPlaces.insert("trash:");
+    }
+    saveHiddenPlaces();
+
     beginRemoveRows(QModelIndex(), index, index);
     m_places.removeAt(index);
     endRemoveRows();
@@ -340,6 +431,13 @@ void PlacesModel::toggleBookmark(const QString& path) {
     } else {
         addBookmark(path);
     }
+}
+
+void PlacesModel::restoreDefaultPlaces() {
+    m_hiddenPlaces.clear();
+    saveHiddenPlaces();
+    refresh();
+    saveBookmarks();
 }
 
 void PlacesModel::updatePlace(int index, const QString& name, const QString& iconName) {

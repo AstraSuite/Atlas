@@ -97,6 +97,7 @@ qt_add_qml_module(prism_app
         qml/components/filedialog/FolderContents.qml
         qml/components/filedialog/FileDialog.qml
         qml/components/tabs/TabBar.qml
+        qml/components/tabs/M3TopTabBar.qml
         qml/components/navigation/NavigationBar.qml
         qml/components/panels/PlacesSidebar.qml
         qml/components/panels/PreviewPanel.qml
@@ -112,6 +113,7 @@ qt_add_qml_module(prism_app
         qml/components/dialogs/NewItemModal.qml
         qml/components/dialogs/EditPlaceModal.qml
         qml/components/dialogs/PlacesManageModal.qml
+        qml/components/dialogs/PreferencesModal.qml
         qml/components/dialogs/PropertiesModal.qml
         qml/components/dialogs/OpenWithModal.qml
         qml/components/dialogs/GitModal.qml

@@ -14,6 +14,7 @@ MouseArea {
     property bool submenuOpen: false
     property real submenuY: 0
     property var sharingServices: []
+    property var customActions: []
 
     readonly property bool isTrash: currentDir.indexOf("Trash") !== -1 || currentDir.indexOf("trash:") !== -1 || (targetItem && targetItem.isTrashItem)
     readonly property bool isArchive: targetItem && (
@@ -28,6 +29,10 @@ MouseArea {
         submenuOpen = false;
         if (expanded) {
             sharingServices = AppIntegration.getAvailableSharingServices();
+            let selPaths = targetItem ? [targetItem.path] : [];
+            let isDir = targetItem ? targetItem.isDir : true;
+            let mime = targetItem ? (targetItem.mimeType || "") : "inode/directory";
+            customActions = AppIntegration.getCustomActions(currentDir, selPaths, isDir, mime);
         }
     }
 
@@ -117,6 +122,14 @@ MouseArea {
                             list.push({ text: qsTr("Extract to Folder"), icon: "folder_zip", action: "extractTo" });
                         }
 
+                        // Custom Context Actions
+                        if (root.customActions && root.customActions.length > 0) {
+                            for (let i = 0; i < root.customActions.length; ++i) {
+                                let ca = root.customActions[i];
+                                list.push({ text: ca.name, icon: ca.icon || "play_arrow", action: "custom:" + ca.id });
+                            }
+                        }
+
                         list.push({ text: qsTr("Compress..."), icon: "archive", action: "compress" });
                         list.push({ text: qsTr("Cut"), icon: "content_cut", action: "cut" });
                         list.push({ text: qsTr("Copy"), icon: "content_copy", action: "copy" });
@@ -131,16 +144,26 @@ MouseArea {
 
                         return list;
                     } else {
-                        return [
+                        let blankList = [
                             { text: qsTr("New Folder"), icon: "create_new_folder", action: "newFolder" },
                             { text: qsTr("New Text File"), icon: "note_add", action: "newFile" },
                             { text: qsTr("Paste"), icon: "content_paste", action: "paste", visible: FileOperations.canPaste },
                             { text: qsTr("Paste as Symlink"), icon: "link", action: "pasteSymlink", visible: FileOperations.canPaste },
                             { text: qsTr("Copy Path"), icon: "link", action: "copyCurrentDirPath" },
                             { text: qsTr("Add to Bookmarks"), icon: "bookmark_add", action: "bookmark" },
-                            { text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminal" },
-                            { text: qsTr("Properties"), icon: "info", action: "propertiesDir" }
+                            { text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminal" }
                         ];
+
+                        if (root.customActions && root.customActions.length > 0) {
+                            for (let i = 0; i < root.customActions.length; ++i) {
+                                let ca = root.customActions[i];
+                                blankList.push({ text: ca.name, icon: ca.icon || "play_arrow", action: "custom:" + ca.id });
+                            }
+                        }
+                        blankList.push({ text: qsTr("Open Scripts Folder"), icon: "folder_special", action: "openScriptsFolder" });
+                        blankList.push({ text: qsTr("Properties"), icon: "info", action: "propertiesDir" });
+
+                        return blankList;
                     }
                 }
 

@@ -293,4 +293,278 @@ void AppIntegration::openNewWindow(const QString& path) {
     QProcess::startDetached(appPath, args);
 }
 
+QString AppIntegration::scriptsFolderPath() const {
+    return QDir::homePath() + "/.local/share/prism/scripts";
+}
+
+void AppIntegration::openScriptsFolder() {
+    QString path = scriptsFolderPath();
+    QDir().mkpath(path);
+    openNewWindow(path);
+}
+
+void AppIntegration::scanCustomActions() {
+    m_customActions.clear();
+
+    // 1. Auto-detect common tools
+    // Disk Usage Analyzers
+    if (!QStandardPaths::findExecutable("baobab").isEmpty()) {
+        m_customActions.append({
+            "tool_baobab",
+            "Analyze Disk Usage",
+            "pie_chart",
+            "baobab %f",
+            "dir",
+            {},
+            false,
+            {}
+        });
+    } else if (!QStandardPaths::findExecutable("filelight").isEmpty()) {
+        m_customActions.append({
+            "tool_filelight",
+            "Analyze Disk Usage",
+            "pie_chart",
+            "filelight %f",
+            "dir",
+            {},
+            false,
+            {}
+        });
+    } else if (!QStandardPaths::findExecutable("k4dirstat").isEmpty()) {
+        m_customActions.append({
+            "tool_k4dirstat",
+            "Analyze Disk Usage",
+            "pie_chart",
+            "k4dirstat %f",
+            "dir",
+            {},
+            false,
+            {}
+        });
+    }
+
+    // Code Editors
+    if (!QStandardPaths::findExecutable("code").isEmpty()) {
+        m_customActions.append({
+            "tool_vscode",
+            "Open with VS Code",
+            "code",
+            "code %F",
+            "all",
+            {},
+            false,
+            {}
+        });
+    } else if (!QStandardPaths::findExecutable("cursor").isEmpty()) {
+        m_customActions.append({
+            "tool_cursor",
+            "Open with Cursor",
+            "code",
+            "cursor %F",
+            "all",
+            {},
+            false,
+            {}
+        });
+    } else if (!QStandardPaths::findExecutable("subl").isEmpty()) {
+        m_customActions.append({
+            "tool_sublime",
+            "Open with Sublime Text",
+            "edit_note",
+            "subl %F",
+            "all",
+            {},
+            false,
+            {}
+        });
+    }
+
+    // 2. Scan User Scripts Directories
+    QStringList scriptDirs = {
+        scriptsFolderPath(),
+        QDir::homePath() + "/.local/share/nautilus/scripts"
+    };
+
+    QSet<QString> seenScripts;
+    for (const QString& sDir : scriptDirs) {
+        QDir dir(sDir);
+        if (!dir.exists()) {
+            QDir().mkpath(sDir);
+            continue;
+        }
+
+        const auto entries = dir.entryInfoList(QDir::Files | QDir::Executable, QDir::Name);
+        for (const auto& fi : entries) {
+            if (seenScripts.contains(fi.fileName())) continue;
+            seenScripts.insert(fi.fileName());
+
+            QString displayName = fi.fileName();
+            if (displayName.endsWith(".sh")) displayName.chop(3);
+            displayName.replace('_', ' ');
+
+            m_customActions.append({
+                "script:" + fi.absoluteFilePath(),
+                displayName,
+                "terminal",
+                QString("\"%1\" %F").arg(fi.absoluteFilePath()),
+                "all",
+                {},
+                true,
+                fi.absoluteFilePath()
+            });
+        }
+    }
+
+    // 3. Scan Custom .desktop Action Files
+    QStringList actionDirs = {
+        QDir::homePath() + "/.local/share/prism/actions",
+        QDir::homePath() + "/.local/share/file-manager/actions",
+        QDir::homePath() + "/.local/share/kio/servicemenus",
+        "/usr/share/kio/servicemenus"
+    };
+
+    for (const QString& aDir : actionDirs) {
+        QDir dir(aDir);
+        if (!dir.exists()) continue;
+
+        const auto entries = dir.entryInfoList(QStringList{ "*.desktop" }, QDir::Files);
+        for (const auto& fi : entries) {
+            QSettings desktop(fi.absoluteFilePath(), QSettings::IniFormat);
+            desktop.beginGroup("Desktop Entry");
+            QString actionsStr = desktop.value("Actions").toString();
+            QString mainName = desktop.value("Name").toString();
+            QString mainExec = desktop.value("Exec").toString();
+            QString mainIcon = desktop.value("Icon").toString();
+            QString mainMime = desktop.value("MimeType").toString();
+            desktop.endGroup();
+
+            if (!actionsStr.isEmpty()) {
+                QStringList actionNames = actionsStr.split(';', Qt::SkipEmptyParts);
+                for (const QString& act : actionNames) {
+                    desktop.beginGroup(QString("Desktop Action %1").arg(act.trimmed()));
+                    QString aName = desktop.value("Name").toString();
+                    QString aExec = desktop.value("Exec").toString();
+                    QString aIcon = desktop.value("Icon").toString();
+                    desktop.endGroup();
+
+                    if (!aName.isEmpty() && !aExec.isEmpty()) {
+                        m_customActions.append({
+                            QString("desktop:%1:%2").arg(fi.fileName(), act),
+                            aName,
+                            aIcon.isEmpty() ? "extension" : aIcon,
+                            aExec,
+                            "all",
+                            mainMime.split(';', Qt::SkipEmptyParts),
+                            false,
+                            {}
+                        });
+                    }
+                }
+            } else if (!mainName.isEmpty() && !mainExec.isEmpty()) {
+                m_customActions.append({
+                    QString("desktop:%1").arg(fi.fileName()),
+                    mainName,
+                    mainIcon.isEmpty() ? "extension" : mainIcon,
+                    mainExec,
+                    "all",
+                    mainMime.split(';', Qt::SkipEmptyParts),
+                    false,
+                    {}
+                });
+            }
+        }
+    }
+}
+
+QVariantList AppIntegration::getCustomActions(const QString& currentDir, const QStringList& selectedPaths, bool isDir, const QString& mimeType) {
+    scanCustomActions();
+
+    QVariantList list;
+    for (const auto& act : m_customActions) {
+        if (act.target == "dir" && !isDir && selectedPaths.size() > 0) {
+            continue;
+        }
+        if (act.target == "file" && isDir) {
+            continue;
+        }
+        if (!act.mimeTypes.isEmpty() && !mimeType.isEmpty()) {
+            bool matched = false;
+            for (const auto& m : act.mimeTypes) {
+                if (m == "*/*" || m == mimeType || (m.endsWith("/*") && mimeType.startsWith(m.left(m.length() - 1)))) {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) continue;
+        }
+
+        QVariantMap map;
+        map["id"] = act.id;
+        map["name"] = act.name;
+        map["icon"] = act.icon;
+        map["isScript"] = act.isScript;
+        list.append(map);
+    }
+    return list;
+}
+
+void AppIntegration::executeCustomAction(const QString& actionId, const QString& currentDir, const QStringList& selectedPaths) {
+    const CustomActionItem* targetAct = nullptr;
+    for (const auto& act : m_customActions) {
+        if (act.id == actionId) {
+            targetAct = &act;
+            break;
+        }
+    }
+
+    if (!targetAct) return;
+
+    QString primaryPath = selectedPaths.isEmpty() ? currentDir : selectedPaths.first();
+    QString dirPath = currentDir;
+    if (selectedPaths.size() == 1 && QFileInfo(selectedPaths.first()).isDir()) {
+        dirPath = selectedPaths.first();
+    }
+
+    // Prepare path strings for substitution
+    QString quotedPaths;
+    QString quotedUrls;
+    for (const QString& p : selectedPaths) {
+        if (!quotedPaths.isEmpty()) quotedPaths += " ";
+        quotedPaths += QString("\"%1\"").arg(p);
+
+        if (!quotedUrls.isEmpty()) quotedUrls += " ";
+        quotedUrls += QString("\"%1\"").arg(QUrl::fromLocalFile(p).toString());
+    }
+    if (quotedPaths.isEmpty()) {
+        quotedPaths = QString("\"%1\"").arg(currentDir);
+        quotedUrls = QString("\"%1\"").arg(QUrl::fromLocalFile(currentDir).toString());
+    }
+
+    QString cmd = targetAct->exec;
+    cmd.replace("%f", QString("\"%1\"").arg(primaryPath));
+    cmd.replace("%F", quotedPaths);
+    cmd.replace("%u", QString("\"%1\"").arg(QUrl::fromLocalFile(primaryPath).toString()));
+    cmd.replace("%U", quotedUrls);
+    cmd.replace("%d", QString("\"%1\"").arg(dirPath));
+    cmd.replace("%D", QString("\"%1\"").arg(dirPath));
+    cmd.replace("%n", QString("\"%1\"").arg(QFileInfo(primaryPath).fileName()));
+    cmd.remove("%i");
+    cmd.remove("%c");
+    cmd.remove("%k");
+    cmd.remove("%m");
+
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", selectedPaths.join("\n"));
+    env.insert("NAUTILUS_SCRIPT_CURRENT_URI", QUrl::fromLocalFile(currentDir).toString());
+    env.insert("PRISM_SELECTED_PATHS", selectedPaths.join("\n"));
+    env.insert("PRISM_CURRENT_DIR", currentDir);
+
+    QProcess proc;
+    proc.setProcessEnvironment(env);
+    proc.setWorkingDirectory(dirPath);
+
+    QProcess::startDetached("/bin/sh", QStringList{ "-c", cmd }, dirPath);
+}
+
 } // namespace prism::core
+

@@ -62,16 +62,21 @@ public:
     Q_INVOKABLE void updatePlace(int index, const QString& name, const QString& iconName);
     Q_INVOKABLE bool isBookmarked(const QString& path) const;
     Q_INVOKABLE void toggleBookmark(const QString& path);
+    Q_INVOKABLE void restoreDefaultPlaces();
 
 signals:
     void countChanged();
 
 private:
+    void loadHiddenPlaces();
+    void saveHiddenPlaces();
     void loadStandardPlaces();
     void loadBookmarks();
     void saveBookmarks();
 
     QVector<PlaceItem> m_places;
+    QSet<QString> m_hiddenPlaces;
+    bool m_isSaving = false;
 };
 
 } // namespace prism::core
