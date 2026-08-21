@@ -211,7 +211,7 @@ StyledRect {
                                     ? (tabItem.isSplit && tabItem.activePane === 1 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface)
                                     : Colours.palette.m3onSurfaceVariant
                                 font: tabItem.selected && (!tabItem.isSplit || tabItem.activePane === 0)
-                                    ? Tokens.font.builders.body.small.weight(Font.DemiBold).build()
+                                    ? Tokens.font.body.builders.small.weight(Font.DemiBold).build()
                                     : Tokens.font.body.small
                                 elide: Text.ElideRight
                             }
@@ -290,7 +290,7 @@ StyledRect {
                                     ? (tabItem.activePane === 1 ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant)
                                     : Colours.palette.m3onSurfaceVariant
                                 font: tabItem.selected && tabItem.activePane === 1
-                                    ? Tokens.font.builders.body.small.weight(Font.DemiBold).build()
+                                    ? Tokens.font.body.builders.small.weight(Font.DemiBold).build()
                                     : Tokens.font.body.small
                                 elide: Text.ElideRight
                             }

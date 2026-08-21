@@ -347,6 +347,7 @@ void TabManager::closeSplitPane(int tabIndex, int paneIndex) {
             tab->setCurrentPath(tab->splitPath());
         }
         tab->setIsSplit(false);
+        tab->setActivePane(0);
     }
 }
 

@@ -485,7 +485,13 @@ ApplicationWindow {
 
         Shortcut {
             sequence: "Ctrl+W"
-            onActivated: TabManager.closeTab(TabManager.currentIndex)
+            onActivated: {
+                if (TabManager.currentTab && TabManager.currentTab.isSplit) {
+                    TabManager.closeSplitPane(TabManager.currentIndex, TabManager.currentTab.activePane);
+                } else {
+                    TabManager.closeTab(TabManager.currentIndex);
+                }
+            }
         }
 
         Shortcut {
