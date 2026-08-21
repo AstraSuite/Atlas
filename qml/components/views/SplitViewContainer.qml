@@ -11,16 +11,28 @@ StyledRect {
     property real zoomSize: 80
     property string searchQuery: ""
     readonly property bool isSplit: activeTab && activeTab.isSplit
+    readonly property int activePane: activeTab ? activeTab.activePane : 0
     property real splitRatio: 0.5
 
+    property alias mainViewLoader: mainViewLoader
+    property alias splitViewLoader: splitViewLoader
+
     readonly property var currentSelectedPath: {
-        if (mainViewLoader && mainViewLoader.item && mainViewLoader.item.currentItem) {
-            return mainViewLoader.item.currentItem.path;
+        let loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
+        if (loader && loader.item && loader.item.currentItem) {
+            return loader.item.currentItem.path;
         }
-        return activeTab ? activeTab.currentPath : "";
+        if (!activeTab) return "";
+        return (isSplit && activePane === 1) ? activeTab.splitPath : activeTab.currentPath;
     }
-    readonly property var selectedPaths: (mainViewLoader && mainViewLoader.item && mainViewLoader.item.selectedPaths) ? mainViewLoader.item.selectedPaths : []
-    readonly property var activeModel: mainModel
+    readonly property var selectedPaths: {
+        let loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
+        if (loader && loader.item && loader.item.selectedPaths) {
+            return loader.item.selectedPaths;
+        }
+        return [];
+    }
+    readonly property var activeModel: (isSplit && activePane === 1) ? splitModel : mainModel
 
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
@@ -47,10 +59,26 @@ StyledRect {
             color: Colours.tPalette.m3surface
             clip: true
 
+            // Active Pane Low-Profile Top Accent Bar
+            Rectangle {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.topMargin: 2
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+                height: 3
+                radius: 1.5
+                color: Colours.palette.m3primary
+                visible: root.isSplit && root.activePane === 0
+                z: 20
+                opacity: 0.95
+            }
+
             FileSystemModel {
                 id: mainModel
                 path: root.activeTab ? root.activeTab.currentPath : ""
-                searchQuery: root.searchQuery
+                searchQuery: (root.isSplit && root.activePane === 1) ? "" : root.searchQuery
                 showHidden: AppController.showHidden
             }
 
@@ -71,9 +99,15 @@ StyledRect {
                 visible: mainModel.count === 0
                 path: root.activeTab ? root.activeTab.currentPath : ""
                 isSearching: mainModel.isSearching
-                searchQuery: root.searchQuery
-                onCreateFolder: root.createNewFolder()
-                onCreateFile: root.createNewFile()
+                searchQuery: (root.isSplit && root.activePane === 1) ? "" : root.searchQuery
+                onCreateFolder: {
+                    if (root.activeTab) root.activeTab.activePane = 0;
+                    root.createNewFolder();
+                }
+                onCreateFile: {
+                    if (root.activeTab) root.activeTab.activePane = 0;
+                    root.createNewFile();
+                }
             }
         }
 
@@ -92,10 +126,9 @@ StyledRect {
                 width: 2
                 height: parent.height - 16
                 radius: 1
-                color: (resizeMouse.containsMouse || resizeMouse.drag.active) ? Colours.palette.m3primary : Colours.palette.m3outlineVariant
-                opacity: (resizeMouse.containsMouse || resizeMouse.drag.active) ? 1.0 : 0.45
+                color: Colours.palette.m3primary
+                opacity: (resizeMouse.containsMouse || resizeMouse.drag.active) ? 1.0 : 0.65
 
-                Behavior on color { Anim { type: Anim.FastEffects } }
                 Behavior on opacity { Anim { type: Anim.FastEffects } }
             }
 
@@ -139,9 +172,26 @@ StyledRect {
             color: Colours.tPalette.m3surface
             clip: true
 
+            // Active Pane Low-Profile Top Accent Bar
+            Rectangle {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.topMargin: 2
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+                height: 3
+                radius: 1.5
+                color: Colours.palette.m3primary
+                visible: root.isSplit && root.activePane === 1
+                z: 20
+                opacity: 0.95
+            }
+
             FileSystemModel {
                 id: splitModel
                 path: (root.activeTab && root.activeTab.splitPath) ? root.activeTab.splitPath : ""
+                searchQuery: (root.isSplit && root.activePane === 1) ? root.searchQuery : ""
                 showHidden: AppController.showHidden
             }
 
@@ -161,9 +211,16 @@ StyledRect {
             EmptyStateView {
                 visible: splitModel.count === 0
                 path: (root.activeTab && root.activeTab.splitPath) ? root.activeTab.splitPath : ""
-                isSearching: false
-                onCreateFolder: root.createNewFolder()
-                onCreateFile: root.createNewFile()
+                isSearching: splitModel.isSearching
+                searchQuery: (root.isSplit && root.activePane === 1) ? root.searchQuery : ""
+                onCreateFolder: {
+                    if (root.activeTab) root.activeTab.activePane = 1;
+                    root.createNewFolder();
+                }
+                onCreateFile: {
+                    if (root.activeTab) root.activeTab.activePane = 1;
+                    root.createNewFile();
+                }
             }
         }
     }
@@ -174,11 +231,21 @@ StyledRect {
         FileGridView {
             model: mainModel
             activeTab: root.activeTab
+            paneIndex: 0
             zoomSize: root.zoomSize
             onOpenItem: item => root.handleOpen(item, 0)
-            onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
-            onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
-            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
+            onItemContextMenu: (item, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 0;
+                root.itemContextMenu(item, x, y);
+            }
+            onBlankContextMenu: (x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 0;
+                root.blankContextMenu(x, y);
+            }
+            onFilesDropped: (sources, destDir, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 0;
+                root.filesDropped(sources, destDir, x, y);
+            }
         }
     }
 
@@ -187,10 +254,20 @@ StyledRect {
         FileDetailsView {
             model: mainModel
             activeTab: root.activeTab
+            paneIndex: 0
             onOpenItem: item => root.handleOpen(item, 0)
-            onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
-            onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
-            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
+            onItemContextMenu: (item, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 0;
+                root.itemContextMenu(item, x, y);
+            }
+            onBlankContextMenu: (x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 0;
+                root.blankContextMenu(x, y);
+            }
+            onFilesDropped: (sources, destDir, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 0;
+                root.filesDropped(sources, destDir, x, y);
+            }
         }
     }
 
@@ -199,10 +276,20 @@ StyledRect {
         FileCompactView {
             model: mainModel
             activeTab: root.activeTab
+            paneIndex: 0
             onOpenItem: item => root.handleOpen(item, 0)
-            onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
-            onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
-            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
+            onItemContextMenu: (item, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 0;
+                root.itemContextMenu(item, x, y);
+            }
+            onBlankContextMenu: (x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 0;
+                root.blankContextMenu(x, y);
+            }
+            onFilesDropped: (sources, destDir, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 0;
+                root.filesDropped(sources, destDir, x, y);
+            }
         }
     }
 
@@ -212,11 +299,21 @@ StyledRect {
         FileGridView {
             model: splitModel
             activeTab: root.activeTab
+            paneIndex: 1
             zoomSize: root.zoomSize
             onOpenItem: item => root.handleOpen(item, 1)
-            onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
-            onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
-            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
+            onItemContextMenu: (item, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 1;
+                root.itemContextMenu(item, x, y);
+            }
+            onBlankContextMenu: (x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 1;
+                root.blankContextMenu(x, y);
+            }
+            onFilesDropped: (sources, destDir, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 1;
+                root.filesDropped(sources, destDir, x, y);
+            }
         }
     }
 
@@ -225,10 +322,20 @@ StyledRect {
         FileDetailsView {
             model: splitModel
             activeTab: root.activeTab
+            paneIndex: 1
             onOpenItem: item => root.handleOpen(item, 1)
-            onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
-            onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
-            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
+            onItemContextMenu: (item, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 1;
+                root.itemContextMenu(item, x, y);
+            }
+            onBlankContextMenu: (x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 1;
+                root.blankContextMenu(x, y);
+            }
+            onFilesDropped: (sources, destDir, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 1;
+                root.filesDropped(sources, destDir, x, y);
+            }
         }
     }
 
@@ -237,14 +344,25 @@ StyledRect {
         FileCompactView {
             model: splitModel
             activeTab: root.activeTab
+            paneIndex: 1
             onOpenItem: item => root.handleOpen(item, 1)
-            onItemContextMenu: (item, x, y) => root.itemContextMenu(item, x, y)
-            onBlankContextMenu: (x, y) => root.blankContextMenu(x, y)
-            onFilesDropped: (sources, destDir, x, y) => root.filesDropped(sources, destDir, x, y)
+            onItemContextMenu: (item, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 1;
+                root.itemContextMenu(item, x, y);
+            }
+            onBlankContextMenu: (x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 1;
+                root.blankContextMenu(x, y);
+            }
+            onFilesDropped: (sources, destDir, x, y) => {
+                if (root.activeTab) root.activeTab.activePane = 1;
+                root.filesDropped(sources, destDir, x, y);
+            }
         }
     }
 
     function handleOpen(item, pane) {
+        if (root.activeTab) root.activeTab.activePane = pane;
         if (!item) return;
         if (item.isDir) {
             if (pane === 1) {
@@ -254,6 +372,40 @@ StyledRect {
             }
         } else {
             root.itemOpened(item, pane);
+        }
+    }
+
+    function selectAll() {
+        let loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
+        if (activeModel && loader && loader.item) {
+            let all = [];
+            for (let i = 0; i < activeModel.count; ++i) {
+                let e = activeModel.get(i);
+                if (e) all.push(e.path);
+            }
+            loader.item.selectedPaths = all;
+        }
+    }
+
+    function clearSelection() {
+        let loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
+        if (loader && loader.item) {
+            loader.item.selectedPaths = [];
+        }
+    }
+
+    function invertSelection() {
+        let loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
+        if (activeModel && loader && loader.item) {
+            let cur = loader.item.selectedPaths;
+            let inverted = [];
+            for (let i = 0; i < activeModel.count; ++i) {
+                let e = activeModel.get(i);
+                if (e && cur.indexOf(e.path) === -1) {
+                    inverted.push(e.path);
+                }
+            }
+            loader.item.selectedPaths = inverted;
         }
     }
 }

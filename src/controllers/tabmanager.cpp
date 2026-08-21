@@ -164,6 +164,7 @@ QVariant TabManager::data(const QModelIndex& index, int role) const {
     case IsSplitRole: return tab->isSplit();
     case SplitTitleRole: return tab->splitTitle();
     case SplitPathRole: return tab->splitPath();
+    case ActivePaneRole: return tab->activePane();
     case TabItemRole: return QVariant::fromValue(tab);
     default:
         return {};
@@ -177,6 +178,7 @@ QHash<int, QByteArray> TabManager::roleNames() const {
         { IsSplitRole, "isSplit" },
         { SplitTitleRole, "splitTitle" },
         { SplitPathRole, "splitPath" },
+        { ActivePaneRole, "activePane" },
         { TabItemRole, "tabItem" }
     };
 }
@@ -219,6 +221,13 @@ void TabManager::newTab(const QString& path) {
         if (i >= 0) {
             auto mi = index(i, 0);
             emit dataChanged(mi, mi, { IsSplitRole });
+        }
+    });
+    connect(tab, &TabItem::activePaneChanged, this, [this, tab]() {
+        int i = m_tabs.indexOf(tab);
+        if (i >= 0) {
+            auto mi = index(i, 0);
+            emit dataChanged(mi, mi, { ActivePaneRole, TitleRole });
         }
     });
     m_tabs.append(tab);

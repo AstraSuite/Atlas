@@ -8,8 +8,18 @@ StyledRect {
 
     signal tabContextMenuRequested(int tabIndex, real globalX, real globalY)
 
-    implicitHeight: 40
+    readonly property bool shouldShow: TabManager.count > 1
+    implicitHeight: shouldShow ? 40 : 0
+    visible: implicitHeight > 0
+    clip: true
     color: "transparent"
+
+    Behavior on implicitHeight {
+        NumberAnimation {
+            duration: 180
+            easing.type: Easing.OutCubic
+        }
+    }
 
     Flickable {
         id: flick
@@ -43,6 +53,7 @@ StyledRect {
                     required property bool isSplit
                     required property string splitTitle
                     required property string splitPath
+                    required property int activePane
                     readonly property bool selected: TabManager.currentIndex === index
 
                     implicitWidth: isSplit ? Math.min(360, Math.max(240, tabContent.implicitWidth + 50)) : Math.min(220, Math.max(120, tabContent.implicitWidth + 44))
@@ -129,6 +140,10 @@ StyledRect {
                         onPressed: mouse => {
                             if (mouse.button === Qt.LeftButton) {
                                 TabManager.currentIndex = tabItem.index;
+                                if (tabItem.isSplit && TabManager.currentTab) {
+                                    let half = tabItem.width / 2;
+                                    TabManager.currentTab.activePane = (mouse.x > half) ? 1 : 0;
+                                }
                                 startX = tabItem.x;
                                 dragging = false;
                             }
@@ -176,20 +191,27 @@ StyledRect {
 
                         // Primary Pane
                         RowLayout {
+                            id: primaryPaneLayout
                             Layout.fillWidth: true
                             spacing: 4
 
                             MaterialIcon {
                                 text: "folder"
-                                color: tabItem.selected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                                color: tabItem.selected
+                                    ? (tabItem.isSplit && tabItem.activePane === 1 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3primary)
+                                    : Colours.palette.m3onSurfaceVariant
                                 fontStyle: Tokens.font.icon.small
                             }
 
                             StyledText {
                                 Layout.fillWidth: true
                                 text: tabItem.title
-                                color: tabItem.selected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
-                                font: Tokens.font.body.small
+                                color: tabItem.selected
+                                    ? (tabItem.isSplit && tabItem.activePane === 1 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface)
+                                    : Colours.palette.m3onSurfaceVariant
+                                font: tabItem.selected && (!tabItem.isSplit || tabItem.activePane === 0)
+                                    ? Tokens.font.builders.body.small.weight(Font.DemiBold).build()
+                                    : Tokens.font.body.small
                                 elide: Text.ElideRight
                             }
 
@@ -242,21 +264,28 @@ StyledRect {
 
                         // Secondary Split Pane
                         RowLayout {
+                            id: secondaryPaneLayout
                             visible: tabItem.isSplit
                             Layout.fillWidth: true
                             spacing: 4
 
                             MaterialIcon {
                                 text: "folder"
-                                color: tabItem.selected ? Colours.palette.m3tertiary : Colours.palette.m3onSurfaceVariant
+                                color: tabItem.selected
+                                    ? (tabItem.activePane === 1 ? Colours.palette.m3tertiary : Colours.palette.m3onSurfaceVariant)
+                                    : Colours.palette.m3onSurfaceVariant
                                 fontStyle: Tokens.font.icon.small
                             }
 
                             StyledText {
                                 Layout.fillWidth: true
                                 text: tabItem.splitTitle
-                                color: tabItem.selected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
-                                font: Tokens.font.body.small
+                                color: tabItem.selected
+                                    ? (tabItem.activePane === 1 ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant)
+                                    : Colours.palette.m3onSurfaceVariant
+                                font: tabItem.selected && tabItem.activePane === 1
+                                    ? Tokens.font.builders.body.small.weight(Font.DemiBold).build()
+                                    : Tokens.font.body.small
                                 elide: Text.ElideRight
                             }
 

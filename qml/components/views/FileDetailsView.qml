@@ -10,11 +10,21 @@ Item {
 
     required property var model
     required property var activeTab
+    property int paneIndex: 0
     property int currentIndex: listView.currentIndex
     readonly property var currentItem: listView.currentItem ? listView.currentItem.modelData : null
     property var selectedPaths: []
     property int anchorIndex: -1
-    readonly property bool isTrash: root.activeTab && (root.activeTab.currentPath.indexOf("Trash") !== -1 || root.activeTab.currentPath.indexOf("trash:") !== -1)
+    readonly property bool isTrash: root.activeTab && (
+        ((root.activeTab.isSplit && root.paneIndex === 1 ? root.activeTab.splitPath : root.activeTab.currentPath).indexOf("Trash") !== -1)
+        || ((root.activeTab.isSplit && root.paneIndex === 1 ? root.activeTab.splitPath : root.activeTab.currentPath).indexOf("trash:") !== -1)
+    )
+
+    function notifyFocus() {
+        if (root.activeTab && root.activeTab.activePane !== root.paneIndex) {
+            root.activeTab.activePane = root.paneIndex;
+        }
+    }
 
     signal openItem(var item)
     signal itemContextMenu(var item, real mouseX, real mouseY)
@@ -397,6 +407,7 @@ Item {
                     property bool isDragging: false
 
                     onPressed: mouse => {
+                        root.notifyFocus();
                         if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
                             if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
                             return;
@@ -423,6 +434,7 @@ Item {
                     }
 
                     onClicked: mouse => {
+                        root.notifyFocus();
                         if (isDragging || dragSelectArea.isSelecting) return;
                         if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
                             if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
@@ -447,6 +459,7 @@ Item {
                     }
 
                     onDoubleClicked: mouse => {
+                        root.notifyFocus();
                         if (mouse.button === Qt.LeftButton) {
                             root.openItem(rowItem.modelData);
                         }
@@ -601,6 +614,7 @@ Item {
         property bool wasSelecting: false
 
         onPressed: mouse => {
+            root.notifyFocus();
             if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
                 if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
                 return;

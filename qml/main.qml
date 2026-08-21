@@ -26,6 +26,22 @@ ApplicationWindow {
     property bool pickerActive: typeof isPickerMode !== "undefined" ? isPickerMode : false
     property real zoomLevel: 80
 
+    function getActiveDirectory() {
+        if (!TabManager.currentTab) return "";
+        return (TabManager.currentTab.isSplit && TabManager.currentTab.activePane === 1)
+            ? TabManager.currentTab.splitPath
+            : TabManager.currentTab.currentPath;
+    }
+
+    function setActiveDirectory(path) {
+        if (!TabManager.currentTab) return;
+        if (TabManager.currentTab.isSplit && TabManager.currentTab.activePane === 1) {
+            TabManager.currentTab.splitPath = path;
+        } else {
+            TabManager.currentTab.currentPath = path;
+        }
+    }
+
     // Full File Manager Mode
     Item {
         anchors.fill: parent
@@ -73,9 +89,7 @@ ApplicationWindow {
                         }
 
                         onToggleTerminal: {
-                            if (TabManager.currentTab) {
-                                AppIntegration.openInTerminal(TabManager.currentTab.currentPath);
-                            }
+                            AppIntegration.openInTerminal(window.getActiveDirectory());
                         }
 
                         onCreateNewFolder: {
@@ -94,7 +108,11 @@ ApplicationWindow {
 
                         onReload: {
                             if (TabManager.currentTab) {
-                                TabManager.currentTab.currentPath = TabManager.currentTab.currentPath;
+                                if (TabManager.currentTab.isSplit && TabManager.currentTab.activePane === 1) {
+                                    TabManager.currentTab.splitPath = TabManager.currentTab.splitPath;
+                                } else {
+                                    TabManager.currentTab.currentPath = TabManager.currentTab.currentPath;
+                                }
                             }
                         }
 
@@ -231,15 +249,15 @@ ApplicationWindow {
         // Context Menu Overlay
         ContextMenu {
             id: contextMenu
-            currentDir: TabManager.currentTab ? TabManager.currentTab.currentPath : ""
+            currentDir: window.getActiveDirectory()
 
             onActionTriggered: (action, item) => {
-                let currentDir = TabManager.currentTab ? TabManager.currentTab.currentPath : "";
+                let currentDir = window.getActiveDirectory();
                 if (action === "preview" && item) {
                     mediaViewerModal.openFile(item.path, splitContainer.activeModel);
                 } else if (action === "open" && item) {
                     if (item.isDir) {
-                        TabManager.currentTab.currentPath = item.path;
+                        window.setActiveDirectory(item.path);
                     } else if (item.isImage || item.isVideo || FileUtils.isImage(item.path) || FileUtils.isVideo(item.path)) {
                         mediaViewerModal.openFile(item.path, splitContainer.activeModel);
                     } else {
@@ -324,7 +342,7 @@ ApplicationWindow {
         CompressModal {
             id: compressModal
             onAccepted: (sources, dest, fmt) => {
-                let curDir = TabManager.currentTab ? TabManager.currentTab.currentPath : "";
+                let curDir = window.getActiveDirectory();
                 FileOperations.createArchive(sources, curDir + "/" + dest, fmt);
             }
         }
@@ -362,7 +380,7 @@ ApplicationWindow {
         NewItemModal {
             id: newItemModal
             onAccepted: text => {
-                let currentDir = TabManager.currentTab ? TabManager.currentTab.currentPath : "";
+                let currentDir = window.getActiveDirectory();
                 if (title === qsTr("Create New Folder")) {
                     FileOperations.createDirectory(currentDir, text);
                 } else if (title === qsTr("Create New File")) {
@@ -506,7 +524,7 @@ ApplicationWindow {
         Shortcut {
             sequence: "Ctrl+V"
             onActivated: {
-                if (TabManager.currentTab) FileOperations.paste(TabManager.currentTab.currentPath);
+                if (TabManager.currentTab) FileOperations.paste(window.getActiveDirectory());
             }
         }
 
@@ -563,53 +581,22 @@ ApplicationWindow {
 
         Shortcut {
             sequence: "Ctrl+A"
-            onActivated: {
-                if (splitContainer.activeModel) {
-                    let all = [];
-                    for (let i = 0; i < splitContainer.activeModel.count; ++i) {
-                        let e = splitContainer.activeModel.get(i);
-                        if (e) all.push(e.path);
-                    }
-                    if (splitContainer.mainViewLoader && splitContainer.mainViewLoader.item) {
-                        splitContainer.mainViewLoader.item.selectedPaths = all;
-                    }
-                }
-            }
+            onActivated: splitContainer.selectAll()
         }
 
         Shortcut {
             sequence: "Ctrl+Shift+A"
-            onActivated: {
-                if (splitContainer.mainViewLoader && splitContainer.mainViewLoader.item) {
-                    splitContainer.mainViewLoader.item.selectedPaths = [];
-                }
-            }
+            onActivated: splitContainer.clearSelection()
         }
 
         Shortcut {
             sequence: "Ctrl+D"
-            onActivated: {
-                if (splitContainer.mainViewLoader && splitContainer.mainViewLoader.item) {
-                    splitContainer.mainViewLoader.item.selectedPaths = [];
-                }
-            }
+            onActivated: splitContainer.clearSelection()
         }
 
         Shortcut {
             sequence: "Ctrl+I"
-            onActivated: {
-                if (splitContainer.activeModel && splitContainer.mainViewLoader && splitContainer.mainViewLoader.item) {
-                    let cur = splitContainer.mainViewLoader.item.selectedPaths;
-                    let inverted = [];
-                    for (let i = 0; i < splitContainer.activeModel.count; ++i) {
-                        let e = splitContainer.activeModel.get(i);
-                        if (e && cur.indexOf(e.path) === -1) {
-                            inverted.push(e.path);
-                        }
-                    }
-                    splitContainer.mainViewLoader.item.selectedPaths = inverted;
-                }
-            }
+            onActivated: splitContainer.invertSelection()
         }
 
         Shortcut {
@@ -644,7 +631,7 @@ ApplicationWindow {
 
         Shortcut {
             sequence: "Alt+Home"
-            onActivated: if (TabManager.currentTab) TabManager.currentTab.currentPath = FileUtils.home
+            onActivated: window.setActiveDirectory(FileUtils.home)
         }
 
         Shortcut {
@@ -683,7 +670,7 @@ ApplicationWindow {
             sequence: "F4"
             onActivated: {
                 if (TabManager.currentTab) {
-                    AppIntegration.openInTerminal(TabManager.currentTab.currentPath);
+                    AppIntegration.openInTerminal(window.getActiveDirectory());
                 }
             }
         }

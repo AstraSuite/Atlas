@@ -87,6 +87,7 @@ public:
         IsSplitRole,
         SplitTitleRole,
         SplitPathRole,
+        ActivePaneRole,
         TabItemRole
     };
     Q_ENUM(TabRoles)

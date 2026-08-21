@@ -7,6 +7,7 @@ StyledRect {
     id: root
 
     required property var activeTab
+    property int activePane: activeTab ? activeTab.activePane : 0
     property bool isEditingPath: false
     property bool isSearching: false
     property bool isFiltering: false
@@ -130,7 +131,11 @@ StyledRect {
             implicitWidth: 32
             implicitHeight: 32
 
-            readonly property bool isFav: root.activeTab ? PlacesModel.isBookmarked(root.activeTab.currentPath) : false
+            readonly property bool isFav: {
+                if (!root.activeTab) return false;
+                let p = (root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath;
+                return p ? PlacesModel.isBookmarked(p) : false;
+            }
 
             StyledRect {
                 anchors.fill: parent
@@ -151,8 +156,11 @@ StyledRect {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        if (root.activeTab && root.activeTab.currentPath.length > 0) {
-                            PlacesModel.toggleBookmark(root.activeTab.currentPath);
+                        if (root.activeTab) {
+                            let p = (root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath;
+                            if (p && p.length > 0) {
+                                PlacesModel.toggleBookmark(p);
+                            }
                         }
                     }
                 }
@@ -179,8 +187,9 @@ StyledRect {
 
                 Repeater {
                     model: {
-                        if (!root.activeTab || !root.activeTab.currentPath) return [];
-                        let current = root.activeTab.currentPath;
+                        if (!root.activeTab) return [];
+                        let current = (root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath;
+                        if (!current) return [];
                         let home = FileUtils.home;
 
                         if (current.indexOf("/.local/share/Trash") !== -1 || current.indexOf("trash:") !== -1) {
@@ -228,7 +237,11 @@ StyledRect {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     if (root.activeTab) {
-                                        root.activeTab.currentPath = crumb.modelData.path;
+                                        if (root.activePane === 1 && root.activeTab.isSplit) {
+                                            root.activeTab.splitPath = crumb.modelData.path;
+                                        } else {
+                                            root.activeTab.currentPath = crumb.modelData.path;
+                                        }
                                     }
                                 }
                             }
@@ -319,7 +332,7 @@ StyledRect {
                 TextInput {
                     id: pathInput
                     Layout.fillWidth: true
-                    text: root.activeTab ? root.activeTab.currentPath : ""
+                    text: root.activeTab ? ((root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath) : ""
                     color: Colours.palette.m3onSurface
                     selectionColor: Colours.palette.m3primaryContainer
                     selectedTextColor: Colours.palette.m3onPrimaryContainer
@@ -335,7 +348,11 @@ StyledRect {
 
                     onAccepted: {
                         if (root.activeTab && text.trim().length > 0) {
-                            root.activeTab.currentPath = text.trim();
+                            if (root.activePane === 1 && root.activeTab.isSplit) {
+                                root.activeTab.splitPath = text.trim();
+                            } else {
+                                root.activeTab.currentPath = text.trim();
+                            }
                         }
                         root.isEditingPath = false;
                     }
@@ -399,7 +416,11 @@ StyledRect {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             if (root.activeTab && pathInput.text.trim().length > 0) {
-                                root.activeTab.currentPath = pathInput.text.trim();
+                                if (root.activePane === 1 && root.activeTab.isSplit) {
+                                    root.activeTab.splitPath = pathInput.text.trim();
+                                } else {
+                                    root.activeTab.currentPath = pathInput.text.trim();
+                                }
                             }
                             root.isEditingPath = false;
                         }
@@ -514,7 +535,11 @@ StyledRect {
         Item {
             implicitWidth: emptyTrashContent.implicitWidth + 24
             implicitHeight: 32
-            visible: root.activeTab && (root.activeTab.currentPath.indexOf("/Trash") !== -1 || root.activeTab.currentPath.indexOf("trash:") !== -1)
+            visible: {
+                if (!root.activeTab) return false;
+                let p = (root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath;
+                return p && (p.indexOf("/Trash") !== -1 || p.indexOf("trash:") !== -1);
+            }
 
             StyledRect {
                 anchors.fill: parent

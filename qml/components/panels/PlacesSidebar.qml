@@ -114,7 +114,11 @@ StyledRect {
                         required property bool isCustom
                         required property string freeSpaceFormatted
 
-                        readonly property bool selected: root.activeTab && root.activeTab.currentPath === path
+                        readonly property bool selected: root.activeTab && (
+                            (root.activeTab.isSplit && root.activeTab.activePane === 1)
+                                ? root.activeTab.splitPath === path
+                                : root.activeTab.currentPath === path
+                        )
 
                         Layout.fillWidth: true
                         implicitHeight: placeRow.implicitHeight + Tokens.padding.small * 2
@@ -209,7 +213,11 @@ StyledRect {
                                     root.placeContextMenuRequested(globalPos.x, globalPos.y, placeItem.index, placeItem.name, placeItem.path, placeItem.iconName, placeItem.isCustom, placeItem.isTrash);
                                 } else {
                                     if (root.activeTab) {
-                                        root.activeTab.currentPath = placeItem.path;
+                                        if (root.activeTab.isSplit && root.activeTab.activePane === 1) {
+                                            root.activeTab.splitPath = placeItem.path;
+                                        } else {
+                                            root.activeTab.currentPath = placeItem.path;
+                                        }
                                     }
                                 }
                             }
@@ -248,7 +256,11 @@ StyledRect {
                         required property real bytesTotal
                         required property string freeSpaceFormatted
 
-                        readonly property bool selected: root.activeTab && driveItem.isMounted && !driveItem.mountPoint.isEmpty && root.activeTab.currentPath === mountPoint
+                        readonly property bool selected: root.activeTab && driveItem.isMounted && !driveItem.mountPoint.isEmpty && (
+                            (root.activeTab.isSplit && root.activeTab.activePane === 1)
+                                ? root.activeTab.splitPath === mountPoint
+                                : root.activeTab.currentPath === mountPoint
+                        )
 
                         Layout.fillWidth: true
                         implicitHeight: driveRow.implicitHeight + Tokens.padding.small * 2
@@ -281,9 +293,8 @@ StyledRect {
                         DropArea {
                             id: driveDropArea
                             anchors.fill: parent
-                            enabled: driveItem.isMounted && driveItem.mountPoint.length > 0
                             onDropped: drop => {
-                                if (drop.hasUrls) {
+                                if (drop.hasUrls && driveItem.isMounted && driveItem.mountPoint.length > 0) {
                                     let urls = [];
                                     for (let i = 0; i < drop.urls.length; ++i) {
                                         urls.push(FileUtils.toLocalFile(drop.urls[i]));
@@ -315,8 +326,9 @@ StyledRect {
 
                             MaterialIcon {
                                 text: driveItem.isRemovable ? "usb" : "hard_drive"
-                                color: driveItem.selected ? Colours.palette.m3onSecondaryContainer : (driveItem.isMounted ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant)
+                                color: driveItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                                 fontStyle: Tokens.font.icon.medium
+                                fill: driveItem.selected ? 1 : 0
                             }
 
                             ColumnLayout {
@@ -387,7 +399,11 @@ StyledRect {
                                 } else {
                                     if (driveItem.isMounted && driveItem.mountPoint && driveItem.mountPoint.length > 0) {
                                         if (root.activeTab) {
-                                            root.activeTab.currentPath = driveItem.mountPoint;
+                                            if (root.activeTab.isSplit && root.activeTab.activePane === 1) {
+                                                root.activeTab.splitPath = driveItem.mountPoint;
+                                            } else {
+                                                root.activeTab.currentPath = driveItem.mountPoint;
+                                            }
                                         }
                                     } else {
                                         DriveManager.mountDevice(driveItem.devicePath, TabManager.currentIndex);
