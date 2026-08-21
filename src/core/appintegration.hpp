@@ -19,6 +19,8 @@ public:
     static AppIntegration* instance();
 
     Q_INVOKABLE QVariantList getAppsForFile(const QString& filePath);
+    Q_INVOKABLE QVariantList getAvailableSharingServices();
+    Q_INVOKABLE void shareFiles(const QString& serviceId, const QStringList& paths);
     Q_INVOKABLE void openWithDefault(const QString& filePath);
     Q_INVOKABLE void openWithApp(const QString& execLine, const QString& filePath);
     Q_INVOKABLE void openInTerminal(const QString& directoryPath);

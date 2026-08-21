@@ -60,7 +60,11 @@ StyledRect {
                 CachingIconImage {
                     anchors.fill: parent
                     implicitSize: 64
-                    source: "image://thumb/" + thumbDelegate.modelData.path
+                    source: {
+                        if (!thumbDelegate.modelData) return "";
+                        let t = thumbDelegate.modelData.lastModified ? thumbDelegate.modelData.lastModified.getTime() : 0;
+                        return "image://thumb/" + thumbDelegate.modelData.path + "?t=" + t;
+                    }
                 }
             }
 

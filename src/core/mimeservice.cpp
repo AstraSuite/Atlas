@@ -108,6 +108,83 @@ QVariantList MimeService::getApplicationsForFile(const QString& filePath) {
     return result;
 }
 
+QVariantMap MimeService::getDefaultApp(const QString& mimeType) {
+    if (mimeType.isEmpty()) return {};
+
+    QString desktopId;
+
+    // 1. Query user's mimeapps.list (~/.config/mimeapps.list)
+    QString configDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
+    if (!configDir.isEmpty()) {
+        QSettings settings(configDir + "/mimeapps.list", QSettings::IniFormat);
+        desktopId = settings.value(QString("Default Applications/%1").arg(mimeType)).toString();
+        if (desktopId.isEmpty()) {
+            desktopId = settings.value(QString("Added Associations/%1").arg(mimeType)).toString().split(';', Qt::SkipEmptyParts).value(0);
+        }
+    }
+
+    // 2. Query system mimeapps.list
+    if (desktopId.isEmpty()) {
+        QStringList systemConfigDirs = { "/etc/xdg", "/usr/share/applications", "/usr/local/share/applications" };
+        for (const auto& dir : systemConfigDirs) {
+            QString path = dir + "/mimeapps.list";
+            if (QFile::exists(path)) {
+                QSettings settings(path, QSettings::IniFormat);
+                desktopId = settings.value(QString("Default Applications/%1").arg(mimeType)).toString();
+                if (!desktopId.isEmpty()) break;
+            }
+        }
+    }
+
+    // 3. Fallback to xdg-mime query default
+    if (desktopId.isEmpty()) {
+        QProcess proc;
+        proc.start("xdg-mime", QStringList{ "query", "default", mimeType });
+        if (proc.waitForFinished(1000)) {
+            desktopId = QString::fromUtf8(proc.readAllStandardOutput()).trimmed();
+        }
+    }
+
+    // If desktopId contains semicolons, pick the first
+    if (desktopId.contains(';')) {
+        desktopId = desktopId.split(';', Qt::SkipEmptyParts).value(0).trimmed();
+    }
+
+    if (!desktopId.isEmpty()) {
+        QStringList appDirs = {
+            QDir::homePath() + "/.local/share/applications",
+            "/usr/local/share/applications",
+            "/usr/share/applications"
+        };
+
+        for (const auto& dirPath : appDirs) {
+            QString fullPath = dirPath + "/" + desktopId;
+            if (QFile::exists(fullPath)) {
+                auto parsed = parseDesktopFile(fullPath);
+                if (!parsed.isEmpty()) return parsed;
+            }
+        }
+    }
+
+    // Fallback to first recommended app
+    auto allApps = getAllApplications();
+    for (const auto& var : allApps) {
+        auto map = var.toMap();
+        if (map["mimeTypes"].toStringList().contains(mimeType)) {
+            return map;
+        }
+    }
+
+    return {};
+}
+
+QVariantMap MimeService::getDefaultAppForFile(const QString& filePath) {
+    if (filePath.isEmpty()) return {};
+    QMimeDatabase db;
+    QString mime = db.mimeTypeForFile(filePath).name();
+    return getDefaultApp(mime);
+}
+
 void MimeService::openWith(const QString& filePath, const QString& desktopFilePath) {
     auto map = parseDesktopFile(desktopFilePath);
     if (map.isEmpty()) return;
@@ -128,7 +205,35 @@ void MimeService::openWith(const QString& filePath, const QString& desktopFilePa
 
 void MimeService::setDefaultApp(const QString& mimeType, const QString& desktopFileName) {
     if (mimeType.isEmpty() || desktopFileName.isEmpty()) return;
-    QProcess::startDetached("xdg-mime", QStringList{ "default", desktopFileName, mimeType });
+
+    QString cleanId = desktopFileName;
+    if (cleanId.contains('/')) {
+        cleanId = QFileInfo(cleanId).fileName();
+    }
+
+    // 1. Update ~/.config/mimeapps.list directly according to XDG Desktop Entry Specification
+    QString configDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
+    if (!configDir.isEmpty()) {
+        QDir().mkpath(configDir);
+        QString mimeAppsPath = configDir + "/mimeapps.list";
+
+        QSettings settings(mimeAppsPath, QSettings::IniFormat);
+        settings.beginGroup("Default Applications");
+        settings.setValue(mimeType, cleanId);
+        settings.endGroup();
+
+        settings.beginGroup("Added Associations");
+        QString currentAdded = settings.value(mimeType).toString();
+        QStringList addedList = currentAdded.split(';', Qt::SkipEmptyParts);
+        addedList.removeAll(cleanId);
+        addedList.prepend(cleanId);
+        settings.setValue(mimeType, addedList.join(';') + ";");
+        settings.endGroup();
+        settings.sync();
+    }
+
+    // 2. Also invoke xdg-mime default
+    QProcess::startDetached("xdg-mime", QStringList{ "default", cleanId, mimeType });
 }
 
 } // namespace prism::core

@@ -12,12 +12,27 @@ MouseArea {
     property string targetPath: ""
     property int currentTab: 0
     property string hashToCompare: ""
+    property string defaultAppName: ""
+
+    function updateDefaultApp() {
+        if (targetPath && !meta.isDir) {
+            let app = MimeService.getDefaultAppForFile(targetPath);
+            if (app && app.name) {
+                defaultAppName = app.name;
+            } else {
+                defaultAppName = "";
+            }
+        } else {
+            defaultAppName = "";
+        }
+    }
 
     onExpandedChanged: {
         if (expanded && targetPath) {
             meta.path = targetPath;
             currentTab = 0;
             hashToCompare = "";
+            updateDefaultApp();
         }
     }
 
@@ -209,6 +224,66 @@ MouseArea {
                     Layout.fillWidth: true
                     StyledText { Layout.preferredWidth: 110; text: qsTr("Accessed:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
                     StyledText { Layout.fillWidth: true; text: meta.formattedAccessed; font: Tokens.font.body.small; color: Colours.palette.m3onSurface }
+                }
+
+                RowLayout {
+                    visible: !meta.isDir
+                    Layout.fillWidth: true
+                    spacing: Tokens.spacing.small
+
+                    StyledText {
+                        Layout.preferredWidth: 110
+                        text: qsTr("Open With:")
+                        font: Tokens.font.label.medium
+                        color: Colours.palette.m3onSurfaceVariant
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        MaterialIcon {
+                            text: "apps"
+                            fontStyle: Tokens.font.icon.small
+                            color: Colours.palette.m3primary
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: root.defaultAppName.length > 0 ? root.defaultAppName : qsTr("System Default")
+                            font: Tokens.font.body.medium
+                            color: Colours.palette.m3onSurface
+                            elide: Text.ElideRight
+                        }
+
+                        StyledRect {
+                            implicitHeight: 28
+                            implicitWidth: changeText.implicitWidth + 20
+                            radius: Tokens.rounding.full
+                            color: changeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
+
+                            StyledText {
+                                id: changeText
+                                anchors.centerIn: parent
+                                text: qsTr("Change...")
+                                font: Tokens.font.label.small
+                                color: Colours.palette.m3primary
+                            }
+
+                            MouseArea {
+                                id: changeHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (typeof openWithModal !== "undefined" && openWithModal) {
+                                        openWithModal.targetPath = root.targetPath;
+                                        openWithModal.expanded = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Item { Layout.fillHeight: true }

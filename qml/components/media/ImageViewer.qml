@@ -60,6 +60,7 @@ Item {
                 id: img
                 anchors.fill: parent
                 source: root.source
+                cache: false
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
                 smooth: true

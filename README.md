@@ -19,8 +19,25 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 # Build
 cmake --build build
 
-# Run
+# Run locally
 ./build/bin/prism
+```
+
+## Installation
+
+```bash
+# Install system-wide (installs binary, .desktop launcher, and icons to /usr)
+sudo cmake --install build
+
+# Or install to a custom prefix (e.g. ~/.local)
+cmake --install build --prefix ~/.local
+```
+
+### Uninstallation
+
+```bash
+# Remove all installed files recorded in the build manifest
+sudo xargs rm -fv < build/install_manifest.txt
 ```
 
 ## Credits and Licensing

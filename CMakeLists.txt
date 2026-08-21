@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.19)
 project(prism VERSION 1.0.0 LANGUAGES CXX)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Default install prefix" FORCE)
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -145,5 +149,20 @@ target_link_libraries(prism_app PRIVATE
 
 include(GNUInstallDirs)
 install(TARGETS prism_app
+    BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(FILES assets/prism.desktop
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
+)
+
+install(FILES assets/prism.svg
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
+    RENAME prism.svg
+)
+
+install(FILES assets/prism.svg
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/pixmaps
+    RENAME prism.svg
 )

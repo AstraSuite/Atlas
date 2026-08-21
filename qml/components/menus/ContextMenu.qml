@@ -11,6 +11,10 @@ MouseArea {
     property real menuY: 0
     property var targetItem: null
     property string currentDir: ""
+    property bool submenuOpen: false
+    property real submenuY: 0
+    property var sharingServices: []
+
     readonly property bool isTrash: currentDir.indexOf("Trash") !== -1 || currentDir.indexOf("trash:") !== -1 || (targetItem && targetItem.isTrashItem)
     readonly property bool isArchive: targetItem && (
         targetItem.name.endsWith(".zip") || targetItem.name.endsWith(".tar.gz") ||
@@ -20,13 +24,23 @@ MouseArea {
 
     signal actionTriggered(string action, var item)
 
+    onExpandedChanged: {
+        submenuOpen = false;
+        if (expanded) {
+            sharingServices = AppIntegration.getAvailableSharingServices();
+        }
+    }
+
     anchors.fill: parent
     visible: opacity > 0.01
     enabled: expanded
     hoverEnabled: expanded
     cursorShape: expanded ? Qt.ArrowCursor : undefined
     acceptedButtons: Qt.LeftButton | Qt.RightButton
-    onClicked: expanded = false
+    onClicked: {
+        expanded = false;
+        submenuOpen = false;
+    }
 
     opacity: expanded ? 1 : 0
     Behavior on opacity { Anim { type: Anim.FastEffects } }
@@ -54,6 +68,7 @@ MouseArea {
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
+            hoverEnabled: true
             onClicked: mouse => mouse.accepted = true
         }
 
@@ -105,6 +120,8 @@ MouseArea {
                         list.push({ text: qsTr("Compress..."), icon: "archive", action: "compress" });
                         list.push({ text: qsTr("Cut"), icon: "content_cut", action: "cut" });
                         list.push({ text: qsTr("Copy"), icon: "content_copy", action: "copy" });
+                        list.push({ text: qsTr("Copy Path"), icon: "link", action: "copyPath" });
+                        list.push({ text: qsTr("Send To"), icon: "send", action: "sendTo", hasSubmenu: true });
                         list.push({ text: qsTr("Paste"), icon: "content_paste", action: "paste", visible: FileOperations.canPaste });
                         list.push({ text: qsTr("Create Symlink"), icon: "link", action: "symlink" });
                         list.push({ text: qsTr("Rename"), icon: "drive_file_rename_outline", action: "rename" });
@@ -119,6 +136,7 @@ MouseArea {
                             { text: qsTr("New Text File"), icon: "note_add", action: "newFile" },
                             { text: qsTr("Paste"), icon: "content_paste", action: "paste", visible: FileOperations.canPaste },
                             { text: qsTr("Paste as Symlink"), icon: "link", action: "pasteSymlink", visible: FileOperations.canPaste },
+                            { text: qsTr("Copy Path"), icon: "link", action: "copyCurrentDirPath" },
                             { text: qsTr("Add to Bookmarks"), icon: "bookmark_add", action: "bookmark" },
                             { text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminal" },
                             { text: qsTr("Properties"), icon: "info", action: "propertiesDir" }
@@ -137,13 +155,30 @@ MouseArea {
                     implicitWidth: itemRow.implicitWidth + Tokens.padding.medium * 2
                     implicitHeight: 36
                     radius: Tokens.rounding.medium
-                    color: itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                    color: (itemHover.containsMouse || (modelData.hasSubmenu && root.submenuOpen)) ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
 
                     StateLayer {
                         id: itemHover
+                        hoverEnabled: true
+                        onContainsMouseChanged: {
+                            if (menuItem.modelData.hasSubmenu) {
+                                if (containsMouse) {
+                                    root.submenuY = menuItem.y + menuRect.y;
+                                    root.submenuOpen = true;
+                                }
+                            } else if (containsMouse) {
+                                root.submenuOpen = false;
+                            }
+                        }
                         onClicked: {
-                            root.expanded = false;
-                            root.actionTriggered(menuItem.modelData.action, root.targetItem);
+                            if (menuItem.modelData.hasSubmenu) {
+                                root.submenuY = menuItem.y + menuRect.y;
+                                root.submenuOpen = !root.submenuOpen;
+                            } else {
+                                root.expanded = false;
+                                root.submenuOpen = false;
+                                root.actionTriggered(menuItem.modelData.action, root.targetItem);
+                            }
                         }
                     }
 
@@ -165,6 +200,98 @@ MouseArea {
                             text: menuItem.modelData.text
                             font: Tokens.font.body.medium
                             color: menuItem.modelData.action === "delete" || menuItem.modelData.action === "emptyTrash" ? Colours.palette.m3error : Colours.palette.m3onSurface
+                        }
+
+                        MaterialIcon {
+                            visible: menuItem.modelData.hasSubmenu === true
+                            text: "chevron_right"
+                            color: Colours.palette.m3outline
+                            fontStyle: Tokens.font.icon.small
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Send To Submenu Floating Popup
+    StyledRect {
+        id: submenuRect
+
+        visible: root.submenuOpen && root.sharingServices && root.sharingServices.length > 0
+        z: menuRect.z + 1
+
+        x: (menuRect.x + menuRect.width + 180 < root.width) ? (menuRect.x + menuRect.width + 4) : Math.max(8, menuRect.x - width - 4)
+        y: Math.min(Math.max(8, root.submenuY), root.height - height - 8)
+
+        implicitWidth: submenuCol.implicitWidth + Tokens.padding.extraSmall * 2
+        implicitHeight: submenuCol.implicitHeight + Tokens.padding.extraSmall * 2
+
+        radius: Tokens.rounding.large
+        color: Colours.palette.m3surfaceContainerLow
+
+        scale: root.submenuOpen ? 1.0 : 0.94
+        opacity: root.submenuOpen ? 1.0 : 0.0
+        Behavior on opacity { Anim { type: Anim.FastEffects } }
+        Behavior on scale { Anim { type: Anim.FastEffects; easing: Tokens.anim.standard } }
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            hoverEnabled: true
+            onClicked: mouse => mouse.accepted = true
+        }
+
+        ColumnLayout {
+            id: submenuCol
+
+            anchors.fill: parent
+            anchors.margins: Tokens.padding.extraSmall
+            spacing: 0
+
+            Repeater {
+                model: root.sharingServices
+
+                StyledRect {
+                    id: subMenuItem
+
+                    required property int index
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    implicitWidth: subItemRow.implicitWidth + Tokens.padding.medium * 2
+                    implicitHeight: 36
+                    radius: Tokens.rounding.medium
+                    color: subHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+                    StateLayer {
+                        id: subHover
+                        hoverEnabled: true
+                        onClicked: {
+                            root.expanded = false;
+                            root.submenuOpen = false;
+                            root.actionTriggered("sendTo:" + subMenuItem.modelData.id, root.targetItem);
+                        }
+                    }
+
+                    RowLayout {
+                        id: subItemRow
+                        anchors.fill: parent
+                        anchors.leftMargin: Tokens.padding.medium
+                        anchors.rightMargin: Tokens.padding.medium
+                        spacing: Tokens.spacing.small
+
+                        MaterialIcon {
+                            text: subMenuItem.modelData.icon || "share"
+                            color: Colours.palette.m3primary
+                            fontStyle: Tokens.font.icon.small
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: subMenuItem.modelData.name || ""
+                            font: Tokens.font.body.medium
+                            color: Colours.palette.m3onSurface
                         }
                     }
                 }

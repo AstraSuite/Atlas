@@ -104,6 +104,13 @@ bool FileOperations::copyRecursively(const QString& src, const QString& dest, st
         return false;
 
     QFileInfo srcInfo(src);
+    QFileInfo destInfo(dest);
+
+    // Prevent copying a file or folder onto its exact self
+    if (srcInfo.canonicalFilePath() == destInfo.canonicalFilePath() && !srcInfo.canonicalFilePath().isEmpty()) {
+        return false;
+    }
+
     if (srcInfo.isDir()) {
         QDir().mkpath(dest);
         QDir dir(src);
@@ -242,8 +249,26 @@ void FileOperations::moveFiles(const QStringList& sources, const QString& destin
                     allSuccess = false;
                     break;
                 }
-                QFileInfo fi(src);
-                QString dest = destinationDir + "/" + fi.fileName();
+                QFileInfo srcFi(src);
+                if (!srcFi.exists()) {
+                    continue;
+                }
+
+                QDir srcDir = srcFi.dir();
+                QDir targetDir(destinationDir);
+                QString dest = destinationDir + "/" + srcFi.fileName();
+
+                // If moving into the exact same folder/path, it is a no-op: preserve file safely
+                if (srcDir.canonicalPath() == targetDir.canonicalPath() ||
+                    srcFi.canonicalFilePath() == QFileInfo(dest).canonicalFilePath()) {
+                    continue;
+                }
+
+                // Prevent moving a directory into itself or its own subdirectories
+                if (srcFi.isDir() && (targetDir.canonicalPath().startsWith(srcFi.canonicalFilePath() + "/") ||
+                                      targetDir.canonicalPath() == srcFi.canonicalFilePath())) {
+                    continue;
+                }
 
                 // Try fast filesystem rename
                 if (!QFile::rename(src, dest)) {

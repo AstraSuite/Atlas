@@ -250,6 +250,9 @@ ApplicationWindow {
 
             onActionTriggered: (action, item) => {
                 let currentDir = window.getActiveDirectory();
+                let selected = splitContainer.selectedPaths;
+                let targetPaths = (item && selected.length > 0 && selected.indexOf(item.path) !== -1) ? selected : (item ? [item.path] : []);
+
                 if (action === "preview" && item) {
                     mediaViewerModal.openFile(item.path, splitContainer.activeModel);
                 } else if (action === "open" && item) {
@@ -270,15 +273,29 @@ ApplicationWindow {
                 } else if (action === "openTerminalItem" && item) {
                     AppIntegration.openInTerminal(item.path);
                 } else if (action === "cut" && item) {
-                    FileOperations.cutPaths([item.path]);
+                    FileOperations.cutPaths(targetPaths);
                 } else if (action === "copy" && item) {
-                    FileOperations.copyPaths([item.path]);
+                    FileOperations.copyPaths(targetPaths);
                 } else if (action === "copyPath" && item) {
-                    FileOperations.copyTextToClipboard(item.path);
+                    FileOperations.copyTextToClipboard(targetPaths.join("\n"));
+                } else if (action === "copyCurrentDirPath") {
+                    FileOperations.copyTextToClipboard(currentDir);
                 } else if (action === "paste") {
                     FileOperations.paste(currentDir);
                 } else if (action === "pasteSymlink") {
                     FileOperations.pasteAsSymlink(currentDir);
+                } else if (action === "symlink" && item) {
+                    for (let i = 0; i < targetPaths.length; ++i) {
+                        let base = FileUtils.baseName(targetPaths[i]);
+                        FileOperations.createSymlink(targetPaths[i], currentDir + "/" + base + " (symlink)");
+                    }
+                } else if (action === "duplicate" && item) {
+                    for (let i = 0; i < targetPaths.length; ++i) {
+                        FileOperations.duplicateFile(targetPaths[i]);
+                    }
+                } else if (action.startsWith("sendTo:") && item) {
+                    let serviceId = action.substring(7);
+                    AppIntegration.shareFiles(serviceId, targetPaths);
                 } else if (action === "rename" && item) {
                     newItemModal.title = qsTr("Rename");
                     newItemModal.icon = "drive_file_rename_outline";
@@ -286,11 +303,9 @@ ApplicationWindow {
                     newItemModal.initialText = item.name;
                     newItemModal.expanded = true;
                 } else if (action === "trash" && item) {
-                    let paths = (splitContainer.selectedPaths.length > 0 && splitContainer.selectedPaths.indexOf(item.path) !== -1) ? splitContainer.selectedPaths : [item.path];
-                    FileOperations.moveToTrash(paths);
+                    FileOperations.moveToTrash(targetPaths);
                 } else if (action === "delete" && item) {
-                    let paths = (splitContainer.selectedPaths.length > 0 && splitContainer.selectedPaths.indexOf(item.path) !== -1) ? splitContainer.selectedPaths : [item.path];
-                    FileOperations.deletePermanently(paths);
+                    FileOperations.deletePermanently(targetPaths);
                 } else if (action === "newFolder") {
                     newItemModal.title = qsTr("Create New Folder");
                     newItemModal.icon = "create_new_folder";
@@ -305,8 +320,8 @@ ApplicationWindow {
                     let dest = item.path.replace(/\.[^/.]+$/, "");
                     FileOperations.extractArchive(item.path, dest);
                 } else if (action === "compress" && item) {
-                    compressModal.sourcePaths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : [item.path];
-                    compressModal.defaultName = item.name;
+                    compressModal.sourcePaths = targetPaths;
+                    compressModal.defaultName = targetPaths.length === 1 ? item.name : FileUtils.baseName(targetPaths[0]);
                     compressModal.expanded = true;
                 } else if (action === "newFile") {
                     newItemModal.title = qsTr("Create New File");
@@ -314,9 +329,8 @@ ApplicationWindow {
                     newItemModal.initialText = "untitled.txt";
                     newItemModal.expanded = true;
                 } else if (action === "restore" && item) {
-                    let paths = (splitContainer.selectedPaths.length > 0 && splitContainer.selectedPaths.indexOf(item.path) !== -1) ? splitContainer.selectedPaths : [item.path];
-                    for (let i = 0; i < paths.length; ++i) {
-                        FileOperations.restoreFromTrash(paths[i]);
+                    for (let i = 0; i < targetPaths.length; ++i) {
+                        FileOperations.restoreFromTrash(targetPaths[i]);
                     }
                 } else if (action === "emptyTrash") {
                     FileOperations.emptyTrash();

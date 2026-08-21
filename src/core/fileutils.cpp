@@ -133,4 +133,10 @@ QString FileUtils::iconForFile(const QString& name, bool isDir, const QString& m
     return QString("image://icon/application-x-zerosize");
 }
 
+QString FileUtils::mimeTypeForFile(const QString& path) {
+    if (path.isEmpty()) return QString();
+    static const QMimeDatabase db;
+    return db.mimeTypeForFile(path).name();
+}
+
 } // namespace prism::core

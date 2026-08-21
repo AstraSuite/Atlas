@@ -19,8 +19,7 @@ StyledRect {
 
     Behavior on implicitWidth {
         Anim {
-            type: Anim.SlowEffects
-            easing: Tokens.anim.standard
+            type: Anim.DefaultSpatial
         }
     }
 
@@ -78,7 +77,8 @@ StyledRect {
                     anchors.fill: parent
                     anchors.margins: Tokens.padding.small
                     fillMode: Image.PreserveAspectFit
-                    source: meta.isImage ? Qt.resolvedUrl("file://" + meta.path) : ""
+                    cache: false
+                    source: meta.isImage ? ("image://thumb/" + meta.path + "?t=" + (meta.lastModified ? meta.lastModified.getTime() : 0)) : ""
                     visible: meta.isImage
                     asynchronous: true
                 }
@@ -88,7 +88,7 @@ StyledRect {
                     anchors.centerIn: parent
                     implicitSize: 72
                     visible: !meta.isImage
-                    source: meta.isVideo ? "image://thumb/" + meta.path : FileUtils.iconForFile(meta.name, meta.isDir, meta.mimeType)
+                    source: meta.isVideo ? ("image://thumb/" + meta.path + "?t=" + (meta.lastModified ? meta.lastModified.getTime() : 0)) : FileUtils.iconForFile(meta.name, meta.isDir, meta.mimeType)
                 }
 
                 // Video Badge Overlay

@@ -26,11 +26,17 @@ static QString getDiskCachePath(const QString& filePath, const QFileInfo& fi) {
 }
 
 static QImage generateThumbnail(const QString& filePath, int targetSize) {
-    QFileInfo fi(filePath);
+    QString realPath = filePath;
+    int qIndex = realPath.indexOf('?');
+    if (qIndex != -1) {
+        realPath = realPath.left(qIndex);
+    }
+
+    QFileInfo fi(realPath);
     if (!fi.exists()) return QImage();
 
     int sz = targetSize > 0 ? targetSize : 256;
-    QString diskCachePath = getDiskCachePath(filePath, fi);
+    QString diskCachePath = getDiskCachePath(realPath, fi);
 
     // 1. Check in-memory cache
     {
@@ -58,19 +64,19 @@ static QImage generateThumbnail(const QString& filePath, int targetSize) {
     if (videoExtensions.contains(suffix)) {
         // Generate video thumbnail via ffmpegthumbnailer or ffmpeg
         QProcess proc;
-        proc.start("ffmpegthumbnailer", QStringList{ "-i", filePath, "-o", diskCachePath, "-s", QString::number(sz), "-q", "8" });
+        proc.start("ffmpegthumbnailer", QStringList{ "-i", realPath, "-o", diskCachePath, "-s", QString::number(sz), "-q", "8" });
         if (proc.waitForFinished(2000) && proc.exitCode() == 0 && QFile::exists(diskCachePath)) {
             result.load(diskCachePath);
         } else {
             // Fallback to ffmpeg
-            proc.start("ffmpeg", QStringList{ "-y", "-ss", "00:00:01", "-i", filePath, "-vframes", "1", "-vf", QString("scale=%1:-1").arg(sz), diskCachePath });
+            proc.start("ffmpeg", QStringList{ "-y", "-ss", "00:00:01", "-i", realPath, "-vframes", "1", "-vf", QString("scale=%1:-1").arg(sz), diskCachePath });
             if (proc.waitForFinished(3000) && proc.exitCode() == 0 && QFile::exists(diskCachePath)) {
                 result.load(diskCachePath);
             }
         }
     } else {
         // Image generation using QImageReader
-        QImageReader reader(filePath);
+        QImageReader reader(realPath);
         reader.setAutoTransform(true);
         QSize orig = reader.size();
         if (orig.isValid() && orig.width() > 0 && orig.height() > 0) {

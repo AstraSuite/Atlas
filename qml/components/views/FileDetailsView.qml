@@ -345,12 +345,20 @@ Item {
             currentIndex: -1
             interactive: false
 
+            displaced: Transition {
+                NumberAnimation {
+                    properties: "y"
+                    duration: Tokens.anim.durations.expressiveFastSpatial
+                    easing: Tokens.anim.expressiveFastSpatial
+                }
+            }
+
             Component.onCompleted: listView.forceActiveFocus()
 
             onCurrentIndexChanged: {
                 if (currentIndex >= 0 && currentIndex < (root.model ? root.model.count : 0)) {
                     let entry = root.model.get(currentIndex);
-                    if (entry) {
+                    if (entry && root.selectedPaths.length <= 1) {
                         root.selectedPaths = [entry.path];
                         root.anchorIndex = currentIndex;
                     }
@@ -433,7 +441,7 @@ Item {
                 required property int index
                 required property var modelData
 
-                readonly property bool isSelected: root.isSelected(modelData.path) || (listView.currentIndex === index)
+                readonly property bool isSelected: root.isSelected(modelData.path)
                 // Reactive Cut state
                 readonly property bool isCut: FileOperations.isCutOperation && FileOperations.clipboardFiles.indexOf(modelData.path) !== -1
                 // Reactive Drag state
@@ -582,12 +590,14 @@ Item {
                                 anchors.fill: parent
                                 implicitSize: 22
 
-                                Component.onCompleted: {
+                                source: {
                                     const file = rowItem.modelData;
+                                    if (!file) return "";
                                     if (file.isImage || file.isVideo) {
-                                        source = "image://thumb/" + file.path;
+                                        let t = file.lastModified ? file.lastModified.getTime() : file.size;
+                                        return "image://thumb/" + file.path + "?t=" + t;
                                     } else {
-                                        source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
+                                        return FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
                                     }
                                 }
                             }

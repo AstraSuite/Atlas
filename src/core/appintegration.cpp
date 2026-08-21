@@ -92,6 +92,163 @@ QVariantList AppIntegration::getAppsForFile(const QString& filePath) {
     return result;
 }
 
+QVariantList AppIntegration::getAvailableSharingServices() {
+    QVariantList services;
+
+    // 1. LocalSend
+    bool hasLocalSend = !QStandardPaths::findExecutable("localsend").isEmpty() ||
+                         !QStandardPaths::findExecutable("localsend_app").isEmpty() ||
+                         QFile::exists(QDir::homePath() + "/.local/share/flatpak/app/org.localsend.localsend_app") ||
+                         QFile::exists("/var/lib/flatpak/app/org.localsend.localsend_app");
+    if (!hasLocalSend) {
+        for (const auto& app : m_apps) {
+            if (app.name.contains("LocalSend", Qt::CaseInsensitive) || app.exec.contains("localsend", Qt::CaseInsensitive)) {
+                hasLocalSend = true;
+                break;
+            }
+        }
+    }
+    if (hasLocalSend) {
+        QVariantMap s;
+        s["id"] = "localsend";
+        s["name"] = "LocalSend";
+        s["icon"] = "wifi_tethering";
+        services.append(s);
+    }
+
+    // 2. KDE Connect
+    bool hasKdeConnect = !QStandardPaths::findExecutable("kdeconnect-handler").isEmpty() ||
+                          !QStandardPaths::findExecutable("kdeconnect-cli").isEmpty() ||
+                          !QStandardPaths::findExecutable("kdeconnect-app").isEmpty();
+    if (!hasKdeConnect) {
+        for (const auto& app : m_apps) {
+            if (app.name.contains("KDE Connect", Qt::CaseInsensitive) || app.exec.contains("kdeconnect", Qt::CaseInsensitive)) {
+                hasKdeConnect = true;
+                break;
+            }
+        }
+    }
+    if (hasKdeConnect) {
+        QVariantMap s;
+        s["id"] = "kdeconnect";
+        s["name"] = "KDE Connect";
+        s["icon"] = "phone_android";
+        services.append(s);
+    }
+
+    // 3. Quick Share / Nearby / Warpinator
+    bool hasQuickShare = !QStandardPaths::findExecutable("rquickshare").isEmpty() ||
+                          !QStandardPaths::findExecutable("nearbyshare").isEmpty() ||
+                          !QStandardPaths::findExecutable("warpinator").isEmpty();
+    if (!hasQuickShare) {
+        for (const auto& app : m_apps) {
+            if (app.name.contains("Quick Share", Qt::CaseInsensitive) ||
+                app.name.contains("Nearby Share", Qt::CaseInsensitive) ||
+                app.name.contains("Warpinator", Qt::CaseInsensitive)) {
+                hasQuickShare = true;
+                break;
+            }
+        }
+    }
+    if (hasQuickShare) {
+        QVariantMap s;
+        s["id"] = "quickshare";
+        s["name"] = "Quick Share";
+        s["icon"] = "share";
+        services.append(s);
+    }
+
+    // 4. Bluetooth Send To
+    bool hasBluetooth = !QStandardPaths::findExecutable("gnome-bluetooth-sendto").isEmpty() ||
+                         !QStandardPaths::findExecutable("bluetooth-sendto").isEmpty() ||
+                         !QStandardPaths::findExecutable("blueman-sendto").isEmpty();
+    if (hasBluetooth) {
+        QVariantMap s;
+        s["id"] = "bluetooth";
+        s["name"] = "Bluetooth";
+        s["icon"] = "bluetooth";
+        services.append(s);
+    }
+
+    // 5. Email Attachment
+    bool hasEmail = !QStandardPaths::findExecutable("xdg-email").isEmpty() ||
+                    !QStandardPaths::findExecutable("thunderbird").isEmpty();
+    if (hasEmail) {
+        QVariantMap s;
+        s["id"] = "email";
+        s["name"] = "Email";
+        s["icon"] = "mail";
+        services.append(s);
+    }
+
+    // If no specific tools were detected, provide standard options so the user always has functional Send To targets
+    if (services.isEmpty()) {
+        QVariantMap sEmail;
+        sEmail["id"] = "email";
+        sEmail["name"] = "Email";
+        sEmail["icon"] = "mail";
+        services.append(sEmail);
+
+        QVariantMap sLocalSend;
+        sLocalSend["id"] = "localsend";
+        sLocalSend["name"] = "LocalSend";
+        sLocalSend["icon"] = "wifi_tethering";
+        services.append(sLocalSend);
+
+        QVariantMap sKde;
+        sKde["id"] = "kdeconnect";
+        sKde["name"] = "KDE Connect";
+        sKde["icon"] = "phone_android";
+        services.append(sKde);
+    }
+
+    return services;
+}
+
+void AppIntegration::shareFiles(const QString& serviceId, const QStringList& paths) {
+    if (paths.isEmpty()) return;
+
+    if (serviceId == "localsend") {
+        if (!QStandardPaths::findExecutable("localsend").isEmpty()) {
+            QProcess::startDetached("localsend", paths);
+        } else if (!QStandardPaths::findExecutable("localsend_app").isEmpty()) {
+            QProcess::startDetached("localsend_app", paths);
+        } else {
+            QProcess::startDetached("flatpak", QStringList{ "run", "org.localsend.localsend_app" } + paths);
+        }
+    } else if (serviceId == "kdeconnect") {
+        if (!QStandardPaths::findExecutable("kdeconnect-handler").isEmpty()) {
+            QProcess::startDetached("kdeconnect-handler", paths);
+        } else if (!QStandardPaths::findExecutable("kdeconnect-cli").isEmpty()) {
+            QProcess::startDetached("kdeconnect-cli", QStringList{ "--share" } + paths);
+        } else {
+            QProcess::startDetached("kdeconnect-app", paths);
+        }
+    } else if (serviceId == "quickshare") {
+        if (!QStandardPaths::findExecutable("rquickshare").isEmpty()) {
+            QProcess::startDetached("rquickshare", paths);
+        } else if (!QStandardPaths::findExecutable("warpinator").isEmpty()) {
+            QProcess::startDetached("warpinator", paths);
+        } else {
+            QProcess::startDetached("nearbyshare", paths);
+        }
+    } else if (serviceId == "bluetooth") {
+        if (!QStandardPaths::findExecutable("gnome-bluetooth-sendto").isEmpty()) {
+            QProcess::startDetached("gnome-bluetooth-sendto", paths);
+        } else if (!QStandardPaths::findExecutable("bluetooth-sendto").isEmpty()) {
+            QProcess::startDetached("bluetooth-sendto", paths);
+        } else {
+            QProcess::startDetached("blueman-sendto", paths);
+        }
+    } else if (serviceId == "email") {
+        QStringList args;
+        for (const auto& p : paths) {
+            args << "--attach" << p;
+        }
+        QProcess::startDetached("xdg-email", args);
+    }
+}
+
 void AppIntegration::openWithDefault(const QString& filePath) {
     QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
 }

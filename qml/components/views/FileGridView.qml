@@ -130,12 +130,27 @@ Item {
         currentIndex: -1
         interactive: false
 
+        displaced: Transition {
+            NumberAnimation {
+                properties: "x,y"
+                duration: Tokens.anim.durations.expressiveFastSpatial
+                easing: Tokens.anim.expressiveFastSpatial
+            }
+        }
+        move: Transition {
+            NumberAnimation {
+                properties: "x,y"
+                duration: Tokens.anim.durations.expressiveFastSpatial
+                easing: Tokens.anim.expressiveFastSpatial
+            }
+        }
+
         Component.onCompleted: view.forceActiveFocus()
 
         onCurrentIndexChanged: {
             if (currentIndex >= 0 && currentIndex < (root.model ? root.model.count : 0)) {
                 let entry = root.model.get(currentIndex);
-                if (entry) {
+                if (entry && root.selectedPaths.length <= 1) {
                     root.selectedPaths = [entry.path];
                     root.anchorIndex = currentIndex;
                 }
@@ -225,7 +240,7 @@ Item {
             width: view.cellWidth
             height: view.cellHeight
 
-            readonly property bool isSelected: root.isSelected(modelData.path) || (view.currentIndex === index)
+            readonly property bool isSelected: root.isSelected(modelData.path)
             // Reactive Cut state: updates instantly on clipboard change
             readonly property bool isCut: FileOperations.isCutOperation && FileOperations.clipboardFiles.indexOf(modelData.path) !== -1
             // Reactive Drag state: indicates items currently in flight
@@ -391,12 +406,14 @@ Item {
                         anchors.fill: parent
                         implicitSize: root.zoomSize
 
-                        Component.onCompleted: {
+                        source: {
                             const file = delegateContainer.modelData;
+                            if (!file) return "";
                             if (file.isImage || file.isVideo) {
-                                source = "image://thumb/" + file.path;
+                                let t = file.lastModified ? file.lastModified.getTime() : file.size;
+                                return "image://thumb/" + file.path + "?t=" + t;
                             } else {
-                                source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
+                                return FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
                             }
                         }
                     }

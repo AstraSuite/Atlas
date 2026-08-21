@@ -127,12 +127,27 @@ Item {
         currentIndex: -1
         interactive: false
 
+        displaced: Transition {
+            NumberAnimation {
+                properties: "x,y"
+                duration: Tokens.anim.durations.expressiveFastSpatial
+                easing: Tokens.anim.expressiveFastSpatial
+            }
+        }
+        move: Transition {
+            NumberAnimation {
+                properties: "x,y"
+                duration: Tokens.anim.durations.expressiveFastSpatial
+                easing: Tokens.anim.expressiveFastSpatial
+            }
+        }
+
         Component.onCompleted: gridView.forceActiveFocus()
 
         onCurrentIndexChanged: {
             if (currentIndex >= 0 && currentIndex < (root.model ? root.model.count : 0)) {
                 let entry = root.model.get(currentIndex);
-                if (entry) {
+                if (entry && root.selectedPaths.length <= 1) {
                     root.selectedPaths = [entry.path];
                     root.anchorIndex = currentIndex;
                 }
@@ -222,7 +237,7 @@ Item {
             width: gridView.cellWidth
             height: gridView.cellHeight
 
-            readonly property bool isSelected: root.isSelected(modelData.path) || (gridView.currentIndex === index)
+            readonly property bool isSelected: root.isSelected(modelData.path)
             // Reactive Cut state
             readonly property bool isCut: FileOperations.isCutOperation && FileOperations.clipboardFiles.indexOf(modelData.path) !== -1
             // Reactive Drag state
@@ -370,12 +385,14 @@ Item {
                             anchors.fill: parent
                             implicitSize: 20
 
-                            Component.onCompleted: {
+                            source: {
                                 const file = compDelegate.modelData;
+                                if (!file) return "";
                                 if (file.isImage || file.isVideo) {
-                                    source = "image://thumb/" + file.path;
+                                    let t = file.lastModified ? file.lastModified.getTime() : file.size;
+                                    return "image://thumb/" + file.path + "?t=" + t;
                                 } else {
-                                    source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
+                                    return FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
                                 }
                             }
                         }

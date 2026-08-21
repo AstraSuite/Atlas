@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Prism
+GenericName=File Manager
+Comment=Modern, fast, expressive file manager for Linux
+Exec=prism %U
+Icon=prism
+Terminal=false
+Type=Application
+Categories=System;FileTools;FileManager;Utility;
+MimeType=inode/directory;
+Keywords=folder;manager;explore;disk;filesystem;file;
+StartupNotify=true

@@ -153,12 +153,14 @@ Item {
 
                 implicitSize: sizes.itemWidth - Tokens.padding.medium * 2
 
-                Component.onCompleted: {
+                source: {
                     const file = item.modelData;
+                    if (!file) return "";
                     if (file.isImage) {
-                        source = Qt.resolvedUrl("file://" + file.path);
+                        let t = file.lastModified ? file.lastModified.getTime() : file.size;
+                        return "image://thumb/" + file.path + "?t=" + t;
                     } else {
-                        source = FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
+                        return FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
                     }
                 }
             }
