@@ -558,7 +558,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "F2"
+            sequences: ["F2", "Shift+F2"]
             onActivated: {
                 let sel = splitContainer.currentSelectedPath;
                 if (sel && sel.length > 0) {
@@ -648,12 +648,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "Ctrl+F"
-            onActivated: navBar.openSearch()
-        }
-
-        Shortcut {
-            sequence: "F9"
+            sequences: ["Ctrl+F", "F9", "Shift+F9"]
             onActivated: navBar.openSearch()
         }
 
@@ -668,7 +663,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "F3"
+            sequences: ["F3", "Shift+F3"]
             onActivated: {
                 if (TabManager.currentTab) {
                     TabManager.currentTab.isSplit = !TabManager.currentTab.isSplit;
@@ -680,7 +675,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "F4"
+            sequences: ["F4", "Shift+F4", "Ctrl+Alt+T", "Ctrl+`"]
             onActivated: {
                 if (TabManager.currentTab) {
                     AppIntegration.openInTerminal(window.getActiveDirectory());
@@ -689,7 +684,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "F5"
+            sequences: ["F5", "Shift+F5", "Ctrl+R"]
             onActivated: {
                 if (splitContainer.activeModel) {
                     splitContainer.activeModel.refresh();
@@ -698,16 +693,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "Ctrl+R"
-            onActivated: {
-                if (splitContainer.activeModel) {
-                    splitContainer.activeModel.refresh();
-                }
-            }
-        }
-
-        Shortcut {
-            sequence: "F10"
+            sequences: ["F10", "Shift+F10"]
             onActivated: {
                 newItemModal.title = qsTr("Create New Folder");
                 newItemModal.icon = "create_new_folder";
@@ -717,12 +703,12 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "F1"
+            sequences: ["F1", "Shift+F1", "Alt+P"]
             onActivated: previewPanel.expanded = !previewPanel.expanded
         }
 
         Shortcut {
-            sequence: "F11"
+            sequences: ["F11", "Shift+F11"]
             onActivated: {
                 if (window.visibility === Window.FullScreen) {
                     window.visibility = Window.Windowed;
