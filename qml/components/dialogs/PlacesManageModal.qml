@@ -96,6 +96,11 @@ MouseArea {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.expanded = false
                     }
+
+                    StyledToolTip {
+                        text: qsTr("Close")
+                        visible: closeHover.containsMouse
+                    }
                 }
             }
 
@@ -187,6 +192,11 @@ MouseArea {
                                 cursorShape: placeRowCard.index > 0 ? Qt.PointingHandCursor : undefined
                                 onClicked: PlacesModel.movePlace(placeRowCard.index, placeRowCard.index - 1)
                             }
+
+                            StyledToolTip {
+                                text: qsTr("Move up")
+                                visible: upHover.containsMouse
+                            }
                         }
 
                         // Reorder Down
@@ -211,6 +221,11 @@ MouseArea {
                                 hoverEnabled: true
                                 cursorShape: placeRowCard.index < PlacesModel.count - 1 ? Qt.PointingHandCursor : undefined
                                 onClicked: PlacesModel.movePlace(placeRowCard.index, placeRowCard.index + 1)
+                            }
+
+                            StyledToolTip {
+                                text: qsTr("Move down")
+                                visible: downHover.containsMouse
                             }
                         }
 
@@ -238,6 +253,11 @@ MouseArea {
                                     root.editPlaceRequested(placeRowCard.index, placeRowCard.name, placeRowCard.path, placeRowCard.iconName, placeRowCard.isCustom);
                                 }
                             }
+
+                            StyledToolTip {
+                                text: qsTr("Edit place")
+                                visible: editHover.containsMouse
+                            }
                         }
 
                         // Delete / Unpin Button (for custom places)
@@ -261,6 +281,11 @@ MouseArea {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: PlacesModel.removeBookmark(placeRowCard.index)
+                            }
+
+                            StyledToolTip {
+                                text: qsTr("Remove place")
+                                visible: delHover.containsMouse
                             }
                         }
                     }

@@ -24,6 +24,7 @@ StyledRect {
             implicitHeight: upIcon.implicitHeight + Tokens.padding.small
 
             StateLayer {
+                id: upFolderHover
                 radius: Tokens.rounding.medium
                 disabled: root.dialog.cwd.length <= 1
                 onClicked: {
@@ -41,6 +42,11 @@ StyledRect {
                 text: "drive_folder_upload"
                 color: root.dialog.cwd.length <= 1 ? Colours.palette.m3outline : Colours.palette.m3onSurface
                 grade: 200
+            }
+
+            StyledToolTip {
+                text: qsTr("Go up")
+                visible: upFolderHover.containsMouse && !upFolderHover.disabled
             }
         }
 
@@ -140,6 +146,7 @@ StyledRect {
             implicitHeight: hiddenIcon.implicitHeight + Tokens.padding.small
 
             StateLayer {
+                id: hiddenHover
                 radius: Tokens.rounding.medium
                 onClicked: {
                     root.dialog.showHidden = !root.dialog.showHidden;
@@ -153,6 +160,11 @@ StyledRect {
                 text: root.dialog.showHidden ? "visibility" : "visibility_off"
                 color: root.dialog.showHidden ? Colours.palette.m3primary : Colours.palette.m3outline
                 fill: root.dialog.showHidden ? 1 : 0
+            }
+
+            StyledToolTip {
+                text: root.dialog.showHidden ? qsTr("Hide hidden files (Ctrl+H)") : qsTr("Show hidden files (Ctrl+H)")
+                visible: hiddenHover.containsMouse
             }
         }
     }

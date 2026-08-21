@@ -251,6 +251,11 @@ StyledRect {
                                         }
                                     }
                                 }
+
+                                StyledToolTip {
+                                    text: tabItem.isSplit ? qsTr("Close pane") : qsTr("Close tab (Ctrl+W)")
+                                    visible: closeHover1.containsMouse
+                                }
                             }
                         }
 
@@ -320,6 +325,11 @@ StyledRect {
                                         TabManager.closeSplitPane(tabItem.index, 1);
                                     }
                                 }
+
+                                StyledToolTip {
+                                    text: qsTr("Close pane")
+                                    visible: closeHover2.containsMouse
+                                }
                             }
                         }
                     }
@@ -366,6 +376,11 @@ StyledRect {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: TabManager.newTab()
+                    }
+
+                    StyledToolTip {
+                        text: qsTr("New tab (Ctrl+T)")
+                        visible: addHover.containsMouse
                     }
                 }
             }

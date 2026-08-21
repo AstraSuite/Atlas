@@ -69,6 +69,11 @@ StyledRect {
                     cursorShape: (root.activeTab && root.activeTab.canGoBack) ? Qt.PointingHandCursor : undefined
                     onClicked: if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack()
                 }
+
+                StyledToolTip {
+                    text: qsTr("Back (Alt+Left)")
+                    visible: backHover.containsMouse
+                }
             }
         }
 
@@ -96,6 +101,11 @@ StyledRect {
                     cursorShape: (root.activeTab && root.activeTab.canGoForward) ? Qt.PointingHandCursor : undefined
                     onClicked: if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward()
                 }
+
+                StyledToolTip {
+                    text: qsTr("Forward (Alt+Right)")
+                    visible: fwdHover.containsMouse
+                }
             }
         }
 
@@ -122,6 +132,11 @@ StyledRect {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: if (root.activeTab) root.activeTab.goUp()
+                }
+
+                StyledToolTip {
+                    text: qsTr("Up (Alt+Up)")
+                    visible: upHover.containsMouse
                 }
             }
         }
@@ -163,6 +178,11 @@ StyledRect {
                             }
                         }
                     }
+                }
+
+                StyledToolTip {
+                    text: parent.parent.isFav ? qsTr("Remove from Places") : qsTr("Add to Places")
+                    visible: favHover.containsMouse
                 }
             }
         }
@@ -304,13 +324,20 @@ StyledRect {
                     }
 
                     MouseArea {
+                        id: editPencilHover
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             root.isEditingPath = true;
                             pathInput.forceActiveFocus();
                             pathInput.selectAll();
                         }
+                    }
+
+                    StyledToolTip {
+                        text: qsTr("Edit location (Ctrl+L)")
+                        visible: editPencilHover.containsMouse
                     }
                 }
             }
@@ -375,9 +402,16 @@ StyledRect {
                     }
 
                     MouseArea {
+                        id: clearPathHover
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: pathInput.text = ""
+                    }
+
+                    StyledToolTip {
+                        text: qsTr("Clear")
+                        visible: clearPathHover.containsMouse
                     }
                 }
 
@@ -412,7 +446,9 @@ StyledRect {
                     }
 
                     MouseArea {
+                        id: acceptPathHover
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             if (root.activeTab && pathInput.text.trim().length > 0) {
@@ -424,6 +460,11 @@ StyledRect {
                             }
                             root.isEditingPath = false;
                         }
+                    }
+
+                    StyledToolTip {
+                        text: qsTr("Go to location")
+                        visible: acceptPathHover.containsMouse
                     }
                 }
             }
@@ -485,7 +526,9 @@ StyledRect {
                     }
 
                     MouseArea {
+                        id: closeSearchHover
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             searchInput.text = "";
@@ -496,6 +539,11 @@ StyledRect {
                                 splitContainer.focusActiveView();
                             }
                         }
+                    }
+
+                    StyledToolTip {
+                        text: qsTr("Close search (Esc)")
+                        visible: closeSearchHover.containsMouse
                     }
                 }
             }
@@ -533,6 +581,11 @@ StyledRect {
                             root.searchRequested("");
                         }
                     }
+                }
+
+                StyledToolTip {
+                    text: root.isSearching ? qsTr("Close search") : qsTr("Search (Ctrl+F)")
+                    visible: searchHover.containsMouse
                 }
             }
         }
@@ -577,6 +630,11 @@ StyledRect {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: FileOperations.emptyTrash()
                 }
+
+                StyledToolTip {
+                    text: qsTr("Empty all items in Trash")
+                    visible: emptyHover.containsMouse
+                }
             }
         }
 
@@ -609,9 +667,16 @@ StyledRect {
                         }
 
                         MouseArea {
+                            id: gridHover
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: if (root.activeTab) root.activeTab.viewMode = 0
+                        }
+
+                        StyledToolTip {
+                            text: qsTr("Icons view (Ctrl+1)")
+                            visible: gridHover.containsMouse
                         }
                     }
                 }
@@ -634,9 +699,16 @@ StyledRect {
                         }
 
                         MouseArea {
+                            id: listHover
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: if (root.activeTab) root.activeTab.viewMode = 1
+                        }
+
+                        StyledToolTip {
+                            text: qsTr("Details view (Ctrl+2)")
+                            visible: listHover.containsMouse
                         }
                     }
                 }
@@ -659,9 +731,16 @@ StyledRect {
                         }
 
                         MouseArea {
+                            id: compactHover
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: if (root.activeTab) root.activeTab.viewMode = 2
+                        }
+
+                        StyledToolTip {
+                            text: qsTr("Compact view (Ctrl+3)")
+                            visible: compactHover.containsMouse
                         }
                     }
                 }
@@ -692,6 +771,11 @@ StyledRect {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.toggleTerminal()
                 }
+
+                StyledToolTip {
+                    text: qsTr("Open Terminal (F4)")
+                    visible: termHover.containsMouse
+                }
             }
         }
 
@@ -718,6 +802,11 @@ StyledRect {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.togglePreview()
+                }
+
+                StyledToolTip {
+                    text: qsTr("Information panel (F11)")
+                    visible: infoHover.containsMouse
                 }
             }
         }
