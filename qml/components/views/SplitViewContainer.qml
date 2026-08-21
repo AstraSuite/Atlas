@@ -19,8 +19,13 @@ StyledRect {
 
     readonly property var currentSelectedPath: {
         let loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
-        if (loader && loader.item && loader.item.currentItem) {
-            return loader.item.currentItem.path;
+        if (loader && loader.item) {
+            if (loader.item.selectedPaths && loader.item.selectedPaths.length > 0) {
+                return loader.item.selectedPaths[0];
+            }
+            if (loader.item.currentItem) {
+                return loader.item.currentItem.path;
+            }
         }
         if (!activeTab) return "";
         return (isSplit && activePane === 1) ? activeTab.splitPath : activeTab.currentPath;
@@ -407,5 +412,16 @@ StyledRect {
             }
             loader.item.selectedPaths = inverted;
         }
+    }
+
+    function focusActiveView() {
+        let loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
+        if (loader && loader.item) {
+            loader.item.forceActiveFocus();
+        }
+    }
+
+    Component.onCompleted: {
+        focusActiveView();
     }
 }

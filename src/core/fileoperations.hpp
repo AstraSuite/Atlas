@@ -106,6 +106,7 @@ public:
     Q_INVOKABLE void copyFiles(const QStringList& sources, const QString& destinationDir);
     Q_INVOKABLE void moveFiles(const QStringList& sources, const QString& destinationDir);
     Q_INVOKABLE void deleteFiles(const QStringList& paths, bool permanent = false);
+    Q_INVOKABLE void deletePermanently(const QStringList& paths);
     Q_INVOKABLE void moveToTrash(const QStringList& paths);
     Q_INVOKABLE void restoreFromTrash(const QString& trashInfoPath);
     Q_INVOKABLE void emptyTrash();

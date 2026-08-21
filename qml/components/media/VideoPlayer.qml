@@ -42,7 +42,9 @@ Item {
     }
 
     function seek(posMs) {
-        player.setPosition(posMs);
+        root.hasStartedPlaying = true;
+        let targetPos = Math.min(Math.max(0, Math.round(posMs)), Math.max(0, player.duration));
+        player.setPosition(targetPos);
     }
 
     function stepForward(ms) {

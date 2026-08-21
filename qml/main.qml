@@ -207,11 +207,7 @@ ApplicationWindow {
                             }
 
                             onItemOpened: (item, pane) => {
-                                if (item.isImage || item.isVideo || FileUtils.isImage(item.path) || FileUtils.isVideo(item.path)) {
-                                    mediaViewerModal.openFile(item.path, pane === 1 ? splitContainer.splitModel : splitContainer.activeModel);
-                                } else {
-                                    AppIntegration.openWithDefault(item.path);
-                                }
+                                AppIntegration.openWithDefault(item.path);
                             }
                         }
 
@@ -232,9 +228,10 @@ ApplicationWindow {
                         Layout.fillWidth: true
                         activeModel: splitContainer.activeModel
                         activeTab: TabManager.currentTab
+                        zoomLevel: window.zoomLevel
                         selectedCount: splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths.length : (contextMenu.targetItem ? 1 : 0)
                         selectedSizeFormatted: contextMenu.targetItem ? (contextMenu.targetItem.isDir ? "" : contextMenu.targetItem.formattedSize) : ""
-                        onZoomChanged: level => zoomLevel = level
+                        onZoomChanged: level => window.zoomLevel = level
                         onGitRequested: {
                             gitModal.expanded = true;
                         }
@@ -258,8 +255,6 @@ ApplicationWindow {
                 } else if (action === "open" && item) {
                     if (item.isDir) {
                         window.setActiveDirectory(item.path);
-                    } else if (item.isImage || item.isVideo || FileUtils.isImage(item.path) || FileUtils.isVideo(item.path)) {
-                        mediaViewerModal.openFile(item.path, splitContainer.activeModel);
                     } else {
                         AppIntegration.openWithDefault(item.path);
                     }
@@ -287,12 +282,15 @@ ApplicationWindow {
                 } else if (action === "rename" && item) {
                     newItemModal.title = qsTr("Rename");
                     newItemModal.icon = "drive_file_rename_outline";
+                    newItemModal.targetRenamePath = item.path;
                     newItemModal.initialText = item.name;
                     newItemModal.expanded = true;
                 } else if (action === "trash" && item) {
-                    FileOperations.moveToTrash([item.path]);
+                    let paths = (splitContainer.selectedPaths.length > 0 && splitContainer.selectedPaths.indexOf(item.path) !== -1) ? splitContainer.selectedPaths : [item.path];
+                    FileOperations.moveToTrash(paths);
                 } else if (action === "delete" && item) {
-                    FileOperations.deletePermanently([item.path]);
+                    let paths = (splitContainer.selectedPaths.length > 0 && splitContainer.selectedPaths.indexOf(item.path) !== -1) ? splitContainer.selectedPaths : [item.path];
+                    FileOperations.deletePermanently(paths);
                 } else if (action === "newFolder") {
                     newItemModal.title = qsTr("Create New Folder");
                     newItemModal.icon = "create_new_folder";
@@ -316,7 +314,10 @@ ApplicationWindow {
                     newItemModal.initialText = "untitled.txt";
                     newItemModal.expanded = true;
                 } else if (action === "restore" && item) {
-                    FileOperations.restoreFromTrash(item.path);
+                    let paths = (splitContainer.selectedPaths.length > 0 && splitContainer.selectedPaths.indexOf(item.path) !== -1) ? splitContainer.selectedPaths : [item.path];
+                    for (let i = 0; i < paths.length; ++i) {
+                        FileOperations.restoreFromTrash(paths[i]);
+                    }
                 } else if (action === "emptyTrash") {
                     FileOperations.emptyTrash();
                 } else if (action === "bookmark") {
@@ -458,9 +459,7 @@ ApplicationWindow {
             onActivated: {
                 if (splitContainer.currentSelectedPath) {
                     let path = splitContainer.currentSelectedPath;
-                    if (FileUtils.isImage(path) || FileUtils.isVideo(path)) {
-                        mediaViewerModal.openFile(path, splitContainer.activeModel);
-                    }
+                    mediaViewerModal.openFile(path, splitContainer.activeModel);
                 }
             }
         }
@@ -736,22 +735,22 @@ ApplicationWindow {
 
         Shortcut {
             sequence: "Ctrl+="
-            onActivated: zoomLevel = Math.min(2.0, zoomLevel + 0.15)
+            onActivated: window.zoomLevel = Math.min(180, window.zoomLevel + 16)
         }
 
         Shortcut {
             sequence: "Ctrl++"
-            onActivated: zoomLevel = Math.min(2.0, zoomLevel + 0.15)
+            onActivated: window.zoomLevel = Math.min(180, window.zoomLevel + 16)
         }
 
         Shortcut {
             sequence: "Ctrl+-"
-            onActivated: zoomLevel = Math.max(0.4, zoomLevel - 0.15)
+            onActivated: window.zoomLevel = Math.max(48, window.zoomLevel - 16)
         }
 
         Shortcut {
             sequence: "Ctrl+0"
-            onActivated: zoomLevel = 1.0
+            onActivated: window.zoomLevel = 80
         }
 
         // Global MouseArea for Back/Forward Extra Mouse Buttons

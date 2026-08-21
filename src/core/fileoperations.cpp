@@ -375,9 +375,15 @@ void FileOperations::deleteFiles(const QStringList& paths, bool permanent) {
 
     (void)QtConcurrent::run([this, paths]() {
         bool allSuccess = true;
+        QString trashDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/Trash";
         for (const QString& p : paths) {
             if (!removeRecursively(p)) {
                 allSuccess = false;
+            }
+            if (p.contains("/Trash/files/") || p.contains("/.local/share/Trash/files/")) {
+                QString name = QFileInfo(p).fileName();
+                QString infoFile = trashDir + "/info/" + name + ".trashinfo";
+                QFile::remove(infoFile);
             }
         }
 
@@ -386,6 +392,10 @@ void FileOperations::deleteFiles(const QStringList& paths, bool permanent) {
             emit operationFinished(allSuccess, allSuccess ? tr("Deleted files") : tr("Failed to delete some files"));
         });
     });
+}
+
+void FileOperations::deletePermanently(const QStringList& paths) {
+    deleteFiles(paths, true);
 }
 
 void FileOperations::moveToTrash(const QStringList& paths) {

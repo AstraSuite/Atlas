@@ -106,6 +106,22 @@ QString FileUtils::iconForFile(const QString& name, bool isDir, const QString& m
         return QString("image://icon/inode-directory");
     }
 
+    if (name.endsWith(".bak", Qt::CaseInsensitive) || name.endsWith("~") ||
+        name.endsWith(".backup", Qt::CaseInsensitive) || name.endsWith(".old", Qt::CaseInsensitive)) {
+        if (QIcon::hasThemeIcon("application-x-backup")) {
+            return QString("image://icon/application-x-backup");
+        }
+        if (QIcon::hasThemeIcon("document-revert")) {
+            return QString("image://icon/document-revert");
+        }
+        if (QIcon::hasThemeIcon("edit-undo")) {
+            return QString("image://icon/edit-undo");
+        }
+        if (QIcon::hasThemeIcon("text-x-generic")) {
+            return QString("image://icon/text-x-generic");
+        }
+    }
+
     QString mimeIcon = mimeType;
     mimeIcon.replace('/', '-');
     if (QIcon::hasThemeIcon(mimeIcon)) {

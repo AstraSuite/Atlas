@@ -36,7 +36,18 @@ MouseArea {
         if (expanded) {
             input.text = initialText;
             input.forceActiveFocus();
-            input.selectAll();
+            let lastDot = initialText.lastIndexOf('.');
+            if (lastDot > 0 && (root.title === qsTr("Rename") || root.title === "Rename" || initialText.indexOf("untitled") !== -1)) {
+                input.select(0, lastDot);
+            } else {
+                input.selectAll();
+            }
+        } else {
+            input.focus = false;
+            targetRenamePath = "";
+            if (typeof splitContainer !== "undefined" && splitContainer) {
+                splitContainer.focusActiveView();
+            }
         }
     }
 

@@ -12,11 +12,28 @@ Item {
     required property var activeTab
     property int paneIndex: 0
     property int currentIndex: gridView.currentIndex
-    readonly property var currentItem: gridView.currentItem ? gridView.currentItem.modelData : null
+    readonly property var currentItem: {
+        if (gridView.currentIndex >= 0 && root.model && gridView.currentIndex < root.model.count) {
+            return root.model.get(gridView.currentIndex);
+        }
+        if (selectedPaths.length > 0 && root.model) {
+            let idx = root.model.indexOfPath(selectedPaths[0]);
+            if (idx >= 0) return root.model.get(idx);
+        }
+        if (gridView.currentItem && gridView.currentItem.modelData) {
+            return gridView.currentItem.modelData;
+        }
+        return null;
+    }
     property var selectedPaths: []
     property int anchorIndex: -1
 
+    function forceActiveFocus() {
+        gridView.forceActiveFocus();
+    }
+
     function notifyFocus() {
+        gridView.forceActiveFocus();
         if (root.activeTab && root.activeTab.activePane !== root.paneIndex) {
             root.activeTab.activePane = root.paneIndex;
         }
@@ -69,12 +86,14 @@ Item {
             arr.splice(idx, 1);
         }
         selectedPaths = arr;
+        gridView.forceActiveFocus();
     }
 
     function selectSingle(path, index) {
         anchorIndex = index;
         gridView.currentIndex = index;
         selectedPaths = [path];
+        gridView.forceActiveFocus();
     }
 
     function selectRange(targetIndex) {
@@ -91,6 +110,7 @@ Item {
         }
         selectedPaths = arr;
         gridView.currentIndex = targetIndex;
+        gridView.forceActiveFocus();
     }
 
     GridView {
@@ -106,6 +126,86 @@ Item {
         focus: true
         currentIndex: -1
         interactive: false
+
+        Component.onCompleted: gridView.forceActiveFocus()
+
+        onCurrentIndexChanged: {
+            if (currentIndex >= 0 && currentIndex < (root.model ? root.model.count : 0)) {
+                let entry = root.model.get(currentIndex);
+                if (entry) {
+                    root.selectedPaths = [entry.path];
+                    root.anchorIndex = currentIndex;
+                }
+            }
+        }
+
+        Keys.onEscapePressed: {
+            currentIndex = -1;
+            root.selectedPaths = [];
+        }
+        Keys.onReturnPressed: if (root.currentItem) root.openItem(root.currentItem)
+        Keys.onEnterPressed: if (root.currentItem) root.openItem(root.currentItem)
+        Keys.onSpacePressed: if (root.currentItem && typeof mediaViewerModal !== "undefined" && mediaViewerModal) mediaViewerModal.openFile(root.currentItem.path, root.model)
+
+        Keys.onPressed: event => {
+            if (event.modifiers === Qt.NoModifier || event.modifiers === Qt.KeypadModifier) {
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    if (root.currentItem) {
+                        root.openItem(root.currentItem);
+                        event.accepted = true;
+                        return;
+                    }
+                } else if (event.key === Qt.Key_H || event.key === Qt.Key_Left) {
+                    if (gridView.currentIndex === -1 && root.model && root.model.count > 0) {
+                        gridView.currentIndex = 0;
+                    } else {
+                        gridView.moveCurrentIndexLeft();
+                    }
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_J || event.key === Qt.Key_Down) {
+                    if (gridView.currentIndex === -1 && root.model && root.model.count > 0) {
+                        gridView.currentIndex = 0;
+                    } else {
+                        gridView.moveCurrentIndexDown();
+                    }
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_K || event.key === Qt.Key_Up) {
+                    if (gridView.currentIndex === -1 && root.model && root.model.count > 0) {
+                        gridView.currentIndex = 0;
+                    } else {
+                        gridView.moveCurrentIndexUp();
+                    }
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_L || event.key === Qt.Key_Right) {
+                    if (gridView.currentIndex === -1 && root.model && root.model.count > 0) {
+                        gridView.currentIndex = 0;
+                    } else {
+                        gridView.moveCurrentIndexRight();
+                    }
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Slash) {
+                    if (typeof navBar !== "undefined" && navBar) {
+                        navBar.openSearch("");
+                    }
+                    event.accepted = true;
+                    return;
+                }
+            }
+            if ((event.modifiers === Qt.NoModifier || event.modifiers === Qt.ShiftModifier) && event.text.length > 0) {
+                let ch = event.text;
+                let code = ch.charCodeAt(0);
+                if (code >= 32 && ch !== ' ') {
+                    if (typeof navBar !== "undefined" && navBar) {
+                        navBar.openSearch(ch);
+                        event.accepted = true;
+                    }
+                }
+            }
+        }
 
         ScrollBar.horizontal: StyledScrollBar {
             flickable: gridView
@@ -327,9 +427,9 @@ Item {
         onWheel: wheel => {
             if (wheel.modifiers & Qt.ControlModifier) {
                 if (wheel.angleDelta.y > 0) {
-                    zoomLevel = Math.min(2.0, zoomLevel + 0.15);
+                    window.zoomLevel = Math.min(180, window.zoomLevel + 16);
                 } else if (wheel.angleDelta.y < 0) {
-                    zoomLevel = Math.max(0.4, zoomLevel - 0.15);
+                    window.zoomLevel = Math.max(48, window.zoomLevel - 16);
                 }
                 wheel.accepted = true;
             } else {

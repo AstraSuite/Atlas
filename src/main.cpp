@@ -68,9 +68,9 @@ int main(int argc, char* argv[]) {
     QSurfaceFormat::setDefaultFormat(format);
 
     QGuiApplication app(argc, argv);
-    app.setApplicationName("Prism");
+    app.setApplicationName("prism");
     app.setApplicationDisplayName("Prism");
-    app.setOrganizationName("Caelestia");
+    app.setOrganizationName("prism");
     app.setApplicationVersion("1.0.0");
 
     // Load fonts, window icon, and initialize icon theme engine on main thread

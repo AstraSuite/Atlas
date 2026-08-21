@@ -6,8 +6,10 @@ namespace prism::core {
 
 AppController::AppController(QObject* parent)
     : QObject(parent) {
-    QSettings settings("Caelestia", "Prism");
-    m_showHidden = settings.value("session/showHidden", false).toBool();
+    QSettings settings("prism", "prism");
+    QSettings legacy1("caelestia", "prism");
+    QSettings legacy2("Caelestia", "Prism");
+    m_showHidden = settings.value("session/showHidden", legacy1.value("session/showHidden", legacy2.value("session/showHidden", false))).toBool();
 }
 
 AppController* AppController::instance() {
@@ -53,7 +55,7 @@ void AppController::setDirectoryOnly(bool dirOnly) {
 void AppController::setShowHidden(bool show) {
     if (m_showHidden != show) {
         m_showHidden = show;
-        QSettings settings("Caelestia", "Prism");
+        QSettings settings("prism", "prism");
         settings.setValue("session/showHidden", show);
         emit showHiddenChanged();
     }

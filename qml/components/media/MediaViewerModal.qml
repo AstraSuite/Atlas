@@ -9,6 +9,11 @@ MouseArea {
     id: root
 
     property bool expanded: false
+    onExpandedChanged: {
+        if (!expanded && typeof splitContainer !== "undefined" && splitContainer) {
+            splitContainer.focusActiveView();
+        }
+    }
     property string currentFilePath: ""
     property var mediaList: []
     property int currentIndex: -1

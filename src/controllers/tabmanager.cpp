@@ -55,7 +55,7 @@ void TabItem::setCurrentPath(const QString& path) {
         emit historyChanged();
         if (m_activePane == 0) updateTitle();
 
-        QSettings settings("Caelestia", "Prism");
+        QSettings settings("prism", "prism");
         settings.setValue("session/lastPath", m_currentPath);
     }
 }
@@ -91,7 +91,7 @@ void TabItem::setViewMode(int mode) {
         m_viewMode = mode;
         emit viewModeChanged();
 
-        QSettings settings("Caelestia", "Prism");
+        QSettings settings("prism", "prism");
         settings.setValue("session/viewMode", m_viewMode);
     }
 }
@@ -130,9 +130,12 @@ void TabItem::goUp() {
 // TabManager
 TabManager::TabManager(QObject* parent)
     : QAbstractListModel(parent) {
-    QSettings settings("Caelestia", "Prism");
-    QString lastPath = settings.value("session/lastPath", QDir::homePath()).toString();
-    int lastViewMode = settings.value("session/viewMode", 0).toInt();
+    QSettings settings("prism", "prism");
+    QSettings legacy1("caelestia", "prism");
+    QSettings legacy2("Caelestia", "Prism");
+
+    QString lastPath = settings.value("session/lastPath", legacy1.value("session/lastPath", legacy2.value("session/lastPath", QDir::homePath()))).toString();
+    int lastViewMode = settings.value("session/viewMode", legacy1.value("session/viewMode", legacy2.value("session/viewMode", 0))).toInt();
     if (lastPath.isEmpty() || !QDir(lastPath).exists()) {
         lastPath = QDir::homePath();
     }

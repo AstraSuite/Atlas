@@ -13,11 +13,28 @@ Item {
     property int paneIndex: 0
     property real zoomSize: 80
     property int currentIndex: view.currentIndex
-    readonly property var currentItem: view.currentItem ? view.currentItem.modelData : null
+    readonly property var currentItem: {
+        if (view.currentIndex >= 0 && root.model && view.currentIndex < root.model.count) {
+            return root.model.get(view.currentIndex);
+        }
+        if (selectedPaths.length > 0 && root.model) {
+            let idx = root.model.indexOfPath(selectedPaths[0]);
+            if (idx >= 0) return root.model.get(idx);
+        }
+        if (view.currentItem && view.currentItem.modelData) {
+            return view.currentItem.modelData;
+        }
+        return null;
+    }
     property var selectedPaths: []
     property int anchorIndex: -1
 
+    function forceActiveFocus() {
+        view.forceActiveFocus();
+    }
+
     function notifyFocus() {
+        view.forceActiveFocus();
         if (root.activeTab && root.activeTab.activePane !== root.paneIndex) {
             root.activeTab.activePane = root.paneIndex;
         }
@@ -70,12 +87,14 @@ Item {
             arr.splice(idx, 1);
         }
         selectedPaths = arr;
+        view.forceActiveFocus();
     }
 
     function selectSingle(path, index) {
         anchorIndex = index;
         view.currentIndex = index;
         selectedPaths = [path];
+        view.forceActiveFocus();
     }
 
     function selectRange(targetIndex) {
@@ -92,6 +111,7 @@ Item {
         }
         selectedPaths = arr;
         view.currentIndex = targetIndex;
+        view.forceActiveFocus();
     }
 
     VerticalFadeGridView {
@@ -110,12 +130,85 @@ Item {
         currentIndex: -1
         interactive: false
 
+        Component.onCompleted: view.forceActiveFocus()
+
+        onCurrentIndexChanged: {
+            if (currentIndex >= 0 && currentIndex < (root.model ? root.model.count : 0)) {
+                let entry = root.model.get(currentIndex);
+                if (entry) {
+                    root.selectedPaths = [entry.path];
+                    root.anchorIndex = currentIndex;
+                }
+            }
+        }
+
         Keys.onEscapePressed: {
             currentIndex = -1;
             root.selectedPaths = [];
         }
-        Keys.onReturnPressed: if (currentItem) root.openItem(currentItem)
-        Keys.onEnterPressed: if (currentItem) root.openItem(currentItem)
+        Keys.onReturnPressed: if (root.currentItem) root.openItem(root.currentItem)
+        Keys.onEnterPressed: if (root.currentItem) root.openItem(root.currentItem)
+        Keys.onSpacePressed: if (root.currentItem && typeof mediaViewerModal !== "undefined" && mediaViewerModal) mediaViewerModal.openFile(root.currentItem.path, root.model)
+
+        Keys.onPressed: event => {
+            if (event.modifiers === Qt.NoModifier || event.modifiers === Qt.KeypadModifier) {
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    if (root.currentItem) {
+                        root.openItem(root.currentItem);
+                        event.accepted = true;
+                        return;
+                    }
+                } else if (event.key === Qt.Key_H || event.key === Qt.Key_Left) {
+                    if (view.currentIndex === -1 && root.model && root.model.count > 0) {
+                        view.currentIndex = 0;
+                    } else {
+                        view.moveCurrentIndexLeft();
+                    }
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_J || event.key === Qt.Key_Down) {
+                    if (view.currentIndex === -1 && root.model && root.model.count > 0) {
+                        view.currentIndex = 0;
+                    } else {
+                        view.moveCurrentIndexDown();
+                    }
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_K || event.key === Qt.Key_Up) {
+                    if (view.currentIndex === -1 && root.model && root.model.count > 0) {
+                        view.currentIndex = 0;
+                    } else {
+                        view.moveCurrentIndexUp();
+                    }
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_L || event.key === Qt.Key_Right) {
+                    if (view.currentIndex === -1 && root.model && root.model.count > 0) {
+                        view.currentIndex = 0;
+                    } else {
+                        view.moveCurrentIndexRight();
+                    }
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Slash) {
+                    if (typeof navBar !== "undefined" && navBar) {
+                        navBar.openSearch("");
+                    }
+                    event.accepted = true;
+                    return;
+                }
+            }
+            if ((event.modifiers === Qt.NoModifier || event.modifiers === Qt.ShiftModifier) && event.text.length > 0) {
+                let ch = event.text;
+                let code = ch.charCodeAt(0);
+                if (code >= 32 && ch !== ' ') {
+                    if (typeof navBar !== "undefined" && navBar) {
+                        navBar.openSearch(ch);
+                        event.accepted = true;
+                    }
+                }
+            }
+        }
 
         ScrollBar.vertical: StyledScrollBar {
             flickable: view
@@ -380,9 +473,9 @@ Item {
         onWheel: wheel => {
             if (wheel.modifiers & Qt.ControlModifier) {
                 if (wheel.angleDelta.y > 0) {
-                    zoomLevel = Math.min(2.0, zoomLevel + 0.15);
+                    window.zoomLevel = Math.min(180, window.zoomLevel + 16);
                 } else if (wheel.angleDelta.y < 0) {
-                    zoomLevel = Math.max(0.4, zoomLevel - 0.15);
+                    window.zoomLevel = Math.max(48, window.zoomLevel - 16);
                 }
                 wheel.accepted = true;
             } else {

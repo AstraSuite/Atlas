@@ -467,6 +467,9 @@ StyledRect {
                         root.searchText = "";
                         root.isSearching = false;
                         root.searchRequested("");
+                        if (typeof splitContainer !== "undefined" && splitContainer) {
+                            splitContainer.focusActiveView();
+                        }
                     }
                 }
 
@@ -489,6 +492,9 @@ StyledRect {
                             root.searchText = "";
                             root.isSearching = false;
                             root.searchRequested("");
+                            if (typeof splitContainer !== "undefined" && splitContainer) {
+                                splitContainer.focusActiveView();
+                            }
                         }
                     }
                 }
@@ -717,10 +723,17 @@ StyledRect {
         }
     }
 
-    function openSearch() {
+    function openSearch(initialChar) {
         isSearching = true;
+        if (typeof initialChar === "string" && initialChar.length > 0) {
+            searchText = initialChar;
+            searchInput.text = initialChar;
+            searchRequested(initialChar);
+            searchInput.cursorPosition = searchInput.text.length;
+        } else {
+            searchInput.selectAll();
+        }
         searchInput.forceActiveFocus();
-        searchInput.selectAll();
     }
 
     function openAddressEdit() {
