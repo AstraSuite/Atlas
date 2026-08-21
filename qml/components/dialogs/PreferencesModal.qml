@@ -665,6 +665,11 @@ MouseArea {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.expanded = false
                     }
+
+                    StyledToolTip {
+                        text: qsTr("Cancel")
+                        visible: cancelHover.containsMouse
+                    }
                 }
 
                 // Done Button
@@ -687,6 +692,11 @@ MouseArea {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.expanded = false
+                    }
+
+                    StyledToolTip {
+                        text: qsTr("Done")
+                        visible: doneHover.containsMouse
                     }
                 }
             }

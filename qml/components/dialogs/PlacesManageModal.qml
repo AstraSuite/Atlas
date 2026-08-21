@@ -216,6 +216,11 @@ MouseArea {
                                                 cursorShape: placeRowCard.index > 0 ? Qt.PointingHandCursor : undefined
                                                 onClicked: root.movePlaceSafely(placeRowCard.index, placeRowCard.index - 1)
                                             }
+
+                                            StyledToolTip {
+                                                text: qsTr("Move up")
+                                                visible: upHover.containsMouse
+                                            }
                                         }
 
                                         // Reorder Down
@@ -240,6 +245,11 @@ MouseArea {
                                                 hoverEnabled: true
                                                 cursorShape: placeRowCard.index < PlacesModel.count - 1 ? Qt.PointingHandCursor : undefined
                                                 onClicked: root.movePlaceSafely(placeRowCard.index, placeRowCard.index + 1)
+                                            }
+
+                                            StyledToolTip {
+                                                text: qsTr("Move down")
+                                                visible: downHover.containsMouse
                                             }
                                         }
 
@@ -267,6 +277,11 @@ MouseArea {
                                                     root.editPlaceRequested(placeRowCard.index, placeRowCard.name, placeRowCard.path, placeRowCard.iconName, placeRowCard.isCustom);
                                                 }
                                             }
+
+                                            StyledToolTip {
+                                                text: qsTr("Edit place")
+                                                visible: editHover.containsMouse
+                                            }
                                         }
 
                                         // Delete / Unpin Button
@@ -290,6 +305,11 @@ MouseArea {
                                                 hoverEnabled: true
                                                 cursorShape: Qt.PointingHandCursor
                                                 onClicked: PlacesModel.removeBookmark(placeRowCard.index)
+                                            }
+
+                                            StyledToolTip {
+                                                text: qsTr("Remove place")
+                                                visible: delHover.containsMouse
                                             }
                                         }
                                     }
@@ -407,6 +427,11 @@ MouseArea {
                                                 root.refreshDevices();
                                             }
                                         }
+
+                                        StyledToolTip {
+                                            text: devRowCard.modelData.isHidden ? qsTr("Show in sidebar") : qsTr("Hide from sidebar")
+                                            visible: visHover.containsMouse
+                                        }
                                     }
 
                                     Column {
@@ -476,6 +501,11 @@ MouseArea {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.expanded = false
                     }
+
+                    StyledToolTip {
+                        text: qsTr("Cancel")
+                        visible: cancelHover.containsMouse
+                    }
                 }
 
                 // Done Button
@@ -498,6 +528,11 @@ MouseArea {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.expanded = false
+                    }
+
+                    StyledToolTip {
+                        text: qsTr("Done")
+                        visible: doneHover.containsMouse
                     }
                 }
             }

@@ -212,6 +212,7 @@ MouseArea {
 
             // Tab 0: Branches List
             ListView {
+                id: branchesList
                 visible: root.currentTab === 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -224,7 +225,7 @@ MouseArea {
                     required property string modelData
                     readonly property bool isCurrent: modelData === GitManager.branchName
 
-                    width: parent.width
+                    width: branchesList.width
                     implicitHeight: 40
                     radius: Tokens.rounding.small
                     color: isCurrent ? Qt.alpha(Colours.palette.m3tertiary, 0.18) : (bHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")

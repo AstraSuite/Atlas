@@ -88,6 +88,7 @@ qt_add_qml_module(prism_app
         qml/components/StateLayer.qml
         qml/components/Mask.qml
         qml/components/StyledScrollBar.qml
+        qml/components/StyledToolTip.qml
         qml/components/CachingIconImage.qml
         qml/components/filedialog/Sizes.qml
         qml/components/filedialog/CurrentItem.qml

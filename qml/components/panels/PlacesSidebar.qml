@@ -60,6 +60,11 @@ StyledRect {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.managePlacesRequested()
                 }
+
+                StyledToolTip {
+                    text: qsTr("Configure Places")
+                    visible: cfgHover.containsMouse
+                }
             }
         }
 

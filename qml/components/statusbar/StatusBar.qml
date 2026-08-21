@@ -89,6 +89,12 @@ StyledRect {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.gitRequested()
                 }
+
+                StyledToolTip {
+                    text: qsTr("Git branch: %1").arg(GitManager.branchName)
+                    visible: gitChipHover.containsMouse
+                    y: -height - Tokens.padding.extraSmall
+                }
             }
         }
 
@@ -96,18 +102,33 @@ StyledRect {
         RowLayout {
             spacing: Tokens.spacing.extraSmall
 
-            MaterialIcon {
-                text: "photo_size_select_small"
-                fontStyle: Tokens.font.icon.small
-                color: zoomSlider.value <= 0.1 ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+            Item {
+                implicitWidth: zoomSmallIcon.implicitWidth
+                implicitHeight: zoomSmallIcon.implicitHeight
+
+                MaterialIcon {
+                    id: zoomSmallIcon
+                    anchors.centerIn: parent
+                    text: "photo_size_select_small"
+                    fontStyle: Tokens.font.icon.small
+                    color: zoomSlider.value <= 0.1 ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                }
 
                 MouseArea {
+                    id: zoomSmallHover
                     anchors.fill: parent
+                    hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         zoomSlider.value = 0.0;
                         root.zoomChanged(48);
                     }
+                }
+
+                StyledToolTip {
+                    text: qsTr("Small icons")
+                    visible: zoomSmallHover.containsMouse
+                    y: -height - Tokens.padding.extraSmall
                 }
             }
 
@@ -125,18 +146,33 @@ StyledRect {
                 }
             }
 
-            MaterialIcon {
-                text: "photo_size_select_large"
-                fontStyle: Tokens.font.icon.small
-                color: zoomSlider.value >= 0.9 ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+            Item {
+                implicitWidth: zoomLargeIcon.implicitWidth
+                implicitHeight: zoomLargeIcon.implicitHeight
+
+                MaterialIcon {
+                    id: zoomLargeIcon
+                    anchors.centerIn: parent
+                    text: "photo_size_select_large"
+                    fontStyle: Tokens.font.icon.small
+                    color: zoomSlider.value >= 0.9 ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                }
 
                 MouseArea {
+                    id: zoomLargeHover
                     anchors.fill: parent
+                    hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         zoomSlider.value = 1.0;
                         root.zoomChanged(180);
                     }
+                }
+
+                StyledToolTip {
+                    text: qsTr("Large icons")
+                    visible: zoomLargeHover.containsMouse
+                    y: -height - Tokens.padding.extraSmall
                 }
             }
         }
@@ -171,6 +207,12 @@ StyledRect {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.operationsRequested()
+            }
+
+            StyledToolTip {
+                text: FileOperations.progress.running ? qsTr("Operations in progress") : qsTr("Operations history")
+                visible: opsHover.containsMouse
+                y: -height - Tokens.padding.extraSmall
             }
         }
     }

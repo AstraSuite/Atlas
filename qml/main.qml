@@ -512,7 +512,13 @@ ApplicationWindow {
         Shortcut {
             sequence: "Ctrl+W"
             context: Qt.ApplicationShortcut
-            onActivated: TabManager.closeTab(TabManager.currentIndex)
+            onActivated: {
+                if (TabManager.currentTab && TabManager.currentTab.isSplit) {
+                    TabManager.closeSplitPane(TabManager.currentIndex, TabManager.currentTab.activePane);
+                } else {
+                    TabManager.closeTab(TabManager.currentIndex);
+                }
+            }
         }
 
         Shortcut {
@@ -594,7 +600,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "F2"
+            sequences: ["F2", "Shift+F2"]
             context: Qt.ApplicationShortcut
             onActivated: {
                 let sel = splitContainer.currentSelectedPath;
@@ -699,13 +705,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "Ctrl+F"
-            context: Qt.ApplicationShortcut
-            onActivated: navBar.openSearch()
-        }
-
-        Shortcut {
-            sequence: "F9"
+            sequences: ["Ctrl+F", "F9", "Shift+F9"]
             context: Qt.ApplicationShortcut
             onActivated: navBar.openSearch()
         }
@@ -723,7 +723,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "F3"
+            sequences: ["F3", "Shift+F3"]
             context: Qt.ApplicationShortcut
             onActivated: {
                 if (TabManager.currentTab) {
@@ -736,7 +736,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "F4"
+            sequences: ["F4", "Shift+F4", "Ctrl+Alt+T", "Ctrl+`"]
             context: Qt.ApplicationShortcut
             onActivated: {
                 if (TabManager.currentTab) {
@@ -746,7 +746,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "F5"
+            sequences: ["F5", "Shift+F5", "Ctrl+R"]
             context: Qt.ApplicationShortcut
             onActivated: {
                 if (splitContainer.activeModel) {
@@ -756,17 +756,7 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "Ctrl+R"
-            context: Qt.ApplicationShortcut
-            onActivated: {
-                if (splitContainer.activeModel) {
-                    splitContainer.activeModel.refresh();
-                }
-            }
-        }
-
-        Shortcut {
-            sequence: "F10"
+            sequences: ["F10", "Shift+F10"]
             context: Qt.ApplicationShortcut
             onActivated: {
                 newItemModal.title = qsTr("Create New Folder");
@@ -777,13 +767,13 @@ ApplicationWindow {
         }
 
         Shortcut {
-            sequence: "F1"
+            sequences: ["F1", "Shift+F1", "Alt+P"]
             context: Qt.ApplicationShortcut
             onActivated: previewPanel.expanded = !previewPanel.expanded
         }
 
         Shortcut {
-            sequence: "F11"
+            sequences: ["F11", "Shift+F11"]
             context: Qt.ApplicationShortcut
             onActivated: {
                 if (window.visibility === Window.FullScreen) {
