@@ -8,7 +8,8 @@ StyledRect {
 
     signal tabContextMenuRequested(int tabIndex, real globalX, real globalY)
 
-    readonly property bool shouldShow: TabManager.count > 1
+    readonly property bool hasSplit: TabManager.currentTab ? TabManager.currentTab.isSplit : false
+    readonly property bool shouldShow: TabManager.count > 1 || hasSplit
     implicitHeight: shouldShow ? 40 : 0
     visible: implicitHeight > 0
     clip: true
