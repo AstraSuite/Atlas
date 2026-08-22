@@ -41,6 +41,16 @@ ApplicationWindow {
             : TabManager.currentTab.currentPath;
     }
 
+    function requestPermanentDelete(paths) {
+        if (!paths || paths.length === 0) return;
+        if (AppController.confirmPermanentDelete) {
+            confirmDeleteModal.targetPaths = paths;
+            confirmDeleteModal.expanded = true;
+        } else {
+            FileOperations.deletePermanently(paths);
+        }
+    }
+
     function setActiveDirectory(path) {
         if (!TabManager.currentTab) return;
         let expanded = FileUtils.expandPath(path);
@@ -327,7 +337,7 @@ ApplicationWindow {
                 } else if (action === "trash" && item) {
                     FileOperations.moveToTrash(targetPaths);
                 } else if (action === "delete" && item) {
-                    FileOperations.deletePermanently(targetPaths);
+                    window.requestPermanentDelete(targetPaths);
                 } else if (action === "newFolder") {
                     newItemModal.title = qsTr("Create New Folder");
                     newItemModal.icon = "create_new_folder";
@@ -398,6 +408,12 @@ ApplicationWindow {
         // Operations & Background Activity Modal
         OperationsModal {
             id: operationsModal
+        }
+
+        // Permanent Delete Confirmation Modal
+        ConfirmDeleteModal {
+            id: confirmDeleteModal
+            onConfirmed: paths => FileOperations.deletePermanently(paths)
         }
 
         // Places & Devices Management Modal
@@ -653,7 +669,7 @@ ApplicationWindow {
             context: Qt.ApplicationShortcut
             onActivated: {
                 let paths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : (splitContainer.currentSelectedPath ? [splitContainer.currentSelectedPath] : []);
-                if (paths.length > 0) FileOperations.deletePermanently(paths);
+                if (paths.length > 0) window.requestPermanentDelete(paths);
             }
         }
 

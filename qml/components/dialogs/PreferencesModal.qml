@@ -303,6 +303,64 @@ MouseArea {
                                 }
                             }
 
+                            // Confirm permanent delete toggle card
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 56
+                                radius: Tokens.rounding.large
+                                color: confirmDelHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.medium
+                                    spacing: Tokens.spacing.medium
+
+                                    MaterialIcon {
+                                        Layout.alignment: Qt.AlignVCenter
+                                        text: "delete_forever"
+                                        color: AppController.confirmPermanentDelete ? Colours.palette.m3primary : Colours.palette.m3outline
+                                        fontStyle: Tokens.font.icon.medium
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignVCenter
+                                        spacing: 2
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Confirm Permanent Deletion")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.small
+                                            elide: Text.ElideRight
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Ask before deleting files without using the trash (Shift+Delete)")
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font: Tokens.font.label.small
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+
+                                    StyledCheckBox {
+                                        Layout.alignment: Qt.AlignVCenter
+                                        checked: AppController.confirmPermanentDelete
+                                        onToggled: val => AppController.confirmPermanentDelete = val
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: confirmDelHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: AppController.confirmPermanentDelete = !AppController.confirmPermanentDelete
+                                }
+                            }
+
                             // Single-click toggle card
                             StyledRect {
                                 Layout.fillWidth: true
