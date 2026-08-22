@@ -4,8 +4,10 @@
 #include <QDateTime>
 #include <QFileSystemWatcher>
 #include <QList>
+#include <QSharedPointer>
 #include <QString>
 #include <QStringList>
+#include <atomic>
 #include <qqmlintegration.h>
 
 namespace prism::models {
@@ -235,6 +237,7 @@ private:
     QString m_searchQuery;
     bool m_isSearching = false;
     bool m_isLoading = false;
+    QSharedPointer<std::atomic<quint64>> m_scanGeneration = QSharedPointer<std::atomic<quint64>>::create(0);
     bool m_isPathReset = false;
     QStringList m_nameFilters;
     bool m_showHidden = false;

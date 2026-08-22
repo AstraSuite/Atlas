@@ -300,6 +300,9 @@ static FileSystemEntry* createEntryFromRawData(const RawEntryData& d, QObject* p
 }
 
 void FileSystemModel::scanDirectory(bool isPathReset) {
+    const auto generationToken = m_scanGeneration;
+    const quint64 generation = generationToken->fetch_add(1, std::memory_order_relaxed) + 1;
+
     if (!m_watcher.directories().isEmpty())
         m_watcher.removePaths(m_watcher.directories());
 
@@ -326,7 +329,7 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
         emit isLoadingChanged();
     }
 
-    (void)QtConcurrent::run([this, scanPath, isPathReset]() {
+    (void)QtConcurrent::run([this, scanPath, isPathReset, generationToken, generation]() {
         QDir dir(scanPath);
         QFileInfoList list = dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
         QMimeDatabase mimeDb;
@@ -334,11 +337,13 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
         QList<RawEntryData> rawData;
         rawData.reserve(list.size());
         for (const auto& fi : list) {
+            if (generationToken->load(std::memory_order_relaxed) != generation)
+                return;
             rawData.append(createRawDataFromInfo(fi, mimeDb));
         }
 
-        QMetaObject::invokeMethod(this, [this, rawData, scanPath, isPathReset]() {
-            if (m_path != scanPath)
+        QMetaObject::invokeMethod(this, [this, rawData, isPathReset, generationToken, generation]() {
+            if (generationToken->load(std::memory_order_relaxed) != generation)
                 return;
 
             if (m_isLoading) {
