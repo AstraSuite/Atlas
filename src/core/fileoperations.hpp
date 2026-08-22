@@ -113,6 +113,7 @@ public:
     Q_INVOKABLE void extractArchive(const QString& archivePath, const QString& destinationDir = "");
     Q_INVOKABLE void createArchive(const QStringList& sourcePaths, const QString& destinationFile, const QString& format = "zip");
     Q_INVOKABLE void uploadToCatbox(const QStringList& paths);
+    Q_INVOKABLE void uploadToLitterbox(const QStringList& paths, const QString& time = QStringLiteral("24h"));
 
     Q_INVOKABLE void copyFiles(const QStringList& sources, const QString& destinationDir);
     Q_INVOKABLE void moveFiles(const QStringList& sources, const QString& destinationDir);

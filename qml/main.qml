@@ -361,6 +361,16 @@ ApplicationWindow {
                         operationsModal.expanded = true;
                         FileOperations.uploadToCatbox(pathsToUpload);
                     }
+                } else if (action.startsWith("uploadLitterbox")) {
+                    let time = "24h";
+                    if (action.indexOf(":") !== -1) {
+                        time = action.split(":")[1];
+                    }
+                    let pathsToUpload = (targetPaths && targetPaths.length > 0) ? targetPaths : (item && item.path ? [item.path] : []);
+                    if (pathsToUpload.length > 0) {
+                        operationsModal.expanded = true;
+                        FileOperations.uploadToLitterbox(pathsToUpload, time);
+                    }
                 } else if (action === "newFile") {
                     newItemModal.title = qsTr("Create New File");
                     newItemModal.icon = "note_add";

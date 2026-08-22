@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
 import "../containers"
+import "../controls"
 import prism
 
 Item {
@@ -122,32 +123,16 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: Tokens.spacing.small
 
-                                MaterialIcon {
-                                    id: activeSyncIcon
-                                    text: CatboxUploader.isUploading ? "cloud_upload" : "sync"
+                                CircularIndicator {
+                                    size: 18
+                                    strokeWidth: 2.5
                                     color: Colours.palette.m3primary
-                                    fontStyle: Tokens.font.icon.small
-                                    rotation: 0
-
-                                    NumberAnimation {
-                                        target: activeSyncIcon
-                                        property: "rotation"
-                                        loops: Animation.Infinite
-                                        from: 0
-                                        to: 360
-                                        duration: 1200
-                                        running: FileOperations.progress.running || CatboxUploader.isUploading
-                                        onRunningChanged: {
-                                            if (!running) {
-                                                activeSyncIcon.rotation = 0;
-                                            }
-                                        }
-                                    }
+                                    running: FileOperations.progress.running || CatboxUploader.isUploading
                                 }
 
                                 StyledText {
                                     text: CatboxUploader.isUploading
-                                        ? (qsTr("Uploading %1 to Catbox (%2%)").arg(CatboxUploader.currentFileName).arg(Math.round(CatboxUploader.uploadProgress * 100)))
+                                        ? (qsTr("Uploading %1 to %2 (%3%)").arg(CatboxUploader.currentFileName).arg(CatboxUploader.currentService || "Cloud").arg(Math.round(CatboxUploader.uploadProgress * 100)))
                                         : (FileOperations.progress.statusText || qsTr("In progress..."))
                                     color: Colours.palette.m3onSurface
                                     font: Tokens.font.body.small

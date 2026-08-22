@@ -180,28 +180,22 @@ StyledRect {
                 ? Colours.tPalette.m3surfaceContainerHighest
                 : ((FileOperations.progress.running || CatboxUploader.isUploading) ? Qt.alpha(Colours.palette.m3primary, 0.2) : "transparent")
 
+            CircularIndicator {
+                anchors.centerIn: parent
+                size: 16
+                strokeWidth: 2
+                color: Colours.palette.m3primary
+                running: FileOperations.progress.running || CatboxUploader.isUploading
+                visible: running
+            }
+
             MaterialIcon {
                 id: opsIcon
                 anchors.centerIn: parent
-                text: (FileOperations.progress.running || CatboxUploader.isUploading) ? "sync" : "pending_actions"
-                color: (FileOperations.progress.running || CatboxUploader.isUploading) ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                visible: !FileOperations.progress.running && !CatboxUploader.isUploading
+                text: "pending_actions"
+                color: Colours.palette.m3onSurfaceVariant
                 fontStyle: Tokens.font.icon.small
-                rotation: 0
-
-                NumberAnimation {
-                    target: opsIcon
-                    property: "rotation"
-                    loops: Animation.Infinite
-                    from: 0
-                    to: 360
-                    duration: 1200
-                    running: FileOperations.progress.running || CatboxUploader.isUploading
-                    onRunningChanged: {
-                        if (!running) {
-                            opsIcon.rotation = 0;
-                        }
-                    }
-                }
             }
 
             MouseArea {
