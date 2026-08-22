@@ -351,6 +351,13 @@ ApplicationWindow {
                 } else if (action === "extractTo" && item) {
                     let dest = item.path.replace(/\.[^/.]+$/, "");
                     FileOperations.extractArchive(item.path, dest);
+                } else if (action.startsWith("quickCompress:") && item) {
+                    let fmt = action.substring(14);
+                    let defaultBase = targetPaths.length === 1 ? item.name : FileUtils.baseName(targetPaths[0]);
+                    let ext = (fmt === "tar.gz") ? ".tar.gz" : ((fmt === "tar.xz") ? ".tar.xz" : ((fmt === "7z") ? ".7z" : ".zip"));
+                    let destName = defaultBase.replace(/\.[^/.]+$/, "") + ext;
+                    let curDir = window.getActiveDirectory();
+                    FileOperations.createArchive(targetPaths, curDir + "/" + destName, fmt);
                 } else if (action === "compress" && item) {
                     compressModal.sourcePaths = targetPaths;
                     compressModal.defaultName = targetPaths.length === 1 ? item.name : FileUtils.baseName(targetPaths[0]);

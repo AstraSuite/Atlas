@@ -125,6 +125,14 @@ MouseArea {
                             list.push({ text: qsTr("Open With..."), icon: "open_with", action: "openWith" });
                         }
 
+                        // Secondary Open Actions (e.g. Open with VS Code) right under Open / Open With
+                        if (root.customActions && root.customActions.length > 0) {
+                            for (let i = 0; i < root.customActions.length; ++i) {
+                                let ca = root.customActions[i];
+                                list.push({ text: ca.name, icon: ca.icon || "code", action: "custom:" + ca.id });
+                            }
+                        }
+
                         list.push({ isSeparator: true });
 
                         // 2. Organization / Clipboard actions
@@ -136,7 +144,6 @@ MouseArea {
                         }
                         list.push({ text: qsTr("Rename"), icon: "drive_file_rename_outline", action: "rename" });
                         list.push({ text: qsTr("Duplicate"), icon: "control_point_duplicate", action: "duplicate" });
-                        list.push({ text: qsTr("Create Symlink"), icon: "link", action: "symlink" });
 
                         list.push({ isSeparator: true });
 
@@ -156,52 +163,48 @@ MouseArea {
                             });
                         }
 
+                        // Send To Submenu (includes Create Symlink and sharing services)
+                        let sendToList = [
+                            { text: qsTr("Create Symlink"), icon: "link", action: "symlink" }
+                        ];
                         if (root.sharingServices && root.sharingServices.length > 0) {
-                            list.push({
-                                text: qsTr("Send To"),
-                                icon: "send",
-                                hasSubmenu: true,
-                                submenuItems: root.sharingServices.map(s => ({
+                            sendToList.push({ isSeparator: true });
+                            for (let sIdx = 0; sIdx < root.sharingServices.length; ++sIdx) {
+                                let s = root.sharingServices[sIdx];
+                                sendToList.push({
                                     text: s.name || "",
                                     icon: s.icon || "share",
                                     action: "sendTo:" + s.id
-                                }))
-                            });
-                        }
-
-                        if (root.isArchive) {
-                            list.push({
-                                text: qsTr("Extract Archive"),
-                                icon: "unarchive",
-                                hasSubmenu: true,
-                                submenuItems: [
-                                    { text: qsTr("Extract Here"), icon: "unarchive", action: "extractHere" },
-                                    { text: qsTr("Extract to Folder"), icon: "folder_zip", action: "extractTo" }
-                                ]
-                            });
-                            list.push({ text: qsTr("Compress..."), icon: "archive", action: "compress" });
-                        } else {
-                            list.push({ text: qsTr("Compress..."), icon: "archive", action: "compress" });
-                        }
-
-                        // Custom Context Actions
-                        if (root.customActions && root.customActions.length > 0) {
-                            if (root.customActions.length === 1) {
-                                let ca = root.customActions[0];
-                                list.push({ text: ca.name, icon: ca.icon || "play_arrow", action: "custom:" + ca.id });
-                            } else {
-                                list.push({
-                                    text: qsTr("Scripts & Tools"),
-                                    icon: "terminal",
-                                    hasSubmenu: true,
-                                    submenuItems: root.customActions.map(ca => ({
-                                        text: ca.name,
-                                        icon: ca.icon || "play_arrow",
-                                        action: "custom:" + ca.id
-                                    }))
                                 });
                             }
                         }
+                        list.push({
+                            text: qsTr("Send To"),
+                            icon: "send",
+                            hasSubmenu: true,
+                            submenuItems: sendToList
+                        });
+
+                        // Compress / Archive Submenu
+                        let compressSubmenu = [];
+                        if (root.isArchive) {
+                            compressSubmenu.push({ text: qsTr("Extract Here"), icon: "unarchive", action: "extractHere" });
+                            compressSubmenu.push({ text: qsTr("Extract to Folder"), icon: "folder_zip", action: "extractTo" });
+                            compressSubmenu.push({ isSeparator: true });
+                        }
+                        compressSubmenu.push({ text: qsTr("Compress as .zip"), icon: "folder_zip", action: "quickCompress:zip" });
+                        compressSubmenu.push({ text: qsTr("Compress as .tar.gz"), icon: "archive", action: "quickCompress:tar.gz" });
+                        compressSubmenu.push({ text: qsTr("Compress as .tar.xz"), icon: "archive", action: "quickCompress:tar.xz" });
+                        compressSubmenu.push({ text: qsTr("Compress as .7z"), icon: "archive", action: "quickCompress:7z" });
+                        compressSubmenu.push({ isSeparator: true });
+                        compressSubmenu.push({ text: qsTr("Custom Options..."), icon: "tune", action: "compress" });
+
+                        list.push({
+                            text: root.isArchive ? qsTr("Archive") : qsTr("Compress"),
+                            icon: "archive",
+                            hasSubmenu: true,
+                            submenuItems: compressSubmenu
+                        });
 
                         list.push({ isSeparator: true });
 
@@ -232,20 +235,9 @@ MouseArea {
                         blankList.push({ text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminal" });
 
                         if (root.customActions && root.customActions.length > 0) {
-                            if (root.customActions.length === 1) {
-                                let ca = root.customActions[0];
+                            for (let i = 0; i < root.customActions.length; ++i) {
+                                let ca = root.customActions[i];
                                 blankList.push({ text: ca.name, icon: ca.icon || "play_arrow", action: "custom:" + ca.id });
-                            } else {
-                                blankList.push({
-                                    text: qsTr("Scripts & Tools"),
-                                    icon: "terminal",
-                                    hasSubmenu: true,
-                                    submenuItems: root.customActions.map(ca => ({
-                                        text: ca.name,
-                                        icon: ca.icon || "play_arrow",
-                                        action: "custom:" + ca.id
-                                    }))
-                                });
                             }
                         }
 
@@ -309,7 +301,8 @@ MouseArea {
                     if (modelData.hasSubmenu) {
                         if (containsMouse) {
                             root.activeSubmenuItems = modelData.submenuItems || [];
-                            root.submenuY = menuItem.y + menuRect.y;
+                            let pos = menuItem.mapToItem(root, 0, 0);
+                            root.submenuY = pos.y;
                             root.submenuOpen = true;
                         }
                     } else if (containsMouse) {
@@ -320,7 +313,8 @@ MouseArea {
                 onClicked: {
                     if (modelData.hasSubmenu) {
                         root.activeSubmenuItems = modelData.submenuItems || [];
-                        root.submenuY = menuItem.y + menuRect.y;
+                        let pos = menuItem.mapToItem(root, 0, 0);
+                        root.submenuY = pos.y;
                         root.submenuOpen = !root.submenuOpen;
                     } else {
                         root.expanded = false;
@@ -361,6 +355,51 @@ MouseArea {
         }
     }
 
+    Component {
+        id: subMenuItemComponent
+        StyledRect {
+            id: subMenuItem
+
+            Layout.fillWidth: true
+            implicitWidth: subItemRow.implicitWidth + Tokens.padding.medium * 2
+            implicitHeight: 36
+            radius: Tokens.rounding.medium
+            color: subHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+            StateLayer {
+                id: subHover
+                hoverEnabled: true
+                onClicked: {
+                    root.expanded = false;
+                    root.submenuOpen = false;
+                    root.activeSubmenuItems = [];
+                    root.actionTriggered(modelData.action, root.targetItem);
+                }
+            }
+
+            RowLayout {
+                id: subItemRow
+                anchors.fill: parent
+                anchors.leftMargin: Tokens.padding.medium
+                anchors.rightMargin: Tokens.padding.medium
+                spacing: Tokens.spacing.small
+
+                MaterialIcon {
+                    text: modelData.icon || "share"
+                    color: Colours.palette.m3primary
+                    fontStyle: Tokens.font.icon.small
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: modelData.text || ""
+                    font: Tokens.font.body.medium
+                    color: Colours.palette.m3onSurface
+                }
+            }
+        }
+    }
+
     // Dynamic Floating Submenu Popup
     StyledRect {
         id: submenuRect
@@ -369,7 +408,7 @@ MouseArea {
         z: menuRect.z + 1
 
         x: (menuRect.x + menuRect.width + width + 8 < root.width) ? (menuRect.x + menuRect.width + 4) : Math.max(8, menuRect.x - width - 4)
-        y: Math.min(Math.max(8, root.submenuY), root.height - height - 8)
+        y: Math.min(Math.max(8, root.submenuY - 4), root.height - height - 8)
 
         implicitWidth: submenuCol.implicitWidth + Tokens.padding.extraSmall * 2
         implicitHeight: submenuCol.implicitHeight + Tokens.padding.extraSmall * 2
@@ -399,52 +438,17 @@ MouseArea {
             Repeater {
                 model: root.activeSubmenuItems
 
-                StyledRect {
-                    id: subMenuItem
-
+                Loader {
+                    id: subEntryLoader
                     required property int index
                     required property var modelData
 
                     Layout.fillWidth: true
-                    implicitWidth: subItemRow.implicitWidth + Tokens.padding.medium * 2
-                    implicitHeight: 36
-                    radius: Tokens.rounding.medium
-                    color: subHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
-
-                    StateLayer {
-                        id: subHover
-                        hoverEnabled: true
-                        onClicked: {
-                            root.expanded = false;
-                            root.submenuOpen = false;
-                            root.activeSubmenuItems = [];
-                            root.actionTriggered(subMenuItem.modelData.action, root.targetItem);
-                        }
-                    }
-
-                    RowLayout {
-                        id: subItemRow
-                        anchors.fill: parent
-                        anchors.leftMargin: Tokens.padding.medium
-                        anchors.rightMargin: Tokens.padding.medium
-                        spacing: Tokens.spacing.small
-
-                        MaterialIcon {
-                            text: subMenuItem.modelData.icon || "share"
-                            color: Colours.palette.m3primary
-                            fontStyle: Tokens.font.icon.small
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: subMenuItem.modelData.text || ""
-                            font: Tokens.font.body.medium
-                            color: Colours.palette.m3onSurface
-                        }
-                    }
+                    sourceComponent: modelData.isSeparator ? separatorComponent : subMenuItemComponent
                 }
             }
         }
     }
 }
+
 
