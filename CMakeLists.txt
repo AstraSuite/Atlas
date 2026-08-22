@@ -118,6 +118,7 @@ qt_add_qml_module(prism_app
         qml/components/views/SplitViewContainer.qml
         qml/components/views/EmptyStateView.qml
         qml/components/views/LoadingOverlay.qml
+        qml/components/views/ColumnResizeHandle.qml
         qml/components/menus/ContextMenu.qml
         qml/components/menus/TabContextMenu.qml
         qml/components/menus/PlaceContextMenu.qml

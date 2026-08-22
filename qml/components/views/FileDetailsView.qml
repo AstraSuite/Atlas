@@ -117,7 +117,9 @@ Item {
         }
         selectedPaths = arr;
         listView.currentIndex = targetIndex;
-        listView.forceActiveFocus();
+    function colWidth(key, fallback) {
+        const stored = AppController.detailsColumnWidths[key];
+        return stored !== undefined ? stored : fallback;
     }
 
     Flickable {
@@ -167,12 +169,15 @@ Item {
                     RowLayout {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
+                        anchors.right: parent.right
                         spacing: 4
 
                         StyledText {
+                            Layout.fillWidth: true
                             text: qsTr("Name")
                             font: Tokens.font.label.medium
                             color: Colours.palette.m3onSurface
+                            elide: Text.ElideRight
                         }
 
                         MaterialIcon {
@@ -200,18 +205,26 @@ Item {
                 // Normal Mode Columns
                 Item {
                     visible: !root.isTrash && AppController.showSizeColumn
-                    Layout.preferredWidth: 100
+                    Layout.preferredWidth: root.colWidth("size", 100)
                     implicitHeight: parent.height
+
+                    ColumnResizeHandle {
+                        columnKey: "size"
+                        defaultWidth: 100
+                    }
 
                     RowLayout {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
+                        anchors.right: parent.right
                         spacing: 4
 
                         StyledText {
+                            Layout.fillWidth: true
                             text: qsTr("Size")
                             font: Tokens.font.label.medium
                             color: Colours.palette.m3onSurface
+                            elide: Text.ElideRight
                         }
 
                         MaterialIcon {
@@ -238,18 +251,26 @@ Item {
 
                 Item {
                     visible: !root.isTrash && AppController.showTypeColumn
-                    Layout.preferredWidth: 150
+                    Layout.preferredWidth: root.colWidth("type", 150)
                     implicitHeight: parent.height
+
+                    ColumnResizeHandle {
+                        columnKey: "type"
+                        defaultWidth: 150
+                    }
 
                     RowLayout {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
+                        anchors.right: parent.right
                         spacing: 4
 
                         StyledText {
+                            Layout.fillWidth: true
                             text: qsTr("Type")
                             font: Tokens.font.label.medium
                             color: Colours.palette.m3onSurface
+                            elide: Text.ElideRight
                         }
 
                         MaterialIcon {
@@ -276,18 +297,26 @@ Item {
 
                 Item {
                     visible: !root.isTrash && AppController.showDateColumn
-                    Layout.preferredWidth: 140
+                    Layout.preferredWidth: root.colWidth("date", 140)
                     implicitHeight: parent.height
+
+                    ColumnResizeHandle {
+                        columnKey: "date"
+                        defaultWidth: 140
+                    }
 
                     RowLayout {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
+                        anchors.right: parent.right
                         spacing: 4
 
                         StyledText {
+                            Layout.fillWidth: true
                             text: qsTr("Date Modified")
                             font: Tokens.font.label.medium
                             color: Colours.palette.m3onSurface
+                            elide: Text.ElideRight
                         }
 
                         MaterialIcon {
@@ -314,23 +343,35 @@ Item {
 
                 Item {
                     visible: !root.isTrash && AppController.showPermissionsColumn
-                    Layout.preferredWidth: 90
+                    Layout.preferredWidth: root.colWidth("perms", 90)
                     implicitHeight: parent.height
+
+                    ColumnResizeHandle {
+                        columnKey: "perms"
+                        defaultWidth: 90
+                    }
 
                     StyledText {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
+                        anchors.right: parent.right
                         text: qsTr("Permissions")
                         font: Tokens.font.label.medium
                         color: Colours.palette.m3onSurfaceVariant
+                        elide: Text.ElideRight
                     }
                 }
 
                 // Trash Mode Columns
                 Item {
                     visible: root.isTrash
-                    Layout.preferredWidth: 320
+                    Layout.preferredWidth: root.colWidth("origPath", 320)
                     implicitHeight: parent.height
+
+                    ColumnResizeHandle {
+                        columnKey: "origPath"
+                        defaultWidth: 320
+                    }
 
                     StyledText {
                         anchors.verticalCenter: parent.verticalCenter
@@ -338,13 +379,20 @@ Item {
                         text: qsTr("Original Path")
                         font: Tokens.font.label.medium
                         color: Colours.palette.m3onSurface
+                        elide: Text.ElideRight
+                        width: parent.width
                     }
                 }
 
                 Item {
                     visible: root.isTrash
-                    Layout.preferredWidth: 180
+                    Layout.preferredWidth: root.colWidth("deleted", 180)
                     implicitHeight: parent.height
+
+                    ColumnResizeHandle {
+                        columnKey: "deleted"
+                        defaultWidth: 180
+                    }
 
                     StyledText {
                         anchors.verticalCenter: parent.verticalCenter
@@ -352,6 +400,8 @@ Item {
                         text: qsTr("Deletion Time")
                         font: Tokens.font.label.medium
                         color: Colours.palette.m3onSurface
+                        elide: Text.ElideRight
+                        width: parent.width
                     }
                 }
             }
@@ -771,15 +821,16 @@ Item {
                     // Normal Mode Details
                     StyledText {
                         visible: !root.isTrash && AppController.showSizeColumn
-                        Layout.preferredWidth: 100
+                        Layout.preferredWidth: root.colWidth("size", 100)
                         text: rowItem.modelData ? (rowItem.modelData.isDir ? "" : rowItem.modelData.formattedSize) : ""
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
+                        elide: Text.ElideRight
                     }
 
                     StyledText {
                         visible: !root.isTrash && AppController.showTypeColumn
-                        Layout.preferredWidth: 150
+                        Layout.preferredWidth: root.colWidth("type", 150)
                         text: rowItem.modelData ? rowItem.modelData.mimeDescription : ""
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
@@ -788,24 +839,26 @@ Item {
 
                     StyledText {
                         visible: !root.isTrash && AppController.showDateColumn
-                        Layout.preferredWidth: 140
+                        Layout.preferredWidth: root.colWidth("date", 140)
                         text: rowItem.modelData ? rowItem.modelData.formattedDate : ""
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
+                        elide: Text.ElideRight
                     }
 
                     StyledText {
                         visible: !root.isTrash && AppController.showPermissionsColumn
-                        Layout.preferredWidth: 90
+                        Layout.preferredWidth: root.colWidth("perms", 90)
                         text: rowItem.modelData ? rowItem.modelData.permissions : ""
                         color: Colours.palette.m3outline
                         font: Tokens.font.mono.small
+                        elide: Text.ElideRight
                     }
 
                     // Trash Mode Details
                     StyledText {
                         visible: root.isTrash
-                        Layout.preferredWidth: 320
+                        Layout.preferredWidth: root.colWidth("origPath", 320)
                         text: rowItem.modelData ? (rowItem.modelData.originalPath || "") : ""
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
@@ -814,10 +867,11 @@ Item {
 
                     StyledText {
                         visible: root.isTrash
-                        Layout.preferredWidth: 180
+                        Layout.preferredWidth: root.colWidth("deleted", 180)
                         text: rowItem.modelData ? (rowItem.modelData.deletionTime || rowItem.modelData.formattedDate) : ""
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
+                        elide: Text.ElideRight
                     }
                 }
             }

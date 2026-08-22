@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QVariantMap>
 #include <QString>
 #include <QStringList>
 #include <QGuiApplication>
@@ -26,6 +27,7 @@ class AppController : public QObject {
     Q_PROPERTY(bool showTypeColumn READ showTypeColumn WRITE setShowTypeColumn NOTIFY showTypeColumnChanged)
     Q_PROPERTY(bool showDateColumn READ showDateColumn WRITE setShowDateColumn NOTIFY showDateColumnChanged)
     Q_PROPERTY(bool showPermissionsColumn READ showPermissionsColumn WRITE setShowPermissionsColumn NOTIFY showPermissionsColumnChanged)
+    Q_PROPERTY(QVariantMap detailsColumnWidths READ detailsColumnWidths NOTIFY detailsColumnWidthsChanged)
     Q_PROPERTY(bool singleClick READ singleClick WRITE setSingleClick NOTIFY singleClickChanged)
     Q_PROPERTY(QString defaultStartupDirectory READ defaultStartupDirectory WRITE setDefaultStartupDirectory NOTIFY defaultStartupDirectoryChanged)
     Q_PROPERTY(int defaultViewMode READ defaultViewMode WRITE setDefaultViewMode NOTIFY defaultViewModeChanged)
@@ -77,6 +79,9 @@ public:
     void setShowDateColumn(bool show);
     [[nodiscard]] bool showPermissionsColumn() const { return m_showPermissionsColumn; }
     void setShowPermissionsColumn(bool show);
+    [[nodiscard]] QVariantMap detailsColumnWidths() const { return m_detailsColumnWidths; }
+    Q_INVOKABLE void setDetailsColumnWidth(const QString& key, int width);
+    Q_INVOKABLE void resetDetailsColumnWidths();
     void setShowHidden(bool show);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
@@ -120,6 +125,7 @@ signals:
     void showTypeColumnChanged();
     void showDateColumnChanged();
     void showPermissionsColumnChanged();
+    void detailsColumnWidthsChanged();
     void singleClickChanged();
     void defaultStartupDirectoryChanged();
     void defaultViewModeChanged();
@@ -147,6 +153,7 @@ private:
     bool m_showTypeColumn = true;
     bool m_showDateColumn = true;
     bool m_showPermissionsColumn = true;
+    QVariantMap m_detailsColumnWidths;
     bool m_singleClick = false;
     QString m_defaultStartupDirectory = "home";
     int m_defaultViewMode = 0; // Grid, Details, Compact
