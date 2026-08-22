@@ -24,6 +24,7 @@ MouseArea {
     Behavior on opacity { Anim { type: Anim.FastEffects } }
 
     onClicked: root.expanded = false
+    onWheel: wheel => wheel.accepted = true
     Keys.onEscapePressed: root.expanded = false
 
     Rectangle {
@@ -36,6 +37,7 @@ MouseArea {
 
         anchors.centerIn: parent
         width: Math.min(parent.width - 32, 580)
+        height: Math.min(parent.height - 32, 560)
         implicitWidth: 580
         implicitHeight: 560
 
@@ -53,6 +55,7 @@ MouseArea {
         MouseArea {
             anchors.fill: parent
             onClicked: mouse => mouse.accepted = true
+            onWheel: wheel => wheel.accepted = true
         }
 
         ColumnLayout {
@@ -111,12 +114,23 @@ MouseArea {
                     }
 
                     // --- TAB 0: General & Startup ---
-                    Item {
+                    VerticalFadeFlickable {
+                        id: tab0Flickable
                         width: contentArea.width
                         height: contentArea.height
+                        contentWidth: width
+                        contentHeight: tab0Col.implicitHeight + Tokens.padding.medium
+                        clip: true
+                        fadeAmount: 0.08
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        ScrollBar.vertical: StyledScrollBar {
+                            flickable: tab0Flickable
+                        }
 
                         ColumnLayout {
-                            anchors.fill: parent
+                            id: tab0Col
+                            width: tab0Flickable.width
                             spacing: Tokens.spacing.medium
 
                             StyledText {
@@ -430,17 +444,28 @@ MouseArea {
                                 }
                             }
 
-                            Item { Layout.fillHeight: true }
+                            Item { implicitHeight: Tokens.padding.small }
                         }
                     }
 
                     // --- TAB 1: View & Sorting Defaults ---
-                    Item {
+                    VerticalFadeFlickable {
+                        id: tab1Flickable
                         width: contentArea.width
                         height: contentArea.height
+                        contentWidth: width
+                        contentHeight: tab1Col.implicitHeight + Tokens.padding.medium
+                        clip: true
+                        fadeAmount: 0.08
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        ScrollBar.vertical: StyledScrollBar {
+                            flickable: tab1Flickable
+                        }
 
                         ColumnLayout {
-                            anchors.fill: parent
+                            id: tab1Col
+                            width: tab1Flickable.width
                             spacing: Tokens.spacing.medium
 
                             StyledText {
@@ -630,17 +655,28 @@ MouseArea {
                                 }
                             }
 
-                            Item { Layout.fillHeight: true }
+                            Item { implicitHeight: Tokens.padding.small }
                         }
                     }
 
                     // --- TAB 2: Custom Scripts & Tools ---
-                    Item {
+                    VerticalFadeFlickable {
+                        id: tab2Flickable
                         width: contentArea.width
                         height: contentArea.height
+                        contentWidth: width
+                        contentHeight: tab2Col.implicitHeight + Tokens.padding.medium
+                        clip: true
+                        fadeAmount: 0.08
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        ScrollBar.vertical: StyledScrollBar {
+                            flickable: tab2Flickable
+                        }
 
                         ColumnLayout {
-                            anchors.fill: parent
+                            id: tab2Col
+                            width: tab2Flickable.width
                             spacing: Tokens.spacing.medium
 
                             StyledText {
@@ -714,7 +750,7 @@ MouseArea {
                                 }
                             }
 
-                            Item { Layout.fillHeight: true }
+                            Item { implicitHeight: Tokens.padding.small }
                         }
                     }
                 }

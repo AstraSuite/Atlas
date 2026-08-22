@@ -21,6 +21,7 @@ MouseArea {
     Behavior on opacity { Anim { type: Anim.FastEffects } }
 
     onClicked: root.expanded = false
+    onWheel: wheel => wheel.accepted = true
     Keys.onEscapePressed: root.expanded = false
 
     Rectangle {
@@ -51,6 +52,7 @@ MouseArea {
         MouseArea {
             anchors.fill: parent
             onClicked: mouse => mouse.accepted = true
+            onWheel: wheel => wheel.accepted = true
         }
 
         ColumnLayout {

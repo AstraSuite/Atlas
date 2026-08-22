@@ -42,6 +42,7 @@ MouseArea {
     Behavior on opacity { Anim { type: Anim.FastEffects } }
 
     onClicked: root.expanded = false
+    onWheel: wheel => wheel.accepted = true
     Keys.onEscapePressed: root.expanded = false
 
     Rectangle {
@@ -53,6 +54,8 @@ MouseArea {
         id: modalCard
 
         anchors.centerIn: parent
+        width: Math.min(parent.width - 32, 480)
+        height: Math.min(parent.height - 32, 560)
         implicitWidth: 480
         implicitHeight: 560
 
@@ -65,6 +68,7 @@ MouseArea {
         MouseArea {
             anchors.fill: parent
             onClicked: mouse => mouse.accepted = true
+            onWheel: wheel => wheel.accepted = true
         }
 
         ColumnLayout {

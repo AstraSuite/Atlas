@@ -29,6 +29,7 @@ MouseArea {
     }
 
     onClicked: root.expanded = false
+    onWheel: wheel => wheel.accepted = true
 
     Keys.onEscapePressed: root.expanded = false
 
@@ -60,6 +61,8 @@ MouseArea {
         id: modalCard
 
         anchors.centerIn: parent
+        width: Math.min(parent.width - 48, 440)
+        height: Math.min(parent.height - 32, modalCol.implicitHeight + Tokens.padding.large * 2)
         implicitWidth: Math.min(parent.width - 48, 440)
         implicitHeight: modalCol.implicitHeight + Tokens.padding.large * 2
 
@@ -78,6 +81,7 @@ MouseArea {
         MouseArea {
             anchors.fill: parent
             onClicked: mouse => mouse.accepted = true
+            onWheel: wheel => wheel.accepted = true
         }
 
         ColumnLayout {

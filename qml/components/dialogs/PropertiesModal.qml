@@ -48,6 +48,7 @@ MouseArea {
     cursorShape: Qt.ArrowCursor
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     onClicked: expanded = false
+    onWheel: wheel => wheel.accepted = true
 
     opacity: expanded ? 1 : 0
     Behavior on opacity { Anim { type: Anim.FastEffects } }
@@ -62,6 +63,8 @@ MouseArea {
         id: dialog
 
         anchors.centerIn: parent
+        width: Math.min(parent.width - 32, 480)
+        height: Math.min(parent.height - 32, 560)
         implicitWidth: 480
         implicitHeight: 560
 
@@ -75,6 +78,7 @@ MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             onClicked: mouse => mouse.accepted = true
+            onWheel: wheel => wheel.accepted = true
         }
 
         ColumnLayout {

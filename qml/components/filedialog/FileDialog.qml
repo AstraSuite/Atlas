@@ -83,24 +83,28 @@ StyledRect {
 
     Shortcut {
         sequence: "Escape"
+        enabled: root.visible
         context: Qt.ApplicationShortcut
         onActivated: root.rejected()
     }
 
     Shortcut {
         sequence: "Ctrl+H"
+        enabled: root.visible
         context: Qt.ApplicationShortcut
         onActivated: root.showHidden = !root.showHidden
     }
 
     Shortcut {
         sequence: "Alt+."
+        enabled: root.visible
         context: Qt.ApplicationShortcut
         onActivated: root.showHidden = !root.showHidden
     }
 
     Shortcut {
         sequence: "Alt+Up"
+        enabled: root.visible
         context: Qt.ApplicationShortcut
         onActivated: {
             if (root.cwd.length > 1) {
@@ -111,24 +115,28 @@ StyledRect {
 
     Shortcut {
         sequence: "Ctrl+="
+        enabled: root.visible
         context: Qt.ApplicationShortcut
         onActivated: root.zoomLevel = Math.min(180, root.zoomLevel + 16)
     }
 
     Shortcut {
         sequence: "Ctrl++"
+        enabled: root.visible
         context: Qt.ApplicationShortcut
         onActivated: root.zoomLevel = Math.min(180, root.zoomLevel + 16)
     }
 
     Shortcut {
         sequence: "Ctrl+-"
+        enabled: root.visible
         context: Qt.ApplicationShortcut
         onActivated: root.zoomLevel = Math.max(48, root.zoomLevel - 16)
     }
 
     Shortcut {
         sequence: "Ctrl+0"
+        enabled: root.visible
         context: Qt.ApplicationShortcut
         onActivated: root.zoomLevel = 80
     }

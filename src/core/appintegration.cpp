@@ -618,14 +618,7 @@ int AppIntegration::handleCustomProtocol(const QString& uri) {
 }
 
 QString AppIntegration::getGameAssetUrl() {
-    if (QFile::exists(QStringLiteral("/home/dim/Projects/t-rex-runner/index.html"))) {
-        return QStringLiteral("file:///home/dim/Projects/t-rex-runner/index.html");
-    }
-    QString local = QCoreApplication::applicationDirPath() + QStringLiteral("/../assets/runner/index.html");
-    if (QFile::exists(local)) {
-        return QUrl::fromLocalFile(local).toString();
-    }
-    return QStringLiteral("file:///home/dim/Projects/Prism/assets/runner/index.html");
+    return QStringLiteral("qrc:/qt/qml/prism/assets/runner/index.html");
 }
 
 QString AppIntegration::getSystemGeometry(int index) {

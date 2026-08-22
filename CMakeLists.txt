@@ -142,6 +142,13 @@ qt_add_qml_module(prism_app
         assets/material_icons.txt
         assets/prism.png
         assets/prism.svg
+        assets/runner/index.html
+        assets/runner/index.js
+        assets/runner/index.css
+        assets/runner/assets/default_100_percent/100-offline-sprite.png
+        assets/runner/assets/default_100_percent/100-error-offline.png
+        assets/runner/assets/default_200_percent/200-offline-sprite.png
+        assets/runner/assets/default_200_percent/200-error-offline.png
 )
 
 target_link_libraries(prism_app PRIVATE
