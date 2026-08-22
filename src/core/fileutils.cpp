@@ -1,4 +1,8 @@
 #include "fileutils.hpp"
+
+#include <QDateTime>
+#include <QLocale>
+#include <atomic>
 #include <QDir>
 #include <QFileInfo>
 #include <QMimeDatabase>
@@ -36,6 +40,35 @@ QString FileUtils::music() const {
 
 QString FileUtils::desktop() const {
     return QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+}
+
+namespace {
+std::atomic<int> g_dateFormat{FileUtils::Iso};
+}
+
+void FileUtils::setDateFormat(int format) {
+    g_dateFormat.store(format, std::memory_order_relaxed);
+}
+
+int FileUtils::dateFormat() {
+    return g_dateFormat.load(std::memory_order_relaxed);
+}
+
+QString FileUtils::formatDateTime(const QDateTime& dt, int format) {
+    if (!dt.isValid())
+        return {};
+
+    if (format < 0)
+        format = g_dateFormat.load(std::memory_order_relaxed);
+
+    switch (format) {
+    case SystemLocale:
+        return QLocale::system().toString(dt, QLocale::ShortFormat);
+    case LongLocale:
+        return QLocale::system().toString(dt, QLocale::LongFormat);
+    default:
+        return dt.toString(QStringLiteral("yyyy-MM-dd hh:mm"));
+    }
 }
 
 QString FileUtils::formatSize(qint64 bytes) {

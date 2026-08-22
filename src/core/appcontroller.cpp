@@ -1,4 +1,5 @@
 #include "appcontroller.hpp"
+#include "fileutils.hpp"
 #include "iconprovider.hpp"
 #include <QSettings>
 #include <iostream>
@@ -18,6 +19,8 @@ AppController::AppController(QObject* parent)
     m_defaultSortOrder = settings.value("preferences/defaultSortOrder", 0).toInt();
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
+    m_dateFormat = settings.value("preferences/dateFormat", 1).toInt();
+    FileUtils::setDateFormat(m_dateFormat);
 }
 
 AppController* AppController::instance() {
@@ -57,6 +60,16 @@ void AppController::setDirectoryOnly(bool dirOnly) {
     if (m_directoryOnly != dirOnly) {
         m_directoryOnly = dirOnly;
         emit directoryOnlyChanged();
+    }
+}
+
+void AppController::setDateFormat(int format) {
+    if (m_dateFormat != format) {
+        m_dateFormat = format;
+        FileUtils::setDateFormat(format);
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/dateFormat", format);
+        emit dateFormatChanged();
     }
 }
 

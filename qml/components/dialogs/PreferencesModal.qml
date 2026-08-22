@@ -531,6 +531,75 @@ MouseArea {
                             Item { implicitHeight: 4 }
 
                             StyledText {
+                                text: qsTr("Date Format")
+                                color: Colours.palette.m3primary
+                                font: Tokens.font.label.large
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.small
+
+                                Repeater {
+                                    model: [
+                                        { mode: 1, label: qsTr("ISO"), icon: "calendar_month" },
+                                        { mode: 0, label: qsTr("Short"), icon: "schedule" },
+                                        { mode: 2, label: qsTr("Long"), icon: "event_note" }
+                                    ]
+
+                                    StyledRect {
+                                        id: dateCard
+                                        required property int index
+                                        required property var modelData
+
+                                        Layout.fillWidth: true
+                                        implicitHeight: 44
+                                        radius: Tokens.rounding.medium
+                                        readonly property bool isSelected: AppController.dateFormat === dateCard.modelData.mode
+                                        color: isSelected
+                                            ? Colours.palette.m3primaryContainer
+                                            : (dateHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
+
+                                        RowLayout {
+                                            anchors.centerIn: parent
+                                            spacing: 6
+
+                                            MaterialIcon {
+                                                text: dateCard.modelData.icon
+                                                color: dateCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+                                                fontStyle: Tokens.font.icon.small
+                                            }
+
+                                            StyledText {
+                                                text: dateCard.modelData.label
+                                                color: dateCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                                                font: Tokens.font.body.small
+                                                elide: Text.ElideRight
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: dateHover
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: AppController.dateFormat = dateCard.modelData.mode
+                                        }
+                                    }
+                                }
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: FileUtils.formatDateTime(new Date(), AppController.dateFormat)
+                                color: Colours.palette.m3onSurfaceVariant
+                                font: Tokens.font.label.small
+                                elide: Text.ElideRight
+                            }
+
+                            Item { implicitHeight: 4 }
+
+                            StyledText {
                                 text: qsTr("Places Sidebar Icon Size")
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
