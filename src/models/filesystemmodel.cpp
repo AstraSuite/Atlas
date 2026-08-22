@@ -166,6 +166,24 @@ int FileSystemModel::indexOfPath(const QString& path) const {
     return -1;
 }
 
+int FileSystemModel::findFirstIndexByPrefix(const QString& prefix, int startIndex) const {
+    if (prefix.isEmpty() || m_filteredEntries.isEmpty()) return -1;
+    int size = static_cast<int>(m_filteredEntries.size());
+    int start = (startIndex >= 0 && startIndex < size) ? startIndex : 0;
+
+    for (int i = start; i < size; ++i) {
+        if (m_filteredEntries.at(i)->name().startsWith(prefix, Qt::CaseInsensitive)) {
+            return i;
+        }
+    }
+    for (int i = 0; i < start; ++i) {
+        if (m_filteredEntries.at(i)->name().startsWith(prefix, Qt::CaseInsensitive)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 void FileSystemModel::refresh() {
     scanDirectory();
 }

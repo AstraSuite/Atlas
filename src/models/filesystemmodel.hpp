@@ -213,6 +213,7 @@ public:
 
     Q_INVOKABLE prism::models::FileSystemEntry* get(int index) const;
     Q_INVOKABLE int indexOfPath(const QString& path) const;
+    Q_INVOKABLE int findFirstIndexByPrefix(const QString& prefix, int startIndex = 0) const;
     Q_INVOKABLE void refresh();
 
 signals:

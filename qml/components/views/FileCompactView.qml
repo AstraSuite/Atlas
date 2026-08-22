@@ -41,6 +41,46 @@ Item {
         }
     }
 
+    property string typeAheadBuffer: ""
+
+    Timer {
+        id: typeAheadTimer
+        interval: 800
+        repeat: false
+        onTriggered: {
+            root.typeAheadBuffer = "";
+        }
+    }
+
+    function handleTypeAhead(text) {
+        if (!root.model || root.model.count === 0) return;
+        typeAheadTimer.restart();
+
+        let isSingleCharRepeat = (text.length === 1 && root.typeAheadBuffer.length === 1 && root.typeAheadBuffer.toLowerCase() === text.toLowerCase());
+
+        let startIndex = 0;
+        if (isSingleCharRepeat) {
+            startIndex = gridView.currentIndex + 1;
+        } else {
+            root.typeAheadBuffer += text;
+        }
+
+        let matchIdx = -1;
+        if (root.model.findFirstIndexByPrefix) {
+            matchIdx = root.model.findFirstIndexByPrefix(root.typeAheadBuffer, startIndex);
+        }
+
+        if (matchIdx !== -1) {
+            gridView.currentIndex = matchIdx;
+            let item = root.model.get(matchIdx);
+            if (item) {
+                root.currentItem = item;
+                root.selectedPaths = [item.path];
+                gridView.positionViewAtIndex(matchIdx, GridView.Contain);
+            }
+        }
+    }
+
     signal openItem(var item)
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
@@ -281,10 +321,9 @@ Item {
                 let ch = event.text;
                 let code = ch.charCodeAt(0);
                 if (code >= 32 && ch !== ' ') {
-                    if (typeof navBar !== "undefined" && navBar) {
-                        navBar.openSearch(ch);
-                        event.accepted = true;
-                    }
+                    root.handleTypeAhead(ch);
+                    event.accepted = true;
+                    return;
                 }
             }
         }
