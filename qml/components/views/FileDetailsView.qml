@@ -79,7 +79,6 @@ Item {
             listView.currentIndex = matchIdx;
             let item = root.model.get(matchIdx);
             if (item) {
-                root.currentItem = item;
                 root.selectedPaths = [item.path];
                 listView.positionViewAtIndex(matchIdx, ListView.Contain);
             }

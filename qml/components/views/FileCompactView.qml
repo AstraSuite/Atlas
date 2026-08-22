@@ -74,7 +74,6 @@ Item {
             gridView.currentIndex = matchIdx;
             let item = root.model.get(matchIdx);
             if (item) {
-                root.currentItem = item;
                 root.selectedPaths = [item.path];
                 gridView.positionViewAtIndex(matchIdx, GridView.Contain);
             }

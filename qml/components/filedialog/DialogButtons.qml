@@ -56,9 +56,15 @@ StyledRect {
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
 
-                text: root.dialog.directoryOnly
-                    ? qsTr("Folders only")
-                    : `${root.dialog.filterLabel} (${root.dialog.filters.map(f => f === '*' ? '*.*' : `*.${f}`).join(", ")})`
+                text: {
+                    if (!root.dialog) return "";
+                    if (root.dialog.directoryOnly) return qsTr("Folders only");
+                    let label = root.dialog.filterLabel || qsTr("All Files");
+                    if (root.dialog.filters && Array.isArray(root.dialog.filters) && root.dialog.filters.length > 0) {
+                        return `${label} (${root.dialog.filters.map(f => f === '*' ? '*.*' : `*.${f}`).join(", ")})`;
+                    }
+                    return label;
+                }
             }
         }
 
