@@ -12,6 +12,14 @@ Item {
     required property var activeTab
     property int paneIndex: 0
     property real zoomSize: 80
+    readonly property int labelLines: zoomSize < 64 ? 2 : (zoomSize < 80 ? 3 : 4)
+    readonly property int labelHeight: Math.ceil(labelMetrics.height) * labelLines
+
+    FontMetrics {
+        id: labelMetrics
+        font: Tokens.font.body.small
+    }
+
     property int currentIndex: view.currentIndex
     readonly property var currentItem: {
         if (view.currentIndex >= 0 && root.model && view.currentIndex < root.model.count) {
@@ -123,7 +131,7 @@ Item {
 
         // Exact uniform cell dimensions
         cellWidth: Math.max(144, root.zoomSize + 48)
-        cellHeight: root.zoomSize + 84
+        cellHeight: 16 + root.zoomSize + root.labelHeight
 
         clip: true
         focus: true
@@ -573,7 +581,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignTop
                     elide: Text.ElideMiddle
-                    maximumLineCount: 4
+                    maximumLineCount: root.labelLines
                     wrapMode: Text.WrapAnywhere
                 }
             }
