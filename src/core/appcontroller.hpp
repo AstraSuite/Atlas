@@ -19,6 +19,7 @@ class AppController : public QObject {
     Q_PROPERTY(QStringList filters READ filters WRITE setFilters NOTIFY filtersChanged)
     Q_PROPERTY(bool directoryOnly READ directoryOnly WRITE setDirectoryOnly NOTIFY directoryOnlyChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
+    Q_PROPERTY(bool confirmPermanentDelete READ confirmPermanentDelete WRITE setConfirmPermanentDelete NOTIFY confirmPermanentDeleteChanged)
     Q_PROPERTY(bool singleClick READ singleClick WRITE setSingleClick NOTIFY singleClickChanged)
     Q_PROPERTY(QString defaultStartupDirectory READ defaultStartupDirectory WRITE setDefaultStartupDirectory NOTIFY defaultStartupDirectoryChanged)
     Q_PROPERTY(int defaultViewMode READ defaultViewMode WRITE setDefaultViewMode NOTIFY defaultViewModeChanged)
@@ -53,6 +54,8 @@ public:
     void setDirectoryOnly(bool dirOnly);
 
     [[nodiscard]] bool showHidden() const { return m_showHidden; }
+    [[nodiscard]] bool confirmPermanentDelete() const { return m_confirmPermanentDelete; }
+    void setConfirmPermanentDelete(bool confirm);
     void setShowHidden(bool show);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
@@ -88,6 +91,7 @@ signals:
     void filtersChanged();
     void directoryOnlyChanged();
     void showHiddenChanged();
+    void confirmPermanentDeleteChanged();
     void singleClickChanged();
     void defaultStartupDirectoryChanged();
     void defaultViewModeChanged();
@@ -107,6 +111,7 @@ private:
     QStringList m_filters = { "*" };
     bool m_directoryOnly = false;
     bool m_showHidden = false;
+    bool m_confirmPermanentDelete = true;
     bool m_singleClick = false;
     QString m_defaultStartupDirectory = "home";
     int m_defaultViewMode = 0; // Grid, Details, Compact

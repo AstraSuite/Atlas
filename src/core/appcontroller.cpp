@@ -12,6 +12,7 @@ AppController::AppController(QObject* parent)
     QSettings legacy2("Caelestia", "Prism");
     m_showHidden = settings.value("session/showHidden", legacy1.value("session/showHidden", legacy2.value("session/showHidden", false))).toBool();
     m_singleClick = settings.value("session/singleClick", legacy1.value("session/singleClick", legacy2.value("session/singleClick", false))).toBool();
+    m_confirmPermanentDelete = settings.value("session/confirmPermanentDelete", true).toBool();
     m_defaultStartupDirectory = settings.value("preferences/startupDirectory", "home").toString();
     m_defaultViewMode = settings.value("preferences/defaultViewMode", 0).toInt();
     m_defaultSortField = settings.value("preferences/defaultSortField", 0).toInt();
@@ -57,6 +58,15 @@ void AppController::setDirectoryOnly(bool dirOnly) {
     if (m_directoryOnly != dirOnly) {
         m_directoryOnly = dirOnly;
         emit directoryOnlyChanged();
+    }
+}
+
+void AppController::setConfirmPermanentDelete(bool confirm) {
+    if (m_confirmPermanentDelete != confirm) {
+        m_confirmPermanentDelete = confirm;
+        QSettings settings("prism", "prism");
+        settings.setValue("session/confirmPermanentDelete", confirm);
+        emit confirmPermanentDeleteChanged();
     }
 }
 
