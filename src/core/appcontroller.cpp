@@ -1,5 +1,7 @@
 #include "appcontroller.hpp"
 #include "fileutils.hpp"
+
+#include <QGuiApplication>
 #include "iconprovider.hpp"
 #include <QSettings>
 #include <iostream>
@@ -81,6 +83,10 @@ void AppController::setDateFormat(int format) {
         settings.setValue("preferences/dateFormat", format);
         emit dateFormatChanged();
     }
+}
+
+bool AppController::shiftPressed() {
+    return QGuiApplication::queryKeyboardModifiers().testFlag(Qt::ShiftModifier);
 }
 
 void AppController::setShowHidden(bool show) {

@@ -57,6 +57,7 @@ public:
     void setConfirmPermanentDelete(bool confirm);
     [[nodiscard]] int dateFormat() const { return m_dateFormat; }
     void setDateFormat(int format);
+    Q_INVOKABLE static bool shiftPressed();
     void setShowHidden(bool show);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
