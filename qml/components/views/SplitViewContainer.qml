@@ -39,6 +39,14 @@ StyledRect {
     }
     readonly property var activeModel: (isSplit && activePane === 1) ? splitModel : mainModel
 
+    Connections {
+        target: AppController
+        function onDateFormatChanged() {
+            if (mainModel) mainModel.refresh();
+            if (splitModel) splitModel.refresh();
+        }
+    }
+
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
     signal filesDropped(var sources, string destDir, real mouseX, real mouseY)

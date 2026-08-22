@@ -184,7 +184,7 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
     d.isWritable = fi.isWritable();
     d.isReadOnly = !d.isWritable;
     d.lastModified = fi.lastModified();
-    d.formattedDate = d.lastModified.toString("yyyy-MM-dd hh:mm");
+    d.formattedDate = prism::core::FileUtils::formatDateTime(d.lastModified);
     d.owner = fi.owner();
     d.group = fi.group();
 
@@ -228,7 +228,7 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
                     QString dStr = line.mid(13);
                     QDateTime dt = QDateTime::fromString(dStr, Qt::ISODate);
                     if (dt.isValid()) {
-                        d.deletionTime = dt.toString("M/d/yy 'at' h:mm AP");
+                        d.deletionTime = prism::core::FileUtils::formatDateTime(dt);
                     } else {
                         d.deletionTime = dStr;
                     }

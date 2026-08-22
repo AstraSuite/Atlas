@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QDateTime>
 #include <QObject>
 #include <QString>
 #include <QUrl>
@@ -31,7 +32,17 @@ public:
     [[nodiscard]] QString music() const;
     [[nodiscard]] QString desktop() const;
 
+    enum DateFormat {
+        SystemLocale = 0,
+        Iso = 1,
+        LongLocale = 2
+    };
+    Q_ENUM(DateFormat)
+
     Q_INVOKABLE static QString formatSize(qint64 bytes);
+    Q_INVOKABLE static QString formatDateTime(const QDateTime& dt, int format = -1);
+    static void setDateFormat(int format);
+    static int dateFormat();
     Q_INVOKABLE static QString shortenHome(const QString& path);
     Q_INVOKABLE static QString toLocalFile(const QUrl& url);
     Q_INVOKABLE static QString baseName(const QString& path);

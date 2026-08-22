@@ -17,9 +17,8 @@ class AppController : public QObject {
     Q_PROPERTY(QString initialDirectory READ initialDirectory WRITE setInitialDirectory NOTIFY initialDirectoryChanged)
     Q_PROPERTY(QString filterLabel READ filterLabel WRITE setFilterLabel NOTIFY filterLabelChanged)
     Q_PROPERTY(QStringList filters READ filters WRITE setFilters NOTIFY filtersChanged)
-    Q_PROPERTY(bool directoryOnly READ directoryOnly WRITE setDirectoryOnly NOTIFY directoryOnlyChanged)
-    Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
     Q_PROPERTY(bool confirmPermanentDelete READ confirmPermanentDelete WRITE setConfirmPermanentDelete NOTIFY confirmPermanentDeleteChanged)
+    Q_PROPERTY(int dateFormat READ dateFormat WRITE setDateFormat NOTIFY dateFormatChanged)
     Q_PROPERTY(bool singleClick READ singleClick WRITE setSingleClick NOTIFY singleClickChanged)
     Q_PROPERTY(QString defaultStartupDirectory READ defaultStartupDirectory WRITE setDefaultStartupDirectory NOTIFY defaultStartupDirectoryChanged)
     Q_PROPERTY(int defaultViewMode READ defaultViewMode WRITE setDefaultViewMode NOTIFY defaultViewModeChanged)
@@ -56,6 +55,8 @@ public:
     [[nodiscard]] bool showHidden() const { return m_showHidden; }
     [[nodiscard]] bool confirmPermanentDelete() const { return m_confirmPermanentDelete; }
     void setConfirmPermanentDelete(bool confirm);
+    [[nodiscard]] int dateFormat() const { return m_dateFormat; }
+    void setDateFormat(int format);
     void setShowHidden(bool show);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
@@ -92,6 +93,7 @@ signals:
     void directoryOnlyChanged();
     void showHiddenChanged();
     void confirmPermanentDeleteChanged();
+    void dateFormatChanged();
     void singleClickChanged();
     void defaultStartupDirectoryChanged();
     void defaultViewModeChanged();
@@ -112,6 +114,7 @@ private:
     bool m_directoryOnly = false;
     bool m_showHidden = false;
     bool m_confirmPermanentDelete = true;
+    int m_dateFormat = 1;
     bool m_singleClick = false;
     QString m_defaultStartupDirectory = "home";
     int m_defaultViewMode = 0; // Grid, Details, Compact

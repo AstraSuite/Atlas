@@ -129,9 +129,9 @@ void FileMetadata::reload() {
     m_owner = fi.owner();
     m_group = fi.group();
 
-    m_formattedCreated = fi.birthTime().toString("yyyy-MM-dd hh:mm");
-    m_formattedModified = fi.lastModified().toString("yyyy-MM-dd hh:mm");
-    m_formattedAccessed = fi.lastRead().toString("yyyy-MM-dd hh:mm");
+    m_formattedCreated = FileUtils::formatDateTime(fi.birthTime());
+    m_formattedModified = FileUtils::formatDateTime(fi.lastModified());
+    m_formattedAccessed = FileUtils::formatDateTime(fi.lastRead());
 
     if (m_isImage) {
         QImageReader reader(m_path);
