@@ -700,6 +700,171 @@ MouseArea {
                             Item { implicitHeight: 4 }
 
                             StyledText {
+                                text: qsTr("Details View Columns")
+                                color: Colours.palette.m3primary
+                                font: Tokens.font.label.large
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.small
+
+                                StyledRect {
+                                    Layout.fillWidth: true
+                                    implicitHeight: 44
+                                    radius: Tokens.rounding.medium
+                                    readonly property bool isSelected: AppController.showSizeColumn
+                                    color: isSelected
+                                        ? Colours.palette.m3primaryContainer
+                                        : (colSizeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
+
+                                    RowLayout {
+                                        anchors.centerIn: parent
+                                        spacing: 6
+
+                                        MaterialIcon {
+                                            text: "straighten"
+                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+                                            fontStyle: Tokens.font.icon.small
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Size")
+                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                                            font: Tokens.font.body.small
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: colSizeHover
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: AppController.showSizeColumn = !AppController.showSizeColumn
+                                    }
+                                }
+
+                                StyledRect {
+                                    Layout.fillWidth: true
+                                    implicitHeight: 44
+                                    radius: Tokens.rounding.medium
+                                    readonly property bool isSelected: AppController.showTypeColumn
+                                    color: isSelected
+                                        ? Colours.palette.m3primaryContainer
+                                        : (colTypeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
+
+                                    RowLayout {
+                                        anchors.centerIn: parent
+                                        spacing: 6
+
+                                        MaterialIcon {
+                                            text: "category"
+                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+                                            fontStyle: Tokens.font.icon.small
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Type")
+                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                                            font: Tokens.font.body.small
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: colTypeHover
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: AppController.showTypeColumn = !AppController.showTypeColumn
+                                    }
+                                }
+
+                                StyledRect {
+                                    Layout.fillWidth: true
+                                    implicitHeight: 44
+                                    radius: Tokens.rounding.medium
+                                    readonly property bool isSelected: AppController.showDateColumn
+                                    color: isSelected
+                                        ? Colours.palette.m3primaryContainer
+                                        : (colDateHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
+
+                                    RowLayout {
+                                        anchors.centerIn: parent
+                                        spacing: 6
+
+                                        MaterialIcon {
+                                            text: "schedule"
+                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+                                            fontStyle: Tokens.font.icon.small
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Date Modified")
+                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                                            font: Tokens.font.body.small
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: colDateHover
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: AppController.showDateColumn = !AppController.showDateColumn
+                                    }
+                                }
+
+                                StyledRect {
+                                    Layout.fillWidth: true
+                                    implicitHeight: 44
+                                    radius: Tokens.rounding.medium
+                                    readonly property bool isSelected: AppController.showPermissionsColumn
+                                    color: isSelected
+                                        ? Colours.palette.m3primaryContainer
+                                        : (colPermissionsHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
+
+                                    RowLayout {
+                                        anchors.centerIn: parent
+                                        spacing: 6
+
+                                        MaterialIcon {
+                                            text: "lock"
+                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+                                            fontStyle: Tokens.font.icon.small
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Permissions")
+                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                                            font: Tokens.font.body.small
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: colPermissionsHover
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: AppController.showPermissionsColumn = !AppController.showPermissionsColumn
+                                    }
+                                }
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: qsTr("The name column is always shown")
+                                color: Colours.palette.m3onSurfaceVariant
+                                font: Tokens.font.label.small
+                                elide: Text.ElideRight
+                            }
+
+                            Item { implicitHeight: 4 }
+
+                            StyledText {
                                 text: qsTr("Date Format")
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large

@@ -22,6 +22,10 @@ class AppController : public QObject {
     Q_PROPERTY(int dateFormat READ dateFormat WRITE setDateFormat NOTIFY dateFormatChanged)
     Q_PROPERTY(bool thumbnailsEnabled READ thumbnailsEnabled WRITE setThumbnailsEnabled NOTIFY thumbnailsEnabledChanged)
     Q_PROPERTY(int thumbnailMaxMb READ thumbnailMaxMb WRITE setThumbnailMaxMb NOTIFY thumbnailMaxMbChanged)
+    Q_PROPERTY(bool showSizeColumn READ showSizeColumn WRITE setShowSizeColumn NOTIFY showSizeColumnChanged)
+    Q_PROPERTY(bool showTypeColumn READ showTypeColumn WRITE setShowTypeColumn NOTIFY showTypeColumnChanged)
+    Q_PROPERTY(bool showDateColumn READ showDateColumn WRITE setShowDateColumn NOTIFY showDateColumnChanged)
+    Q_PROPERTY(bool showPermissionsColumn READ showPermissionsColumn WRITE setShowPermissionsColumn NOTIFY showPermissionsColumnChanged)
     Q_PROPERTY(bool singleClick READ singleClick WRITE setSingleClick NOTIFY singleClickChanged)
     Q_PROPERTY(QString defaultStartupDirectory READ defaultStartupDirectory WRITE setDefaultStartupDirectory NOTIFY defaultStartupDirectoryChanged)
     Q_PROPERTY(int defaultViewMode READ defaultViewMode WRITE setDefaultViewMode NOTIFY defaultViewModeChanged)
@@ -65,6 +69,14 @@ public:
     void setThumbnailsEnabled(bool enabled);
     [[nodiscard]] int thumbnailMaxMb() const { return m_thumbnailMaxMb; }
     void setThumbnailMaxMb(int mb);
+    [[nodiscard]] bool showSizeColumn() const { return m_showSizeColumn; }
+    void setShowSizeColumn(bool show);
+    [[nodiscard]] bool showTypeColumn() const { return m_showTypeColumn; }
+    void setShowTypeColumn(bool show);
+    [[nodiscard]] bool showDateColumn() const { return m_showDateColumn; }
+    void setShowDateColumn(bool show);
+    [[nodiscard]] bool showPermissionsColumn() const { return m_showPermissionsColumn; }
+    void setShowPermissionsColumn(bool show);
     void setShowHidden(bool show);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
@@ -104,6 +116,10 @@ signals:
     void dateFormatChanged();
     void thumbnailsEnabledChanged();
     void thumbnailMaxMbChanged();
+    void showSizeColumnChanged();
+    void showTypeColumnChanged();
+    void showDateColumnChanged();
+    void showPermissionsColumnChanged();
     void singleClickChanged();
     void defaultStartupDirectoryChanged();
     void defaultViewModeChanged();
@@ -127,6 +143,10 @@ private:
     int m_dateFormat = 1;
     bool m_thumbnailsEnabled = true;
     int m_thumbnailMaxMb = 0;
+    bool m_showSizeColumn = true;
+    bool m_showTypeColumn = true;
+    bool m_showDateColumn = true;
+    bool m_showPermissionsColumn = true;
     bool m_singleClick = false;
     QString m_defaultStartupDirectory = "home";
     int m_defaultViewMode = 0; // Grid, Details, Compact

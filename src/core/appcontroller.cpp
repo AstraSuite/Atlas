@@ -28,6 +28,10 @@ AppController::AppController(QObject* parent)
     m_thumbnailMaxMb = settings.value("preferences/thumbnailMaxMb", 0).toInt();
     FileUtils::setThumbnailsEnabled(m_thumbnailsEnabled);
     FileUtils::setThumbnailMaxBytes(static_cast<qint64>(m_thumbnailMaxMb) * 1024 * 1024);
+    m_showSizeColumn = settings.value("preferences/showSizeColumn", true).toBool();
+    m_showTypeColumn = settings.value("preferences/showTypeColumn", true).toBool();
+    m_showDateColumn = settings.value("preferences/showDateColumn", true).toBool();
+    m_showPermissionsColumn = settings.value("preferences/showPermissionsColumn", true).toBool();
 }
 
 AppController* AppController::instance() {
@@ -110,6 +114,42 @@ void AppController::setThumbnailMaxMb(int mb) {
         QSettings settings("prism", "prism");
         settings.setValue("preferences/thumbnailMaxMb", mb);
         emit thumbnailMaxMbChanged();
+    }
+}
+
+void AppController::setShowSizeColumn(bool show) {
+    if (m_showSizeColumn != show) {
+        m_showSizeColumn = show;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showSizeColumn", show);
+        emit showSizeColumnChanged();
+    }
+}
+
+void AppController::setShowTypeColumn(bool show) {
+    if (m_showTypeColumn != show) {
+        m_showTypeColumn = show;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showTypeColumn", show);
+        emit showTypeColumnChanged();
+    }
+}
+
+void AppController::setShowDateColumn(bool show) {
+    if (m_showDateColumn != show) {
+        m_showDateColumn = show;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showDateColumn", show);
+        emit showDateColumnChanged();
+    }
+}
+
+void AppController::setShowPermissionsColumn(bool show) {
+    if (m_showPermissionsColumn != show) {
+        m_showPermissionsColumn = show;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showPermissionsColumn", show);
+        emit showPermissionsColumnChanged();
     }
 }
 void AppController::setShowHidden(bool show) {
