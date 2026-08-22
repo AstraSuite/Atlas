@@ -119,10 +119,7 @@ StyledRect {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        zoomSlider.value = 0.0;
-                        root.zoomChanged(48);
-                    }
+                    onClicked: root.zoomChanged(48)
                 }
 
                 StyledToolTip {
@@ -163,10 +160,7 @@ StyledRect {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        zoomSlider.value = 1.0;
-                        root.zoomChanged(180);
-                    }
+                    onClicked: root.zoomChanged(180)
                 }
 
                 StyledToolTip {
