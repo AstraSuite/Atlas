@@ -304,6 +304,11 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
         m_watcher.removePaths(m_watcher.directories());
 
     if (m_path.isEmpty() || !QDir(m_path).exists()) {
+        if (m_isLoading) {
+            m_isLoading = false;
+            emit isLoadingChanged();
+        }
+
         beginResetModel();
         qDeleteAll(m_rawEntries);
         m_rawEntries.clear();
@@ -315,6 +320,11 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
 
     m_watcher.addPath(m_path);
     QString scanPath = m_path;
+
+    if (isPathReset && !m_isLoading) {
+        m_isLoading = true;
+        emit isLoadingChanged();
+    }
 
     (void)QtConcurrent::run([this, scanPath, isPathReset]() {
         QDir dir(scanPath);
@@ -330,6 +340,11 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
         QMetaObject::invokeMethod(this, [this, rawData, scanPath, isPathReset]() {
             if (m_path != scanPath)
                 return;
+
+            if (m_isLoading) {
+                m_isLoading = false;
+                emit isLoadingChanged();
+            }
 
             if (isPathReset || m_rawEntries.isEmpty()) {
                 beginResetModel();

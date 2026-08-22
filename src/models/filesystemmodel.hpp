@@ -135,6 +135,7 @@ class FileSystemModel : public QAbstractListModel {
     Q_PROPERTY(QString filterText READ filterText WRITE setFilterText NOTIFY filterTextChanged)
     Q_PROPERTY(QString searchQuery READ searchQuery WRITE setSearchQuery NOTIFY searchQueryChanged)
     Q_PROPERTY(bool isSearching READ isSearching NOTIFY isSearchingChanged)
+    Q_PROPERTY(bool isLoading READ isLoading NOTIFY isLoadingChanged)
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters NOTIFY nameFiltersChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst NOTIFY showDirsFirstChanged)
@@ -185,6 +186,7 @@ public:
     QString searchQuery() const { return m_searchQuery; }
     void setSearchQuery(const QString& query);
     bool isSearching() const { return m_isSearching; }
+    bool isLoading() const { return m_isLoading; }
 
     QStringList nameFilters() const { return m_nameFilters; }
     void setNameFilters(const QStringList& filters);
@@ -212,6 +214,7 @@ signals:
     void filterTextChanged();
     void searchQueryChanged();
     void isSearchingChanged();
+    void isLoadingChanged();
     void nameFiltersChanged();
     void showHiddenChanged();
     void showDirsFirstChanged();
@@ -231,6 +234,7 @@ private:
     QString m_filterText;
     QString m_searchQuery;
     bool m_isSearching = false;
+    bool m_isLoading = false;
     bool m_isPathReset = false;
     QStringList m_nameFilters;
     bool m_showHidden = false;
