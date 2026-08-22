@@ -130,7 +130,7 @@ StyledRect {
                     text: meta.name.length > 0 ? meta.name : qsTr("No Selection")
                     color: Colours.palette.m3onSurface
                     font: Tokens.font.title.small
-                    wrapMode: Text.WrapAnywhere
+                    wrapMode: Text.Wrap
                 }
 
                 StyledText {
@@ -190,7 +190,7 @@ StyledRect {
                         text: modelData.value ? String(modelData.value) : ""
                         color: Colours.palette.m3onSurface
                         font: Tokens.font.body.small
-                        wrapMode: Text.WrapAnywhere
+                        wrapMode: Text.Wrap
                     }
                 }
             }

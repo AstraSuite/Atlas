@@ -261,7 +261,7 @@ Item {
                                         text: completedItem.modelData.message || ""
                                         color: Colours.palette.m3onSurface
                                         font: Tokens.font.body.small
-                                        wrapMode: Text.WrapAnywhere
+                                        wrapMode: Text.Wrap
                                     }
 
                                     StyledText {

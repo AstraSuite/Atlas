@@ -574,7 +574,7 @@ Item {
                     verticalAlignment: Text.AlignTop
                     elide: Text.ElideMiddle
                     maximumLineCount: 4
-                    wrapMode: Text.WrapAnywhere
+                    wrapMode: Text.Wrap
                 }
             }
         }
