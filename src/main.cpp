@@ -115,14 +115,23 @@ int main(int argc, char* argv[]) {
     QString initialDir;
     if (parser.isSet(dirOption)) {
         initialDir = parser.value(dirOption);
+        if (initialDir.startsWith(QLatin1String("file://"))) {
+            initialDir = QUrl(initialDir).toLocalFile();
+        }
+        QFileInfo fi(initialDir);
+        if (fi.exists() && !fi.isDir()) {
+            initialDir = fi.absolutePath();
+        }
     }
     const QStringList posArgs = parser.positionalArguments();
     if (!posArgs.isEmpty()) {
         QString p = posArgs.first();
-        if (QDir(p).exists()) {
-            initialDir = QFileInfo(p).absoluteFilePath();
-        } else if (QFile::exists(p)) {
-            initialDir = QFileInfo(p).absolutePath();
+        if (p.startsWith(QLatin1String("file://"))) {
+            p = QUrl(p).toLocalFile();
+        }
+        QFileInfo fi(p);
+        if (fi.exists()) {
+            initialDir = fi.isDir() ? fi.absoluteFilePath() : fi.absolutePath();
         }
     }
 

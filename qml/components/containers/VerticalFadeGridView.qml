@@ -9,6 +9,7 @@ GridView {
 
     property real topFadeOpacity: fadeShouldBeActive(true) ? 0 : 1
     property real bottomFadeOpacity: fadeShouldBeActive(false) ? 0 : 1
+    flickDeceleration: 5000
 
     function fadeShouldBeActive(isStart) {
         if (contentHeight + topMargin + bottomMargin < height)

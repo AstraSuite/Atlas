@@ -89,7 +89,7 @@ StyledRect {
                         }
 
                         Item {
-                            implicitWidth: homeIcon.implicitWidth + (homeIcon.active ? Tokens.padding.extraSmall : 0) + folderName.implicitWidth + Tokens.padding.medium * 2
+                            implicitWidth: (homeIcon.active ? homeIcon.implicitWidth : (rootIcon.active ? rootIcon.implicitWidth : 0)) + ((homeIcon.active || rootIcon.active) ? Tokens.padding.extraSmall : 0) + folderName.implicitWidth + Tokens.padding.medium * 2
                             implicitHeight: folderName.implicitHeight + Tokens.padding.small
 
                             Loader {
@@ -119,14 +119,29 @@ StyledRect {
                                 }
                             }
 
+                            Loader {
+                                id: rootIcon
+
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.leftMargin: Tokens.padding.medium
+
+                                active: folder.index === 0 && folder.modelData === ""
+                                sourceComponent: MaterialIcon {
+                                    text: "hard_drive"
+                                    color: root.dialog.cwd.length === 1 ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                                    fill: 1
+                                }
+                            }
+
                             StyledText {
                                 id: folderName
 
-                                anchors.left: homeIcon.active ? homeIcon.right : parent.left
+                                anchors.left: homeIcon.active ? homeIcon.right : (rootIcon.active ? rootIcon.right : parent.left)
                                 anchors.verticalCenter: parent.verticalCenter
-                                anchors.leftMargin: homeIcon.active ? Tokens.padding.extraSmall : Tokens.padding.medium
+                                anchors.leftMargin: (homeIcon.active || rootIcon.active) ? Tokens.padding.extraSmall : Tokens.padding.medium
 
-                                text: folder.modelData
+                                text: (folder.index === 0 && folder.modelData === "") ? qsTr("Root") : folder.modelData
                                 color: folder.index < root.dialog.cwd.length - 1 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
                                 font: Tokens.font.body.builders.small.weight(Font.Bold).build()
                             }

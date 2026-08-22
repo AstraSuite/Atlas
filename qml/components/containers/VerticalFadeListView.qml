@@ -20,6 +20,7 @@ ListView {
     }
 
     flickableDirection: Flickable.VerticalFlick
+    flickDeceleration: 5000
     orientation: ListView.Vertical
 
     layer.enabled: true

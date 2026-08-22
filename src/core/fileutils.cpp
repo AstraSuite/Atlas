@@ -146,7 +146,7 @@ QString FileUtils::expandPath(const QString& input, const QString& currentDir) {
 
     QString home = QDir::homePath();
 
-    // 1. Expand ~ tilde representations
+    // Expand tilde representations
     if (p == QLatin1String("~") || p == QLatin1String("~/")) {
         p = home;
     } else if (p.startsWith(QLatin1String("~/"))) {
@@ -156,17 +156,17 @@ QString FileUtils::expandPath(const QString& input, const QString& currentDir) {
         QString firstPart = (slashIdx == -1) ? p.mid(1) : p.mid(1, slashIdx - 1);
         QString rest = (slashIdx == -1) ? QString() : p.mid(slashIdx);
 
-        // Check if /home/firstPart exists
+        // Check if other user home exists
         QString otherUserHome = "/home/" + firstPart;
         if (QDir(otherUserHome).exists() && !firstPart.isEmpty()) {
             p = otherUserHome + rest;
         } else {
-            // Otherwise treat ~folder as ~/folder in the user's home directory
+            // Otherwise treat folder as in the user home directory
             p = home + "/" + firstPart + rest;
         }
     }
 
-    // 2. Expand environment variables like $HOME or ${HOME} or $USER
+    // Expand environment variables
     static const QRegularExpression envRegex(QStringLiteral(R"(\$(?:([A-Za-z_][A-Za-z0-9_]*)|(?:\{([A-Za-z_][A-Za-z0-9_]*)\})))"));
     auto match = envRegex.match(p);
     while (match.hasMatch()) {
@@ -179,7 +179,7 @@ QString FileUtils::expandPath(const QString& input, const QString& currentDir) {
         match = envRegex.match(p);
     }
 
-    // 3. Handle relative path with currentDir
+    // Handle relative path with currentDir
     if (!p.startsWith('/') && !currentDir.isEmpty()) {
         p = currentDir + "/" + p;
     }

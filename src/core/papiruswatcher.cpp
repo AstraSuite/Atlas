@@ -33,7 +33,7 @@ PapirusWatcher* PapirusWatcher::instance() {
 }
 
 void PapirusWatcher::scanAndWatch() {
-    // 1. Monitor configuration directories and files
+    // Monitor configuration directories and files
     QString userConfigDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + QStringLiteral("/papirus-folders");
     QString userConfigFile = userConfigDir + QStringLiteral("/keep");
     QString sysVarDir = QStringLiteral("/var/lib/papirus-folders");
@@ -48,7 +48,7 @@ void PapirusWatcher::scanAndWatch() {
     addPathIfValid(sysEtcDir, true);
     addPathIfValid(sysEtcFile, false);
 
-    // 2. Discover Icon Theme directories
+    // Discover Icon Theme directories
     QStringList iconBaseDirs = QIcon::themeSearchPaths();
     iconBaseDirs << (QDir::homePath() + QStringLiteral("/.icons"));
     iconBaseDirs << (QDir::homePath() + QStringLiteral("/.local/share/icons"));

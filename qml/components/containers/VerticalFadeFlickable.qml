@@ -20,6 +20,7 @@ Flickable {
     }
 
     flickableDirection: Flickable.VerticalFlick
+    flickDeceleration: 5000
 
     layer.enabled: true
     layer.effect: Mask {

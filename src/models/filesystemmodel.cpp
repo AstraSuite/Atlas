@@ -363,7 +363,7 @@ void FileSystemModel::updateDirectoryGranular(const QList<RawEntryData>& rawData
         newMap.insert(d.path, d);
     }
 
-    // 1. Update existing entries or add new ones
+    // Update existing entries or add new ones
     for (const auto& d : rawData) {
         auto it = existingMap.find(d.path);
         if (it != existingMap.end()) {
@@ -378,7 +378,7 @@ void FileSystemModel::updateDirectoryGranular(const QList<RawEntryData>& rawData
         }
     }
 
-    // 2. Remove deleted entries from raw list
+    // Remove deleted entries from raw list
     for (int i = static_cast<int>(m_rawEntries.size()) - 1; i >= 0; --i) {
         auto* e = m_rawEntries.at(i);
         if (!newMap.contains(e->path())) {
@@ -387,11 +387,11 @@ void FileSystemModel::updateDirectoryGranular(const QList<RawEntryData>& rawData
         }
     }
 
-    // 3. Compute target filtered & sorted list
+    // Compute target filtered and sorted list
     QList<FileSystemEntry*> targetEntries = calculateFilteredAndSorted(m_rawEntries);
 
-    // 4. Granularly sync m_filteredEntries
-    // Step A: Remove entries no longer in targetEntries
+    // Granularly sync m_filteredEntries
+    // Remove entries no longer in targetEntries
     for (int i = static_cast<int>(m_filteredEntries.size()) - 1; i >= 0; --i) {
         if (!targetEntries.contains(m_filteredEntries.at(i))) {
             beginRemoveRows(QModelIndex(), i, i);

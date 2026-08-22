@@ -216,59 +216,13 @@ StyledRect {
             }
         }
 
-        // Favorite / Bookmark Toggle Button
-        Item {
-            implicitWidth: 32
-            implicitHeight: 32
-
-            readonly property bool isFav: {
-                if (!root.activeTab) return false;
-                let p = (root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath;
-                return p ? PlacesModel.isBookmarked(p) : false;
-            }
-
-            StyledRect {
-                anchors.fill: parent
-                radius: Tokens.rounding.full
-                color: parent.isFav ? Colours.palette.m3primaryContainer : (favHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0))
-
-                MaterialIcon {
-                    anchors.centerIn: parent
-                    text: parent.parent.isFav ? "star" : "star_outline"
-                    fill: parent.parent.isFav ? 1 : 0
-                    color: parent.parent.isFav ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                    fontStyle: Tokens.font.icon.small
-                }
-
-                MouseArea {
-                    id: favHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (root.activeTab) {
-                            let p = (root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath;
-                            if (p && p.length > 0) {
-                                PlacesModel.toggleBookmark(p);
-                            }
-                        }
-                    }
-                }
-
-                StyledToolTip {
-                    text: parent.parent.isFav ? qsTr("Remove from Places") : qsTr("Add to Places")
-                    visible: favHover.containsMouse
-                }
-            }
-        }
-
         // Path & Breadcrumbs Bar / Search Bar
         StyledRect {
             Layout.fillWidth: true
-            implicitHeight: 36
+            implicitHeight: 30
             z: (root.isEditingPath && root.showSuggestions) ? 500 : 1
 
-            radius: Tokens.rounding.medium
+            radius: Tokens.rounding.full
             color: Colours.tPalette.m3surfaceContainerHigh
             border.color: (root.isEditingPath || root.isSearching) ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3primary, 0)
             border.width: (root.isEditingPath || root.isSearching) ? 1.5 : 0
@@ -324,9 +278,9 @@ StyledRect {
                         readonly property bool isActiveSegment: crumb.index === (breadcrumbRepeater.count - 1)
 
                         StyledRect {
-                            implicitHeight: 26
+                            implicitHeight: 22
                             implicitWidth: crumbContent.implicitWidth + Tokens.padding.small * 2
-                            radius: Tokens.rounding.small
+                            radius: Tokens.rounding.full
                             color: crumbMouse.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
 
                             MouseArea {
@@ -388,36 +342,6 @@ StyledRect {
                             pathInput.forceActiveFocus();
                             pathInput.selectAll();
                         }
-                    }
-                }
-
-                // Edit Path Pencil Icon
-                Item {
-                    implicitWidth: 24
-                    implicitHeight: 24
-
-                    MaterialIcon {
-                        anchors.centerIn: parent
-                        text: "edit"
-                        color: Colours.palette.m3outline
-                        fontStyle: Tokens.font.icon.small
-                    }
-
-                    MouseArea {
-                        id: editPencilHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.isEditingPath = true;
-                            pathInput.forceActiveFocus();
-                            pathInput.selectAll();
-                        }
-                    }
-
-                    StyledToolTip {
-                        text: qsTr("Edit location (Ctrl+L)")
-                        visible: editPencilHover.containsMouse
                     }
                 }
             }
@@ -991,37 +915,6 @@ StyledRect {
             }
         }
 
-        // Terminal Toggle
-        Item {
-            implicitWidth: 32
-            implicitHeight: 32
-
-            StyledRect {
-                anchors.fill: parent
-                radius: Tokens.rounding.full
-                color: termHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
-
-                MaterialIcon {
-                    anchors.centerIn: parent
-                    text: "terminal"
-                    color: Colours.palette.m3onSurface
-                    fontStyle: Tokens.font.icon.small
-                }
-
-                MouseArea {
-                    id: termHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.toggleTerminal()
-                }
-
-                StyledToolTip {
-                    text: qsTr("Open Terminal (F4)")
-                    visible: termHover.containsMouse
-                }
-            }
-        }
 
         // Info / Preview Toggle
         Item {

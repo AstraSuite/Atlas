@@ -126,7 +126,7 @@ void PlacesModel::refresh() {
     beginResetModel();
     m_places.clear();
     
-    // 1. Read standard XBEL places
+    // Read standard XBEL places
     bool loadedXbel = false;
     QString xbelPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/user-places.xbel";
     if (QFile::exists(xbelPath)) {
@@ -291,7 +291,7 @@ void PlacesModel::loadBookmarks() {
 void PlacesModel::saveBookmarks() {
     m_isSaving = true;
 
-    // 1. Write XBEL Bookmarks
+    // Write XBEL Bookmarks
     QString xbelPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/user-places.xbel";
     QFileInfo xbelInfo(xbelPath);
     QDir().mkpath(xbelInfo.absolutePath());
@@ -330,7 +330,7 @@ void PlacesModel::saveBookmarks() {
         xml.writeEndDocument();
     }
 
-    // 2. Write GTK-3.0 / GTK-4 Bookmarks
+    // Write GTK-3.0 and GTK-4 Bookmarks
     QString gtkBookmarksPath = QDir::homePath() + "/.config/gtk-3.0/bookmarks";
     QFileInfo gtkInfo(gtkBookmarksPath);
     QDir().mkpath(gtkInfo.absolutePath());

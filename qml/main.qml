@@ -16,6 +16,14 @@ import prism
 ApplicationWindow {
     id: window
 
+    title: pickerActive
+        ? (AppController.title && AppController.title.length > 0
+            ? (AppController.title + " — Prism File Picker")
+            : "Prism File Picker")
+        : (TabManager.currentTab && TabManager.currentTab.title
+            ? (TabManager.currentTab.title + " — Prism")
+            : "Prism")
+
     visible: true
     width: 1060
     height: 680
@@ -52,7 +60,7 @@ ApplicationWindow {
             anchors.fill: parent
             spacing: 0
 
-            // 1. Tab Bar
+            // Tab Bar
             TabBar {
                 Layout.fillWidth: true
                 onTabContextMenuRequested: (idx, gx, gy) => {
@@ -60,7 +68,7 @@ ApplicationWindow {
                 }
             }
 
-            // Main Content Area with Chrome-like rounded top corners connecting to the titlebar/tabstrip
+            // Main Content Area
             StyledRect {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -75,7 +83,7 @@ ApplicationWindow {
                     anchors.fill: parent
                     spacing: 0
 
-                    // 2. Navigation Bar
+                    // Navigation Bar
                     NavigationBar {
                         id: navBar
                         Layout.fillWidth: true
@@ -135,7 +143,7 @@ ApplicationWindow {
                         }
                     }
 
-                    // 3. Central Workspace
+                    // Central Workspace
                     RowLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -225,7 +233,7 @@ ApplicationWindow {
                             }
                         }
 
-                        // Information / Preview Panel
+                        // Information Preview Panel
                         PreviewPanel {
                             id: previewPanel
                             Layout.fillHeight: true
@@ -236,7 +244,7 @@ ApplicationWindow {
                         }
                     }
 
-                    // 4. Bottom Status Bar
+                    // Status Bar
                     StatusBar {
                         id: statusBar
                         Layout.fillWidth: true
@@ -868,5 +876,7 @@ ApplicationWindow {
         id: fileDialogComponent
         anchors.fill: parent
         visible: pickerActive
+        onAccepted: path => AppController.accept(path)
+        onRejected: AppController.reject()
     }
 }

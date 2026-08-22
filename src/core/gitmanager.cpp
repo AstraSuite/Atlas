@@ -59,7 +59,7 @@ void GitManager::checkRepo() {
             return;
         }
 
-        // 1. Get current branch
+        // Get current branch
         QString branch;
         QFile headFile(root + "/.git/HEAD");
         if (headFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -71,7 +71,7 @@ void GitManager::checkRepo() {
             }
         }
 
-        // 2. Get local branch list
+        // Get local branch list
         QProcess branchProc;
         branchProc.setWorkingDirectory(root);
         branchProc.start("git", QStringList{ "branch", "--list", "--no-color" });
@@ -86,7 +86,7 @@ void GitManager::checkRepo() {
             }
         }
 
-        // 3. Get recent commits
+        // Get recent commits
         QProcess logProc;
         logProc.setWorkingDirectory(root);
         logProc.start("git", QStringList{ "log", "-n", "20", "--format=%h|%s|%an|%cr" });

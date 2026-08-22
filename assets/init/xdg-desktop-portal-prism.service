@@ -1,0 +1,13 @@
+[Unit]
+Description=Prism XDG Desktop Portal FileChooser
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.impl.portal.desktop.prism
+ExecStart=/usr/bin/xdg-desktop-portal-prism
+Restart=on-failure
+
+[Install]
+WantedBy=graphical-session.target

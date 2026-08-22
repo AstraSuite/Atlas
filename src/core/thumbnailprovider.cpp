@@ -38,7 +38,7 @@ static QImage generateThumbnail(const QString& filePath, int targetSize) {
     int sz = targetSize > 0 ? targetSize : 256;
     QString diskCachePath = getDiskCachePath(realPath, fi);
 
-    // 1. Check in-memory cache
+    // Check in-memory cache
     {
         QMutexLocker locker(&s_cacheMutex);
         if (auto* cached = s_memoryCache.object(diskCachePath)) {
@@ -46,7 +46,7 @@ static QImage generateThumbnail(const QString& filePath, int targetSize) {
         }
     }
 
-    // 2. Check persistent disk cache
+    // Check persistent disk cache
     if (QFile::exists(diskCachePath)) {
         QImage diskImg(diskCachePath);
         if (!diskImg.isNull()) {
@@ -56,7 +56,7 @@ static QImage generateThumbnail(const QString& filePath, int targetSize) {
         }
     }
 
-    // 3. Generate thumbnail
+    // Generate thumbnail
     QImage result;
     QString suffix = fi.suffix().toLower();
     static const QStringList videoExtensions = { "mp4", "mkv", "avi", "mov", "webm", "flv", "wmv", "m4v", "ts" };

@@ -1,0 +1,10 @@
+#!/usr/bin/openrc-run
+description="Prism XDG Desktop Portal FileChooser daemon"
+supervisor=supervise-daemon
+command="/usr/bin/xdg-desktop-portal-prism"
+command_args=""
+
+depend() {
+    need dbus
+    after dbus
+}

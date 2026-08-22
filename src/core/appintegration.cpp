@@ -97,7 +97,7 @@ QVariantList AppIntegration::getAppsForFile(const QString& filePath) {
 QVariantList AppIntegration::getAvailableSharingServices() {
     QVariantList services;
 
-    // 1. LocalSend
+    // LocalSend
     bool hasLocalSend = !QStandardPaths::findExecutable("localsend").isEmpty() ||
                          !QStandardPaths::findExecutable("localsend_app").isEmpty() ||
                          QFile::exists(QDir::homePath() + "/.local/share/flatpak/app/org.localsend.localsend_app") ||
@@ -118,7 +118,7 @@ QVariantList AppIntegration::getAvailableSharingServices() {
         services.append(s);
     }
 
-    // 2. KDE Connect
+    // KDE Connect
     bool hasKdeConnect = !QStandardPaths::findExecutable("kdeconnect-handler").isEmpty() ||
                           !QStandardPaths::findExecutable("kdeconnect-cli").isEmpty() ||
                           !QStandardPaths::findExecutable("kdeconnect-app").isEmpty();
@@ -138,7 +138,7 @@ QVariantList AppIntegration::getAvailableSharingServices() {
         services.append(s);
     }
 
-    // 3. Quick Share / Nearby / Warpinator
+    // Quick Share, Nearby, Warpinator
     bool hasQuickShare = !QStandardPaths::findExecutable("rquickshare").isEmpty() ||
                           !QStandardPaths::findExecutable("nearbyshare").isEmpty() ||
                           !QStandardPaths::findExecutable("warpinator").isEmpty();
@@ -160,7 +160,7 @@ QVariantList AppIntegration::getAvailableSharingServices() {
         services.append(s);
     }
 
-    // 4. Bluetooth Send To
+    // Bluetooth Send To
     bool hasBluetooth = !QStandardPaths::findExecutable("gnome-bluetooth-sendto").isEmpty() ||
                          !QStandardPaths::findExecutable("bluetooth-sendto").isEmpty() ||
                          !QStandardPaths::findExecutable("blueman-sendto").isEmpty();
@@ -172,7 +172,7 @@ QVariantList AppIntegration::getAvailableSharingServices() {
         services.append(s);
     }
 
-    // 5. Email Attachment
+    // Email Attachment
     bool hasEmail = !QStandardPaths::findExecutable("xdg-email").isEmpty() ||
                     !QStandardPaths::findExecutable("thunderbird").isEmpty();
     if (hasEmail) {
@@ -308,7 +308,7 @@ void AppIntegration::openScriptsFolder() {
 void AppIntegration::scanCustomActions() {
     m_customActions.clear();
 
-    // 1. Auto-detect common tools
+    // Auto-detect common tools
     // Disk Usage Analyzers
     if (!QStandardPaths::findExecutable("baobab").isEmpty()) {
         m_customActions.append({
@@ -381,7 +381,7 @@ void AppIntegration::scanCustomActions() {
         });
     }
 
-    // 2. Scan User Scripts Directories
+    // Scan User Scripts Directories
     QStringList scriptDirs = {
         scriptsFolderPath(),
         QDir::homePath() + "/.local/share/nautilus/scripts"
@@ -417,7 +417,7 @@ void AppIntegration::scanCustomActions() {
         }
     }
 
-    // 3. Scan Custom .desktop Action Files
+    // Scan Custom desktop Action Files
     QStringList actionDirs = {
         QDir::homePath() + "/.local/share/prism/actions",
         QDir::homePath() + "/.local/share/file-manager/actions",

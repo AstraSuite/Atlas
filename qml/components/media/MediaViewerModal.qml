@@ -125,7 +125,7 @@ MouseArea {
     Item {
         anchors.fill: parent
 
-        // 1. Image Viewer Canvas
+        // Image Viewer Canvas
         ImageViewer {
             id: imageViewer
             anchors.fill: parent
@@ -134,7 +134,7 @@ MouseArea {
             onToggleControlsRequested: root.showControls = !root.showControls
         }
 
-        // 2. Video Player Canvas
+        // Video Player Canvas
         VideoPlayer {
             id: videoPlayer
             anchors.fill: parent

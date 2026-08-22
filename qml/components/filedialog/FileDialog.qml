@@ -1,23 +1,53 @@
 import QtQuick
 import QtQuick.Layouts
+import prism
 import "../"
 
 StyledRect {
     id: root
 
     property var cwd: ["Home"]
-    property string initialDirectory: ""
-    property string filterLabel: "All files"
-    property var filters: ["*"]
-    property string title: qsTr("Select a file")
-    property bool showHidden: false
-    property bool directoryOnly: false
+    readonly property string currentPath: cwdToPath(cwd)
+    property string initialDirectory: AppController.initialDirectory
+    property string filterLabel: AppController.filterLabel
+    property var filters: AppController.filters
+    property string title: AppController.title || qsTr("Select a file")
+    property bool showHidden: AppController.showHidden
+    property bool directoryOnly: AppController.directoryOnly
+    property real zoomLevel: 80
 
     signal accepted(string path)
     signal rejected()
 
+    function pathToCwd(fullPath) {
+        if (!fullPath || fullPath === "") return ["Home"];
+        let home = FileUtils.home;
+        if (fullPath === home) return ["Home"];
+        if (fullPath.startsWith(home + "/")) {
+            let sub = fullPath.substring(home.length + 1).split("/").filter(s => s.length > 0);
+            return ["Home"].concat(sub);
+        }
+        let parts = fullPath.split("/").filter(s => s.length > 0);
+        return [""].concat(parts);
+    }
+
+    function cwdToPath(cwdArr) {
+        if (!cwdArr || cwdArr.length === 0) return FileUtils.home;
+        if (cwdArr[0] === "Home") {
+            if (cwdArr.length === 1) return FileUtils.home;
+            return FileUtils.home + "/" + cwdArr.slice(1).join("/");
+        } else if (cwdArr[0] === "") {
+            return "/" + cwdArr.slice(1).join("/");
+        } else {
+            return cwdArr.join("/");
+        }
+    }
+
     readonly property bool selectionValid: {
         const file = folderContents.currentItem?.modelData;
+        if (directoryOnly) {
+            return true;
+        }
         if (!file)
             return false;
         if (file.isDir)
@@ -25,6 +55,82 @@ StyledRect {
         if (filters.includes("*"))
             return true;
         return filters.includes(file.suffix.toLowerCase()) || filters.includes(file.suffix);
+    }
+
+    Component.onCompleted: {
+        if (AppController.initialDirectory && AppController.initialDirectory.length > 0) {
+            cwd = pathToCwd(AppController.initialDirectory);
+        }
+    }
+
+    Connections {
+        target: AppController
+        function onInitialDirectoryChanged() {
+            if (AppController.initialDirectory && AppController.initialDirectory.length > 0) {
+                root.cwd = root.pathToCwd(AppController.initialDirectory);
+            }
+        }
+    }
+
+    Connections {
+        target: DriveManager
+        function onDeviceMounted(mountPoint, tabIndex) {
+            if (mountPoint && mountPoint.length > 0) {
+                root.cwd = root.pathToCwd(mountPoint);
+            }
+        }
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        context: Qt.ApplicationShortcut
+        onActivated: root.rejected()
+    }
+
+    Shortcut {
+        sequence: "Ctrl+H"
+        context: Qt.ApplicationShortcut
+        onActivated: root.showHidden = !root.showHidden
+    }
+
+    Shortcut {
+        sequence: "Alt+."
+        context: Qt.ApplicationShortcut
+        onActivated: root.showHidden = !root.showHidden
+    }
+
+    Shortcut {
+        sequence: "Alt+Up"
+        context: Qt.ApplicationShortcut
+        onActivated: {
+            if (root.cwd.length > 1) {
+                root.cwd = root.cwd.slice(0, root.cwd.length - 1);
+            }
+        }
+    }
+
+    Shortcut {
+        sequence: "Ctrl+="
+        context: Qt.ApplicationShortcut
+        onActivated: root.zoomLevel = Math.min(180, root.zoomLevel + 16)
+    }
+
+    Shortcut {
+        sequence: "Ctrl++"
+        context: Qt.ApplicationShortcut
+        onActivated: root.zoomLevel = Math.min(180, root.zoomLevel + 16)
+    }
+
+    Shortcut {
+        sequence: "Ctrl+-"
+        context: Qt.ApplicationShortcut
+        onActivated: root.zoomLevel = Math.max(48, root.zoomLevel - 16)
+    }
+
+    Shortcut {
+        sequence: "Ctrl+0"
+        context: Qt.ApplicationShortcut
+        onActivated: root.zoomLevel = 80
     }
 
     implicitWidth: 1000

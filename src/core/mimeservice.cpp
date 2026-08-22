@@ -113,7 +113,7 @@ QVariantMap MimeService::getDefaultApp(const QString& mimeType) {
 
     QString desktopId;
 
-    // 1. Query user's mimeapps.list
+    // Query user mimeapps.list
     QString configDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
     if (!configDir.isEmpty()) {
         QSettings settings(configDir + "/mimeapps.list", QSettings::IniFormat);
@@ -123,7 +123,7 @@ QVariantMap MimeService::getDefaultApp(const QString& mimeType) {
         }
     }
 
-    // 2. Query system mimeapps.list
+    // Query system mimeapps.list
     if (desktopId.isEmpty()) {
         QStringList systemConfigDirs = { "/etc/xdg", "/usr/share/applications", "/usr/local/share/applications" };
         for (const auto& dir : systemConfigDirs) {
@@ -136,7 +136,7 @@ QVariantMap MimeService::getDefaultApp(const QString& mimeType) {
         }
     }
 
-    // 3. Fallback to xdg-mime query default
+    // Fallback to xdg-mime query default
     if (desktopId.isEmpty()) {
         QProcess proc;
         proc.start("xdg-mime", QStringList{ "query", "default", mimeType });
@@ -211,7 +211,7 @@ void MimeService::setDefaultApp(const QString& mimeType, const QString& desktopF
         cleanId = QFileInfo(cleanId).fileName();
     }
 
-    // 1. Update ~/.config/mimeapps.list directly according to XDG Desktop Entry Specification
+    // Update mimeapps.list directly according to XDG Desktop Entry Specification
     QString configDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
     if (!configDir.isEmpty()) {
         QDir().mkpath(configDir);
@@ -232,7 +232,7 @@ void MimeService::setDefaultApp(const QString& mimeType, const QString& desktopF
         settings.sync();
     }
 
-    // 2. Also invoke xdg-mime default
+    // Also invoke xdg-mime default
     QProcess::startDetached("xdg-mime", QStringList{ "default", cleanId, mimeType });
 }
 

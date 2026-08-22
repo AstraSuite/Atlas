@@ -3,32 +3,18 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import prism
 import "../"
+import "../containers"
 
 Item {
     id: root
 
     required property var dialog
     readonly property var currentItem: view.currentItem
-
-    Sizes {
-        id: sizes
-    }
+    readonly property real zoomSize: root.dialog.zoomLevel
 
     FileSystemModel {
         id: fsModel
-        path: {
-            if (root.dialog.cwd.length === 0)
-                return FileUtils.home;
-            if (root.dialog.cwd[0] === "Home") {
-                if (root.dialog.cwd.length === 1)
-                    return FileUtils.home;
-                return FileUtils.home + "/" + root.dialog.cwd.slice(1).join("/");
-            } else if (root.dialog.cwd[0] === "") {
-                return "/" + root.dialog.cwd.slice(1).join("/");
-            } else {
-                return root.dialog.cwd.join("/");
-            }
-        }
+        path: root.dialog.currentPath
         showHidden: root.dialog.showHidden
         onPathChanged: view.currentIndex = -1
     }
@@ -86,27 +72,91 @@ Item {
         }
     }
 
-    GridView {
+    VerticalFadeGridView {
         id: view
 
         anchors.fill: parent
         anchors.margins: Tokens.padding.extraSmall + Tokens.padding.medium
 
-        cellWidth: sizes.itemWidth + Tokens.spacing.small
-        cellHeight: sizes.itemWidth + Tokens.spacing.large + Tokens.padding.medium * 2 + 1
+        // Exact uniform cell dimensions matching FileGridView
+        cellWidth: Math.max(144, root.zoomSize + 48)
+        cellHeight: root.zoomSize + 84
 
         clip: true
         focus: true
         currentIndex: -1
+        interactive: true
+        boundsBehavior: Flickable.DragAndOvershootBounds
+        maximumFlickVelocity: 5000
+        flickDeceleration: 5000
+
+        WheelHandler {
+            target: null
+            acceptedModifiers: Qt.ControlModifier
+            onWheel: event => {
+                if (event.angleDelta.y > 0) {
+                    root.dialog.zoomLevel = Math.min(180, root.dialog.zoomLevel + 16);
+                } else if (event.angleDelta.y < 0) {
+                    root.dialog.zoomLevel = Math.max(48, root.dialog.zoomLevel - 16);
+                }
+                event.accepted = true;
+            }
+        }
+
         Keys.onEscapePressed: currentIndex = -1
 
-        Keys.onReturnPressed: {
-            if (root.dialog.selectionValid && currentItem)
-                root.dialog.accepted(currentItem.modelData.path);
-        }
-        Keys.onEnterPressed: {
-            if (root.dialog.selectionValid && currentItem)
-                root.dialog.accepted(currentItem.modelData.path);
+        Keys.onReturnPressed: root.triggerAcceptOrOpen()
+        Keys.onEnterPressed: root.triggerAcceptOrOpen()
+
+        Keys.onPressed: event => {
+            if (event.matches(StandardKey.ZoomIn) || (event.modifiers === Qt.ControlModifier && (event.key === Qt.Key_Plus || event.key === Qt.Key_Equal))) {
+                root.dialog.zoomLevel = Math.min(180, root.dialog.zoomLevel + 16);
+                event.accepted = true;
+                return;
+            } else if (event.matches(StandardKey.ZoomOut) || (event.modifiers === Qt.ControlModifier && event.key === Qt.Key_Minus)) {
+                root.dialog.zoomLevel = Math.max(48, root.dialog.zoomLevel - 16);
+                event.accepted = true;
+                return;
+            } else if (event.modifiers === Qt.ControlModifier && event.key === Qt.Key_0) {
+                root.dialog.zoomLevel = 80;
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_Left || event.key === Qt.Key_H) {
+                if (view.currentIndex <= 0 && fsModel.count > 0) {
+                    view.currentIndex = 0;
+                } else {
+                    view.moveCurrentIndexLeft();
+                }
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Right || event.key === Qt.Key_L) {
+                if (view.currentIndex === -1 && fsModel.count > 0) {
+                    view.currentIndex = 0;
+                } else {
+                    view.moveCurrentIndexRight();
+                }
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Up || event.key === Qt.Key_K) {
+                if (view.currentIndex === -1 && fsModel.count > 0) {
+                    view.currentIndex = 0;
+                } else {
+                    view.moveCurrentIndexUp();
+                }
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J) {
+                if (view.currentIndex === -1 && fsModel.count > 0) {
+                    view.currentIndex = 0;
+                } else {
+                    view.moveCurrentIndexDown();
+                }
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Backspace) {
+                if (root.dialog.cwd.length > 1) {
+                    root.dialog.cwd = root.dialog.cwd.slice(0, root.dialog.cwd.length - 1);
+                    event.accepted = true;
+                }
+            }
         }
 
         ScrollBar.vertical: StyledScrollBar {
@@ -115,77 +165,180 @@ Item {
 
         model: fsModel
 
-        delegate: StyledRect {
-            id: item
+        delegate: Item {
+            id: delegateContainer
 
             required property int index
             required property var modelData
 
-            readonly property real nonAnimHeight: icon.implicitHeight + name.anchors.topMargin + name.implicitHeight + Tokens.padding.medium * 2
+            width: view.cellWidth
+            height: view.cellHeight
 
-            implicitWidth: sizes.itemWidth
-            implicitHeight: nonAnimHeight
+            readonly property bool isSelected: view.currentIndex === index
+            readonly property bool isHidden: delegateContainer.modelData ? (delegateContainer.modelData.isHidden || delegateContainer.modelData.name.startsWith('.')) : false
 
-            radius: Tokens.rounding.large
-            color: Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, GridView.isCurrentItem ? Colours.tPalette.m3surfaceContainerHighest.a : 0)
-            z: GridView.isCurrentItem || implicitHeight !== nonAnimHeight ? 1 : 0
-            clip: true
+            // Uniform Card Highlight matching FileGridView
+            StyledRect {
+                id: itemCard
+                anchors.centerIn: parent
+                width: parent.width - 8
+                height: parent.height - 8
 
-            StateLayer {
-                onClicked: view.currentIndex = item.index
-                onDoubleClicked: {
-                    if (item.modelData.isDir) {
-                        let newCwd = root.dialog.cwd.slice();
-                        newCwd.push(item.modelData.name);
-                        root.dialog.cwd = newCwd;
-                    } else if (root.dialog.selectionValid) {
-                        root.dialog.accepted(item.modelData.path);
+                radius: Tokens.rounding.large
+                color: delegateContainer.isSelected
+                    ? Colours.palette.m3secondaryContainer
+                    : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0))
+
+                clip: true
+                opacity: delegateContainer.isHidden ? 0.58 : 1.0
+
+                Behavior on opacity {
+                    Anim { type: Anim.FastEffects }
+                }
+
+                MouseArea {
+                    id: itemHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+                    onClicked: mouse => {
+                        view.currentIndex = delegateContainer.index;
+                        if (AppController.singleClick && mouse.button === Qt.LeftButton) {
+                            root.handleItemClick(delegateContainer.modelData);
+                        }
+                    }
+
+                    onDoubleClicked: mouse => {
+                        if (mouse.button === Qt.LeftButton && !AppController.singleClick) {
+                            root.handleItemClick(delegateContainer.modelData);
+                        }
                     }
                 }
-            }
 
-            CachingIconImage {
-                id: icon
+                Item {
+                    id: iconContainer
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 8
+                    width: root.zoomSize
+                    height: root.zoomSize
 
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top
-                anchors.topMargin: Tokens.padding.medium
+                    CachingIconImage {
+                        id: icon
+                        anchors.fill: parent
+                        implicitSize: root.zoomSize
 
-                implicitSize: sizes.itemWidth - Tokens.padding.medium * 2
+                        source: {
+                            const file = delegateContainer.modelData;
+                            if (!file) return "";
+                            if (file.isImage || file.isVideo) {
+                                let t = file.lastModified ? file.lastModified.getTime() : file.size;
+                                return "image://thumb/" + file.path + "?t=" + t;
+                            } else {
+                                return FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
+                            }
+                        }
+                    }
 
-                source: {
-                    const file = item.modelData;
-                    if (!file) return "";
-                    if (file.isImage) {
-                        let t = file.lastModified ? file.lastModified.getTime() : file.size;
-                        return "image://thumb/" + file.path + "?t=" + t;
-                    } else {
-                        return FileUtils.iconForFile(file.name, file.isDir, file.mimeType);
+                    // Lock Indicator Badge
+                    StyledRect {
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        implicitWidth: 20
+                        implicitHeight: 20
+                        radius: Tokens.rounding.full
+                        color: Qt.alpha(Colours.palette.m3surface, 0.9)
+                        visible: delegateContainer.modelData ? delegateContainer.modelData.isReadOnly : false
+                        z: 5
+
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: "lock"
+                            fontStyle: Tokens.font.icon.small
+                            color: Colours.palette.m3error
+                        }
+                    }
+
+                    // Symlink Indicator Badge
+                    StyledRect {
+                        anchors.bottom: parent.bottom
+                        anchors.right: parent.right
+                        implicitWidth: 20
+                        implicitHeight: 20
+                        radius: Tokens.rounding.full
+                        color: Qt.alpha(Colours.palette.m3surface, 0.9)
+                        visible: delegateContainer.modelData ? delegateContainer.modelData.isSymLink : false
+                        z: 5
+
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: "link"
+                            fontStyle: Tokens.font.icon.small
+                            color: Colours.palette.m3primary
+                        }
                     }
                 }
+
+                StyledText {
+                    id: name
+
+                    anchors.top: iconContainer.bottom
+                    anchors.topMargin: 4
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.margins: 4
+
+                    text: delegateContainer.modelData ? delegateContainer.modelData.name : ""
+                    color: delegateContainer.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                    font: Tokens.font.body.small
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignTop
+                    elide: Text.ElideMiddle
+                    maximumLineCount: 4
+                    wrapMode: Text.WrapAnywhere
+                }
             }
+        }
+    }
 
-            StyledText {
-                id: name
+    function handleItemClick(file) {
+        if (!file) return;
+        if (file.isDir) {
+            let newCwd = root.dialog.cwd.slice();
+            newCwd.push(file.name);
+            root.dialog.cwd = newCwd;
+        } else if (root.dialog.selectionValid && !root.dialog.directoryOnly) {
+            root.dialog.accepted(file.path);
+        }
+    }
 
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: icon.bottom
-                anchors.topMargin: Tokens.spacing.small
-                anchors.margins: Tokens.padding.medium
-
-                horizontalAlignment: Text.AlignHCenter
-                elide: item.GridView.isCurrentItem ? Text.ElideNone : Text.ElideRight
-                wrapMode: item.GridView.isCurrentItem ? Text.WrapAtWordBoundaryOrAnywhere : Text.NoWrap
-
-                text: item.modelData ? item.modelData.name : ""
-            }
-
-            Behavior on implicitHeight {
-                Anim {}
+    function triggerAcceptOrOpen() {
+        if (currentItem && currentItem.modelData) {
+            if (currentItem.modelData.isDir) {
+                if (root.dialog.directoryOnly) {
+                    root.dialog.accepted(currentItem.modelData.path);
+                } else {
+                    let newCwd = root.dialog.cwd.slice();
+                    newCwd.push(currentItem.modelData.name);
+                    root.dialog.cwd = newCwd;
+                }
+                return;
             }
         }
 
+        if (root.dialog.selectionValid) {
+            if (root.dialog.directoryOnly) {
+                if (currentItem && currentItem.modelData && currentItem.modelData.isDir) {
+                    root.dialog.accepted(currentItem.modelData.path);
+                } else {
+                    root.dialog.accepted(root.dialog.currentPath);
+                }
+            } else if (currentItem && currentItem.modelData) {
+                root.dialog.accepted(currentItem.modelData.path);
+            }
+        }
     }
 
     CurrentItem {

@@ -104,9 +104,9 @@ private:
     bool m_showHidden = false;
     bool m_singleClick = false;
     QString m_defaultStartupDirectory = "home";
-    int m_defaultViewMode = 0; // 0: Grid, 1: Details, 2: Compact
-    int m_defaultSortField = 0; // 0: Name, 1: Size, 2: Date, 3: Type
-    int m_defaultSortOrder = 0; // 0: Ascending, 1: Descending
+    int m_defaultViewMode = 0; // Grid, Details, Compact
+    int m_defaultSortField = 0; // Name, Size, Date, Type
+    int m_defaultSortOrder = 0; // Ascending, Descending
     bool m_showDirsFirst = true;
     QString m_selectedPath;
     int m_iconThemeVersion = 0;

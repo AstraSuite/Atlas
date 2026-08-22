@@ -128,7 +128,7 @@ Item {
         interactive: false
         boundsBehavior: Flickable.DragAndOvershootBounds
         maximumFlickVelocity: 5000
-        flickDeceleration: 1800
+        flickDeceleration: 5000
 
         WheelHandler {
             target: gridView

@@ -19,6 +19,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     Svg
     Multimedia
     WebEngineQuick
+    DBus
 )
 
 qt_standard_project_setup(REQUIRES 6.5)
@@ -156,8 +157,29 @@ target_link_libraries(prism_app PRIVATE
     Qt6::WebEngineQuick
 )
 
+# Native XDG Desktop Portal FileChooser daemon for Prism
+qt_add_executable(xdg_desktop_portal_prism
+    src/portal/main.cpp
+    src/portal/filechooserportal.hpp
+    src/portal/filechooserportal.cpp
+)
+
+set_target_properties(xdg_desktop_portal_prism PROPERTIES
+    OUTPUT_NAME "xdg-desktop-portal-prism"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+target_include_directories(xdg_desktop_portal_prism PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/portal
+)
+
+target_link_libraries(xdg_desktop_portal_prism PRIVATE
+    Qt6::Core
+    Qt6::DBus
+)
+
 include(GNUInstallDirs)
-install(TARGETS prism_app
+install(TARGETS prism_app xdg_desktop_portal_prism
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
@@ -175,3 +197,55 @@ install(FILES assets/prism.svg
     DESTINATION ${CMAKE_INSTALL_DATADIR}/pixmaps
     RENAME prism.svg
 )
+
+# Native XDG Desktop Portal definition & D-Bus service
+install(FILES assets/portal/prism.portal
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/xdg-desktop-portal/portals
+)
+
+install(FILES assets/portal/org.freedesktop.impl.portal.desktop.prism.service
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/services
+)
+
+# OpenRC / non-systemd user portal lifecycle helper
+install(PROGRAMS assets/portal/openrc-user-portal.sh
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RENAME prism-portal-openrc
+)
+
+# Portal configuration templates
+install(FILES
+    assets/portal/portals.conf
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/prism/portal
+)
+
+# Detect init system to decide service files to install
+set(INIT_SYSTEM "auto" CACHE STRING "Init system to install service files for (auto, openrc, systemd, none)")
+
+if(INIT_SYSTEM STREQUAL "auto")
+    if(EXISTS "/etc/init.d" OR EXISTS "/sbin/openrc" OR EXISTS "/usr/bin/openrc" OR EXISTS "/run/openrc")
+        set(DETECTED_INIT "openrc")
+    elseif(EXISTS "/usr/lib/systemd" OR EXISTS "/etc/systemd")
+        set(DETECTED_INIT "systemd")
+    else()
+        set(DETECTED_INIT "none")
+    endif()
+else()
+    set(DETECTED_INIT "${INIT_SYSTEM}")
+endif()
+
+message(STATUS "Configuring service files for init system: ${DETECTED_INIT}")
+
+if(DETECTED_INIT STREQUAL "openrc")
+    install(PROGRAMS assets/init/xdg-desktop-portal-prism.initd
+        DESTINATION /etc/init.d
+        RENAME xdg-desktop-portal-prism
+    )
+elseif(DETECTED_INIT STREQUAL "systemd")
+    install(FILES assets/init/xdg-desktop-portal-prism.service
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/systemd/user
+    )
+endif()
+
+
+
