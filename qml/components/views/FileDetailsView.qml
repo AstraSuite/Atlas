@@ -117,10 +117,26 @@ Item {
         listView.forceActiveFocus();
     }
 
-    ColumnLayout {
+    Flickable {
+        id: hScroll
+
         z: 1
         anchors.fill: parent
-        anchors.margins: Tokens.padding.small
+        clip: true
+        flickableDirection: Flickable.HorizontalFlick
+        boundsBehavior: Flickable.StopAtBounds
+        contentWidth: Math.max(width, headerRow.implicitWidth + Tokens.padding.medium * 2 + Tokens.padding.small * 2)
+        contentHeight: height
+
+        ScrollBar.horizontal: StyledScrollBar {
+            flickable: hScroll
+        }
+
+    ColumnLayout {
+        x: Tokens.padding.small
+        y: Tokens.padding.small
+        width: hScroll.contentWidth - Tokens.padding.small * 2
+        height: hScroll.height - Tokens.padding.small * 2
         spacing: Tokens.spacing.extraSmall
 
         // Header Row
@@ -131,6 +147,8 @@ Item {
             color: Colours.tPalette.m3surfaceContainerHigh
 
             RowLayout {
+                id: headerRow
+
                 anchors.fill: parent
                 anchors.leftMargin: Tokens.padding.medium
                 anchors.rightMargin: Tokens.padding.medium
@@ -798,6 +816,7 @@ Item {
                 }
             }
         }
+    }
     }
 
     // Background Mouse Area for Deselection, Context Menu on empty space, and Rubber Band Selection
