@@ -258,6 +258,7 @@ StyledRect {
         id: detailsComp
         FileDetailsView {
             model: mainModel
+            zoomSize: root.zoomSize
             activeTab: root.activeTab
             paneIndex: 0
             onOpenItem: item => root.handleOpen(item, 0)
@@ -280,6 +281,7 @@ StyledRect {
         id: compactComp
         FileCompactView {
             model: mainModel
+            zoomSize: root.zoomSize
             activeTab: root.activeTab
             paneIndex: 0
             onOpenItem: item => root.handleOpen(item, 0)
@@ -326,6 +328,7 @@ StyledRect {
         id: splitDetailsComp
         FileDetailsView {
             model: splitModel
+            zoomSize: root.zoomSize
             activeTab: root.activeTab
             paneIndex: 1
             onOpenItem: item => root.handleOpen(item, 1)
@@ -348,6 +351,7 @@ StyledRect {
         id: splitCompactComp
         FileCompactView {
             model: splitModel
+            zoomSize: root.zoomSize
             activeTab: root.activeTab
             paneIndex: 1
             onOpenItem: item => root.handleOpen(item, 1)
