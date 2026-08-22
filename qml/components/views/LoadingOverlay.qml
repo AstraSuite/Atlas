@@ -10,7 +10,7 @@ Item {
 
     anchors.fill: parent
     z: 30
-    visible: opacity > 0.01
+    visible: active || opacity > 0.01
     opacity: shown ? 1 : 0
 
     Behavior on opacity {
@@ -32,6 +32,14 @@ Item {
         id: delay
         interval: 250
         onTriggered: root.shown = root.active
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        enabled: root.active
+        acceptedButtons: Qt.AllButtons
+        cursorShape: root.shown ? Qt.BusyCursor : Qt.ArrowCursor
+        onWheel: wheel => wheel.accepted = true
     }
 
     StyledRect {
