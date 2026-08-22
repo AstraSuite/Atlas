@@ -1,4 +1,6 @@
 #include "appintegration.hpp"
+#include "appcontroller.hpp"
+#include "papiruswatcher.hpp"
 
 #include <QDir>
 #include <QFile>
@@ -644,6 +646,35 @@ QString AppIntegration::getSystemGeometry(int index) {
     case 5: return decode(kGeometry_5, kGeometry_5_len);
     default: return QString();
     }
+}
+
+bool AppIntegration::isPapirusAvailable() {
+    return PapirusWatcher::instance()->isAvailable();
+}
+
+QString AppIntegration::currentPapirusColor() {
+    return PapirusWatcher::instance()->currentColor();
+}
+
+QStringList AppIntegration::availablePapirusColors() {
+    return PapirusWatcher::instance()->availableColors();
+}
+
+bool AppIntegration::setPapirusColor(const QString& color) {
+    QString exe = QStandardPaths::findExecutable(QStringLiteral("papirus-folders"));
+    if (exe.isEmpty()) return false;
+
+    QProcess process;
+    process.start(exe, QStringList{ QStringLiteral("-C"), color });
+    if (!process.waitForFinished(5000)) {
+        return false;
+    }
+    PapirusWatcher::instance()->reload();
+    return (process.exitCode() == 0);
+}
+
+void AppIntegration::reloadIconTheme() {
+    PapirusWatcher::instance()->reload();
 }
 
 } // namespace prism::core

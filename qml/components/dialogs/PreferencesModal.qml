@@ -347,6 +347,89 @@ MouseArea {
                                 }
                             }
 
+                            Item { implicitHeight: 4 }
+
+                            StyledText {
+                                text: qsTr("Theme & Icons")
+                                color: Colours.palette.m3primary
+                                font: Tokens.font.label.large
+                            }
+
+                            // Papirus Folders hot reload card
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 56
+                                radius: Tokens.rounding.large
+                                color: Colours.tPalette.m3surfaceContainer
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.medium
+                                    spacing: Tokens.spacing.medium
+
+                                    MaterialIcon {
+                                        Layout.alignment: Qt.AlignVCenter
+                                        text: "folder_special"
+                                        color: Colours.palette.m3primary
+                                        fontStyle: Tokens.font.icon.medium
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignVCenter
+                                        spacing: 2
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Papirus Folders")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.small
+                                            elide: Text.ElideRight
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Active folder color: %1 • Hot reload active").arg(PapirusWatcher.currentColor)
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font: Tokens.font.label.small
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+
+                                    StyledRect {
+                                        implicitWidth: 80
+                                        implicitHeight: 32
+                                        radius: Tokens.rounding.full
+                                        color: reloadBtnHover.containsMouse ? Colours.palette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHighest
+                                        Layout.alignment: Qt.AlignVCenter
+
+                                        RowLayout {
+                                            anchors.centerIn: parent
+                                            spacing: 4
+                                            MaterialIcon {
+                                                text: "refresh"
+                                                color: Colours.palette.m3primary
+                                                fontStyle: Tokens.font.icon.small
+                                            }
+                                            StyledText {
+                                                text: qsTr("Reload")
+                                                color: Colours.palette.m3primary
+                                                font: Tokens.font.label.small
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: reloadBtnHover
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: PapirusWatcher.reload()
+                                        }
+                                    }
+                                }
+                            }
+
                             Item { Layout.fillHeight: true }
                         }
                     }

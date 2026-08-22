@@ -10,6 +10,8 @@ class IconImageProvider : public QQuickImageProvider {
 public:
     IconImageProvider();
 
+    static void clearCache();
+
     QImage requestImage(const QString& id, QSize* size, const QSize& requestedSize) override;
 };
 

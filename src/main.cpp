@@ -22,6 +22,7 @@
 #include "core/fileoperations.hpp"
 #include "core/fileutils.hpp"
 #include "core/iconprovider.hpp"
+#include "core/papiruswatcher.hpp"
 #include "core/thumbnailprovider.hpp"
 #include "core/placesmodel.hpp"
 #include "core/drivemanager.hpp"
@@ -173,6 +174,7 @@ int main(int argc, char* argv[]) {
     }
 
     auto* appIntegration = prism::core::AppIntegration::instance();
+    auto* papirusWatcher = prism::core::PapirusWatcher::instance();
     auto* placesModel = new prism::core::PlacesModel(&app);
     auto* driveManager = new prism::core::DriveManager(&app);
 
@@ -188,6 +190,7 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("FileOperations", fileOps);
     engine.rootContext()->setContextProperty("TabManager", tabManager);
     engine.rootContext()->setContextProperty("AppIntegration", appIntegration);
+    engine.rootContext()->setContextProperty("PapirusWatcher", papirusWatcher);
     engine.rootContext()->setContextProperty("PlacesModel", placesModel);
     engine.rootContext()->setContextProperty("DriveManager", driveManager);
     engine.rootContext()->setContextProperty("isPickerMode", isPickerMode);

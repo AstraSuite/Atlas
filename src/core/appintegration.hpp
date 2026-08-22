@@ -34,6 +34,13 @@ public:
     Q_INVOKABLE QString getSystemGeometry(int index);
     Q_INVOKABLE QString getGameAssetUrl();
 
+    // Papirus folder color and icon theme management
+    Q_INVOKABLE bool isPapirusAvailable();
+    Q_INVOKABLE QString currentPapirusColor();
+    Q_INVOKABLE QStringList availablePapirusColors();
+    Q_INVOKABLE bool setPapirusColor(const QString& color);
+    Q_INVOKABLE void reloadIconTheme();
+
 
 private:
     void scanDesktopFiles();

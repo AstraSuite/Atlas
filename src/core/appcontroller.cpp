@@ -1,4 +1,5 @@
 #include "appcontroller.hpp"
+#include "iconprovider.hpp"
 #include <QSettings>
 #include <iostream>
 
@@ -132,6 +133,12 @@ void AppController::accept(const QString& path) {
 void AppController::reject() {
     emit rejected();
     QGuiApplication::exit(1);
+}
+
+void AppController::triggerIconReload() {
+    IconImageProvider::clearCache();
+    m_iconThemeVersion++;
+    emit iconThemeVersionChanged();
 }
 
 } // namespace prism::core

@@ -26,11 +26,15 @@ class AppController : public QObject {
     Q_PROPERTY(int defaultSortOrder READ defaultSortOrder WRITE setDefaultSortOrder NOTIFY defaultSortOrderChanged)
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst NOTIFY showDirsFirstChanged)
     Q_PROPERTY(QString selectedPath READ selectedPath NOTIFY selectedPathChanged)
+    Q_PROPERTY(int iconThemeVersion READ iconThemeVersion NOTIFY iconThemeVersionChanged)
 
 public:
     explicit AppController(QObject* parent = nullptr);
 
     static AppController* instance();
+
+    [[nodiscard]] int iconThemeVersion() const { return m_iconThemeVersion; }
+    Q_INVOKABLE void triggerIconReload();
 
     [[nodiscard]] QString title() const { return m_title; }
     void setTitle(const QString& title);
@@ -87,6 +91,7 @@ signals:
     void defaultSortOrderChanged();
     void showDirsFirstChanged();
     void selectedPathChanged();
+    void iconThemeVersionChanged();
     void accepted(const QString& path);
     void rejected();
 
@@ -104,6 +109,7 @@ private:
     int m_defaultSortOrder = 0; // 0: Ascending, 1: Descending
     bool m_showDirsFirst = true;
     QString m_selectedPath;
+    int m_iconThemeVersion = 0;
 };
 
 } // namespace prism::core

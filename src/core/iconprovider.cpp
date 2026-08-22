@@ -13,6 +13,28 @@ static QMutex s_iconMutex;
 IconImageProvider::IconImageProvider()
     : QQuickImageProvider(QQuickImageProvider::Image) {}
 
+void IconImageProvider::clearCache() {
+    {
+        QMutexLocker locker(&s_iconMutex);
+        s_iconCache.clear();
+    }
+
+    auto resetQtTheme = []() {
+        QString currentTheme = QIcon::themeName();
+        // Trigger Qt internal theme cache reset
+        QIcon::setThemeSearchPaths(QIcon::themeSearchPaths());
+        if (!currentTheme.isEmpty()) {
+            QIcon::setThemeName(currentTheme);
+        }
+    };
+
+    if (QThread::currentThread() == qApp->thread()) {
+        resetQtTheme();
+    } else {
+        QMetaObject::invokeMethod(qApp, resetQtTheme, Qt::BlockingQueuedConnection);
+    }
+}
+
 QImage IconImageProvider::requestImage(const QString& id, QSize* size, const QSize& requestedSize) {
     int w = requestedSize.width() > 0 ? requestedSize.width() : 64;
     int h = requestedSize.height() > 0 ? requestedSize.height() : 64;
@@ -21,6 +43,7 @@ QImage IconImageProvider::requestImage(const QString& id, QSize* size, const QSi
         *size = QSize(w, h);
     }
 
+    QString cleanId = id.section('?', 0, 0);
     QString key = id + "@" + QString::number(w) + "x" + QString::number(h);
     {
         QMutexLocker locker(&s_iconMutex);
@@ -32,14 +55,14 @@ QImage IconImageProvider::requestImage(const QString& id, QSize* size, const QSi
     QImage img;
     // Safely query QIcon::fromTheme on the main GUI thread
     if (QThread::currentThread() == qApp->thread()) {
-        QIcon icon = QIcon::fromTheme(id);
+        QIcon icon = QIcon::fromTheme(cleanId);
         if (icon.isNull()) icon = QIcon::fromTheme("text-plain");
         if (!icon.isNull()) {
             img = icon.pixmap(w, h).toImage();
         }
     } else {
-        QMetaObject::invokeMethod(qApp, [&img, id, w, h]() {
-            QIcon icon = QIcon::fromTheme(id);
+        QMetaObject::invokeMethod(qApp, [&img, cleanId, w, h]() {
+            QIcon icon = QIcon::fromTheme(cleanId);
             if (icon.isNull()) icon = QIcon::fromTheme("text-plain");
             if (!icon.isNull()) {
                 img = icon.pixmap(w, h).toImage();

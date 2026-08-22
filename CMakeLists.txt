@@ -59,6 +59,8 @@ qt_add_executable(prism_app
     src/core/iconprovider.cpp
     src/core/iconcatalog.hpp
     src/core/iconcatalog.cpp
+    src/core/papiruswatcher.hpp
+    src/core/papiruswatcher.cpp
     src/core/appcontroller.hpp
     src/core/appcontroller.cpp
 )
