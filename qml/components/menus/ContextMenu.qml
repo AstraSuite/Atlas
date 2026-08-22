@@ -16,7 +16,14 @@ MouseArea {
     property var sharingServices: []
     property var customActions: []
     property var activeSubmenuItems: []
+    property var displaySubmenuItems: []
     property bool shiftHeld: false
+
+    onActiveSubmenuItemsChanged: {
+        if (activeSubmenuItems && activeSubmenuItems.length > 0) {
+            displaySubmenuItems = activeSubmenuItems;
+        }
+    }
 
     readonly property bool isTrash: currentDir.indexOf("Trash") !== -1 || currentDir.indexOf("trash:") !== -1 || (targetItem && targetItem.isTrashItem)
     readonly property bool isArchive: targetItem && (
@@ -404,10 +411,11 @@ MouseArea {
     StyledRect {
         id: submenuRect
 
-        visible: root.submenuOpen && root.activeSubmenuItems && root.activeSubmenuItems.length > 0
+        visible: opacity > 0.005
         z: menuRect.z + 1
 
-        x: (menuRect.x + menuRect.width + width + 8 < root.width) ? (menuRect.x + menuRect.width + 4) : Math.max(8, menuRect.x - width - 4)
+        readonly property bool openOnRight: menuRect.x + menuRect.width + width + 8 < root.width
+        x: openOnRight ? (menuRect.x + menuRect.width + 4) : Math.max(8, menuRect.x - width - 4)
         y: Math.min(Math.max(8, root.submenuY - 4), root.height - height - 8)
 
         implicitWidth: submenuCol.implicitWidth + Tokens.padding.extraSmall * 2
@@ -416,10 +424,22 @@ MouseArea {
         radius: Tokens.rounding.large
         color: Colours.palette.m3surfaceContainerLow
 
+        transformOrigin: openOnRight ? Item.TopLeft : Item.TopRight
         scale: root.submenuOpen ? 1.0 : 0.94
         opacity: root.submenuOpen ? 1.0 : 0.0
-        Behavior on opacity { Anim { type: Anim.FastEffects } }
-        Behavior on scale { Anim { type: Anim.FastEffects; easing: Tokens.anim.standard } }
+
+        Behavior on opacity {
+            Anim {
+                type: Anim.FastEffects
+                easing: Tokens.anim.standard
+            }
+        }
+        Behavior on scale {
+            Anim {
+                type: Anim.FastEffects
+                easing: Tokens.anim.standard
+            }
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -436,7 +456,7 @@ MouseArea {
             spacing: 0
 
             Repeater {
-                model: root.activeSubmenuItems
+                model: root.displaySubmenuItems
 
                 Loader {
                     id: subEntryLoader
