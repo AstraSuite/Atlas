@@ -117,6 +117,9 @@ Item {
         }
         selectedPaths = arr;
         listView.currentIndex = targetIndex;
+        listView.forceActiveFocus();
+    }
+
     function colWidth(key, fallback) {
         const stored = AppController.detailsColumnWidths[key];
         return stored !== undefined ? stored : fallback;

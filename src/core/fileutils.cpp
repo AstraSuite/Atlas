@@ -1,10 +1,7 @@
 #include "fileutils.hpp"
 
-<<<<<<< HEAD
 #include <QDateTime>
 #include <QLocale>
-=======
->>>>>>> pr-12
 #include <atomic>
 #include <QDir>
 #include <QFileInfo>
