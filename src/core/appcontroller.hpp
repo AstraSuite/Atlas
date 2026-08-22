@@ -19,6 +19,8 @@ class AppController : public QObject {
     Q_PROPERTY(QStringList filters READ filters WRITE setFilters NOTIFY filtersChanged)
     Q_PROPERTY(bool directoryOnly READ directoryOnly WRITE setDirectoryOnly NOTIFY directoryOnlyChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
+    Q_PROPERTY(bool thumbnailsEnabled READ thumbnailsEnabled WRITE setThumbnailsEnabled NOTIFY thumbnailsEnabledChanged)
+    Q_PROPERTY(int thumbnailMaxMb READ thumbnailMaxMb WRITE setThumbnailMaxMb NOTIFY thumbnailMaxMbChanged)
     Q_PROPERTY(bool singleClick READ singleClick WRITE setSingleClick NOTIFY singleClickChanged)
     Q_PROPERTY(QString defaultStartupDirectory READ defaultStartupDirectory WRITE setDefaultStartupDirectory NOTIFY defaultStartupDirectoryChanged)
     Q_PROPERTY(int defaultViewMode READ defaultViewMode WRITE setDefaultViewMode NOTIFY defaultViewModeChanged)
@@ -53,6 +55,10 @@ public:
     void setDirectoryOnly(bool dirOnly);
 
     [[nodiscard]] bool showHidden() const { return m_showHidden; }
+    [[nodiscard]] bool thumbnailsEnabled() const { return m_thumbnailsEnabled; }
+    void setThumbnailsEnabled(bool enabled);
+    [[nodiscard]] int thumbnailMaxMb() const { return m_thumbnailMaxMb; }
+    void setThumbnailMaxMb(int mb);
     void setShowHidden(bool show);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
@@ -88,6 +94,8 @@ signals:
     void filtersChanged();
     void directoryOnlyChanged();
     void showHiddenChanged();
+    void thumbnailsEnabledChanged();
+    void thumbnailMaxMbChanged();
     void singleClickChanged();
     void defaultStartupDirectoryChanged();
     void defaultViewModeChanged();
@@ -107,6 +115,8 @@ private:
     QStringList m_filters = { "*" };
     bool m_directoryOnly = false;
     bool m_showHidden = false;
+    bool m_thumbnailsEnabled = true;
+    int m_thumbnailMaxMb = 0;
     bool m_singleClick = false;
     QString m_defaultStartupDirectory = "home";
     int m_defaultViewMode = 0; // Grid, Details, Compact

@@ -32,6 +32,7 @@ struct RawEntryData {
     bool isImage = false;
     bool isAudio = false;
     bool isVideo = false;
+    bool hasThumbnail = false;
     bool isText = false;
     QString originalPath;
     QString deletionTime;
@@ -64,6 +65,7 @@ class FileSystemEntry : public QObject {
     Q_PROPERTY(bool isImage READ isImage CONSTANT)
     Q_PROPERTY(bool isAudio READ isAudio CONSTANT)
     Q_PROPERTY(bool isVideo READ isVideo CONSTANT)
+    Q_PROPERTY(bool hasThumbnail READ hasThumbnail CONSTANT)
     Q_PROPERTY(bool isText READ isText CONSTANT)
     Q_PROPERTY(QString originalPath READ originalPath CONSTANT)
     Q_PROPERTY(QString deletionTime READ deletionTime CONSTANT)
@@ -93,6 +95,7 @@ public:
     bool isImage() const { return m_isImage; }
     bool isAudio() const { return m_isAudio; }
     bool isVideo() const { return m_isVideo; }
+    bool hasThumbnail() const { return m_hasThumbnail; }
     bool isText() const { return m_isText; }
     QString originalPath() const { return m_originalPath; }
     QString deletionTime() const { return m_deletionTime; }
@@ -124,6 +127,7 @@ public:
     bool m_isImage = false;
     bool m_isAudio = false;
     bool m_isVideo = false;
+    bool m_hasThumbnail = false;
     bool m_isText = false;
 };
 

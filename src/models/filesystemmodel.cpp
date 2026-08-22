@@ -214,6 +214,8 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
         d.isText = true;
     }
 
+    d.hasThumbnail = prism::core::FileUtils::shouldThumbnail(d.isImage, d.isVideo, d.size);
+
     if (fi.absolutePath().contains("/.local/share/Trash/files") || fi.absolutePath().contains("/Trash/files")) {
         d.isTrashItem = true;
         QString infoPath = QDir::homePath() + "/.local/share/Trash/info/" + fi.fileName() + ".trashinfo";
@@ -262,6 +264,7 @@ bool FileSystemEntry::updateFromRaw(const RawEntryData& d) {
     if (m_isImage != d.isImage) { m_isImage = d.isImage; changed = true; }
     if (m_isAudio != d.isAudio) { m_isAudio = d.isAudio; changed = true; }
     if (m_isVideo != d.isVideo) { m_isVideo = d.isVideo; changed = true; }
+    if (m_hasThumbnail != d.hasThumbnail) { m_hasThumbnail = d.hasThumbnail; changed = true; }
     if (m_isText != d.isText) { m_isText = d.isText; changed = true; }
     if (m_originalPath != d.originalPath) { m_originalPath = d.originalPath; changed = true; }
     if (m_deletionTime != d.deletionTime) { m_deletionTime = d.deletionTime; changed = true; }
@@ -292,6 +295,7 @@ static FileSystemEntry* createEntryFromRawData(const RawEntryData& d, QObject* p
     entry->m_isImage = d.isImage;
     entry->m_isAudio = d.isAudio;
     entry->m_isVideo = d.isVideo;
+    entry->m_hasThumbnail = d.hasThumbnail;
     entry->m_isText = d.isText;
     entry->m_originalPath = d.originalPath;
     entry->m_deletionTime = d.deletionTime;

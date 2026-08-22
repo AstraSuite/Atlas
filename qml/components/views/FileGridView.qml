@@ -509,7 +509,7 @@ Item {
                         source: {
                             const file = delegateContainer.modelData;
                             if (!file) return "";
-                            if (file.isImage || file.isVideo) {
+                            if (file.hasThumbnail) {
                                 let t = file.lastModified ? file.lastModified.getTime() : file.size;
                                 return "image://thumb/" + file.path + "?t=" + t;
                             } else {
