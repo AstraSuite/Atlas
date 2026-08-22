@@ -142,7 +142,9 @@ Item {
                 // Name Column
                 Item {
                     Layout.fillWidth: true
+                    Layout.minimumWidth: 120
                     implicitHeight: parent.height
+                    clip: true
 
                     RowLayout {
                         anchors.verticalCenter: parent.verticalCenter
@@ -690,6 +692,7 @@ Item {
                     // Name + Icon + Symlink / Lock
                     RowLayout {
                         Layout.fillWidth: true
+                        Layout.minimumWidth: 120
                         spacing: Tokens.spacing.small
 
                         Item {
