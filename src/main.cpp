@@ -29,41 +29,6 @@
 #include "core/drivemanager.hpp"
 #include "models/filesystemmodel.hpp"
 
-namespace {
-class GlobalMouseFilter : public QObject {
-public:
-    explicit GlobalMouseFilter(prism::controllers::TabManager* tm, QObject* parent = nullptr)
-        : QObject(parent), m_tabManager(tm) {}
-
-protected:
-    bool eventFilter(QObject* obj, QEvent* event) override {
-        Q_UNUSED(obj);
-        if (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease) {
-            auto* me = static_cast<QMouseEvent*>(event);
-            if (me->button() == Qt::BackButton || me->button() == Qt::ExtraButton1) {
-                if (event->type() == QEvent::MouseButtonRelease) {
-                    if (m_tabManager && m_tabManager->currentTab() && m_tabManager->currentTab()->canGoBack()) {
-                        m_tabManager->currentTab()->goBack();
-                    }
-                }
-                return true;
-            } else if (me->button() == Qt::ForwardButton || me->button() == Qt::ExtraButton2) {
-                if (event->type() == QEvent::MouseButtonRelease) {
-                    if (m_tabManager && m_tabManager->currentTab() && m_tabManager->currentTab()->canGoForward()) {
-                        m_tabManager->currentTab()->goForward();
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-private:
-    prism::controllers::TabManager* m_tabManager = nullptr;
-};
-}
-
 int main(int argc, char* argv[]) {
     QtWebEngineQuick::initialize();
 
@@ -182,7 +147,6 @@ int main(int argc, char* argv[]) {
     auto* fileOps = prism::core::FileOperations::instance();
     auto* catboxUploader = prism::core::CatboxUploader::instance();
     auto* tabManager = prism::controllers::TabManager::instance();
-    app.installEventFilter(new GlobalMouseFilter(tabManager, &app));
 
     // If explicit path was provided on command line, navigate there
     if (!initialDir.isEmpty() && tabManager->currentTab()) {

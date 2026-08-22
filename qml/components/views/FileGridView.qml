@@ -425,7 +425,7 @@ Item {
                     id: itemHover
                     anchors.fill: parent
                     hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton | Qt.ExtraButton1 | Qt.ExtraButton2
 
                     property real pressX: 0
                     property real pressY: 0
@@ -460,7 +460,11 @@ Item {
                     onClicked: mouse => {
                         root.notifyFocus();
                         if (isDragging || dragSelectArea.isSelecting) return;
-                        if (mouse.button === Qt.RightButton) {
+                        if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
+                            if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
+                        } else if (mouse.button === Qt.ForwardButton || mouse.button === Qt.ExtraButton2) {
+                            if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
+                        } else if (mouse.button === Qt.RightButton) {
                             if (!root.isSelected(delegateContainer.modelData.path)) {
                                 root.selectSingle(delegateContainer.modelData.path, delegateContainer.index);
                             }
@@ -582,7 +586,7 @@ Item {
         id: dragSelectArea
         anchors.fill: parent
         z: 0
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton | Qt.ExtraButton1 | Qt.ExtraButton2
 
         onWheel: wheel => {
             if (wheel.modifiers & Qt.ControlModifier) {
@@ -654,7 +658,11 @@ Item {
                 wasSelecting = false;
                 return;
             }
-            if (mouse.button === Qt.RightButton) {
+            if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
+                if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
+            } else if (mouse.button === Qt.ForwardButton || mouse.button === Qt.ExtraButton2) {
+                if (root.activeTab && root.activeTab.canGoForward) root.activeTab.goForward();
+            } else if (mouse.button === Qt.RightButton) {
                 let globalPos = mapToItem(null, mouse.x, mouse.y);
                 root.blankContextMenu(globalPos.x, globalPos.y);
             } else if (mouse.button === Qt.LeftButton) {
