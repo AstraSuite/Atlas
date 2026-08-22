@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.19)
 project(prism VERSION 1.0.0 LANGUAGES CXX)
 
+# Must be set before GNUInstallDirs / qt_standard_project_setup runs
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Default install prefix" FORCE)
 endif()
+
+include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -189,7 +192,6 @@ target_link_libraries(xdg_desktop_portal_prism PRIVATE
     Qt6::DBus
 )
 
-include(GNUInstallDirs)
 install(TARGETS prism_app xdg_desktop_portal_prism
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -257,6 +259,3 @@ elseif(DETECTED_INIT STREQUAL "systemd")
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/systemd/user
     )
 endif()
-
-
-
