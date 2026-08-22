@@ -176,7 +176,7 @@ Item {
 
                 // Normal Mode Columns
                 Item {
-                    visible: !root.isTrash
+                    visible: !root.isTrash && AppController.showSizeColumn
                     Layout.preferredWidth: 100
                     implicitHeight: parent.height
 
@@ -214,7 +214,7 @@ Item {
                 }
 
                 Item {
-                    visible: !root.isTrash
+                    visible: !root.isTrash && AppController.showTypeColumn
                     Layout.preferredWidth: 150
                     implicitHeight: parent.height
 
@@ -252,7 +252,7 @@ Item {
                 }
 
                 Item {
-                    visible: !root.isTrash
+                    visible: !root.isTrash && AppController.showDateColumn
                     Layout.preferredWidth: 140
                     implicitHeight: parent.height
 
@@ -290,7 +290,7 @@ Item {
                 }
 
                 Item {
-                    visible: !root.isTrash
+                    visible: !root.isTrash && AppController.showPermissionsColumn
                     Layout.preferredWidth: 90
                     implicitHeight: parent.height
 
@@ -746,7 +746,7 @@ Item {
 
                     // Normal Mode Details
                     StyledText {
-                        visible: !root.isTrash
+                        visible: !root.isTrash && AppController.showSizeColumn
                         Layout.preferredWidth: 100
                         text: rowItem.modelData ? (rowItem.modelData.isDir ? "" : rowItem.modelData.formattedSize) : ""
                         color: Colours.palette.m3onSurfaceVariant
@@ -754,7 +754,7 @@ Item {
                     }
 
                     StyledText {
-                        visible: !root.isTrash
+                        visible: !root.isTrash && AppController.showTypeColumn
                         Layout.preferredWidth: 150
                         text: rowItem.modelData ? rowItem.modelData.mimeDescription : ""
                         color: Colours.palette.m3onSurfaceVariant
@@ -763,7 +763,7 @@ Item {
                     }
 
                     StyledText {
-                        visible: !root.isTrash
+                        visible: !root.isTrash && AppController.showDateColumn
                         Layout.preferredWidth: 140
                         text: rowItem.modelData ? rowItem.modelData.formattedDate : ""
                         color: Colours.palette.m3onSurfaceVariant
@@ -771,7 +771,7 @@ Item {
                     }
 
                     StyledText {
-                        visible: !root.isTrash
+                        visible: !root.isTrash && AppController.showPermissionsColumn
                         Layout.preferredWidth: 90
                         text: rowItem.modelData ? rowItem.modelData.permissions : ""
                         color: Colours.palette.m3outline

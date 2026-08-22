@@ -18,6 +18,10 @@ AppController::AppController(QObject* parent)
     m_defaultSortOrder = settings.value("preferences/defaultSortOrder", 0).toInt();
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
+    m_showSizeColumn = settings.value("preferences/showSizeColumn", true).toBool();
+    m_showTypeColumn = settings.value("preferences/showTypeColumn", true).toBool();
+    m_showDateColumn = settings.value("preferences/showDateColumn", true).toBool();
+    m_showPermissionsColumn = settings.value("preferences/showPermissionsColumn", true).toBool();
 }
 
 AppController* AppController::instance() {
@@ -57,6 +61,42 @@ void AppController::setDirectoryOnly(bool dirOnly) {
     if (m_directoryOnly != dirOnly) {
         m_directoryOnly = dirOnly;
         emit directoryOnlyChanged();
+    }
+}
+
+void AppController::setShowSizeColumn(bool show) {
+    if (m_showSizeColumn != show) {
+        m_showSizeColumn = show;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showSizeColumn", show);
+        emit showSizeColumnChanged();
+    }
+}
+
+void AppController::setShowTypeColumn(bool show) {
+    if (m_showTypeColumn != show) {
+        m_showTypeColumn = show;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showTypeColumn", show);
+        emit showTypeColumnChanged();
+    }
+}
+
+void AppController::setShowDateColumn(bool show) {
+    if (m_showDateColumn != show) {
+        m_showDateColumn = show;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showDateColumn", show);
+        emit showDateColumnChanged();
+    }
+}
+
+void AppController::setShowPermissionsColumn(bool show) {
+    if (m_showPermissionsColumn != show) {
+        m_showPermissionsColumn = show;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showPermissionsColumn", show);
+        emit showPermissionsColumnChanged();
     }
 }
 

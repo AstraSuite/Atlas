@@ -19,6 +19,10 @@ class AppController : public QObject {
     Q_PROPERTY(QStringList filters READ filters WRITE setFilters NOTIFY filtersChanged)
     Q_PROPERTY(bool directoryOnly READ directoryOnly WRITE setDirectoryOnly NOTIFY directoryOnlyChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
+    Q_PROPERTY(bool showSizeColumn READ showSizeColumn WRITE setShowSizeColumn NOTIFY showSizeColumnChanged)
+    Q_PROPERTY(bool showTypeColumn READ showTypeColumn WRITE setShowTypeColumn NOTIFY showTypeColumnChanged)
+    Q_PROPERTY(bool showDateColumn READ showDateColumn WRITE setShowDateColumn NOTIFY showDateColumnChanged)
+    Q_PROPERTY(bool showPermissionsColumn READ showPermissionsColumn WRITE setShowPermissionsColumn NOTIFY showPermissionsColumnChanged)
     Q_PROPERTY(bool singleClick READ singleClick WRITE setSingleClick NOTIFY singleClickChanged)
     Q_PROPERTY(QString defaultStartupDirectory READ defaultStartupDirectory WRITE setDefaultStartupDirectory NOTIFY defaultStartupDirectoryChanged)
     Q_PROPERTY(int defaultViewMode READ defaultViewMode WRITE setDefaultViewMode NOTIFY defaultViewModeChanged)
@@ -53,6 +57,14 @@ public:
     void setDirectoryOnly(bool dirOnly);
 
     [[nodiscard]] bool showHidden() const { return m_showHidden; }
+    [[nodiscard]] bool showSizeColumn() const { return m_showSizeColumn; }
+    void setShowSizeColumn(bool show);
+    [[nodiscard]] bool showTypeColumn() const { return m_showTypeColumn; }
+    void setShowTypeColumn(bool show);
+    [[nodiscard]] bool showDateColumn() const { return m_showDateColumn; }
+    void setShowDateColumn(bool show);
+    [[nodiscard]] bool showPermissionsColumn() const { return m_showPermissionsColumn; }
+    void setShowPermissionsColumn(bool show);
     void setShowHidden(bool show);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
@@ -88,6 +100,10 @@ signals:
     void filtersChanged();
     void directoryOnlyChanged();
     void showHiddenChanged();
+    void showSizeColumnChanged();
+    void showTypeColumnChanged();
+    void showDateColumnChanged();
+    void showPermissionsColumnChanged();
     void singleClickChanged();
     void defaultStartupDirectoryChanged();
     void defaultViewModeChanged();
@@ -107,6 +123,10 @@ private:
     QStringList m_filters = { "*" };
     bool m_directoryOnly = false;
     bool m_showHidden = false;
+    bool m_showSizeColumn = true;
+    bool m_showTypeColumn = true;
+    bool m_showDateColumn = true;
+    bool m_showPermissionsColumn = true;
     bool m_singleClick = false;
     QString m_defaultStartupDirectory = "home";
     int m_defaultViewMode = 0; // Grid, Details, Compact
