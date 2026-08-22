@@ -131,6 +131,9 @@ MouseArea {
                         }
 
                         list.push({ text: qsTr("Compress..."), icon: "archive", action: "compress" });
+                        if (!root.targetItem.isDir) {
+                            list.push({ text: qsTr("Upload to Catbox"), icon: "cloud_upload", action: "uploadCatbox" });
+                        }
                         list.push({ text: qsTr("Cut"), icon: "content_cut", action: "cut" });
                         list.push({ text: qsTr("Copy"), icon: "content_copy", action: "copy" });
                         list.push({ text: qsTr("Copy Path"), icon: "link", action: "copyPath" });

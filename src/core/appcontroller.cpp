@@ -17,6 +17,7 @@ AppController::AppController(QObject* parent)
     m_defaultSortField = settings.value("preferences/defaultSortField", 0).toInt();
     m_defaultSortOrder = settings.value("preferences/defaultSortOrder", 0).toInt();
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
+    m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
 }
 
 AppController* AppController::instance() {
@@ -119,6 +120,15 @@ void AppController::setShowDirsFirst(bool dirsFirst) {
         QSettings settings("prism", "prism");
         settings.setValue("preferences/showDirsFirst", dirsFirst);
         emit showDirsFirstChanged();
+    }
+}
+
+void AppController::setPlacesIconSize(int size) {
+    if (m_placesIconSize != size && size > 0) {
+        m_placesIconSize = size;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/placesIconSize", size);
+        emit placesIconSizeChanged();
     }
 }
 

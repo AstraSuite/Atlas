@@ -20,6 +20,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     Multimedia
     WebEngineQuick
     DBus
+    Network
 )
 
 qt_standard_project_setup(REQUIRES 6.5)
@@ -42,6 +43,8 @@ qt_add_executable(prism_app
     src/core/fileutils.cpp
     src/core/fileoperations.hpp
     src/core/fileoperations.cpp
+    src/core/catboxuploader.hpp
+    src/core/catboxuploader.cpp
     src/core/placesmodel.hpp
     src/core/placesmodel.cpp
     src/core/drivemanager.hpp
@@ -162,6 +165,7 @@ target_link_libraries(prism_app PRIVATE
     Qt6::Svg
     Qt6::Multimedia
     Qt6::WebEngineQuick
+    Qt6::Network
 )
 
 # Native XDG Desktop Portal FileChooser daemon for Prism

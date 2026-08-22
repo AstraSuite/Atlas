@@ -1,5 +1,6 @@
 #include "fileoperations.hpp"
 
+#include "catboxuploader.hpp"
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -529,12 +530,48 @@ void FileOperations::restoreFromTrash(const QString& targetPath) {
 }
 
 void FileOperations::emptyTrash() {
-    QString trashDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/Trash";
-    removeRecursively(trashDir + "/files");
-    removeRecursively(trashDir + "/info");
-    QDir().mkpath(trashDir + "/files");
-    QDir().mkpath(trashDir + "/info");
-    emit operationFinished(true, tr("Trash emptied"));
+    m_progress->setRunning(true);
+    m_progress->setProgress(0.0);
+    m_progress->setStatusText(tr("Emptying trash..."));
+
+    (void)QtConcurrent::run([this]() {
+        QString trashDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/Trash";
+        QString filesDir = trashDir + "/files";
+        QString infoDir = trashDir + "/info";
+
+        bool allSuccess = true;
+
+        auto removeDirContents = [this, &allSuccess](const QString& dirPath) {
+            QDir dir(dirPath);
+            if (!dir.exists()) return;
+            const auto entries = dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
+            for (const auto& entry : entries) {
+                if (entry.isDir() && !entry.isSymLink()) {
+                    QDir subDir(entry.absoluteFilePath());
+                    if (!subDir.removeRecursively()) {
+                        allSuccess = false;
+                    }
+                } else {
+                    if (!QFile::remove(entry.absoluteFilePath())) {
+                        allSuccess = false;
+                    }
+                }
+            }
+        };
+
+        removeDirContents(filesDir);
+        removeDirContents(infoDir);
+
+        // Ensure directories still exist
+        QDir().mkpath(filesDir);
+        QDir().mkpath(infoDir);
+
+        QMetaObject::invokeMethod(this, [this, allSuccess]() {
+            m_progress->setRunning(false);
+            m_progress->setProgress(1.0);
+            emit operationFinished(allSuccess, allSuccess ? tr("Trash emptied") : tr("Failed to empty some trash items"));
+        });
+    });
 }
 
 void FileOperations::renameFile(const QString& oldPath, const QString& newName) {
@@ -831,6 +868,43 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
 
     m_activeDragFiles.clear();
     emit activeDragFilesChanged();
+}
+
+void FileOperations::addCompletedTask(bool success, const QString& message, const QString& url) {
+    QVariantMap task;
+    task[QStringLiteral("success")] = success;
+    task[QStringLiteral("message")] = message;
+    task[QStringLiteral("url")] = url;
+    task[QStringLiteral("time")] = QTime::currentTime().toString(QStringLiteral("hh:mm:ss"));
+
+    if (!m_completedTasks.isEmpty()) {
+        const auto first = m_completedTasks.first().toMap();
+        if (first.value(QStringLiteral("message")).toString() == message &&
+            first.value(QStringLiteral("url")).toString() == url) {
+            return;
+        }
+    }
+
+    m_completedTasks.prepend(task);
+    if (m_completedTasks.size() > 30) {
+        m_completedTasks.removeLast();
+    }
+    emit completedTasksChanged();
+}
+
+void FileOperations::clearCompletedTasks() {
+    if (!m_completedTasks.isEmpty()) {
+        m_completedTasks.clear();
+        emit completedTasksChanged();
+    }
+}
+
+void FileOperations::uploadToCatbox(const QStringList& paths) {
+    if (paths.isEmpty()) return;
+    m_progress->setRunning(true);
+    m_progress->setProgress(0.0);
+    m_progress->setStatusText(tr("Uploading to Catbox..."));
+    CatboxUploader::instance()->uploadFiles(paths);
 }
 
 } // namespace prism::core

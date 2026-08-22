@@ -18,6 +18,8 @@ MouseArea {
     property bool isDevice: false
     property bool isMounted: false
     property string devicePath: ""
+    property bool submenuOpen: false
+    property real submenuY: 0
 
     signal editRequested(int index, string name, string path, string iconName, bool isCustom)
     signal emptyTrashRequested()
@@ -34,6 +36,7 @@ MouseArea {
         isTrash = trash;
         isDevice = false;
         devicePath = "";
+        submenuOpen = false;
         expanded = true;
     }
 
@@ -47,6 +50,7 @@ MouseArea {
         isDevice = true;
         isCustom = false;
         isTrash = false;
+        submenuOpen = false;
         expanded = true;
     }
 
@@ -56,7 +60,10 @@ MouseArea {
     enabled: expanded
     hoverEnabled: expanded
     acceptedButtons: Qt.LeftButton | Qt.RightButton
-    onClicked: expanded = false
+    onClicked: {
+        expanded = false;
+        submenuOpen = false;
+    }
 
     opacity: expanded ? 1.0 : 0.0
     Behavior on opacity { Anim { type: Anim.FastEffects } }
@@ -95,7 +102,8 @@ MouseArea {
                             { text: qsTr("Open"), icon: "delete", action: "open" },
                             { text: qsTr("Open in New Tab"), icon: "tab", action: "openTab" },
                             { text: qsTr("Open in New Window"), icon: "open_in_new", action: "openWindow" },
-                            { text: qsTr("Empty Trash"), icon: "delete_sweep", action: "emptyTrash" }
+                            { text: qsTr("Empty Trash"), icon: "delete_sweep", action: "emptyTrash" },
+                            { text: qsTr("Places Icon Size"), icon: "photo_size_select_large", action: "iconSize", hasSubmenu: true }
                         ];
                     }
 
@@ -115,6 +123,7 @@ MouseArea {
                             list.push({ text: qsTr("Eject & Power Off"), icon: "power_settings_new", action: "eject" });
                         }
                         list.push({ text: qsTr("Hide from Sidebar"), icon: "visibility_off", action: "hideDevice" });
+                        list.push({ text: qsTr("Places Icon Size"), icon: "photo_size_select_large", action: "iconSize", hasSubmenu: true });
                         list.push({ text: qsTr("Manage Places & Devices..."), icon: "tune", action: "manage" });
                         return list;
                     }
@@ -127,6 +136,7 @@ MouseArea {
                         { text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminal" },
                         { text: qsTr("Edit Place..."), icon: "edit", action: "edit" },
                         { text: qsTr("Hide from Sidebar"), icon: "bookmark_remove", action: "remove" },
+                        { text: qsTr("Places Icon Size"), icon: "photo_size_select_large", action: "iconSize", hasSubmenu: true },
                         { text: qsTr("Manage Places & Devices..."), icon: "tune", action: "manage" }
                     ];
 
@@ -142,7 +152,7 @@ MouseArea {
                     implicitWidth: itemRow.implicitWidth + Tokens.padding.medium * 2
                     implicitHeight: 36
                     radius: Tokens.rounding.medium
-                    color: itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                    color: (itemHover.containsMouse || (menuItem.modelData.hasSubmenu && root.submenuOpen)) ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
 
                     RowLayout {
                         id: itemRow
@@ -167,6 +177,13 @@ MouseArea {
                                 ? Colours.palette.m3error
                                 : Colours.palette.m3onSurface
                         }
+
+                        MaterialIcon {
+                            visible: menuItem.modelData.hasSubmenu === true
+                            text: "chevron_right"
+                            color: Colours.palette.m3outline
+                            fontStyle: Tokens.font.icon.small
+                        }
                     }
 
                     MouseArea {
@@ -174,8 +191,25 @@ MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
+                        onContainsMouseChanged: {
+                            if (menuItem.modelData.hasSubmenu) {
+                                if (containsMouse) {
+                                    root.submenuY = menuItem.y + menuCard.y;
+                                    root.submenuOpen = true;
+                                }
+                            } else if (containsMouse) {
+                                root.submenuOpen = false;
+                            }
+                        }
                         onClicked: {
+                            if (menuItem.modelData.hasSubmenu) {
+                                root.submenuY = menuItem.y + menuCard.y;
+                                root.submenuOpen = !root.submenuOpen;
+                                return;
+                            }
+
                             root.expanded = false;
+                            root.submenuOpen = false;
                             let act = menuItem.modelData.action;
 
                             if (act === "open") {
@@ -212,6 +246,102 @@ MouseArea {
                             } else if (act === "manage") {
                                 root.manageRequested();
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Places Icon Size Submenu Floating Popup
+    StyledRect {
+        id: sizeSubmenuRect
+
+        visible: root.submenuOpen
+        z: menuCard.z + 1
+
+        x: (menuCard.x + menuCard.width + 160 < root.width) ? (menuCard.x + menuCard.width + 4) : Math.max(8, menuCard.x - width - 4)
+        y: Math.min(Math.max(8, root.submenuY), root.height - height - 8)
+
+        implicitWidth: sizeSubmenuCol.implicitWidth + Tokens.padding.extraSmall * 2
+        implicitHeight: sizeSubmenuCol.implicitHeight + Tokens.padding.extraSmall * 2
+
+        radius: Tokens.rounding.large
+        color: Colours.palette.m3surfaceContainerLow
+
+        scale: root.submenuOpen ? 1.0 : 0.94
+        opacity: root.submenuOpen ? 1.0 : 0.0
+        Behavior on opacity { Anim { type: Anim.FastEffects } }
+        Behavior on scale { Anim { type: Anim.FastEffects; easing: Tokens.anim.standard } }
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            hoverEnabled: true
+            onClicked: mouse => mouse.accepted = true
+        }
+
+        ColumnLayout {
+            id: sizeSubmenuCol
+
+            anchors.fill: parent
+            anchors.margins: Tokens.padding.extraSmall
+            spacing: 0
+
+            Repeater {
+                model: [
+                    { label: qsTr("Small (16px)"), size: 16 },
+                    { label: qsTr("Medium (20px)"), size: 20 },
+                    { label: qsTr("Large (24px)"), size: 24 },
+                    { label: qsTr("Extra Large (32px)"), size: 32 }
+                ]
+
+                StyledRect {
+                    id: sizeItem
+
+                    required property int index
+                    required property var modelData
+
+                    readonly property bool isCurrent: AppController.placesIconSize === modelData.size
+
+                    Layout.fillWidth: true
+                    implicitWidth: sizeRow.implicitWidth + Tokens.padding.medium * 2
+                    implicitHeight: 36
+                    radius: Tokens.rounding.medium
+                    color: isCurrent
+                        ? Colours.palette.m3primaryContainer
+                        : (subHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
+
+                    RowLayout {
+                        id: sizeRow
+                        anchors.fill: parent
+                        anchors.leftMargin: Tokens.padding.medium
+                        anchors.rightMargin: Tokens.padding.medium
+                        spacing: Tokens.spacing.small
+
+                        MaterialIcon {
+                            text: sizeItem.isCurrent ? "check" : "radio_button_unchecked"
+                            color: sizeItem.isCurrent ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3outline
+                            fontStyle: Tokens.font.icon.small
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: sizeItem.modelData.label
+                            font: Tokens.font.body.medium
+                            color: sizeItem.isCurrent ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        }
+                    }
+
+                    MouseArea {
+                        id: subHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            AppController.placesIconSize = sizeItem.modelData.size;
+                            root.submenuOpen = false;
+                            root.expanded = false;
                         }
                     }
                 }

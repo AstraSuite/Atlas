@@ -345,6 +345,12 @@ ApplicationWindow {
                     compressModal.sourcePaths = targetPaths;
                     compressModal.defaultName = targetPaths.length === 1 ? item.name : FileUtils.baseName(targetPaths[0]);
                     compressModal.expanded = true;
+                } else if (action === "uploadCatbox") {
+                    let pathsToUpload = (targetPaths && targetPaths.length > 0) ? targetPaths : (item && item.path ? [item.path] : []);
+                    if (pathsToUpload.length > 0) {
+                        operationsModal.expanded = true;
+                        FileOperations.uploadToCatbox(pathsToUpload);
+                    }
                 } else if (action === "newFile") {
                     newItemModal.title = qsTr("Create New File");
                     newItemModal.icon = "note_add";
@@ -499,6 +505,34 @@ ApplicationWindow {
         // Preferences / Settings Modal
         PreferencesModal {
             id: preferencesModal
+        }
+
+        // Drive Manager Navigation Handler
+        Connections {
+            target: DriveManager
+            function onDeviceMounted(mountPoint, tabIndex) {
+                if (!mountPoint || mountPoint.length === 0) return;
+                if (tabIndex === -1) {
+                    TabManager.newTab(mountPoint);
+                } else if (tabIndex >= 0 && tabIndex < TabManager.count) {
+                    TabManager.currentIndex = tabIndex;
+                    let tab = TabManager.currentTab;
+                    if (tab) {
+                        if (tab.isSplit && tab.activePane === 1) {
+                            tab.splitPath = mountPoint;
+                        } else {
+                            tab.currentPath = mountPoint;
+                        }
+                    }
+                } else if (TabManager.currentTab) {
+                    let tab = TabManager.currentTab;
+                    if (tab.isSplit && tab.activePane === 1) {
+                        tab.splitPath = mountPoint;
+                    } else {
+                        tab.currentPath = mountPoint;
+                    }
+                }
+            }
         }
 
         VectorBloomOverlay {

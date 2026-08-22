@@ -531,6 +531,69 @@ MouseArea {
                             Item { implicitHeight: 4 }
 
                             StyledText {
+                                text: qsTr("Places Sidebar Icon Size")
+                                color: Colours.palette.m3primary
+                                font: Tokens.font.label.large
+                            }
+
+                            // Places Sidebar Icon Size Selection
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.small
+
+                                Repeater {
+                                    model: [
+                                        { size: 16, label: qsTr("Small (16px)"), icon: "photo_size_select_small" },
+                                        { size: 20, label: qsTr("Medium (20px)"), icon: "photo_size_select_large" },
+                                        { size: 24, label: qsTr("Large (24px)"), icon: "crop_free" },
+                                        { size: 32, label: qsTr("X-Large (32px)"), icon: "fullscreen" }
+                                    ]
+
+                                    StyledRect {
+                                        id: sizeCard
+                                        required property int index
+                                        required property var modelData
+
+                                        Layout.fillWidth: true
+                                        implicitHeight: 44
+                                        radius: Tokens.rounding.medium
+                                        readonly property bool isSelected: AppController.placesIconSize === sizeCard.modelData.size
+                                        color: isSelected
+                                            ? Colours.palette.m3primaryContainer
+                                            : (sizeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
+
+                                        RowLayout {
+                                            anchors.centerIn: parent
+                                            spacing: 6
+
+                                            MaterialIcon {
+                                                text: sizeCard.modelData.icon
+                                                color: sizeCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+                                                fontStyle: Tokens.font.icon.small
+                                            }
+
+                                            StyledText {
+                                                text: sizeCard.modelData.label
+                                                color: sizeCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                                                font: Tokens.font.body.small
+                                                elide: Text.ElideRight
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: sizeHover
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: AppController.placesIconSize = sizeCard.modelData.size
+                                        }
+                                    }
+                                }
+                            }
+
+                            Item { implicitHeight: 4 }
+
+                            StyledText {
                                 text: qsTr("Sorting & Organization")
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large

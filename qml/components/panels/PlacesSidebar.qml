@@ -190,7 +190,7 @@ StyledRect {
                             MaterialIcon {
                                 text: placeItem.iconName
                                 color: placeItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                                fontStyle: Tokens.font.icon.medium
+                                pointSize: AppController.placesIconSize
                                 fill: placeItem.selected ? 1 : 0
                             }
 
@@ -332,7 +332,7 @@ StyledRect {
                             MaterialIcon {
                                 text: driveItem.isRemovable ? "usb" : "hard_drive"
                                 color: driveItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                                fontStyle: Tokens.font.icon.medium
+                                pointSize: AppController.placesIconSize
                                 fill: driveItem.selected ? 1 : 0
                             }
 

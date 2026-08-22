@@ -20,6 +20,7 @@
 #include "core/appintegration.hpp"
 #include "core/filemetadata.hpp"
 #include "core/fileoperations.hpp"
+#include "core/catboxuploader.hpp"
 #include "core/fileutils.hpp"
 #include "core/iconprovider.hpp"
 #include "core/papiruswatcher.hpp"
@@ -175,6 +176,7 @@ int main(int argc, char* argv[]) {
     auto* tokens = prism::config::TokensSingleton::instance();
     auto* fileUtils = new prism::core::FileUtils(&app);
     auto* fileOps = prism::core::FileOperations::instance();
+    auto* catboxUploader = prism::core::CatboxUploader::instance();
     auto* tabManager = prism::controllers::TabManager::instance();
 
     // If explicit path was provided on command line, navigate there
@@ -197,6 +199,7 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("AppController", controller);
     engine.rootContext()->setContextProperty("FileUtils", fileUtils);
     engine.rootContext()->setContextProperty("FileOperations", fileOps);
+    engine.rootContext()->setContextProperty("CatboxUploader", catboxUploader);
     engine.rootContext()->setContextProperty("TabManager", tabManager);
     engine.rootContext()->setContextProperty("AppIntegration", appIntegration);
     engine.rootContext()->setContextProperty("PapirusWatcher", papirusWatcher);

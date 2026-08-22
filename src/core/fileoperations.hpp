@@ -5,6 +5,8 @@
 #include <QStringList>
 #include <QFutureWatcher>
 #include <atomic>
+#include <QQmlEngine>
+#include <QJSEngine>
 #include <qqmlintegration.h>
 
 namespace prism::core {
@@ -56,19 +58,27 @@ class FileOperations : public QObject {
     Q_PROPERTY(bool canUndo READ canUndo NOTIFY undoStackChanged)
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY undoStackChanged)
     Q_PROPERTY(QStringList activeDragFiles READ activeDragFiles NOTIFY activeDragFilesChanged)
+    Q_PROPERTY(QVariantList completedTasks READ completedTasks NOTIFY completedTasksChanged)
 
 public:
     explicit FileOperations(QObject* parent = nullptr);
 
     static FileOperations* instance();
+    static FileOperations* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
+        return instance();
+    }
 
     FileOperationProgress* progress() const { return m_progress; }
     QStringList clipboardFiles() const { return m_clipboardFiles; }
     QStringList activeDragFiles() const { return m_activeDragFiles; }
+    QVariantList completedTasks() const { return m_completedTasks; }
     bool isCutOperation() const { return m_isCut; }
     bool canPaste() const { return !m_clipboardFiles.isEmpty(); }
     bool canUndo() const { return !m_undoStack.isEmpty(); }
     bool canRedo() const { return !m_redoStack.isEmpty(); }
+
+    Q_INVOKABLE void addCompletedTask(bool success, const QString& message, const QString& url = QString());
+    Q_INVOKABLE void clearCompletedTasks();
 
     Q_INVOKABLE void undo();
     Q_INVOKABLE void redo();
@@ -102,6 +112,7 @@ public:
 
     Q_INVOKABLE void extractArchive(const QString& archivePath, const QString& destinationDir = "");
     Q_INVOKABLE void createArchive(const QStringList& sourcePaths, const QString& destinationFile, const QString& format = "zip");
+    Q_INVOKABLE void uploadToCatbox(const QStringList& paths);
 
     Q_INVOKABLE void copyFiles(const QStringList& sources, const QString& destinationDir);
     Q_INVOKABLE void moveFiles(const QStringList& sources, const QString& destinationDir);
@@ -127,6 +138,7 @@ signals:
     void customCommandChanged();
     void undoStackChanged();
     void operationFinished(bool success, const QString& message);
+    void completedTasksChanged();
     void conflictOccurred(const QString& source, const QString& destination);
 
 private:
@@ -157,6 +169,7 @@ private:
     FileOperationProgress* m_progress = nullptr;
     QStringList m_clipboardFiles;
     QStringList m_activeDragFiles;
+    QVariantList m_completedTasks;
     QList<UndoAction> m_undoStack;
     QList<UndoAction> m_redoStack;
     bool m_isCut = false;

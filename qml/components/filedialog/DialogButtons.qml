@@ -2,12 +2,29 @@ import QtQuick
 import QtQuick.Layouts
 import "../"
 import "../controls"
+import prism
 
 StyledRect {
     id: root
 
     required property var dialog
     required property var folder
+
+    property bool uploadingFromDialog: false
+
+    Connections {
+        target: CatboxUploader
+        function onUploadFinished(success, result, path) {
+            if (root.uploadingFromDialog) {
+                root.uploadingFromDialog = false;
+                if (success) {
+                    // Successfully uploaded and copied to clipboard;
+                    // Exit file chooser without returning the local file path
+                    root.dialog.rejected();
+                }
+            }
+        }
+    }
 
     implicitHeight: inner.implicitHeight + Tokens.padding.medium * 2
 
@@ -121,6 +138,68 @@ StyledRect {
             }
         }
 
+        // Upload to Catbox Button (for file chooser mode)
+        StyledRect {
+            visible: !root.dialog.directoryOnly
+            color: uploadHover.containsMouse ? Colours.palette.m3tertiaryContainer : Colours.tPalette.m3surfaceContainerHigh
+            radius: Tokens.rounding.medium
+
+            implicitWidth: uploadRow.implicitWidth + Tokens.padding.medium * 2
+            implicitHeight: uploadRow.implicitHeight + Tokens.padding.medium * 2
+
+            readonly property bool canUpload: root.dialog.selectionValid &&
+                root.folder && root.folder.currentItem && root.folder.currentItem.modelData &&
+                !root.folder.currentItem.modelData.isDir && !CatboxUploader.isUploading
+
+            RowLayout {
+                id: uploadRow
+                anchors.centerIn: parent
+                spacing: 6
+
+                MaterialIcon {
+                    text: "cloud_upload"
+                    color: (root.uploadingFromDialog && CatboxUploader.isUploading)
+                        ? Colours.palette.m3primary
+                        : (parent.parent.canUpload ? Colours.palette.m3primary : Colours.palette.m3outline)
+                    fontStyle: Tokens.font.icon.small
+
+                    RotationAnimation on rotation {
+                        loops: Animation.Infinite
+                        from: 0
+                        to: 360
+                        duration: 1200
+                        running: root.uploadingFromDialog && CatboxUploader.isUploading
+                    }
+                }
+
+                StyledText {
+                    id: uploadText
+                    text: (root.uploadingFromDialog && CatboxUploader.isUploading)
+                        ? qsTr("Uploading (%1%)...").arg(Math.round(CatboxUploader.uploadProgress * 100))
+                        : qsTr("Upload to Catbox")
+                    color: parent.parent.canUpload ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                }
+            }
+
+            StateLayer {
+                id: uploadHover
+                disabled: !parent.canUpload
+                onClicked: {
+                    if (parent.canUpload) {
+                        let path = root.folder.currentItem.modelData.path;
+                        root.uploadingFromDialog = true;
+                        CatboxUploader.uploadFile(path);
+                    }
+                }
+            }
+
+            StyledToolTip {
+                text: qsTr("Upload selected file directly to Catbox and copy link to clipboard")
+                visible: uploadHover.containsMouse
+            }
+        }
+
+        // Select Button
         StyledRect {
             color: Colours.tPalette.m3surfaceContainerHigh
             radius: Tokens.rounding.medium
@@ -129,9 +208,9 @@ StyledRect {
             implicitHeight: selectText.implicitHeight + Tokens.padding.medium * 2
 
             StateLayer {
-                disabled: !root.dialog.selectionValid
+                disabled: !root.dialog.selectionValid || CatboxUploader.isUploading
                 onClicked: {
-                    if (root.dialog.selectionValid) {
+                    if (root.dialog.selectionValid && !CatboxUploader.isUploading) {
                         if (root.dialog.directoryOnly) {
                             if (root.folder && root.folder.currentItem && root.folder.currentItem.modelData && root.folder.currentItem.modelData.isDir) {
                                 root.dialog.accepted(root.folder.currentItem.modelData.path);
@@ -152,10 +231,11 @@ StyledRect {
                 anchors.margins: Tokens.padding.medium
 
                 text: root.dialog.directoryOnly ? qsTr("Select Folder") : qsTr("Select")
-                color: root.dialog.selectionValid ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                color: root.dialog.selectionValid && !CatboxUploader.isUploading ? Colours.palette.m3onSurface : Colours.palette.m3outline
             }
         }
 
+        // Cancel Button
         StyledRect {
             color: Colours.tPalette.m3surfaceContainerHigh
             radius: Tokens.rounding.medium
@@ -165,6 +245,9 @@ StyledRect {
 
             StateLayer {
                 onClicked: {
+                    if (CatboxUploader.isUploading) {
+                        CatboxUploader.cancelUpload();
+                    }
                     root.dialog.rejected();
                 }
             }
