@@ -582,7 +582,7 @@ Item {
                     verticalAlignment: Text.AlignTop
                     elide: Text.ElideMiddle
                     maximumLineCount: root.labelLines
-                    wrapMode: Text.WrapAnywhere
+                    wrapMode: Text.Wrap
                 }
             }
         }
