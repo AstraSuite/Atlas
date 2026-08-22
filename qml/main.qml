@@ -899,26 +899,6 @@ ApplicationWindow {
             context: Qt.ApplicationShortcut
             onActivated: window.zoomLevel = 80
         }
-
-        // Global MouseArea for Back/Forward Extra Mouse Buttons
-        MouseArea {
-            anchors.fill: parent
-            z: -1
-            acceptedButtons: Qt.BackButton | Qt.ForwardButton | Qt.ExtraButton1 | Qt.ExtraButton2
-            onPressed: mouse => {
-                if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
-                    if (TabManager.currentTab && TabManager.currentTab.canGoBack) {
-                        TabManager.currentTab.goBack();
-                        mouse.accepted = true;
-                    }
-                } else if (mouse.button === Qt.ForwardButton || mouse.button === Qt.ExtraButton2) {
-                    if (TabManager.currentTab && TabManager.currentTab.canGoForward) {
-                        TabManager.currentTab.goForward();
-                        mouse.accepted = true;
-                    }
-                }
-            }
-        }
     }
 
     // Modal File Dialog Picker Mode

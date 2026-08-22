@@ -38,18 +38,22 @@ public:
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override {
         Q_UNUSED(obj);
-        if (event->type() == QEvent::MouseButtonPress) {
+        if (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease) {
             auto* me = static_cast<QMouseEvent*>(event);
             if (me->button() == Qt::BackButton || me->button() == Qt::ExtraButton1) {
-                if (m_tabManager && m_tabManager->currentTab() && m_tabManager->currentTab()->canGoBack()) {
-                    m_tabManager->currentTab()->goBack();
-                    return true;
+                if (event->type() == QEvent::MouseButtonRelease) {
+                    if (m_tabManager && m_tabManager->currentTab() && m_tabManager->currentTab()->canGoBack()) {
+                        m_tabManager->currentTab()->goBack();
+                    }
                 }
+                return true;
             } else if (me->button() == Qt::ForwardButton || me->button() == Qt::ExtraButton2) {
-                if (m_tabManager && m_tabManager->currentTab() && m_tabManager->currentTab()->canGoForward()) {
-                    m_tabManager->currentTab()->goForward();
-                    return true;
+                if (event->type() == QEvent::MouseButtonRelease) {
+                    if (m_tabManager && m_tabManager->currentTab() && m_tabManager->currentTab()->canGoForward()) {
+                        m_tabManager->currentTab()->goForward();
+                    }
                 }
+                return true;
             }
         }
         return false;
@@ -178,6 +182,7 @@ int main(int argc, char* argv[]) {
     auto* fileOps = prism::core::FileOperations::instance();
     auto* catboxUploader = prism::core::CatboxUploader::instance();
     auto* tabManager = prism::controllers::TabManager::instance();
+    app.installEventFilter(new GlobalMouseFilter(tabManager, &app));
 
     // If explicit path was provided on command line, navigate there
     if (!initialDir.isEmpty() && tabManager->currentTab()) {
@@ -219,11 +224,6 @@ int main(int argc, char* argv[]) {
         Qt::QueuedConnection);
 
     engine.load(url);
-
-    if (!engine.rootObjects().isEmpty()) {
-        auto* rootWin = engine.rootObjects().first();
-        rootWin->installEventFilter(new GlobalMouseFilter(tabManager, rootWin));
-    }
 
     return app.exec();
 }
