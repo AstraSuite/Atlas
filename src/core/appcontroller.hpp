@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QVariantMap>
 #include <QString>
 #include <QStringList>
 #include <QGuiApplication>
@@ -19,6 +20,7 @@ class AppController : public QObject {
     Q_PROPERTY(QStringList filters READ filters WRITE setFilters NOTIFY filtersChanged)
     Q_PROPERTY(bool directoryOnly READ directoryOnly WRITE setDirectoryOnly NOTIFY directoryOnlyChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
+    Q_PROPERTY(QVariantMap detailsColumnWidths READ detailsColumnWidths NOTIFY detailsColumnWidthsChanged)
     Q_PROPERTY(bool singleClick READ singleClick WRITE setSingleClick NOTIFY singleClickChanged)
     Q_PROPERTY(QString defaultStartupDirectory READ defaultStartupDirectory WRITE setDefaultStartupDirectory NOTIFY defaultStartupDirectoryChanged)
     Q_PROPERTY(int defaultViewMode READ defaultViewMode WRITE setDefaultViewMode NOTIFY defaultViewModeChanged)
@@ -53,6 +55,9 @@ public:
     void setDirectoryOnly(bool dirOnly);
 
     [[nodiscard]] bool showHidden() const { return m_showHidden; }
+    [[nodiscard]] QVariantMap detailsColumnWidths() const { return m_detailsColumnWidths; }
+    Q_INVOKABLE void setDetailsColumnWidth(const QString& key, int width);
+    Q_INVOKABLE void resetDetailsColumnWidths();
     void setShowHidden(bool show);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
@@ -88,6 +93,7 @@ signals:
     void filtersChanged();
     void directoryOnlyChanged();
     void showHiddenChanged();
+    void detailsColumnWidthsChanged();
     void singleClickChanged();
     void defaultStartupDirectoryChanged();
     void defaultViewModeChanged();
@@ -107,6 +113,7 @@ private:
     QStringList m_filters = { "*" };
     bool m_directoryOnly = false;
     bool m_showHidden = false;
+    QVariantMap m_detailsColumnWidths;
     bool m_singleClick = false;
     QString m_defaultStartupDirectory = "home";
     int m_defaultViewMode = 0; // Grid, Details, Compact

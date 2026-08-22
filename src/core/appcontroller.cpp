@@ -1,4 +1,6 @@
 #include "appcontroller.hpp"
+#include <QJsonObject>
+#include <QJsonDocument>
 #include "iconprovider.hpp"
 #include <QSettings>
 #include <iostream>
@@ -18,6 +20,11 @@ AppController::AppController(QObject* parent)
     m_defaultSortOrder = settings.value("preferences/defaultSortOrder", 0).toInt();
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
+
+    const QByteArray widthsJson = settings.value("preferences/detailsColumnWidths").toString().toUtf8();
+    if (!widthsJson.isEmpty()) {
+        m_detailsColumnWidths = QJsonDocument::fromJson(widthsJson).object().toVariantMap();
+    }
 }
 
 AppController* AppController::instance() {
@@ -58,6 +65,30 @@ void AppController::setDirectoryOnly(bool dirOnly) {
         m_directoryOnly = dirOnly;
         emit directoryOnlyChanged();
     }
+}
+
+void AppController::setDetailsColumnWidth(const QString& key, int width) {
+    const int clamped = qBound(48, width, 800);
+    if (m_detailsColumnWidths.value(key).toInt() == clamped)
+        return;
+
+    m_detailsColumnWidths.insert(key, clamped);
+
+    QSettings settings("prism", "prism");
+    settings.setValue("preferences/detailsColumnWidths",
+                      QString::fromUtf8(QJsonDocument(QJsonObject::fromVariantMap(m_detailsColumnWidths)).toJson(QJsonDocument::Compact)));
+    emit detailsColumnWidthsChanged();
+}
+
+void AppController::resetDetailsColumnWidths() {
+    if (m_detailsColumnWidths.isEmpty())
+        return;
+
+    m_detailsColumnWidths.clear();
+
+    QSettings settings("prism", "prism");
+    settings.remove("preferences/detailsColumnWidths");
+    emit detailsColumnWidthsChanged();
 }
 
 void AppController::setShowHidden(bool show) {
