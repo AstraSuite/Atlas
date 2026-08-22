@@ -53,6 +53,7 @@ public:
     void setDirectoryOnly(bool dirOnly);
 
     [[nodiscard]] bool showHidden() const { return m_showHidden; }
+    Q_INVOKABLE static bool shiftPressed();
     void setShowHidden(bool show);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }

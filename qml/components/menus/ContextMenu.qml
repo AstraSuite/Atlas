@@ -15,6 +15,7 @@ MouseArea {
     property real submenuY: 0
     property var sharingServices: []
     property var customActions: []
+    property bool shiftHeld: false
 
     readonly property bool isTrash: currentDir.indexOf("Trash") !== -1 || currentDir.indexOf("trash:") !== -1 || (targetItem && targetItem.isTrashItem)
     readonly property bool isArchive: targetItem && (
@@ -28,6 +29,7 @@ MouseArea {
     onExpandedChanged: {
         submenuOpen = false;
         if (expanded) {
+            shiftHeld = AppController.shiftPressed();
             sharingServices = AppIntegration.getAvailableSharingServices();
             let selPaths = targetItem ? [targetItem.path] : [];
             let isDir = targetItem ? targetItem.isDir : true;
@@ -142,7 +144,11 @@ MouseArea {
                         list.push({ text: qsTr("Create Symlink"), icon: "link", action: "symlink" });
                         list.push({ text: qsTr("Rename"), icon: "drive_file_rename_outline", action: "rename" });
                         list.push({ text: qsTr("Duplicate"), icon: "control_point_duplicate", action: "duplicate" });
-                        list.push({ text: qsTr("Move to Trash"), icon: "delete", action: "trash" });
+                        if (root.shiftHeld) {
+                            list.push({ text: qsTr("Delete Permanently"), icon: "delete_forever", action: "delete" });
+                        } else {
+                            list.push({ text: qsTr("Move to Trash"), icon: "delete", action: "trash" });
+                        }
                         list.push({ text: qsTr("Properties"), icon: "info", action: "properties" });
 
                         return list;

@@ -1,4 +1,6 @@
 #include "appcontroller.hpp"
+
+#include <QGuiApplication>
 #include "iconprovider.hpp"
 #include <QSettings>
 #include <iostream>
@@ -58,6 +60,10 @@ void AppController::setDirectoryOnly(bool dirOnly) {
         m_directoryOnly = dirOnly;
         emit directoryOnlyChanged();
     }
+}
+
+bool AppController::shiftPressed() {
+    return QGuiApplication::queryKeyboardModifiers().testFlag(Qt::ShiftModifier);
 }
 
 void AppController::setShowHidden(bool show) {
