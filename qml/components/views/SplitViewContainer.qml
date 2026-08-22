@@ -108,8 +108,12 @@ StyledRect {
             }
 
             // Nexus-Style Empty State
+            LoadingOverlay {
+                active: mainModel.isLoading
+            }
+
             EmptyStateView {
-                visible: mainModel.count === 0
+                visible: mainModel.count === 0 && !mainModel.isLoading
                 path: root.activeTab ? root.activeTab.currentPath : ""
                 isSearching: mainModel.isSearching
                 searchQuery: (root.isSplit && root.activePane === 1) ? "" : root.searchQuery
@@ -221,8 +225,12 @@ StyledRect {
             }
 
             // Secondary Empty State
+            LoadingOverlay {
+                active: splitModel.isLoading
+            }
+
             EmptyStateView {
-                visible: splitModel.count === 0
+                visible: splitModel.count === 0 && !splitModel.isLoading
                 path: (root.activeTab && root.activeTab.splitPath) ? root.activeTab.splitPath : ""
                 isSearching: splitModel.isSearching
                 searchQuery: (root.isSplit && root.activePane === 1) ? root.searchQuery : ""
@@ -381,6 +389,7 @@ StyledRect {
     function handleOpen(item, pane) {
         if (root.activeTab) root.activeTab.activePane = pane;
         if (!item) return;
+        if ((pane === 1 ? splitModel : mainModel).isLoading) return;
         if (item.isDir) {
             if (pane === 1) {
                 root.activeTab.splitPath = item.path;
