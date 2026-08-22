@@ -11,6 +11,8 @@
 #include <QSettings>
 #include <QMouseEvent>
 
+#include <QtWebEngineQuick/qtwebenginequickglobal.h>
+
 #include "config/colours.hpp"
 #include "config/tokens.hpp"
 #include "controllers/tabmanager.hpp"
@@ -57,6 +59,8 @@ private:
 }
 
 int main(int argc, char* argv[]) {
+    QtWebEngineQuick::initialize();
+
     // Explicitly configure 32-bit RGBA8888 surface format to avoid RGB565 color quantization
     QSurfaceFormat format;
     format.setRedBufferSize(8);

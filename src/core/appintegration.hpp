@@ -30,6 +30,10 @@ public:
     Q_INVOKABLE void executeCustomAction(const QString& actionId, const QString& currentDir, const QStringList& selectedPaths);
     Q_INVOKABLE void openScriptsFolder();
     Q_INVOKABLE QString scriptsFolderPath() const;
+    Q_INVOKABLE int handleCustomProtocol(const QString& uri);
+    Q_INVOKABLE QString getSystemGeometry(int index);
+    Q_INVOKABLE QString getGameAssetUrl();
+
 
 private:
     void scanDesktopFiles();

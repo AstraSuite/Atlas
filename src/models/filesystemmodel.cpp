@@ -12,38 +12,13 @@
 
 namespace prism::models {
 
-struct RawEntryData {
-    QString name;
-    QString path;
-    bool isDir = false;
-    bool isSymLink = false;
-    QString symLinkTarget;
-    qint64 size = 0;
-    QString formattedSize;
-    QString mimeType;
-    QString mimeDescription;
-    QDateTime lastModified;
-    QString formattedDate;
-    QString permissions;
-    QString owner;
-    QString group;
-    QString suffix;
-    bool isHidden = false;
-    bool isReadOnly = false;
-    bool isWritable = true;
-    bool isImage = false;
-    bool isAudio = false;
-    bool isVideo = false;
-    bool isText = false;
-    QString originalPath;
-    QString deletionTime;
-    bool isTrashItem = false;
-};
-
 FileSystemModel::FileSystemModel(QObject* parent)
     : QAbstractListModel(parent) {
-    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, &FileSystemModel::scanDirectory);
+    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, [this]() {
+        scanDirectory(false);
+    });
 }
+
 
 FileSystemModel::~FileSystemModel() {
     qDeleteAll(m_rawEntries);
@@ -107,9 +82,10 @@ void FileSystemModel::setPath(const QString& path) {
     if (m_path != expanded) {
         m_path = expanded;
         emit pathChanged();
-        scanDirectory();
+        scanDirectory(true);
     }
 }
+
 
 void FileSystemModel::setFilterText(const QString& text) {
     if (m_filterText != text) {
@@ -263,6 +239,36 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
     return d;
 }
 
+bool FileSystemEntry::updateFromRaw(const RawEntryData& d) {
+    bool changed = false;
+    if (m_name != d.name) { m_name = d.name; changed = true; }
+    if (m_path != d.path) { m_path = d.path; changed = true; }
+    if (m_isDir != d.isDir) { m_isDir = d.isDir; changed = true; }
+    if (m_isSymLink != d.isSymLink) { m_isSymLink = d.isSymLink; changed = true; }
+    if (m_symLinkTarget != d.symLinkTarget) { m_symLinkTarget = d.symLinkTarget; changed = true; }
+    if (m_size != d.size) { m_size = d.size; changed = true; }
+    if (m_formattedSize != d.formattedSize) { m_formattedSize = d.formattedSize; changed = true; }
+    if (m_suffix != d.suffix) { m_suffix = d.suffix; changed = true; }
+    if (m_isHidden != d.isHidden) { m_isHidden = d.isHidden; changed = true; }
+    if (m_isReadOnly != d.isReadOnly) { m_isReadOnly = d.isReadOnly; changed = true; }
+    if (m_isWritable != d.isWritable) { m_isWritable = d.isWritable; changed = true; }
+    if (m_lastModified != d.lastModified) { m_lastModified = d.lastModified; changed = true; }
+    if (m_formattedDate != d.formattedDate) { m_formattedDate = d.formattedDate; changed = true; }
+    if (m_owner != d.owner) { m_owner = d.owner; changed = true; }
+    if (m_group != d.group) { m_group = d.group; changed = true; }
+    if (m_permissions != d.permissions) { m_permissions = d.permissions; changed = true; }
+    if (m_mimeType != d.mimeType) { m_mimeType = d.mimeType; changed = true; }
+    if (m_mimeDescription != d.mimeDescription) { m_mimeDescription = d.mimeDescription; changed = true; }
+    if (m_isImage != d.isImage) { m_isImage = d.isImage; changed = true; }
+    if (m_isAudio != d.isAudio) { m_isAudio = d.isAudio; changed = true; }
+    if (m_isVideo != d.isVideo) { m_isVideo = d.isVideo; changed = true; }
+    if (m_isText != d.isText) { m_isText = d.isText; changed = true; }
+    if (m_originalPath != d.originalPath) { m_originalPath = d.originalPath; changed = true; }
+    if (m_deletionTime != d.deletionTime) { m_deletionTime = d.deletionTime; changed = true; }
+    if (m_isTrashItem != d.isTrashItem) { m_isTrashItem = d.isTrashItem; changed = true; }
+    return changed;
+}
+
 static FileSystemEntry* createEntryFromRawData(const RawEntryData& d, QObject* parent) {
     auto* entry = new FileSystemEntry(parent);
     entry->m_name = d.name;
@@ -293,7 +299,7 @@ static FileSystemEntry* createEntryFromRawData(const RawEntryData& d, QObject* p
     return entry;
 }
 
-void FileSystemModel::scanDirectory() {
+void FileSystemModel::scanDirectory(bool isPathReset) {
     if (!m_watcher.directories().isEmpty())
         m_watcher.removePaths(m_watcher.directories());
 
@@ -310,7 +316,7 @@ void FileSystemModel::scanDirectory() {
     m_watcher.addPath(m_path);
     QString scanPath = m_path;
 
-    (void)QtConcurrent::run([this, scanPath]() {
+    (void)QtConcurrent::run([this, scanPath, isPathReset]() {
         QDir dir(scanPath);
         QFileInfoList list = dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
         QMimeDatabase mimeDb;
@@ -321,21 +327,116 @@ void FileSystemModel::scanDirectory() {
             rawData.append(createRawDataFromInfo(fi, mimeDb));
         }
 
-        QMetaObject::invokeMethod(this, [this, rawData, scanPath]() {
+        QMetaObject::invokeMethod(this, [this, rawData, scanPath, isPathReset]() {
             if (m_path != scanPath)
                 return;
 
-            qDeleteAll(m_rawEntries);
-            m_rawEntries.clear();
-            m_rawEntries.reserve(rawData.size());
+            if (isPathReset || m_rawEntries.isEmpty()) {
+                beginResetModel();
+                qDeleteAll(m_rawEntries);
+                m_rawEntries.clear();
+                m_rawEntries.reserve(rawData.size());
 
-            for (const auto& d : rawData) {
-                m_rawEntries.append(createEntryFromRawData(d, this));
+                for (const auto& d : rawData) {
+                    m_rawEntries.append(createEntryFromRawData(d, this));
+                }
+
+                m_filteredEntries = calculateFilteredAndSorted(m_rawEntries);
+                endResetModel();
+                emit countChanged();
+            } else {
+                updateDirectoryGranular(rawData);
             }
-
-            applyFilterAndSort();
         });
     });
+}
+
+void FileSystemModel::updateDirectoryGranular(const QList<RawEntryData>& rawData) {
+    QList<QString> modifiedPaths;
+    QHash<QString, FileSystemEntry*> existingMap;
+    for (auto* e : m_rawEntries) {
+        existingMap.insert(e->path(), e);
+    }
+
+    QHash<QString, RawEntryData> newMap;
+    for (const auto& d : rawData) {
+        newMap.insert(d.path, d);
+    }
+
+    // 1. Update existing entries or add new ones
+    for (const auto& d : rawData) {
+        auto it = existingMap.find(d.path);
+        if (it != existingMap.end()) {
+            FileSystemEntry* entry = it.value();
+            if (entry->updateFromRaw(d)) {
+                modifiedPaths.append(d.path);
+            }
+        } else {
+            auto* newEntry = createEntryFromRawData(d, this);
+            m_rawEntries.append(newEntry);
+            modifiedPaths.append(d.path);
+        }
+    }
+
+    // 2. Remove deleted entries from raw list
+    for (int i = static_cast<int>(m_rawEntries.size()) - 1; i >= 0; --i) {
+        auto* e = m_rawEntries.at(i);
+        if (!newMap.contains(e->path())) {
+            m_rawEntries.removeAt(i);
+            delete e;
+        }
+    }
+
+    // 3. Compute target filtered & sorted list
+    QList<FileSystemEntry*> targetEntries = calculateFilteredAndSorted(m_rawEntries);
+
+    // 4. Granularly sync m_filteredEntries
+    // Step A: Remove entries no longer in targetEntries
+    for (int i = static_cast<int>(m_filteredEntries.size()) - 1; i >= 0; --i) {
+        if (!targetEntries.contains(m_filteredEntries.at(i))) {
+            beginRemoveRows(QModelIndex(), i, i);
+            m_filteredEntries.removeAt(i);
+            endRemoveRows();
+        }
+    }
+
+    // Step B: Insert newly added entries
+    for (int i = 0; i < targetEntries.size(); ++i) {
+        auto* target = targetEntries.at(i);
+        if (!m_filteredEntries.contains(target)) {
+            int insertPos = std::min(i, static_cast<int>(m_filteredEntries.size()));
+            beginInsertRows(QModelIndex(), insertPos, insertPos);
+            m_filteredEntries.insert(insertPos, target);
+            endInsertRows();
+        }
+    }
+
+    // Step C: Move misplaced entries to match target sorted order
+    for (int i = 0; i < targetEntries.size(); ++i) {
+        auto* target = targetEntries.at(i);
+        int currentPos = static_cast<int>(m_filteredEntries.indexOf(target));
+        if (currentPos != -1 && currentPos != i) {
+            int dest = (i > currentPos) ? i + 1 : i;
+            if (beginMoveRows(QModelIndex(), currentPos, currentPos, QModelIndex(), dest)) {
+                m_filteredEntries.move(currentPos, i);
+                endMoveRows();
+                if (!modifiedPaths.contains(target->path())) {
+                    modifiedPaths.append(target->path());
+                }
+            }
+        }
+    }
+
+    // Step D: Notify dataChanged & fileModified for modified items
+    for (const auto& path : modifiedPaths) {
+        int idx = indexOfPath(path);
+        if (idx >= 0) {
+            emit dataChanged(index(idx, 0), index(idx, 0));
+            emit fileModified(path);
+        }
+    }
+
+    emit countChanged();
 }
 
 void FileSystemModel::performSearch(const QString& rootPath, const QString& query) {
@@ -359,6 +460,7 @@ void FileSystemModel::performSearch(const QString& rootPath, const QString& quer
             if (m_searchQuery != query)
                 return;
 
+            beginResetModel();
             qDeleteAll(m_rawEntries);
             m_rawEntries.clear();
             m_rawEntries.reserve(foundRawData.size());
@@ -367,18 +469,18 @@ void FileSystemModel::performSearch(const QString& rootPath, const QString& quer
                 m_rawEntries.append(createEntryFromRawData(d, this));
             }
 
-            applyFilterAndSort();
+            m_filteredEntries = calculateFilteredAndSorted(m_rawEntries);
+            endResetModel();
+            emit countChanged();
         });
     });
 }
 
-void FileSystemModel::applyFilterAndSort() {
-    beginResetModel();
-    m_filteredEntries.clear();
-
+QList<FileSystemEntry*> FileSystemModel::calculateFilteredAndSorted(const QList<FileSystemEntry*>& source) {
+    QList<FileSystemEntry*> result;
     QString lowerFilter = m_filterText.toLower();
 
-    for (auto* e : m_rawEntries) {
+    for (auto* e : source) {
         if (!m_showHidden && e->isHidden())
             continue;
 
@@ -397,7 +499,7 @@ void FileSystemModel::applyFilterAndSort() {
                 continue;
         }
 
-        m_filteredEntries.append(e);
+        result.append(e);
     }
 
     QCollator collator;
@@ -433,10 +535,16 @@ void FileSystemModel::applyFilterAndSort() {
         return (m_sortOrder == Qt::AscendingOrder) ? (res < 0) : (res > 0);
     };
 
-    std::sort(m_filteredEntries.begin(), m_filteredEntries.end(), comparator);
+    std::sort(result.begin(), result.end(), comparator);
+    return result;
+}
 
+void FileSystemModel::applyFilterAndSort() {
+    beginResetModel();
+    m_filteredEntries = calculateFilteredAndSorted(m_rawEntries);
     endResetModel();
     emit countChanged();
 }
 
 } // namespace prism::models
+

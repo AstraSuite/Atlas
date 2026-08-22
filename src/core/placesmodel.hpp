@@ -63,6 +63,14 @@ public:
     Q_INVOKABLE bool isBookmarked(const QString& path) const;
     Q_INVOKABLE void toggleBookmark(const QString& path);
     Q_INVOKABLE void restoreDefaultPlaces();
+    Q_INVOKABLE void hidePlace(const QString& path);
+    Q_INVOKABLE void unhidePlace(const QString& path);
+    Q_INVOKABLE void togglePlaceHidden(const QString& path);
+    Q_INVOKABLE bool isPlaceHidden(const QString& path) const;
+    Q_INVOKABLE QStringList hiddenPlaces() const;
+    Q_INVOKABLE void setHiddenPlaces(const QStringList& list);
+    Q_INVOKABLE QVariantList allPlaces() const;
+
 
 signals:
     void countChanged();
@@ -80,3 +88,4 @@ private:
 };
 
 } // namespace prism::core
+

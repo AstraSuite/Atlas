@@ -18,6 +18,22 @@ StyledRect {
     property int selectedSuggestionIndex: -1
     property bool showSuggestions: false
 
+    readonly property string ghostCompletionText: {
+        if (!root.isEditingPath || !pathInput.text || pathInput.text.length === 0) return "";
+        let cur = root.activeTab ? ((root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath) : "";
+        let comp = FileUtils.getCompletedPath(pathInput.text, cur);
+        if (comp.startsWith(pathInput.text) && comp.length > pathInput.text.length) {
+            return comp.substring(pathInput.text.length);
+        }
+        if (root.pathSuggestions.length > 0) {
+            let firstSugg = root.pathSuggestions[0].displayPath;
+            if (firstSugg.startsWith(pathInput.text) && firstSugg.length > pathInput.text.length) {
+                return firstSugg.substring(pathInput.text.length);
+            }
+        }
+        return "";
+    }
+
     function updateSuggestions() {
         if (!isEditingPath) {
             showSuggestions = false;
@@ -47,6 +63,13 @@ StyledRect {
             textToUse = pathSuggestions[selectedSuggestionIndex].displayPath;
         }
         let trimmed = textToUse.trim();
+        let proto = AppIntegration.handleCustomProtocol(trimmed);
+        if (proto > 0) {
+            root.specialProtocolInvoked(proto);
+            showSuggestions = false;
+            isEditingPath = false;
+            return;
+        }
         if (root.activeTab && trimmed.length > 0) {
             let cur = (root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath;
             let finalPath = FileUtils.expandPath(trimmed, cur);
@@ -71,10 +94,12 @@ StyledRect {
     signal filterRequested(string filter)
     signal gitRequested()
     signal preferencesRequested()
+    signal specialProtocolInvoked(int protocolId)
 
     implicitHeight: 48
     color: Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.large
+    z: (root.isEditingPath && root.showSuggestions) ? 500 : 10
 
     // Square off bottom corners so only top-left and top-right are rounded
     Rectangle {
@@ -93,6 +118,7 @@ StyledRect {
         anchors.leftMargin: Tokens.padding.medium
         anchors.rightMargin: Tokens.padding.medium
         spacing: Tokens.spacing.extraSmall
+        z: 10
 
         // Back Button
         Item {
@@ -102,7 +128,7 @@ StyledRect {
             StyledRect {
                 anchors.fill: parent
                 radius: Tokens.rounding.full
-                color: (root.activeTab && root.activeTab.canGoBack && backHover.containsMouse) ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
+                color: (root.activeTab && root.activeTab.canGoBack && backHover.containsMouse) ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
 
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -134,7 +160,7 @@ StyledRect {
             StyledRect {
                 anchors.fill: parent
                 radius: Tokens.rounding.full
-                color: (root.activeTab && root.activeTab.canGoForward && fwdHover.containsMouse) ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
+                color: (root.activeTab && root.activeTab.canGoForward && fwdHover.containsMouse) ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
 
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -166,7 +192,7 @@ StyledRect {
             StyledRect {
                 anchors.fill: parent
                 radius: Tokens.rounding.full
-                color: upHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
+                color: upHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
 
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -204,7 +230,7 @@ StyledRect {
             StyledRect {
                 anchors.fill: parent
                 radius: Tokens.rounding.full
-                color: parent.isFav ? Colours.palette.m3primaryContainer : (favHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent")
+                color: parent.isFav ? Colours.palette.m3primaryContainer : (favHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0))
 
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -240,10 +266,11 @@ StyledRect {
         StyledRect {
             Layout.fillWidth: true
             implicitHeight: 36
+            z: (root.isEditingPath && root.showSuggestions) ? 500 : 1
 
-            radius: Tokens.rounding.small
+            radius: Tokens.rounding.medium
             color: Colours.tPalette.m3surfaceContainerHigh
-            border.color: (root.isEditingPath || root.isSearching) ? Colours.palette.m3primary : "transparent"
+            border.color: (root.isEditingPath || root.isSearching) ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3primary, 0)
             border.width: (root.isEditingPath || root.isSearching) ? 1.5 : 0
 
             // Normal Breadcrumbs Mode
@@ -255,6 +282,7 @@ StyledRect {
                 visible: !root.isEditingPath && !root.isSearching
 
                 Repeater {
+                    id: breadcrumbRepeater
                     model: {
                         if (!root.activeTab) return [];
                         let current = (root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath;
@@ -293,11 +321,13 @@ StyledRect {
                         required property int index
                         spacing: Tokens.spacing.extraSmall
 
+                        readonly property bool isActiveSegment: crumb.index === (breadcrumbRepeater.count - 1)
+
                         StyledRect {
                             implicitHeight: 26
                             implicitWidth: crumbContent.implicitWidth + Tokens.padding.small * 2
                             radius: Tokens.rounding.small
-                            color: crumbMouse.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
+                            color: crumbMouse.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
 
                             MouseArea {
                                 id: crumbMouse
@@ -323,23 +353,24 @@ StyledRect {
                                 MaterialIcon {
                                     visible: crumb.modelData.isHome || crumb.modelData.isTrash
                                     text: crumb.modelData.isTrash ? "delete" : "home"
+                                    fill: 1
                                     fontStyle: Tokens.font.icon.small
-                                    color: Colours.palette.m3onSurface
+                                    color: crumb.isActiveSegment ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
                                 }
 
                                 StyledText {
                                     text: crumb.modelData.name
-                                    color: Colours.palette.m3onSurface
-                                    font: Tokens.font.body.small
+                                    color: crumb.isActiveSegment ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                                    font: Tokens.font.body.builders.small.weight(Font.Bold).build()
                                 }
                             }
                         }
 
                         StyledText {
                             text: "/"
-                            color: Colours.palette.m3outline
-                            font: Tokens.font.body.small
-                            visible: crumb.index < (parent.parent.count - 1)
+                            color: Colours.palette.m3onSurfaceVariant
+                            font: Tokens.font.body.builders.small.weight(Font.Bold).build()
+                            visible: crumb.index < (breadcrumbRepeater.count - 1)
                         }
                     }
                 }
@@ -405,78 +436,118 @@ StyledRect {
                     fontStyle: Tokens.font.icon.small
                 }
 
-                TextInput {
-                    id: pathInput
+                Item {
+                    id: inputContainer
                     Layout.fillWidth: true
-                    text: root.activeTab ? ((root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath) : ""
-                    color: Colours.palette.m3onSurface
-                    selectionColor: Colours.palette.m3primaryContainer
-                    selectedTextColor: Colours.palette.m3onPrimaryContainer
-                    font: Tokens.font.body.small
-                    selectByMouse: true
-                    cursorVisible: focus
+                    Layout.fillHeight: true
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.IBeamCursor
-                        acceptedButtons: Qt.NoButton
-                    }
+                    TextInput {
+                        id: pathInput
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.activeTab ? ((root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath) : ""
+                        color: Colours.palette.m3onSurface
+                        selectionColor: Colours.palette.m3primaryContainer
+                        selectedTextColor: Colours.palette.m3onPrimaryContainer
+                        font: Tokens.font.body.small
+                        selectByMouse: true
+                        cursorVisible: focus
+                        z: 2
 
-                    onTextChanged: {
-                        if (root.isEditingPath && activeFocus) {
-                            root.updateSuggestions();
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.IBeamCursor
+                            acceptedButtons: Qt.NoButton
                         }
-                    }
 
-                    onActiveFocusChanged: {
-                        if (activeFocus && root.isEditingPath) {
-                            root.updateSuggestions();
+                        onTextChanged: {
+                            if (root.isEditingPath && activeFocus) {
+                                root.updateSuggestions();
+                            }
                         }
-                    }
 
-                    Keys.onTabPressed: event => {
-                        let cur = root.activeTab ? ((root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath) : "";
-                        let comp = FileUtils.getCompletedPath(pathInput.text, cur);
-                        if (comp !== pathInput.text) {
-                            pathInput.text = comp;
-                            pathInput.cursorPosition = pathInput.text.length;
-                            root.updateSuggestions();
-                        } else if (root.pathSuggestions.length > 0) {
-                            root.showSuggestions = true;
-                            root.selectedSuggestionIndex = (root.selectedSuggestionIndex + 1) % root.pathSuggestions.length;
-                            pathInput.text = root.pathSuggestions[root.selectedSuggestionIndex].displayPath;
-                            pathInput.cursorPosition = pathInput.text.length;
+                        onActiveFocusChanged: {
+                            if (activeFocus && root.isEditingPath) {
+                                root.updateSuggestions();
+                            }
                         }
-                        event.accepted = true;
-                    }
 
-                    Keys.onDownPressed: event => {
-                        if (root.pathSuggestions.length > 0) {
-                            root.showSuggestions = true;
-                            root.selectedSuggestionIndex = (root.selectedSuggestionIndex + 1) % root.pathSuggestions.length;
+                        Keys.onTabPressed: event => {
+                            if (root.ghostCompletionText.length > 0) {
+                                pathInput.text = pathInput.text + root.ghostCompletionText;
+                                pathInput.cursorPosition = pathInput.text.length;
+                                root.updateSuggestions();
+                                event.accepted = true;
+                                return;
+                            }
+                            let cur = root.activeTab ? ((root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath) : "";
+                            let comp = FileUtils.getCompletedPath(pathInput.text, cur);
+                            if (comp !== pathInput.text) {
+                                pathInput.text = comp;
+                                pathInput.cursorPosition = pathInput.text.length;
+                                root.updateSuggestions();
+                            } else if (root.pathSuggestions.length > 0) {
+                                root.showSuggestions = true;
+                                root.selectedSuggestionIndex = (root.selectedSuggestionIndex + 1) % root.pathSuggestions.length;
+                                pathInput.text = root.pathSuggestions[root.selectedSuggestionIndex].displayPath;
+                                pathInput.cursorPosition = pathInput.text.length;
+                            }
                             event.accepted = true;
                         }
-                    }
 
-                    Keys.onUpPressed: event => {
-                        if (root.pathSuggestions.length > 0) {
-                            root.showSuggestions = true;
-                            root.selectedSuggestionIndex = (root.selectedSuggestionIndex - 1 + root.pathSuggestions.length) % root.pathSuggestions.length;
-                            event.accepted = true;
+                        Keys.onRightPressed: event => {
+                            if (pathInput.cursorPosition === pathInput.text.length && root.ghostCompletionText.length > 0) {
+                                pathInput.text = pathInput.text + root.ghostCompletionText;
+                                pathInput.cursorPosition = pathInput.text.length;
+                                root.updateSuggestions();
+                                event.accepted = true;
+                                return;
+                            }
+                            event.accepted = false;
+                        }
+
+                        Keys.onDownPressed: event => {
+                            if (root.pathSuggestions.length > 0) {
+                                root.showSuggestions = true;
+                                root.selectedSuggestionIndex = (root.selectedSuggestionIndex + 1) % root.pathSuggestions.length;
+                                event.accepted = true;
+                            }
+                        }
+
+                        Keys.onUpPressed: event => {
+                            if (root.pathSuggestions.length > 0) {
+                                root.showSuggestions = true;
+                                root.selectedSuggestionIndex = (root.selectedSuggestionIndex - 1 + root.pathSuggestions.length) % root.pathSuggestions.length;
+                                event.accepted = true;
+                            }
+                        }
+
+                        Keys.onEscapePressed: event => {
+                            if (root.showSuggestions) {
+                                root.showSuggestions = false;
+                                event.accepted = true;
+                            } else {
+                                root.isEditingPath = false;
+                            }
+                        }
+
+                        onAccepted: {
+                            root.commitPath();
                         }
                     }
 
-                    Keys.onEscapePressed: event => {
-                        if (root.showSuggestions) {
-                            root.showSuggestions = false;
-                            event.accepted = true;
-                        } else {
-                            root.isEditingPath = false;
-                        }
-                    }
-
-                    onAccepted: {
-                        root.commitPath();
+                    StyledText {
+                        id: ghostLabel
+                        anchors.left: parent.left
+                        anchors.leftMargin: pathInput.contentWidth
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.ghostCompletionText
+                        font: pathInput.font
+                        color: Colours.palette.m3onSurfaceVariant
+                        opacity: 0.45
+                        visible: root.ghostCompletionText.length > 0 && pathInput.activeFocus && pathInput.cursorPosition === pathInput.text.length
+                        z: 1
                     }
                 }
 
@@ -594,7 +665,7 @@ StyledRect {
                         width: suggestionsList.width
                         implicitHeight: 32
                         radius: Tokens.rounding.small
-                        color: (root.selectedSuggestionIndex === index || suggHover.containsMouse) ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                        color: (root.selectedSuggestionIndex === index || suggHover.containsMouse) ? Colours.tPalette.m3surfaceContainerHigh : Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0)
 
                         RowLayout {
                             anchors.fill: parent
@@ -640,6 +711,7 @@ StyledRect {
                     }
                 }
             }
+
 
             // Search Bar
             RowLayout {
@@ -729,7 +801,7 @@ StyledRect {
             StyledRect {
                 anchors.fill: parent
                 radius: Tokens.rounding.full
-                color: root.isSearching ? Colours.palette.m3primaryContainer : (searchHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent")
+                color: root.isSearching ? Colours.palette.m3primaryContainer : (searchHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0))
 
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -775,7 +847,7 @@ StyledRect {
             StyledRect {
                 anchors.fill: parent
                 radius: Tokens.rounding.full
-                color: emptyHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
+                color: emptyHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
 
                 RowLayout {
                     id: emptyTrashContent
@@ -829,7 +901,7 @@ StyledRect {
                     StyledRect {
                         anchors.fill: parent
                         radius: Tokens.rounding.full
-                        color: (root.activeTab && root.activeTab.viewMode === 0) ? Colours.palette.m3secondaryContainer : "transparent"
+                        color: (root.activeTab && root.activeTab.viewMode === 0) ? Colours.palette.m3secondaryContainer : (gridHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Qt.alpha(Colours.palette.m3secondaryContainer, 0))
 
                         MaterialIcon {
                             anchors.centerIn: parent
@@ -861,7 +933,7 @@ StyledRect {
                     StyledRect {
                         anchors.fill: parent
                         radius: Tokens.rounding.full
-                        color: (root.activeTab && root.activeTab.viewMode === 1) ? Colours.palette.m3secondaryContainer : "transparent"
+                        color: (root.activeTab && root.activeTab.viewMode === 1) ? Colours.palette.m3secondaryContainer : (listHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Qt.alpha(Colours.palette.m3secondaryContainer, 0))
 
                         MaterialIcon {
                             anchors.centerIn: parent
@@ -893,7 +965,7 @@ StyledRect {
                     StyledRect {
                         anchors.fill: parent
                         radius: Tokens.rounding.full
-                        color: (root.activeTab && root.activeTab.viewMode === 2) ? Colours.palette.m3secondaryContainer : "transparent"
+                        color: (root.activeTab && root.activeTab.viewMode === 2) ? Colours.palette.m3secondaryContainer : (compactHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Qt.alpha(Colours.palette.m3secondaryContainer, 0))
 
                         MaterialIcon {
                             anchors.centerIn: parent
@@ -927,7 +999,7 @@ StyledRect {
             StyledRect {
                 anchors.fill: parent
                 radius: Tokens.rounding.full
-                color: termHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
+                color: termHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
 
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -959,7 +1031,7 @@ StyledRect {
             StyledRect {
                 anchors.fill: parent
                 radius: Tokens.rounding.full
-                color: infoHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
+                color: infoHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
 
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -991,7 +1063,8 @@ StyledRect {
             StyledRect {
                 anchors.fill: parent
                 radius: Tokens.rounding.full
-                color: prefsHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
+                color: prefsHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
+
 
                 MaterialIcon {
                     anchors.centerIn: parent

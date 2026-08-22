@@ -18,6 +18,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     Concurrent
     Svg
     Multimedia
+    WebEngineQuick
 )
 
 qt_standard_project_setup(REQUIRES 6.5)
@@ -120,6 +121,8 @@ qt_add_qml_module(prism_app
         qml/components/dialogs/GitModal.qml
         qml/components/dialogs/CompressModal.qml
         qml/components/dialogs/OperationsModal.qml
+        qml/components/dialogs/VectorBloomOverlay.qml
+        qml/components/dialogs/RunnerGameModal.qml
         qml/components/media/ImageViewer.qml
         qml/components/media/VideoPlayer.qml
         qml/components/media/MediaFilmstrip.qml
@@ -148,6 +151,7 @@ target_link_libraries(prism_app PRIVATE
     Qt6::Concurrent
     Qt6::Svg
     Qt6::Multimedia
+    Qt6::WebEngineQuick
 )
 
 include(GNUInstallDirs)

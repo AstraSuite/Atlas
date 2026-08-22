@@ -344,8 +344,35 @@ Item {
             focus: true
             currentIndex: -1
             interactive: false
+            boundsBehavior: Flickable.DragAndOvershootBounds
+            maximumFlickVelocity: 5000
+            flickDeceleration: 1800
+
+            WheelHandler {
+                target: listView
+                acceptedModifiers: Qt.NoModifier
+                onWheel: event => {
+                    let vy = 0;
+                    if (event.pixelDelta.y !== 0) {
+                        vy = event.pixelDelta.y * 25;
+                    } else if (event.angleDelta.y !== 0) {
+                        vy = event.angleDelta.y * 14;
+                    }
+                    if (vy !== 0) {
+                        listView.flick(0, vy);
+                        event.accepted = true;
+                    }
+                }
+            }
 
             displaced: Transition {
+                NumberAnimation {
+                    properties: "y"
+                    duration: Tokens.anim.durations.expressiveFastSpatial
+                    easing: Tokens.anim.expressiveFastSpatial
+                }
+            }
+            move: Transition {
                 NumberAnimation {
                     properties: "y"
                     duration: Tokens.anim.durations.expressiveFastSpatial
@@ -496,13 +523,14 @@ Item {
                 radius: Tokens.rounding.small
                 color: folderDropArea.containsDrag
                     ? Colours.palette.m3primaryContainer
-                    : (isSelected ? Colours.palette.m3secondaryContainer : (rowHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : (index % 2 === 1 ? Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0.3) : "transparent")))
+                    : (isSelected ? Colours.palette.m3secondaryContainer : (rowHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : (index % 2 === 1 ? Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0.3) : Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0))))
 
                 // Cut & Hidden & Dragging Files Indication: Darkened / Ghosted Opacity
                 opacity: isDragged ? 0.35 : (isCut ? 0.38 : (isHidden ? 0.58 : 1.0))
 
                 scale: folderDropArea.containsDrag ? 1.02 : 1.0
                 Behavior on scale {
+                    enabled: !bounceAnim.running
                     Anim { type: Anim.FastEffects }
                 }
 
@@ -511,6 +539,35 @@ Item {
                         type: Anim.FastEffects
                     }
                 }
+
+                Connections {
+                    target: root.model
+                    function onFileModified(modifiedPath) {
+                        if (rowItem.modelData && rowItem.modelData.path === modifiedPath) {
+                            bounceAnim.restart();
+                        }
+                    }
+                }
+
+                SequentialAnimation {
+                    id: bounceAnim
+                    NumberAnimation {
+                        target: rowItem
+                        property: "scale"
+                        to: 1.03
+                        duration: 120
+                        easing.type: Easing.OutQuad
+                    }
+                    NumberAnimation {
+                        target: rowItem
+                        property: "scale"
+                        to: 1.0
+                        duration: 200
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 1.4
+                    }
+                }
+
 
                 DropArea {
                     id: folderDropArea
@@ -759,7 +816,16 @@ Item {
                 }
                 wheel.accepted = true;
             } else {
-                listView.flick(0, wheel.angleDelta.y * 6);
+                let vy = 0;
+                if (wheel.pixelDelta.y !== 0) {
+                    vy = wheel.pixelDelta.y * 25;
+                } else if (wheel.angleDelta.y !== 0) {
+                    vy = wheel.angleDelta.y * 14;
+                }
+                if (vy !== 0) {
+                    listView.flick(0, vy);
+                    wheel.accepted = true;
+                }
             }
         }
 

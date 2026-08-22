@@ -129,6 +129,26 @@ Item {
         focus: true
         currentIndex: -1
         interactive: false
+        boundsBehavior: Flickable.DragAndOvershootBounds
+        maximumFlickVelocity: 5000
+        flickDeceleration: 1800
+
+        WheelHandler {
+            target: view
+            acceptedModifiers: Qt.NoModifier
+            onWheel: event => {
+                let vy = 0;
+                if (event.pixelDelta.y !== 0) {
+                    vy = event.pixelDelta.y * 25;
+                } else if (event.angleDelta.y !== 0) {
+                    vy = event.angleDelta.y * 14;
+                }
+                if (vy !== 0) {
+                    view.flick(0, vy);
+                    event.accepted = true;
+                }
+            }
+        }
 
         displaced: Transition {
             NumberAnimation {
@@ -329,7 +349,7 @@ Item {
                 radius: Tokens.rounding.large
                 color: folderDropArea.containsDrag
                     ? Colours.palette.m3primaryContainer
-                    : (delegateContainer.isSelected ? Colours.palette.m3secondaryContainer : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"))
+                    : (delegateContainer.isSelected ? Colours.palette.m3secondaryContainer : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0)))
 
                 clip: true
 
@@ -347,7 +367,7 @@ Item {
                 Component.onCompleted: popInAnim.start()
 
                 Behavior on scale {
-                    enabled: !popInAnim.running
+                    enabled: !popInAnim.running && !modifiedBounceAnim.running
                     Anim { type: Anim.FastEffects }
                 }
 
@@ -363,6 +383,35 @@ Item {
                         easing.overshoot: 1.3
                     }
                 }
+
+                Connections {
+                    target: root.model
+                    function onFileModified(modifiedPath) {
+                        if (delegateContainer.modelData && delegateContainer.modelData.path === modifiedPath) {
+                            modifiedBounceAnim.restart();
+                        }
+                    }
+                }
+
+                SequentialAnimation {
+                    id: modifiedBounceAnim
+                    NumberAnimation {
+                        target: itemCard
+                        property: "scale"
+                        to: 1.14
+                        duration: 130
+                        easing.type: Easing.OutQuad
+                    }
+                    NumberAnimation {
+                        target: itemCard
+                        property: "scale"
+                        to: 1.0
+                        duration: 220
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 1.4
+                    }
+                }
+
 
                 MouseArea {
                     id: itemHover
@@ -547,7 +596,16 @@ Item {
                 }
                 wheel.accepted = true;
             } else {
-                view.flick(0, wheel.angleDelta.y * 6);
+                let vy = 0;
+                if (wheel.pixelDelta.y !== 0) {
+                    vy = wheel.pixelDelta.y * 25;
+                } else if (wheel.angleDelta.y !== 0) {
+                    vy = wheel.angleDelta.y * 14;
+                }
+                if (vy !== 0) {
+                    view.flick(0, vy);
+                    wheel.accepted = true;
+                }
             }
         }
 

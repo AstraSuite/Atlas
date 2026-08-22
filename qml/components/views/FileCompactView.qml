@@ -126,6 +126,30 @@ Item {
         focus: true
         currentIndex: -1
         interactive: false
+        boundsBehavior: Flickable.DragAndOvershootBounds
+        maximumFlickVelocity: 5000
+        flickDeceleration: 1800
+
+        WheelHandler {
+            target: gridView
+            acceptedModifiers: Qt.NoModifier
+            onWheel: event => {
+                let vx = 0;
+                if (event.pixelDelta.x !== 0) {
+                    vx = event.pixelDelta.x * 25;
+                } else if (event.pixelDelta.y !== 0) {
+                    vx = event.pixelDelta.y * 25;
+                } else if (event.angleDelta.y !== 0) {
+                    vx = event.angleDelta.y * 14;
+                } else if (event.angleDelta.x !== 0) {
+                    vx = event.angleDelta.x * 14;
+                }
+                if (vx !== 0) {
+                    gridView.flick(vx, 0);
+                    event.accepted = true;
+                }
+            }
+        }
 
         displaced: Transition {
             NumberAnimation {
@@ -325,7 +349,7 @@ Item {
                 radius: Tokens.rounding.small
                 color: folderDropArea.containsDrag
                     ? Colours.palette.m3primaryContainer
-                    : (compDelegate.isSelected ? Colours.palette.m3secondaryContainer : (compHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"))
+                    : (compDelegate.isSelected ? Colours.palette.m3secondaryContainer : (compHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0)))
 
                 // Cut & Hidden & Dragging Files Indication: Darkened / Ghosted Opacity
                 opacity: compDelegate.isDragged ? 0.35 : (compDelegate.isCut ? 0.38 : (compDelegate.isHidden ? 0.58 : 1.0))
@@ -333,6 +357,7 @@ Item {
                 // Scale up when dragging over folder
                 scale: folderDropArea.containsDrag ? 1.05 : 1.0
                 Behavior on scale {
+                    enabled: !bounceAnim.running
                     Anim { type: Anim.FastEffects }
                 }
 
@@ -341,6 +366,35 @@ Item {
                         type: Anim.FastEffects
                     }
                 }
+
+                Connections {
+                    target: root.model
+                    function onFileModified(modifiedPath) {
+                        if (compDelegate.modelData && compDelegate.modelData.path === modifiedPath) {
+                            bounceAnim.restart();
+                        }
+                    }
+                }
+
+                SequentialAnimation {
+                    id: bounceAnim
+                    NumberAnimation {
+                        target: compCard
+                        property: "scale"
+                        to: 1.08
+                        duration: 120
+                        easing.type: Easing.OutQuad
+                    }
+                    NumberAnimation {
+                        target: compCard
+                        property: "scale"
+                        to: 1.0
+                        duration: 200
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 1.4
+                    }
+                }
+
 
                 MouseArea {
                     id: compHover
@@ -501,7 +555,20 @@ Item {
                 }
                 wheel.accepted = true;
             } else {
-                gridView.flick(wheel.angleDelta.y * 6, 0);
+                let vx = 0;
+                if (wheel.pixelDelta.x !== 0) {
+                    vx = wheel.pixelDelta.x * 25;
+                } else if (wheel.pixelDelta.y !== 0) {
+                    vx = wheel.pixelDelta.y * 25;
+                } else if (wheel.angleDelta.y !== 0) {
+                    vx = wheel.angleDelta.y * 14;
+                } else if (wheel.angleDelta.x !== 0) {
+                    vx = wheel.angleDelta.x * 14;
+                }
+                if (vx !== 0) {
+                    gridView.flick(vx, 0);
+                    wheel.accepted = true;
+                }
             }
         }
 

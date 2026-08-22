@@ -10,7 +10,36 @@
 
 namespace prism::models {
 
+struct RawEntryData {
+    QString name;
+    QString path;
+    bool isDir = false;
+    bool isSymLink = false;
+    QString symLinkTarget;
+    qint64 size = 0;
+    QString formattedSize;
+    QString mimeType;
+    QString mimeDescription;
+    QDateTime lastModified;
+    QString formattedDate;
+    QString permissions;
+    QString owner;
+    QString group;
+    QString suffix;
+    bool isHidden = false;
+    bool isReadOnly = false;
+    bool isWritable = true;
+    bool isImage = false;
+    bool isAudio = false;
+    bool isVideo = false;
+    bool isText = false;
+    QString originalPath;
+    QString deletionTime;
+    bool isTrashItem = false;
+};
+
 class FileSystemEntry : public QObject {
+
     Q_OBJECT
     QML_ANONYMOUS
 
@@ -68,6 +97,8 @@ public:
     QString originalPath() const { return m_originalPath; }
     QString deletionTime() const { return m_deletionTime; }
     bool isTrashItem() const { return m_isTrashItem; }
+
+    bool updateFromRaw(const RawEntryData& d);
 
     QString m_name;
     QString m_path;
@@ -187,16 +218,20 @@ signals:
     void sortFieldChanged();
     void sortOrderChanged();
     void countChanged();
+    void fileModified(const QString& path);
 
 private:
-    void scanDirectory();
+    void scanDirectory(bool isPathReset = false);
+    void updateDirectoryGranular(const QList<RawEntryData>& rawData);
     void applyFilterAndSort();
     void performSearch(const QString& rootPath, const QString& query);
+    QList<FileSystemEntry*> calculateFilteredAndSorted(const QList<FileSystemEntry*>& source);
 
     QString m_path;
     QString m_filterText;
     QString m_searchQuery;
     bool m_isSearching = false;
+    bool m_isPathReset = false;
     QStringList m_nameFilters;
     bool m_showHidden = false;
     bool m_showDirsFirst = true;
@@ -209,3 +244,4 @@ private:
 };
 
 } // namespace prism::models
+

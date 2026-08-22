@@ -171,8 +171,10 @@ void PlacesModel::refresh() {
                             }
 
                             if (localPath == "/" || localPath == "/root") continue;
+                            if (m_hiddenPlaces.contains(localPath) || (currentHref.startsWith("trash:") && m_hiddenPlaces.contains("trash:"))) continue;
 
                             if (!localPath.isEmpty() && (QFile::exists(localPath) || currentHref.startsWith("trash:"))) {
+
                                 if (currentTitle.isEmpty()) {
                                     currentTitle = QFileInfo(localPath).fileName();
                                     if (currentTitle.isEmpty()) currentTitle = localPath;
@@ -450,4 +452,90 @@ void PlacesModel::updatePlace(int index, const QString& name, const QString& ico
     saveBookmarks();
 }
 
+void PlacesModel::hidePlace(const QString& path) {
+
+    if (!path.isEmpty() && !m_hiddenPlaces.contains(path)) {
+        m_hiddenPlaces.insert(path);
+        saveHiddenPlaces();
+        refresh();
+        saveBookmarks();
+    }
+}
+
+void PlacesModel::unhidePlace(const QString& path) {
+    if (!path.isEmpty() && m_hiddenPlaces.contains(path)) {
+        m_hiddenPlaces.remove(path);
+        saveHiddenPlaces();
+        refresh();
+        saveBookmarks();
+    }
+}
+
+void PlacesModel::togglePlaceHidden(const QString& path) {
+    if (isPlaceHidden(path)) {
+        unhidePlace(path);
+    } else {
+        hidePlace(path);
+    }
+}
+
+bool PlacesModel::isPlaceHidden(const QString& path) const {
+    return m_hiddenPlaces.contains(path);
+}
+
+QStringList PlacesModel::hiddenPlaces() const {
+    return QStringList(m_hiddenPlaces.begin(), m_hiddenPlaces.end());
+}
+
+void PlacesModel::setHiddenPlaces(const QStringList& list) {
+    m_hiddenPlaces = QSet<QString>(list.begin(), list.end());
+    saveHiddenPlaces();
+    refresh();
+    saveBookmarks();
+}
+
+QVariantList PlacesModel::allPlaces() const {
+    QVariantList list;
+    QString home = QDir::homePath();
+    struct StdPlace { QString name; QString path; QString icon; bool isTrash; };
+    QList<StdPlace> stdPlaces = {
+        { tr("Home"), home, "home", false },
+        { tr("Downloads"), QStandardPaths::writableLocation(QStandardPaths::DownloadLocation), "file_download", false },
+        { tr("Documents"), QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation), "description", false },
+        { tr("Desktop"), QStandardPaths::writableLocation(QStandardPaths::DesktopLocation), "desktop_windows", false },
+        { tr("Pictures"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), "image", false },
+        { tr("Music"), QStandardPaths::writableLocation(QStandardPaths::MusicLocation), "music_note", false },
+        { tr("Videos"), QStandardPaths::writableLocation(QStandardPaths::MoviesLocation), "video_library", false },
+        { tr("Trash"), home + "/.local/share/Trash/files", "delete", true }
+    };
+
+    for (const auto& sp : stdPlaces) {
+        if (!sp.path.isEmpty() && (QFile::exists(sp.path) || sp.isTrash)) {
+            QVariantMap map;
+            map["name"] = sp.name;
+            map["path"] = sp.path;
+            map["iconName"] = sp.icon;
+            map["isCustom"] = false;
+            map["isTrash"] = sp.isTrash;
+            map["isHidden"] = m_hiddenPlaces.contains(sp.path) || (sp.isTrash && m_hiddenPlaces.contains("trash:"));
+            list.append(map);
+        }
+    }
+
+    for (const auto& p : m_places) {
+        if (p.isCustom) {
+            QVariantMap map;
+            map["name"] = p.name;
+            map["path"] = p.path;
+            map["iconName"] = p.iconName;
+            map["isCustom"] = true;
+            map["isTrash"] = p.isTrash;
+            map["isHidden"] = m_hiddenPlaces.contains(p.path);
+            list.append(map);
+        }
+    }
+    return list;
+}
+
 } // namespace prism::core
+

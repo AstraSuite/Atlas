@@ -415,7 +415,27 @@ StyledRect {
                                     }
                                 }
                             }
+
+                            StyledToolTip {
+                                text: {
+                                    if (driveItem.isMounted && driveItem.bytesTotal > 0) {
+                                        let used = driveItem.bytesTotal - driveItem.bytesFree;
+                                        let percent = Math.round((used / driveItem.bytesTotal) * 100);
+                                        return qsTr("Used: %1\nFree: %2\nTotal: %3 (%4% used)")
+                                            .arg(FileUtils.formatSize(used))
+                                            .arg(FileUtils.formatSize(driveItem.bytesFree))
+                                            .arg(FileUtils.formatSize(driveItem.bytesTotal))
+                                            .arg(percent);
+                                    } else if (driveItem.isMounted) {
+                                        return qsTr("Mounted at: %1\nSize: %2").arg(driveItem.mountPoint).arg(driveItem.sizeFormatted);
+                                    } else {
+                                        return qsTr("Unmounted\nSize: %1").arg(driveItem.sizeFormatted);
+                                    }
+                                }
+                                visible: driveHover.containsMouse
+                            }
                         }
+
                     }
                 }
             }

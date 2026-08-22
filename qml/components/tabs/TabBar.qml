@@ -226,7 +226,7 @@ StyledRect {
                                 StyledRect {
                                     anchors.fill: parent
                                     radius: Tokens.rounding.full
-                                    color: closeHover1.containsMouse ? (tabItem.selected ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainerHighest) : "transparent"
+                                    color: closeHover1.containsMouse ? (tabItem.selected ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainerHighest) : Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0)
 
                                     MaterialIcon {
                                         anchors.centerIn: parent
@@ -304,7 +304,7 @@ StyledRect {
                                 StyledRect {
                                     anchors.fill: parent
                                     radius: Tokens.rounding.full
-                                    color: closeHover2.containsMouse ? (tabItem.selected ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainerHighest) : "transparent"
+                                    color: closeHover2.containsMouse ? (tabItem.selected ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainerHighest) : Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0)
 
                                     MaterialIcon {
                                         anchors.centerIn: parent
@@ -361,7 +361,8 @@ StyledRect {
                     implicitWidth: 28
                     implicitHeight: 28
                     radius: Tokens.rounding.full
-                    color: addHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                    color: addHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0)
+
 
                     MaterialIcon {
                         anchors.centerIn: parent

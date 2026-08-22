@@ -79,7 +79,16 @@ ApplicationWindow {
                     NavigationBar {
                         id: navBar
                         Layout.fillWidth: true
+                        z: (navBar.isEditingPath && navBar.showSuggestions) ? 500 : 10
                         activeTab: TabManager.currentTab
+
+                        onSpecialProtocolInvoked: protocolId => {
+                            if (protocolId === 1) {
+                                vectorBloomOverlay.open();
+                            } else if (protocolId === 2) {
+                                runnerGameModal.open();
+                            }
+                        }
 
                         onGitRequested: {
                             gitModal.expanded = true;
@@ -484,11 +493,18 @@ ApplicationWindow {
             id: preferencesModal
         }
 
-        // Global Desktop Shortcuts
+        VectorBloomOverlay {
+            id: vectorBloomOverlay
+        }
+
+        RunnerGameModal {
+            id: runnerGameModal
+        }
+
         Shortcut {
             sequence: "Space"
             context: Qt.ApplicationShortcut
-            enabled: !mediaViewerModal.expanded && !newItemModal.expanded && !editPlaceModal.expanded && !placesManageModal.expanded && !compressModal.expanded && !openWithModal.expanded && !preferencesModal.expanded
+            enabled: !mediaViewerModal.expanded && !newItemModal.expanded && !editPlaceModal.expanded && !placesManageModal.expanded && !compressModal.expanded && !openWithModal.expanded && !preferencesModal.expanded && !runnerGameModal.isOpen && !vectorBloomOverlay.isOpen
             onActivated: {
                 if (splitContainer.currentSelectedPath) {
                     let path = splitContainer.currentSelectedPath;
