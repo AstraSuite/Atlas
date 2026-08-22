@@ -4,6 +4,7 @@
 #include <QCollator>
 #include <QDir>
 #include <QDirIterator>
+#include <QUrl>
 #include <QFileInfo>
 #include <QImageReader>
 #include <QMimeDatabase>
@@ -222,7 +223,7 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
             while (!infoFile.atEnd()) {
                 QString line = QString::fromUtf8(infoFile.readLine()).trimmed();
                 if (line.startsWith("Path=")) {
-                    d.originalPath = line.mid(5);
+                    d.originalPath = QUrl::fromPercentEncoding(line.mid(5).toUtf8());
                 } else if (line.startsWith("DeletionDate=")) {
                     QString dStr = line.mid(13);
                     QDateTime dt = QDateTime::fromString(dStr, Qt::ISODate);

@@ -458,7 +458,9 @@ void FileOperations::moveToTrash(const QStringList& paths) {
             QFile info(infoFile);
             if (info.open(QIODevice::WriteOnly | QIODevice::Text)) {
                 QString deletionDate = QDateTime::currentDateTime().toString(Qt::ISODate);
-                QString content = QString("[Trash Info]\nPath=%1\nDeletionDate=%2\n").arg(fi.absoluteFilePath(), deletionDate);
+                const QString encodedPath =
+                    QString::fromLatin1(QUrl::toPercentEncoding(fi.absoluteFilePath(), "/"));
+                QString content = QString("[Trash Info]\nPath=%1\nDeletionDate=%2\n").arg(encodedPath, deletionDate);
                 info.write(content.toUtf8());
                 info.close();
             }
@@ -511,7 +513,7 @@ void FileOperations::restoreFromTrash(const QString& targetPath) {
     while (!file.atEnd()) {
         QString line = QString::fromUtf8(file.readLine()).trimmed();
         if (line.startsWith("Path=")) {
-            origPath = line.mid(5);
+            origPath = QUrl::fromPercentEncoding(line.mid(5).toUtf8());
             break;
         }
     }
