@@ -361,6 +361,117 @@ MouseArea {
                                 }
                             }
 
+                            // Show thumbnails toggle card
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 56
+                                radius: Tokens.rounding.large
+                                color: thumbHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.medium
+                                    spacing: Tokens.spacing.medium
+
+                                    MaterialIcon {
+                                        Layout.alignment: Qt.AlignVCenter
+                                        text: AppController.thumbnailsEnabled ? "image" : "hide_image"
+                                        color: AppController.thumbnailsEnabled ? Colours.palette.m3primary : Colours.palette.m3outline
+                                        fontStyle: Tokens.font.icon.medium
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignVCenter
+                                        spacing: 2
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Show Thumbnails")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.small
+                                            elide: Text.ElideRight
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Preview images and videos instead of generic icons")
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font: Tokens.font.label.small
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+
+                                    StyledCheckBox {
+                                        Layout.alignment: Qt.AlignVCenter
+                                        checked: AppController.thumbnailsEnabled
+                                        onToggled: val => AppController.thumbnailsEnabled = val
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: thumbHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: AppController.thumbnailsEnabled = !AppController.thumbnailsEnabled
+                                }
+                            }
+
+                            StyledText {
+                                text: qsTr("Thumbnail Size Limit")
+                                color: Colours.palette.m3primary
+                                font: Tokens.font.label.large
+                                opacity: AppController.thumbnailsEnabled ? 1 : 0.4
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.small
+                                enabled: AppController.thumbnailsEnabled
+                                opacity: enabled ? 1 : 0.4
+
+                                Repeater {
+                                    model: [
+                                        { mb: 10, label: qsTr("10 MB") },
+                                        { mb: 100, label: qsTr("100 MB") },
+                                        { mb: 1024, label: qsTr("1 GB") },
+                                        { mb: 0, label: qsTr("No limit") }
+                                    ]
+
+                                    StyledRect {
+                                        id: limitCard
+                                        required property int index
+                                        required property var modelData
+
+                                        Layout.fillWidth: true
+                                        implicitHeight: 44
+                                        radius: Tokens.rounding.medium
+                                        readonly property bool isSelected: AppController.thumbnailMaxMb === limitCard.modelData.mb
+                                        color: isSelected
+                                            ? Colours.palette.m3primaryContainer
+                                            : (limitHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
+
+                                        StyledText {
+                                            anchors.centerIn: parent
+                                            text: limitCard.modelData.label
+                                            color: limitCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                                            font: Tokens.font.body.small
+                                            elide: Text.ElideRight
+                                        }
+
+                                        MouseArea {
+                                            id: limitHover
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: AppController.thumbnailMaxMb = limitCard.modelData.mb
+                                        }
+                                    }
+                                }
+                            }
+
                             // Single-click toggle card
                             StyledRect {
                                 Layout.fillWidth: true

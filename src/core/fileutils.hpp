@@ -43,6 +43,9 @@ public:
     Q_INVOKABLE static QString formatDateTime(const QDateTime& dt, int format = -1);
     static void setDateFormat(int format);
     static int dateFormat();
+    Q_INVOKABLE static bool shouldThumbnail(bool isImage, bool isVideo, qint64 size);
+    static void setThumbnailsEnabled(bool enabled);
+    static void setThumbnailMaxBytes(qint64 bytes);
     Q_INVOKABLE static QString shortenHome(const QString& path);
     Q_INVOKABLE static QString toLocalFile(const QUrl& url);
     Q_INVOKABLE static QString baseName(const QString& path);

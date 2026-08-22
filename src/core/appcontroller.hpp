@@ -16,9 +16,12 @@ class AppController : public QObject {
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
     Q_PROPERTY(QString initialDirectory READ initialDirectory WRITE setInitialDirectory NOTIFY initialDirectoryChanged)
     Q_PROPERTY(QString filterLabel READ filterLabel WRITE setFilterLabel NOTIFY filterLabelChanged)
-    Q_PROPERTY(QStringList filters READ filters WRITE setFilters NOTIFY filtersChanged)
+    Q_PROPERTY(bool directoryOnly READ directoryOnly WRITE setDirectoryOnly NOTIFY directoryOnlyChanged)
+    Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
     Q_PROPERTY(bool confirmPermanentDelete READ confirmPermanentDelete WRITE setConfirmPermanentDelete NOTIFY confirmPermanentDeleteChanged)
     Q_PROPERTY(int dateFormat READ dateFormat WRITE setDateFormat NOTIFY dateFormatChanged)
+    Q_PROPERTY(bool thumbnailsEnabled READ thumbnailsEnabled WRITE setThumbnailsEnabled NOTIFY thumbnailsEnabledChanged)
+    Q_PROPERTY(int thumbnailMaxMb READ thumbnailMaxMb WRITE setThumbnailMaxMb NOTIFY thumbnailMaxMbChanged)
     Q_PROPERTY(bool singleClick READ singleClick WRITE setSingleClick NOTIFY singleClickChanged)
     Q_PROPERTY(QString defaultStartupDirectory READ defaultStartupDirectory WRITE setDefaultStartupDirectory NOTIFY defaultStartupDirectoryChanged)
     Q_PROPERTY(int defaultViewMode READ defaultViewMode WRITE setDefaultViewMode NOTIFY defaultViewModeChanged)
@@ -58,6 +61,10 @@ public:
     [[nodiscard]] int dateFormat() const { return m_dateFormat; }
     void setDateFormat(int format);
     Q_INVOKABLE static bool shiftPressed();
+    [[nodiscard]] bool thumbnailsEnabled() const { return m_thumbnailsEnabled; }
+    void setThumbnailsEnabled(bool enabled);
+    [[nodiscard]] int thumbnailMaxMb() const { return m_thumbnailMaxMb; }
+    void setThumbnailMaxMb(int mb);
     void setShowHidden(bool show);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
@@ -95,6 +102,8 @@ signals:
     void showHiddenChanged();
     void confirmPermanentDeleteChanged();
     void dateFormatChanged();
+    void thumbnailsEnabledChanged();
+    void thumbnailMaxMbChanged();
     void singleClickChanged();
     void defaultStartupDirectoryChanged();
     void defaultViewModeChanged();
@@ -116,6 +125,8 @@ private:
     bool m_showHidden = false;
     bool m_confirmPermanentDelete = true;
     int m_dateFormat = 1;
+    bool m_thumbnailsEnabled = true;
+    int m_thumbnailMaxMb = 0;
     bool m_singleClick = false;
     QString m_defaultStartupDirectory = "home";
     int m_defaultViewMode = 0; // Grid, Details, Compact

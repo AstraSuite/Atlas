@@ -45,6 +45,14 @@ StyledRect {
             if (mainModel) mainModel.refresh();
             if (splitModel) splitModel.refresh();
         }
+        function onThumbnailsEnabledChanged() {
+            if (mainModel) mainModel.refresh();
+            if (splitModel) splitModel.refresh();
+        }
+        function onThumbnailMaxMbChanged() {
+            if (mainModel) mainModel.refresh();
+            if (splitModel) splitModel.refresh();
+        }
     }
 
     signal itemContextMenu(var item, real mouseX, real mouseY)

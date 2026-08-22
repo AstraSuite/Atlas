@@ -24,6 +24,10 @@ AppController::AppController(QObject* parent)
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
     m_dateFormat = settings.value("preferences/dateFormat", 1).toInt();
     FileUtils::setDateFormat(m_dateFormat);
+    m_thumbnailsEnabled = settings.value("preferences/thumbnailsEnabled", true).toBool();
+    m_thumbnailMaxMb = settings.value("preferences/thumbnailMaxMb", 0).toInt();
+    FileUtils::setThumbnailsEnabled(m_thumbnailsEnabled);
+    FileUtils::setThumbnailMaxBytes(static_cast<qint64>(m_thumbnailMaxMb) * 1024 * 1024);
 }
 
 AppController* AppController::instance() {
@@ -89,6 +93,25 @@ bool AppController::shiftPressed() {
     return QGuiApplication::queryKeyboardModifiers().testFlag(Qt::ShiftModifier);
 }
 
+void AppController::setThumbnailsEnabled(bool enabled) {
+    if (m_thumbnailsEnabled != enabled) {
+        m_thumbnailsEnabled = enabled;
+        FileUtils::setThumbnailsEnabled(enabled);
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/thumbnailsEnabled", enabled);
+        emit thumbnailsEnabledChanged();
+    }
+}
+
+void AppController::setThumbnailMaxMb(int mb) {
+    if (m_thumbnailMaxMb != mb) {
+        m_thumbnailMaxMb = mb;
+        FileUtils::setThumbnailMaxBytes(static_cast<qint64>(mb) * 1024 * 1024);
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/thumbnailMaxMb", mb);
+        emit thumbnailMaxMbChanged();
+    }
+}
 void AppController::setShowHidden(bool show) {
     if (m_showHidden != show) {
         m_showHidden = show;

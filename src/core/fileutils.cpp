@@ -1,7 +1,10 @@
 #include "fileutils.hpp"
 
+<<<<<<< HEAD
 #include <QDateTime>
 #include <QLocale>
+=======
+>>>>>>> pr-12
 #include <atomic>
 #include <QDir>
 #include <QFileInfo>
@@ -44,6 +47,8 @@ QString FileUtils::desktop() const {
 
 namespace {
 std::atomic<int> g_dateFormat{FileUtils::Iso};
+std::atomic<bool> g_thumbsEnabled{true};
+std::atomic<qint64> g_thumbMaxBytes{0};
 }
 
 void FileUtils::setDateFormat(int format) {
@@ -69,6 +74,24 @@ QString FileUtils::formatDateTime(const QDateTime& dt, int format) {
     default:
         return dt.toString(QStringLiteral("yyyy-MM-dd hh:mm"));
     }
+}
+
+void FileUtils::setThumbnailsEnabled(bool enabled) {
+    g_thumbsEnabled.store(enabled, std::memory_order_relaxed);
+}
+
+void FileUtils::setThumbnailMaxBytes(qint64 bytes) {
+    g_thumbMaxBytes.store(bytes, std::memory_order_relaxed);
+}
+
+bool FileUtils::shouldThumbnail(bool isImage, bool isVideo, qint64 size) {
+    if (!isImage && !isVideo)
+        return false;
+    if (!g_thumbsEnabled.load(std::memory_order_relaxed))
+        return false;
+
+    const qint64 limit = g_thumbMaxBytes.load(std::memory_order_relaxed);
+    return limit <= 0 || size <= limit;
 }
 
 QString FileUtils::formatSize(qint64 bytes) {
