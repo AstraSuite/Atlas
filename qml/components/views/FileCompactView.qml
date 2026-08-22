@@ -10,6 +10,8 @@ Item {
 
     required property var model
     required property var activeTab
+    property real zoomSize: 80
+    readonly property int iconSize: Math.max(16, Math.min(64, Math.round(20 * zoomSize / 80)))
     property int paneIndex: 0
     property int currentIndex: gridView.currentIndex
     readonly property var currentItem: {
@@ -119,8 +121,8 @@ Item {
 
         anchors.fill: parent
         anchors.margins: Tokens.padding.small
-        cellWidth: 220
-        cellHeight: 38
+        cellWidth: Math.max(220, 200 + root.iconSize)
+        cellHeight: root.iconSize + 18
         flow: GridView.FlowTopToBottom
         clip: true
         focus: true
@@ -483,12 +485,12 @@ Item {
                     spacing: Tokens.spacing.small
 
                     Item {
-                        implicitWidth: 20
-                        implicitHeight: 20
+                        implicitWidth: root.iconSize
+                        implicitHeight: root.iconSize
 
                         CachingIconImage {
                             anchors.fill: parent
-                            implicitSize: 20
+                            implicitSize: root.iconSize
 
                             source: {
                                 const file = compDelegate.modelData;

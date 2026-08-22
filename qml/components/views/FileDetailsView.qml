@@ -10,6 +10,9 @@ Item {
 
     required property var model
     required property var activeTab
+    property real zoomSize: 80
+    readonly property int iconSize: Math.max(16, Math.min(64, Math.round(22 * zoomSize / 80)))
+    readonly property int rowHeight: Math.max(36, iconSize + 14)
     property int paneIndex: 0
     property int currentIndex: listView.currentIndex
     readonly property var currentItem: {
@@ -518,7 +521,7 @@ Item {
                 readonly property bool isHidden: rowItem.modelData ? (rowItem.modelData.isHidden || rowItem.modelData.name.startsWith('.')) : false
 
                 width: listView.width
-                implicitHeight: 36
+                implicitHeight: root.rowHeight
 
                 radius: Tokens.rounding.small
                 color: folderDropArea.containsDrag
@@ -690,13 +693,13 @@ Item {
                         spacing: Tokens.spacing.small
 
                         Item {
-                            implicitWidth: 22
-                            implicitHeight: 22
+                            implicitWidth: root.iconSize
+                            implicitHeight: root.iconSize
 
                             CachingIconImage {
                                 id: rowIcon
                                 anchors.fill: parent
-                                implicitSize: 22
+                                implicitSize: root.iconSize
 
                                 source: {
                                     const file = rowItem.modelData;
