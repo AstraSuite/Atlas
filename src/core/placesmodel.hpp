@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QString>
 #include <QVector>
+#include <QQmlEngine>
+#include <QJSEngine>
 #include <qqmlintegration.h>
 
 namespace prism::core {
@@ -44,6 +46,11 @@ public:
 
     explicit PlacesModel(QObject* parent = nullptr);
     ~PlacesModel() override = default;
+
+    static PlacesModel* instance();
+    static PlacesModel* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
+        return instance();
+    }
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;

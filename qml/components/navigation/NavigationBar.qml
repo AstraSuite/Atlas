@@ -63,6 +63,12 @@ StyledRect {
             textToUse = pathSuggestions[selectedSuggestionIndex].displayPath;
         }
         let trimmed = textToUse.trim();
+        if (trimmed.startsWith("sftp://") || trimmed.startsWith("smb://") || trimmed.startsWith("ftp://") || trimmed.startsWith("ssh://")) {
+            NetworkManager.connectUri(trimmed, "", true);
+            showSuggestions = false;
+            isEditingPath = false;
+            return;
+        }
         let proto = AppIntegration.handleCustomProtocol(trimmed);
         if (proto > 0) {
             root.specialProtocolInvoked(proto);

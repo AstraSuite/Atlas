@@ -27,6 +27,7 @@
 #include "core/thumbnailprovider.hpp"
 #include "core/placesmodel.hpp"
 #include "core/drivemanager.hpp"
+#include "core/networkmanager.hpp"
 #include "models/filesystemmodel.hpp"
 
 int main(int argc, char* argv[]) {
@@ -157,6 +158,7 @@ int main(int argc, char* argv[]) {
     auto* papirusWatcher = prism::core::PapirusWatcher::instance();
     auto* placesModel = new prism::core::PlacesModel(&app);
     auto* driveManager = new prism::core::DriveManager(&app);
+    auto* networkManager = prism::core::NetworkManager::instance();
 
     QQmlApplicationEngine engine;
     engine.addImageProvider("icon", new prism::core::IconImageProvider());
@@ -174,6 +176,7 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("PapirusWatcher", papirusWatcher);
     engine.rootContext()->setContextProperty("PlacesModel", placesModel);
     engine.rootContext()->setContextProperty("DriveManager", driveManager);
+    engine.rootContext()->setContextProperty("NetworkManager", networkManager);
     engine.rootContext()->setContextProperty("isPickerMode", isPickerMode);
 
     const QUrl url(QStringLiteral("qrc:/qt/qml/prism/qml/main.qml"));

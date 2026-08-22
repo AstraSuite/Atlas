@@ -11,6 +11,7 @@
 #include <QFileSystemWatcher>
 #include <QSettings>
 #include <QTimer>
+#include <unistd.h>
 
 namespace prism::core {
 
@@ -42,8 +43,20 @@ static QString mapXbelIconToMaterial(const QString& iconName, const QString& pat
     return isDir ? "folder" : "bookmark";
 }
 
+static PlacesModel* s_placesInstance = nullptr;
+
+PlacesModel* PlacesModel::instance() {
+    if (!s_placesInstance) {
+        s_placesInstance = new PlacesModel();
+    }
+    return s_placesInstance;
+}
+
 PlacesModel::PlacesModel(QObject* parent)
     : QAbstractListModel(parent) {
+    if (!s_placesInstance) {
+        s_placesInstance = this;
+    }
     
     loadHiddenPlaces();
 
@@ -283,6 +296,37 @@ void PlacesModel::loadBookmarks() {
                         m_places.append({ name, path, isTrash ? "delete" : "bookmark", false, false, isTrash, true, 0, 0 });
                     }
                 }
+            }
+        }
+    }
+
+    // Auto-discover active remote network mounts (SFTP, SMB, FTP, WebDAV)
+    QString gvfsDir = QStringLiteral("/run/user/%1/gvfs").arg(getuid());
+    QDir gvfs(gvfsDir);
+    if (gvfs.exists()) {
+        const auto entries = gvfs.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+        for (const auto& fi : entries) {
+            QString path = fi.absoluteFilePath();
+            if (m_hiddenPlaces.contains(path)) continue;
+            bool alreadyPresent = false;
+            for (const auto& p : m_places) {
+                if (p.path == path) {
+                    alreadyPresent = true;
+                    break;
+                }
+            }
+            if (!alreadyPresent) {
+                QString fn = fi.fileName();
+                QString icon = QStringLiteral("cloud");
+                QString title = fn;
+                if (fn.startsWith(QLatin1String("sftp:"))) {
+                    icon = QStringLiteral("dns");
+                    title = fn.mid(5);
+                } else if (fn.startsWith(QLatin1String("smb-share:"))) {
+                    icon = QStringLiteral("lan");
+                    title = fn.mid(10);
+                }
+                m_places.append({ title, path, icon, true, true, false, true, 0, 0 });
             }
         }
     }

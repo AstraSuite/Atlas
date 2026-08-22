@@ -16,6 +16,7 @@ StyledRect {
     signal deviceContextMenuRequested(real globalX, real globalY, string devPath, string name, string mountPt, bool isMounted)
     signal filesDropped(var sourceFiles, string targetDir, real mouseX, real mouseY)
     signal managePlacesRequested()
+    signal connectServerRequested()
 
     implicitWidth: sidebarWidth
     color: Colours.tPalette.m3surfaceContainer
@@ -32,38 +33,71 @@ StyledRect {
             Layout.bottomMargin: Tokens.spacing.small
 
             StyledText {
-                anchors.centerIn: parent
+                anchors.left: parent.left
+                anchors.leftMargin: Tokens.padding.extraSmall
+                anchors.verticalCenter: parent.verticalCenter
                 text: qsTr("Places")
                 color: Colours.palette.m3onSurface
                 font: Tokens.font.body.builders.large.weight(Font.Bold).build()
             }
 
-            StyledRect {
+            RowLayout {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                implicitWidth: 26
-                implicitHeight: 26
-                radius: Tokens.rounding.full
-                color: cfgHover.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.08) : "transparent"
+                spacing: 2
 
-                MaterialIcon {
-                    anchors.centerIn: parent
-                    text: "tune"
-                    fontStyle: Tokens.font.icon.small
-                    color: Colours.palette.m3onSurfaceVariant
+                StyledRect {
+                    implicitWidth: 26
+                    implicitHeight: 26
+                    radius: Tokens.rounding.full
+                    color: srvHover.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.08) : "transparent"
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "cloud"
+                        fontStyle: Tokens.font.icon.small
+                        color: Colours.palette.m3onSurfaceVariant
+                    }
+
+                    MouseArea {
+                        id: srvHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.connectServerRequested()
+                    }
+
+                    StyledToolTip {
+                        text: qsTr("Connect to Server")
+                        visible: srvHover.containsMouse
+                    }
                 }
 
-                MouseArea {
-                    id: cfgHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.managePlacesRequested()
-                }
+                StyledRect {
+                    implicitWidth: 26
+                    implicitHeight: 26
+                    radius: Tokens.rounding.full
+                    color: cfgHover.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.08) : "transparent"
 
-                StyledToolTip {
-                    text: qsTr("Configure Places")
-                    visible: cfgHover.containsMouse
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "tune"
+                        fontStyle: Tokens.font.icon.small
+                        color: Colours.palette.m3onSurfaceVariant
+                    }
+
+                    MouseArea {
+                        id: cfgHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.managePlacesRequested()
+                    }
+
+                    StyledToolTip {
+                        text: qsTr("Configure Places")
+                        visible: cfgHover.containsMouse
+                    }
                 }
             }
         }

@@ -7,6 +7,8 @@
 #include <QClipboard>
 #include <QProcess>
 #include <QStandardPaths>
+#include <QDateTime>
+#include <QRandomGenerator>
 #include <QDebug>
 #include <algorithm>
 
@@ -76,18 +78,6 @@ void CatboxUploader::cancelUpload() {
         m_currentReply->abort();
         m_currentReply->deleteLater();
         m_currentReply = nullptr;
-        m_currentMultiPart = nullptr;
-        m_currentFile = nullptr;
-    } else {
-        if (m_currentMultiPart) {
-            m_currentMultiPart->deleteLater();
-            m_currentMultiPart = nullptr;
-            m_currentFile = nullptr;
-        } else if (m_currentFile) {
-            if (m_currentFile->isOpen()) m_currentFile->close();
-            delete m_currentFile;
-            m_currentFile = nullptr;
-        }
     }
 
     if (m_isUploading) {
@@ -163,58 +153,53 @@ void CatboxUploader::processNextInQueue() {
         foProgress->setStatusText(tr("Uploading %1 to %2...").arg(m_currentFileName, serviceDisplayName));
     }
 
-    m_currentFile = new QFile(m_currentItem.filePath);
-    if (!m_currentFile->open(QIODevice::ReadOnly)) {
+    QFile file(m_currentItem.filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
         QString err = tr("Failed to open file for reading");
-        delete m_currentFile;
-        m_currentFile = nullptr;
-
         emit uploadFinished(false, err, m_currentItem.filePath);
         FileOperations::instance()->operationFinished(false, tr("%1 upload failed: %2").arg(serviceDisplayName, err));
         processNextInQueue();
         return;
     }
+    QByteArray fileData = file.readAll();
+    file.close();
 
-    m_currentMultiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+    QString boundary = QStringLiteral("----PrismBoundary%1%2")
+        .arg(QDateTime::currentMSecsSinceEpoch())
+        .arg(QRandomGenerator::global()->generate());
 
-    // Form parameter: reqtype = fileupload
-    QHttpPart reqTypePart;
-    reqTypePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"reqtype\""));
-    reqTypePart.setBody("fileupload");
-    m_currentMultiPart->append(reqTypePart);
-
-    // For Litterbox: time parameter
-    if (m_currentItem.service == Service::Litterbox) {
-        QHttpPart timePart;
-        timePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"time\""));
-        timePart.setBody(m_currentItem.time.toUtf8());
-        m_currentMultiPart->append(timePart);
-    }
-
-    // Form parameter: fileToUpload = <file data>
-    QHttpPart filePart;
     QMimeDatabase mimeDb;
     QMimeType mimeType = mimeDb.mimeTypeForFile(m_currentItem.filePath);
     QString mimeName = mimeType.isValid() ? mimeType.name() : QStringLiteral("application/octet-stream");
 
-    filePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant(mimeName));
-    filePart.setHeader(QNetworkRequest::ContentDispositionHeader,
-                       QVariant(QString("form-data; name=\"fileToUpload\"; filename=\"%1\"").arg(m_currentFileName)));
-    filePart.setBodyDevice(m_currentFile);
-    m_currentFile->setParent(m_currentMultiPart);
-    m_currentMultiPart->append(filePart);
+    QByteArray body;
+    body.append("--" + boundary.toUtf8() + "\r\n");
+    body.append("Content-Disposition: form-data; name=\"reqtype\"\r\n\r\n");
+    body.append("fileupload\r\n");
+
+    if (m_currentItem.service == Service::Litterbox) {
+        body.append("--" + boundary.toUtf8() + "\r\n");
+        body.append("Content-Disposition: form-data; name=\"time\"\r\n\r\n");
+        body.append(m_currentItem.time.toUtf8() + "\r\n");
+    }
+
+    body.append("--" + boundary.toUtf8() + "\r\n");
+    body.append("Content-Disposition: form-data; name=\"fileToUpload\"; filename=\"" + m_currentFileName.toUtf8() + "\"\r\n");
+    body.append("Content-Type: " + mimeName.toUtf8() + "\r\n\r\n");
+    body.append(fileData);
+    body.append("\r\n--" + boundary.toUtf8() + "--\r\n");
 
     QUrl apiUrl = (m_currentItem.service == Service::Catbox)
         ? QUrl(QStringLiteral("https://catbox.moe/user/api.php"))
         : QUrl(QStringLiteral("https://litterbox.catbox.moe/resources/internals/api.php"));
 
     QNetworkRequest request(apiUrl);
-    request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("Prism-FileManager/1.0"));
+    request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("Mozilla/5.0 Prism/1.0"));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, QString("multipart/form-data; boundary=%1").arg(boundary).toUtf8());
+    request.setHeader(QNetworkRequest::ContentLengthHeader, body.size());
     request.setTransferTimeout(120000);
 
-    m_currentReply = m_nam->post(request, m_currentMultiPart);
-    m_currentMultiPart->setParent(m_currentReply);
-
+    m_currentReply = m_nam->post(request, body);
     connect(m_currentReply, &QNetworkReply::uploadProgress, this, &CatboxUploader::onUploadProgress);
     connect(m_currentReply, &QNetworkReply::finished, this, &CatboxUploader::onReplyFinished);
 }
@@ -245,8 +230,6 @@ void CatboxUploader::onReplyFinished() {
 
     QNetworkReply* reply = m_currentReply;
     m_currentReply = nullptr;
-    m_currentMultiPart = nullptr;
-    m_currentFile = nullptr;
 
     QString currentFilePath = m_currentItem.filePath;
     QString currentFileName = m_currentFileName;

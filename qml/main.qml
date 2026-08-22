@@ -185,6 +185,10 @@ ApplicationWindow {
                                 placesManageModal.expanded = true;
                             }
 
+                            onConnectServerRequested: {
+                                connectServerModal.expanded = true;
+                            }
+
                             onFilesDropped: (sources, destDir, x, y) => {
                                 dropActionMenu.sourceFiles = sources;
                                 dropActionMenu.targetDir = destDir;
@@ -538,6 +542,15 @@ ApplicationWindow {
         // Preferences / Settings Modal
         PreferencesModal {
             id: preferencesModal
+        }
+
+        // Connect to Remote Server / SFTP Modal
+        ConnectServerModal {
+            id: connectServerModal
+            activeTab: TabManager.currentTab
+            onConnected: localPath => {
+                window.setActiveDirectory(localPath);
+            }
         }
 
         // Drive Manager Navigation Handler

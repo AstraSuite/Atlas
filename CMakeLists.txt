@@ -68,6 +68,8 @@ qt_add_executable(prism_app
     src/core/iconcatalog.cpp
     src/core/papiruswatcher.hpp
     src/core/papiruswatcher.cpp
+    src/core/networkmanager.hpp
+    src/core/networkmanager.cpp
     src/core/appcontroller.hpp
     src/core/appcontroller.cpp
 )
@@ -126,6 +128,7 @@ qt_add_qml_module(prism_app
         qml/components/dialogs/NewItemModal.qml
         qml/components/dialogs/EditPlaceModal.qml
         qml/components/dialogs/PlacesManageModal.qml
+        qml/components/dialogs/ConnectServerModal.qml
         qml/components/dialogs/PreferencesModal.qml
         qml/components/dialogs/PropertiesModal.qml
         qml/components/dialogs/OpenWithModal.qml
