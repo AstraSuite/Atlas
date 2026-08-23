@@ -54,6 +54,7 @@ AppController::AppController(QObject* parent)
         m_directoryViews = QJsonDocument::fromJson(viewsJson).object().toVariantMap();
     m_showFreeSpace = settings.value("preferences/showFreeSpace", true).toBool();
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
+    m_iconZoomLevel = qBound(48, settings.value("session/iconZoomLevel", 80).toInt(), 180);
     m_folderItemCount = settings.value("preferences/folderItemCount", 0).toInt();
     FileUtils::setFolderCountMode(m_folderItemCount);
     m_dateFormat = settings.value("preferences/dateFormat", 1).toInt();
@@ -133,6 +134,18 @@ void AppController::setConfirmPermanentDelete(bool confirm) {
         settings.setValue("session/confirmPermanentDelete", confirm);
         emit confirmPermanentDeleteChanged();
     }
+}
+
+void AppController::setIconZoomLevel(int level) {
+    const int clamped = qBound(48, level, 180);
+    if (m_iconZoomLevel == clamped)
+        return;
+
+    m_iconZoomLevel = clamped;
+
+    QSettings settings("prism", "prism");
+    settings.setValue("session/iconZoomLevel", clamped);
+    emit iconZoomLevelChanged();
 }
 
 void AppController::setCaseSensitiveSort(bool sensitive) {

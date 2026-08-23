@@ -48,6 +48,7 @@ class AppController : public QObject {
     Q_PROPERTY(bool directorySpecificViews READ directorySpecificViews WRITE setDirectorySpecificViews NOTIFY directorySpecificViewsChanged)
     Q_PROPERTY(bool showFreeSpace READ showFreeSpace WRITE setShowFreeSpace NOTIFY showFreeSpaceChanged)
     Q_PROPERTY(int placesIconSize READ placesIconSize WRITE setPlacesIconSize NOTIFY placesIconSizeChanged)
+    Q_PROPERTY(int iconZoomLevel READ iconZoomLevel WRITE setIconZoomLevel NOTIFY iconZoomLevelChanged)
     Q_PROPERTY(int folderItemCount READ folderItemCount WRITE setFolderItemCount NOTIFY folderItemCountChanged)
     Q_PROPERTY(QString selectedPath READ selectedPath NOTIFY selectedPathChanged)
     Q_PROPERTY(int iconThemeVersion READ iconThemeVersion NOTIFY iconThemeVersionChanged)
@@ -157,6 +158,8 @@ public:
     [[nodiscard]] int placesIconSize() const { return m_placesIconSize; }
     void setPlacesIconSize(int size);
 
+    [[nodiscard]] int iconZoomLevel() const { return m_iconZoomLevel; }
+    void setIconZoomLevel(int level);
     [[nodiscard]] int folderItemCount() const { return m_folderItemCount; }
     void setFolderItemCount(int mode);
 
@@ -222,6 +225,7 @@ signals:
     void directorySpecificViewsChanged();
     void showFreeSpaceChanged();
     void placesIconSizeChanged();
+    void iconZoomLevelChanged();
     void folderItemCountChanged();
     void selectedPathChanged();
     void iconThemeVersionChanged();
@@ -264,6 +268,7 @@ private:
     QVariantMap m_directoryViews;
     bool m_showFreeSpace = true;
     int m_placesIconSize = 20;
+    int m_iconZoomLevel = 80;
     int m_folderItemCount = 0;
     QString m_selectedPath;
     int m_iconThemeVersion = 0;
