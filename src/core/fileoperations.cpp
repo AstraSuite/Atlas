@@ -707,7 +707,9 @@ void FileOperations::bulkRename(const QStringList& paths, const QStringList& new
     m_redoStack.clear();
     emit undoStackChanged();
 
-    emit operationFinished(true, tr("Renamed %n item(s)", "", static_cast<int>(sources.size())));
+    emit operationFinished(true, sources.size() == 1
+                                     ? tr("Renamed 1 item")
+                                     : tr("Renamed %1 items").arg(sources.size()));
 }
 
 void FileOperations::createDirectory(const QString& parentDir, const QString& name) {
