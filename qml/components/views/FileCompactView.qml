@@ -176,14 +176,15 @@ Item {
             acceptedModifiers: Qt.NoModifier
             onWheel: event => {
                 let vx = 0;
+                let factor = AppController.scrollSpeed;
                 if (event.pixelDelta.x !== 0) {
-                    vx = event.pixelDelta.x * 25;
+                    vx = event.pixelDelta.x * 25 * factor;
                 } else if (event.pixelDelta.y !== 0) {
-                    vx = event.pixelDelta.y * 25;
+                    vx = event.pixelDelta.y * 25 * factor;
                 } else if (event.angleDelta.y !== 0) {
-                    vx = event.angleDelta.y * 14;
+                    vx = event.angleDelta.y * 14 * factor;
                 } else if (event.angleDelta.x !== 0) {
-                    vx = event.angleDelta.x * 14;
+                    vx = event.angleDelta.x * 14 * factor;
                 }
                 if (vx !== 0) {
                     gridView.flick(vx, 0);
@@ -589,14 +590,15 @@ Item {
                 wheel.accepted = true;
             } else {
                 let vx = 0;
+                let factor = AppController.scrollSpeed;
                 if (wheel.pixelDelta.x !== 0) {
-                    vx = wheel.pixelDelta.x * 25;
+                    vx = wheel.pixelDelta.x * 25 * factor;
                 } else if (wheel.pixelDelta.y !== 0) {
-                    vx = wheel.pixelDelta.y * 25;
+                    vx = wheel.pixelDelta.y * 25 * factor;
                 } else if (wheel.angleDelta.y !== 0) {
-                    vx = wheel.angleDelta.y * 14;
+                    vx = wheel.angleDelta.y * 14 * factor;
                 } else if (wheel.angleDelta.x !== 0) {
-                    vx = wheel.angleDelta.x * 14;
+                    vx = wheel.angleDelta.x * 14 * factor;
                 }
                 if (vx !== 0) {
                     gridView.flick(vx, 0);

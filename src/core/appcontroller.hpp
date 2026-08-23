@@ -46,6 +46,7 @@ class AppController : public QObject {
     Q_PROPERTY(bool menuShowTerminal READ menuShowTerminal WRITE setMenuShowTerminal NOTIFY menuPreferencesChanged)
     Q_PROPERTY(bool menuShowDelete READ menuShowDelete WRITE setMenuShowDelete NOTIFY menuPreferencesChanged)
     Q_PROPERTY(bool showNetworkSection READ showNetworkSection WRITE setShowNetworkSection NOTIFY showNetworkSectionChanged)
+    Q_PROPERTY(qreal scrollSpeed READ scrollSpeed WRITE setScrollSpeed NOTIFY scrollSpeedChanged)
 
 public:
     explicit AppController(QObject* parent = nullptr);
@@ -145,6 +146,10 @@ public:
     [[nodiscard]] bool showNetworkSection() const { return m_showNetworkSection; }
     void setShowNetworkSection(bool show);
 
+    [[nodiscard]] qreal scrollSpeed() const { return m_scrollSpeed; }
+    void setScrollSpeed(qreal speed);
+    Q_INVOKABLE void resetScrollSpeed();
+
     Q_INVOKABLE void accept(const QString& path);
     Q_INVOKABLE void reject();
 
@@ -176,6 +181,7 @@ signals:
     void iconThemeVersionChanged();
     void menuPreferencesChanged();
     void showNetworkSectionChanged();
+    void scrollSpeedChanged();
     void accepted(const QString& path);
     void rejected();
 
@@ -213,6 +219,7 @@ private:
     bool m_menuShowTerminal = true;
     bool m_menuShowDelete = true;
     bool m_showNetworkSection = false;
+    qreal m_scrollSpeed = 1.0;
 };
 
 } // namespace prism::core

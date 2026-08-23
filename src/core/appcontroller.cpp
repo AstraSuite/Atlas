@@ -63,6 +63,10 @@ AppController::AppController(QObject* parent)
     m_menuShowTerminal = settings.value("contextMenu/showTerminal", true).toBool();
     m_menuShowDelete = settings.value("contextMenu/showDelete", true).toBool();
     m_showNetworkSection = settings.value("preferences/showNetworkSection", false).toBool();
+    m_scrollSpeed = settings.value("preferences/scrollSpeed", 1.0).toReal();
+    if (m_scrollSpeed <= 0.05) {
+        m_scrollSpeed = 1.0;
+    }
 
     const QByteArray widthsJson = settings.value("preferences/detailsColumnWidths").toString().toUtf8();
     if (!widthsJson.isEmpty()) {
@@ -392,6 +396,19 @@ void AppController::setShowNetworkSection(bool show) {
         settings.setValue("preferences/showNetworkSection", show);
         emit showNetworkSectionChanged();
     }
+}
+
+void AppController::setScrollSpeed(qreal speed) {
+    if (!qFuzzyCompare(m_scrollSpeed + 1.0, speed + 1.0)) {
+        m_scrollSpeed = speed;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/scrollSpeed", speed);
+        emit scrollSpeedChanged();
+    }
+}
+
+void AppController::resetScrollSpeed() {
+    setScrollSpeed(1.0);
 }
 
 void AppController::triggerIconReload() {
