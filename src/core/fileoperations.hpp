@@ -126,6 +126,7 @@ public:
     Q_INVOKABLE void bulkRename(const QStringList& paths, const QStringList& newNames);
     Q_INVOKABLE void createDirectory(const QString& parentDir, const QString& name);
     Q_INVOKABLE void createFile(const QString& parentDir, const QString& name, const QString& content = "");
+    Q_INVOKABLE void createFromTemplate(const QString& templatePath, const QString& parentDir, const QString& name);
     Q_INVOKABLE void duplicateFile(const QString& path);
     Q_INVOKABLE void createSymlink(const QString& target, const QString& linkPath);
     Q_INVOKABLE void pasteAsSymlink(const QString& destinationDir);

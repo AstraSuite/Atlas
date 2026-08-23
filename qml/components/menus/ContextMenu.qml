@@ -253,6 +253,20 @@ MouseArea {
                             { text: qsTr("New Text File"), icon: "note_add", action: "newFile" }
                         ];
 
+                        const templates = FileUtils.templates();
+                        if (templates.length > 0) {
+                            blankList.push({
+                                text: qsTr("New from Template"),
+                                icon: "file_copy",
+                                hasSubmenu: true,
+                                submenuItems: templates.map(t => ({
+                                    text: t.name,
+                                    icon: t.icon,
+                                    action: "newFromTemplate:" + t.path
+                                }))
+                            });
+                        }
+
                         if (FileOperations.canPaste) {
                             blankList.push({ text: qsTr("Paste"), icon: "content_paste", action: "paste" });
                             if (AppController.menuShowSymlink) {

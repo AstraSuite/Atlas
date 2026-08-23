@@ -743,6 +743,43 @@ void FileOperations::bulkRename(const QStringList& paths, const QStringList& new
                                      : tr("Renamed %1 items").arg(sources.size()));
 }
 
+void FileOperations::createFromTemplate(const QString& templatePath, const QString& parentDir, const QString& name) {
+    const QString trimmed = name.trimmed();
+    if (templatePath.isEmpty() || parentDir.isEmpty() || trimmed.isEmpty() || trimmed.contains(QLatin1Char('/'))) {
+        emit operationFinished(false, tr("Invalid name"));
+        return;
+    }
+
+    if (!QFileInfo::exists(templatePath)) {
+        emit operationFinished(false, tr("Template no longer exists"));
+        return;
+    }
+
+    const QString destination = parentDir + QLatin1Char('/') + trimmed;
+    if (QFileInfo::exists(destination)) {
+        emit operationFinished(false, tr("%1 already exists").arg(trimmed));
+        return;
+    }
+
+    if (!QFile::copy(templatePath, destination)) {
+        emit operationFinished(false, tr("Could not create %1").arg(trimmed));
+        return;
+    }
+
+    QFile::setPermissions(destination, QFile::permissions(destination) | QFile::WriteOwner);
+
+    UndoAction action;
+    action.type = UndoAction::CreateFile;
+    action.newPath = destination;
+    action.parentDir = parentDir;
+    action.name = trimmed;
+    m_undoStack.push_back(action);
+    m_redoStack.clear();
+    emit undoStackChanged();
+
+    emit operationFinished(true, tr("Created %1").arg(trimmed));
+}
+
 void FileOperations::createDirectory(const QString& parentDir, const QString& name) {
     QDir dir(parentDir);
     bool success = dir.mkdir(name);

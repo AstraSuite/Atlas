@@ -387,6 +387,13 @@ ApplicationWindow {
                         operationsModal.expanded = true;
                         FileOperations.uploadToLitterbox(pathsToUpload, time);
                     }
+                } else if (action.startsWith("newFromTemplate:")) {
+                    const templatePath = action.substring(16);
+                    newItemModal.title = qsTr("New from Template");
+                    newItemModal.icon = "file_copy";
+                    newItemModal.templateSource = templatePath;
+                    newItemModal.initialText = templatePath.split("/").pop();
+                    newItemModal.expanded = true;
                 } else if (action === "newFile") {
                     newItemModal.title = qsTr("Create New File");
                     newItemModal.icon = "note_add";
@@ -480,6 +487,8 @@ ApplicationWindow {
                     FileOperations.createDirectory(currentDir, text);
                 } else if (title === qsTr("Create New File")) {
                     FileOperations.createFile(currentDir, text);
+                } else if (title === qsTr("New from Template")) {
+                    FileOperations.createFromTemplate(newItemModal.templateSource, currentDir, text);
                 } else if (title === qsTr("Rename")) {
                     let oldPath = newItemModal.targetRenamePath || (contextMenu.targetItem ? contextMenu.targetItem.path : "");
                     if (oldPath) {
