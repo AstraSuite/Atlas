@@ -45,6 +45,8 @@ qt_add_executable(prism_app
     src/core/fileutils.cpp
     src/core/trashlocations.hpp
     src/core/trashlocations.cpp
+    src/core/recentfiles.hpp
+    src/core/recentfiles.cpp
     src/core/fileoperations.hpp
     src/core/fileoperations.cpp
     src/core/catboxuploader.hpp

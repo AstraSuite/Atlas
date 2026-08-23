@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QQmlEngine>
+#include <QJSEngine>
+
 #include <QAbstractListModel>
 #include <QObject>
 #include <QString>
@@ -92,9 +95,11 @@ public:
     };
     Q_ENUM(TabRoles)
 
-    explicit TabManager(QObject* parent = nullptr);
 
     static TabManager* instance();
+    static TabManager* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
+        return instance();
+    }
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
@@ -120,6 +125,7 @@ signals:
     void countChanged();
 
 private:
+    explicit TabManager(QObject* parent = nullptr);
     QVector<TabItem*> m_tabs;
     int m_currentIndex = 0;
 };
