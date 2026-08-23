@@ -625,34 +625,31 @@ MouseArea {
                                 font: Tokens.font.label.large
                             }
 
-                            RowLayout {
+                            ButtonGroup {
                                 Layout.fillWidth: true
-                                spacing: 2
 
-                                ButtonRowItem {
-                                    first: true
+                                ButtonGroupItem {
                                     icon: "straighten"
                                     text: qsTr("Size")
                                     checked: AppController.showSizeColumn
                                     onClicked: AppController.showSizeColumn = !AppController.showSizeColumn
                                 }
 
-                                ButtonRowItem {
+                                ButtonGroupItem {
                                     icon: "category"
                                     text: qsTr("Type")
                                     checked: AppController.showTypeColumn
                                     onClicked: AppController.showTypeColumn = !AppController.showTypeColumn
                                 }
 
-                                ButtonRowItem {
+                                ButtonGroupItem {
                                     icon: "schedule"
                                     text: qsTr("Date Modified")
                                     checked: AppController.showDateColumn
                                     onClicked: AppController.showDateColumn = !AppController.showDateColumn
                                 }
 
-                                ButtonRowItem {
-                                    last: true
+                                ButtonGroupItem {
                                     icon: "lock"
                                     text: qsTr("Permissions")
                                     checked: AppController.showPermissionsColumn

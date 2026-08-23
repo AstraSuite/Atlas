@@ -267,7 +267,7 @@ StyledRect {
                             return list;
                         } else {
                             let parts = current.split("/").filter(s => s.length > 0);
-                            let list = [{ name: "/", path: "/", icon: "" }];
+                            let list = [{ name: qsTr("Root"), path: "/", icon: "hard_drive" }];
                             let accum = "";
                             for (let part of parts) {
                                 accum += "/" + part;
@@ -297,7 +297,11 @@ StyledRect {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    if (root.activeTab) {
+                                    if (crumb.isActiveSegment) {
+                                        root.isEditingPath = true;
+                                        pathInput.forceActiveFocus();
+                                        pathInput.selectAll();
+                                    } else if (root.activeTab) {
                                         if (root.activePane === 1 && root.activeTab.isSplit) {
                                             root.activeTab.splitPath = crumb.modelData.path;
                                         } else {

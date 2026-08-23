@@ -104,6 +104,9 @@ StyledRect {
                                 color: placeItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                                 pointSize: AppController.placesIconSize
                                 fill: placeItem.selected ? 1 : 0
+
+                                Behavior on color { CAnim {} }
+                                Behavior on fill { Anim { type: Anim.DefaultEffects } }
                             }
 
                             StyledText {
@@ -192,6 +195,9 @@ StyledRect {
                                 color: driveItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                                 pointSize: AppController.placesIconSize
                                 fill: driveItem.selected ? 1 : 0
+
+                                Behavior on color { CAnim {} }
+                                Behavior on fill { Anim { type: Anim.DefaultEffects } }
                             }
 
                             ColumnLayout {

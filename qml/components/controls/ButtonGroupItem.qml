@@ -32,7 +32,9 @@ StyledRect {
     signal clicked()
 
     Layout.fillWidth: true
+    Layout.preferredHeight: buttonHeight
     implicitHeight: buttonHeight
+    implicitWidth: contentRow.implicitWidth + Tokens.padding.large * 2
 
     topLeftRadius: (root.checked || (root.horizontal ? root.first : root.first)) ? Tokens.rounding.large : Tokens.rounding.extraSmall
     topRightRadius: (root.checked || (root.horizontal ? root.last : root.first)) ? Tokens.rounding.large : Tokens.rounding.extraSmall
@@ -66,7 +68,7 @@ StyledRect {
 
     color: root.checked
         ? root.activeColor
-        : (itemHover.containsMouse ? root.hoverColor : root.inactiveColor)
+        : (stateLayer.containsMouse ? root.hoverColor : root.inactiveColor)
 
     Behavior on color {
         CAnim {
@@ -76,6 +78,7 @@ StyledRect {
     }
 
     StateLayer {
+        id: stateLayer
         anchors.fill: parent
         topLeftRadius: parent.topLeftRadius
         topRightRadius: parent.topRightRadius
@@ -87,10 +90,12 @@ StyledRect {
     }
 
     RowLayout {
+        id: contentRow
         anchors.centerIn: parent
         spacing: 6
 
         MaterialIcon {
+            id: iconItem
             visible: root.activeIcon.length > 0
             text: root.activeIcon
             fontStyle: Tokens.font.icon.small
@@ -118,13 +123,5 @@ StyledRect {
                 }
             }
         }
-    }
-
-    MouseArea {
-        id: itemHover
-        anchors.fill: parent
-        hoverEnabled: !root.disabled
-        cursorShape: root.disabled ? Qt.ArrowCursor : Qt.PointingHandCursor
-        onClicked: if (!root.disabled) root.clicked()
     }
 }

@@ -51,7 +51,11 @@ StyledRect {
                     anchors.centerIn: parent
                     text: "tune"
                     fontStyle: Tokens.font.icon.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: cfgHover.containsMouse ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                    fill: cfgHover.containsMouse ? 1 : 0
+
+                    Behavior on color { CAnim {} }
+                    Behavior on fill { Anim { type: Anim.DefaultEffects } }
                 }
 
                 MouseArea {
@@ -196,6 +200,9 @@ StyledRect {
                                 color: placeItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                                 pointSize: AppController.placesIconSize
                                 fill: placeItem.selected ? 1 : 0
+
+                                Behavior on color { CAnim {} }
+                                Behavior on fill { Anim { type: Anim.DefaultEffects } }
                             }
 
                             StyledText {
@@ -262,7 +269,11 @@ StyledRect {
                             anchors.centerIn: parent
                             text: "add"
                             fontStyle: Tokens.font.icon.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: srvHover.containsMouse ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                            fill: srvHover.containsMouse ? 1 : 0
+
+                            Behavior on color { CAnim {} }
+                            Behavior on fill { Anim { type: Anim.DefaultEffects } }
                         }
 
                         MouseArea {
@@ -335,6 +346,9 @@ StyledRect {
                                 color: netItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3primary
                                 pointSize: AppController.placesIconSize
                                 fill: netItem.selected ? 1 : 0
+
+                                Behavior on color { CAnim {} }
+                                Behavior on fill { Anim { type: Anim.DefaultEffects } }
                             }
 
                             StyledText {
@@ -477,6 +491,9 @@ StyledRect {
                                 color: driveItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                                 pointSize: AppController.placesIconSize
                                 fill: driveItem.selected ? 1 : 0
+
+                                Behavior on color { CAnim {} }
+                                Behavior on fill { Anim { type: Anim.DefaultEffects } }
                             }
 
                             ColumnLayout {

@@ -28,12 +28,30 @@ RowLayout {
 
     spacing: 2
 
+    function updateChildPositions() {
+        if (repeater.count > 0) return;
+        let items = [];
+        for (let i = 0; i < root.children.length; i++) {
+            let child = root.children[i];
+            if (child && child !== repeater && child.visible && ("first" in child) && ("last" in child)) {
+                items.push(child);
+            }
+        }
+        for (let i = 0; i < items.length; i++) {
+            items[i].first = (i === 0);
+            items[i].last = (i === items.length - 1);
+        }
+    }
+
+    Component.onCompleted: updateChildPositions()
+    onChildrenChanged: updateChildPositions()
+
     Repeater {
         id: repeater
         model: root.model
 
         delegate: ButtonGroupItem {
-            id: itemRect
+            id: itemDelegate
             required property int index
             required property var modelData
 
@@ -82,7 +100,7 @@ RowLayout {
                 const val = typeof modelData === "object" && modelData !== null && root.valueKey in modelData
                     ? modelData[root.valueKey]
                     : modelData;
-                root.selected(val, itemRect.index);
+                root.selected(val, index);
             }
         }
     }

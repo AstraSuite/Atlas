@@ -137,8 +137,12 @@ MouseArea {
             }
 
             // Segmented Switcher
-            ButtonRow {
+            ButtonGroup {
                 Layout.fillWidth: true
+                activeColor: Colours.palette.m3tertiaryContainer
+                activeOnColor: Colours.palette.m3onTertiaryContainer
+                inactiveColor: Colours.tPalette.m3surfaceContainerHigh
+                hoverColor: Colours.tPalette.m3surfaceContainerHighest
                 model: [
                     { tab: 0, label: qsTr("Branches (%1)").arg(GitManager.branches.length), icon: "fork_right" },
                     { tab: 1, label: qsTr("Recent Commits (%1)").arg(GitManager.commits.length), icon: "history" }
