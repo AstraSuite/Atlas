@@ -37,7 +37,6 @@ public:
         QString time = QStringLiteral("24h");
     };
 
-    explicit CatboxUploader(QObject* parent = nullptr);
     ~CatboxUploader() override;
 
     static CatboxUploader* instance();
@@ -72,7 +71,9 @@ private slots:
     void onReplyFinished();
 
 private:
+    explicit CatboxUploader(QObject* parent = nullptr);
     void enqueue(const QStringList& filePaths, Service service, const QString& time);
+    void beginSharedProgress(const QString& statusText);
     void clearSharedProgress(const QString& finalStatusText = QString());
     static QString serviceDisplayName(Service service, const QString& time);
 

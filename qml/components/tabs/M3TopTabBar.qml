@@ -10,7 +10,7 @@ Item {
     property int currentIndex: 0
     signal tabSelected(int index)
 
-    implicitHeight: 60
+    implicitHeight: 64
     implicitWidth: 400
 
     readonly property int count: root.model ? root.model.length : 0
@@ -51,7 +51,8 @@ Item {
 
                 ColumnLayout {
                     anchors.centerIn: parent
-                    spacing: 2
+                    width: parent.width - Tokens.padding.medium * 2
+                    spacing: 3
 
                     MaterialIcon {
                         Layout.alignment: Qt.AlignHCenter
@@ -66,6 +67,9 @@ Item {
 
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
+                        Layout.maximumWidth: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
                         text: tabBtn.modelData.label
                         color: tabBtn.isCurrent ? Colours.palette.m3primary : (stateLayer.containsMouse ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant)
                         font: tabBtn.isCurrent

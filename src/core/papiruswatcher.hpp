@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QQmlEngine>
+#include <QJSEngine>
+
 #include <QFileSystemWatcher>
 #include <QObject>
 #include <QStringList>
@@ -18,10 +21,12 @@ class PapirusWatcher : public QObject {
     Q_PROPERTY(bool isAvailable READ isAvailable CONSTANT)
 
 public:
-    explicit PapirusWatcher(QObject* parent = nullptr);
     ~PapirusWatcher() override = default;
 
     static PapirusWatcher* instance();
+    static PapirusWatcher* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
+        return instance();
+    }
 
     [[nodiscard]] QString currentColor() const;
     [[nodiscard]] QStringList availableColors() const;
@@ -38,6 +43,7 @@ private slots:
     void onDebounceTimeout();
 
 private:
+    explicit PapirusWatcher(QObject* parent = nullptr);
     void scanAndWatch();
     void addPathIfValid(const QString& path, bool isDir);
     QString readColorFromKeepFile(const QString& filePath) const;

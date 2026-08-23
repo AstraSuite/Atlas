@@ -64,6 +64,19 @@ MouseArea {
     ]
     readonly property var viewModeValues: [0, 1, 2]
 
+    readonly property list<MenuItem> folderCountItems: [
+        MenuItem {
+            text: qsTr("Never")
+        },
+        MenuItem {
+            text: qsTr("Local files only")
+        },
+        MenuItem {
+            text: qsTr("Always")
+        }
+    ]
+    readonly property var folderCountValues: [0, 1, 2]
+
     readonly property list<MenuItem> dateFormatItems: [
         MenuItem {
             text: qsTr("ISO (YYYY-MM-DD)")
@@ -73,10 +86,13 @@ MouseArea {
         },
         MenuItem {
             text: qsTr("Long (Date Time)")
+        },
+        MenuItem {
+            text: qsTr("Custom")
         }
     ]
     // Order matches dateFormatItems: ISO, Short, Long
-    readonly property var dateFormatValues: [1, 0, 2]
+    readonly property var dateFormatValues: [1, 0, 2, 3]
 
     readonly property list<MenuItem> iconSizeItems: [
         MenuItem {
@@ -133,10 +149,10 @@ MouseArea {
         id: modalCard
 
         anchors.centerIn: parent
-        width: Math.min(parent.width - 32, 580)
-        height: Math.min(parent.height - 32, 560)
-        implicitWidth: 580
-        implicitHeight: 560
+        width: Math.min(parent.width - 64, 760)
+        height: Math.min(parent.height - 64, 660)
+        implicitWidth: 760
+        implicitHeight: 660
 
         radius: Tokens.rounding.large
         color: Colours.palette.m3surfaceContainerHigh
@@ -158,7 +174,7 @@ MouseArea {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: Tokens.padding.large
-            spacing: Tokens.spacing.medium
+            spacing: Tokens.spacing.large
 
             // Header
             RowLayout {
@@ -239,6 +255,7 @@ MouseArea {
 
                             StyledText {
                                 text: qsTr("Startup Location")
+                                Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
@@ -302,6 +319,7 @@ MouseArea {
 
                             StyledText {
                                 text: qsTr("File Display & Navigation")
+                                Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
@@ -317,6 +335,14 @@ MouseArea {
                                     subtext: qsTr("Display hidden dotfiles in views (Ctrl+H)")
                                     checked: AppController.showHidden
                                     onToggled: val => AppController.showHidden = val
+                                }
+
+                                ToggleRow {
+                                    icon: "hard_drive_2"
+                                    text: qsTr("Show Free Space")
+                                    subtext: qsTr("Report the space left on the current volume in the status bar")
+                                    checked: AppController.showFreeSpace
+                                    onToggled: checked => AppController.showFreeSpace = checked
                                 }
 
                                 ToggleRow {
@@ -350,6 +376,21 @@ MouseArea {
                                 }
 
 
+                                    icon: "tab_duplicate"
+                                    text: qsTr("Restore Tabs on Startup")
+                                    subtext: qsTr("Reopen the tabs that were open when the window was last closed")
+                                    checked: AppController.restoreTabs
+                                    onToggled: checked => AppController.restoreTabs = checked
+                                }
+
+                                ToggleRow {
+                                    icon: "delete"
+                                    text: qsTr("Confirm Move to Trash")
+                                    subtext: qsTr("Ask before moving files to the trash")
+                                    checked: AppController.confirmMoveToTrash
+                                    onToggled: checked => AppController.confirmMoveToTrash = checked
+                                }
+
                                 ToggleRow {
                                     icon: "image"
                                     text: qsTr("Show Thumbnails")
@@ -372,6 +413,7 @@ MouseArea {
 
                             StyledText {
                                 text: qsTr("Thumbnail Generation")
+                                Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                                 opacity: AppController.thumbnailsEnabled ? 1 : 0.4
@@ -393,6 +435,7 @@ MouseArea {
 
                             StyledText {
                                 text: qsTr("Theme & Icons")
+                                Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
@@ -475,6 +518,7 @@ MouseArea {
 
                             StyledText {
                                 text: qsTr("Layout & View Mode")
+                                Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
@@ -493,6 +537,7 @@ MouseArea {
 
                             StyledText {
                                 text: qsTr("Details View Columns")
+                                Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
@@ -544,6 +589,7 @@ MouseArea {
 
                             StyledText {
                                 text: qsTr("Date & Time")
+                                Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
@@ -551,6 +597,18 @@ MouseArea {
                             SplitButtonRow {
                                 first: true
                                 last: true
+                                label: qsTr("Show Item Count for Folders")
+                                subtext: qsTr("Counting reads every folder in the listing, which is slow over a network")
+                                menuItems: root.folderCountItems
+                                active: root.folderCountItems[Math.max(0, root.folderCountValues.indexOf(AppController.folderItemCount))]
+                                onSelected: item => AppController.folderItemCount = root.folderCountValues[root.folderCountItems.indexOf(item)]
+                            }
+
+                            Item { implicitHeight: 4 }
+
+                            SplitButtonRow {
+                                first: true
+                                last: AppController.dateFormat !== 3
                                 label: qsTr("Date Format")
                                 subtext: qsTr("Format: %1").arg(FileUtils.formatDateTime(new Date(), AppController.dateFormat))
                                 menuItems: root.dateFormatItems
@@ -558,10 +616,36 @@ MouseArea {
                                 onSelected: item => AppController.dateFormat = root.dateFormatValues[root.dateFormatItems.indexOf(item)]
                             }
 
+                            StyledRect {
+                                visible: AppController.dateFormat === 3
+                                Layout.fillWidth: true
+                                implicitHeight: 42
+                                topLeftRadius: Tokens.rounding.extraSmall
+                                topRightRadius: Tokens.rounding.extraSmall
+                                bottomLeftRadius: Tokens.rounding.large
+                                bottomRightRadius: Tokens.rounding.large
+                                color: Colours.tPalette.m3surfaceContainer
+
+                                TextInput {
+                                    id: customDateInput
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.largeIncreased
+                                    anchors.rightMargin: Tokens.padding.largeIncreased
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    text: AppController.customDateFormat
+                                    color: Colours.palette.m3onSurface
+                                    font: Tokens.font.body.small
+                                    selectByMouse: true
+                                    clip: true
+                                    onEditingFinished: AppController.customDateFormat = text
+                                }
+                            }
+
                             Item { implicitHeight: 4 }
 
                             StyledText {
                                 text: qsTr("Sidebar Navigation")
+                                Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
@@ -593,6 +677,7 @@ MouseArea {
 
                             StyledText {
                                 text: qsTr("Sorting & Organization")
+                                Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
@@ -653,6 +738,7 @@ MouseArea {
 
                             StyledText {
                                 text: qsTr("Context Menu Visibility")
+                                Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
@@ -761,6 +847,7 @@ MouseArea {
 
                             StyledText {
                                 text: qsTr("Custom Context Actions & Scripts")
+                                Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
@@ -788,6 +875,13 @@ MouseArea {
                         }
                     }
                 }
+            }
+
+            StyledRect {
+                Layout.fillWidth: true
+                Layout.topMargin: Tokens.spacing.extraSmall
+                implicitHeight: 1
+                color: Qt.alpha(Colours.palette.m3outlineVariant, 0.6)
             }
 
             // Bottom Action Buttons

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QQmlEngine>
+#include <QJSEngine>
+
 #include <QObject>
 #include <QString>
 #include <QVariantList>
@@ -14,9 +17,11 @@ class AppIntegration : public QObject {
     QML_SINGLETON
 
 public:
-    explicit AppIntegration(QObject* parent = nullptr);
 
     static AppIntegration* instance();
+    static AppIntegration* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
+        return instance();
+    }
 
     Q_INVOKABLE QVariantList getAppsForFile(const QString& filePath);
     Q_INVOKABLE QVariantList getAvailableSharingServices();
@@ -42,6 +47,7 @@ public:
 
 
 private:
+    explicit AppIntegration(QObject* parent = nullptr);
     void scanDesktopFiles();
     void scanCustomActions();
 

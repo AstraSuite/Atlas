@@ -79,6 +79,20 @@ StyledRect {
 
     Connections {
         target: AppController
+        function onFolderItemCountChanged() {
+            if (mainModel) mainModel.refresh();
+            if (splitModel) splitModel.refresh();
+        }
+
+        function onDefaultSortFieldChanged() {
+            if (mainModel) mainModel.sortField = AppController.defaultSortField;
+            if (splitModel) splitModel.sortField = AppController.defaultSortField;
+        }
+        function onDefaultSortOrderChanged() {
+            const order = AppController.defaultSortOrder === 0 ? Qt.AscendingOrder : Qt.DescendingOrder;
+            if (mainModel) mainModel.sortOrder = order;
+            if (splitModel) splitModel.sortOrder = order;
+        }
         function onDateFormatChanged() {
             if (mainModel) mainModel.refresh();
             if (splitModel) splitModel.refresh();
@@ -99,6 +113,7 @@ StyledRect {
     signal createNewFolder()
     signal createNewFile()
     signal itemOpened(var item, int pane)
+    signal itemOpenedInNewTab(var item)
 
     color: Colours.tPalette.m3surfaceContainer
 
@@ -139,6 +154,12 @@ StyledRect {
                 path: root.activeTab ? root.activeTab.currentPath : ""
                 searchQuery: (root.isSplit && root.activePane === 1) ? "" : root.searchQuery
                 showHidden: AppController.showHidden
+                showDirsFirst: AppController.showDirsFirst
+
+                Component.onCompleted: {
+                    sortField = AppController.defaultSortField;
+                    sortOrder = AppController.defaultSortOrder === 0 ? Qt.AscendingOrder : Qt.DescendingOrder;
+                }
             }
 
             Loader {
@@ -256,6 +277,12 @@ StyledRect {
                 path: (root.activeTab && root.activeTab.splitPath) ? root.activeTab.splitPath : ""
                 searchQuery: (root.isSplit && root.activePane === 1) ? root.searchQuery : ""
                 showHidden: AppController.showHidden
+                showDirsFirst: AppController.showDirsFirst
+
+                Component.onCompleted: {
+                    sortField = AppController.defaultSortField;
+                    sortOrder = AppController.defaultSortOrder === 0 ? Qt.AscendingOrder : Qt.DescendingOrder;
+                }
             }
 
             Loader {
@@ -301,6 +328,7 @@ StyledRect {
             paneIndex: 0
             zoomSize: root.zoomSize
             onOpenItem: item => root.handleOpen(item, 0)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 0;
                 root.itemContextMenu(item, x, y);
@@ -324,6 +352,7 @@ StyledRect {
             activeTab: root.activeTab
             paneIndex: 0
             onOpenItem: item => root.handleOpen(item, 0)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 0;
                 root.itemContextMenu(item, x, y);
@@ -347,6 +376,7 @@ StyledRect {
             activeTab: root.activeTab
             paneIndex: 0
             onOpenItem: item => root.handleOpen(item, 0)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 0;
                 root.itemContextMenu(item, x, y);
@@ -371,6 +401,7 @@ StyledRect {
             paneIndex: 1
             zoomSize: root.zoomSize
             onOpenItem: item => root.handleOpen(item, 1)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 1;
                 root.itemContextMenu(item, x, y);
@@ -394,6 +425,7 @@ StyledRect {
             activeTab: root.activeTab
             paneIndex: 1
             onOpenItem: item => root.handleOpen(item, 1)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 1;
                 root.itemContextMenu(item, x, y);
@@ -417,6 +449,7 @@ StyledRect {
             activeTab: root.activeTab
             paneIndex: 1
             onOpenItem: item => root.handleOpen(item, 1)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 1;
                 root.itemContextMenu(item, x, y);
@@ -464,6 +497,34 @@ StyledRect {
         if (loader && loader.item) {
             loader.item.selectedPaths = [];
         }
+    }
+
+    function selectByPattern(pattern) {
+        const trimmed = (pattern || "").trim();
+        if (trimmed.length === 0)
+            return;
+
+        const escaped = trimmed.replace(/[.+^${}()|[\]\\]/g, "\\$&")
+                               .replace(/\*/g, ".*")
+                               .replace(/\?/g, ".");
+        let matcher;
+        try {
+            matcher = new RegExp("^" + escaped + "$", "i");
+        } catch (e) {
+            return;
+        }
+
+        const loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
+        if (!activeModel || !loader || !loader.item)
+            return;
+
+        let matched = [];
+        for (let i = 0; i < activeModel.count; ++i) {
+            const e = activeModel.get(i);
+            if (e && matcher.test(e.name))
+                matched.push(e.path);
+        }
+        loader.item.selectedPaths = matched;
     }
 
     function invertSelection() {

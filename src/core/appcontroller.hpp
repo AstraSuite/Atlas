@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QQmlEngine>
+#include <QJSEngine>
+
 #include <QObject>
 #include <QVariantMap>
 #include <QString>
@@ -17,10 +20,16 @@ class AppController : public QObject {
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
     Q_PROPERTY(QString initialDirectory READ initialDirectory WRITE setInitialDirectory NOTIFY initialDirectoryChanged)
     Q_PROPERTY(QString filterLabel READ filterLabel WRITE setFilterLabel NOTIFY filterLabelChanged)
+    Q_PROPERTY(QStringList filters READ filters WRITE setFilters NOTIFY filtersChanged)
     Q_PROPERTY(bool directoryOnly READ directoryOnly WRITE setDirectoryOnly NOTIFY directoryOnlyChanged)
+    Q_PROPERTY(bool saveMode READ saveMode NOTIFY saveModeChanged)
+    Q_PROPERTY(QString suggestedName READ suggestedName NOTIFY suggestedNameChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
     Q_PROPERTY(bool confirmPermanentDelete READ confirmPermanentDelete WRITE setConfirmPermanentDelete NOTIFY confirmPermanentDeleteChanged)
+    Q_PROPERTY(bool restoreTabs READ restoreTabs WRITE setRestoreTabs NOTIFY restoreTabsChanged)
+    Q_PROPERTY(bool confirmMoveToTrash READ confirmMoveToTrash WRITE setConfirmMoveToTrash NOTIFY confirmMoveToTrashChanged)
     Q_PROPERTY(int dateFormat READ dateFormat WRITE setDateFormat NOTIFY dateFormatChanged)
+    Q_PROPERTY(QString customDateFormat READ customDateFormat WRITE setCustomDateFormat NOTIFY customDateFormatChanged)
     Q_PROPERTY(bool thumbnailsEnabled READ thumbnailsEnabled WRITE setThumbnailsEnabled NOTIFY thumbnailsEnabledChanged)
     Q_PROPERTY(int thumbnailMaxMb READ thumbnailMaxMb WRITE setThumbnailMaxMb NOTIFY thumbnailMaxMbChanged)
     Q_PROPERTY(bool showSizeColumn READ showSizeColumn WRITE setShowSizeColumn NOTIFY showSizeColumnChanged)
@@ -36,7 +45,9 @@ class AppController : public QObject {
     Q_PROPERTY(int defaultSortOrder READ defaultSortOrder WRITE setDefaultSortOrder NOTIFY defaultSortOrderChanged)
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst NOTIFY showDirsFirstChanged)
     Q_PROPERTY(bool directorySpecificViews READ directorySpecificViews WRITE setDirectorySpecificViews NOTIFY directorySpecificViewsChanged)
+    Q_PROPERTY(bool showFreeSpace READ showFreeSpace WRITE setShowFreeSpace NOTIFY showFreeSpaceChanged)
     Q_PROPERTY(int placesIconSize READ placesIconSize WRITE setPlacesIconSize NOTIFY placesIconSizeChanged)
+    Q_PROPERTY(int folderItemCount READ folderItemCount WRITE setFolderItemCount NOTIFY folderItemCountChanged)
     Q_PROPERTY(QString selectedPath READ selectedPath NOTIFY selectedPathChanged)
     Q_PROPERTY(int iconThemeVersion READ iconThemeVersion NOTIFY iconThemeVersionChanged)
     Q_PROPERTY(bool menuShowSecondaryEditor READ menuShowSecondaryEditor WRITE setMenuShowSecondaryEditor NOTIFY menuPreferencesChanged)
@@ -49,9 +60,11 @@ class AppController : public QObject {
     Q_PROPERTY(bool showNetworkSection READ showNetworkSection WRITE setShowNetworkSection NOTIFY showNetworkSectionChanged)
 
 public:
-    explicit AppController(QObject* parent = nullptr);
 
     static AppController* instance();
+    static AppController* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
+        return instance();
+    }
 
     [[nodiscard]] int iconThemeVersion() const { return m_iconThemeVersion; }
     Q_INVOKABLE void triggerIconReload();
@@ -71,11 +84,25 @@ public:
     [[nodiscard]] bool directoryOnly() const { return m_directoryOnly; }
     void setDirectoryOnly(bool dirOnly);
 
+    [[nodiscard]] bool saveMode() const { return m_saveMode; }
+    void setSaveMode(bool save);
+    [[nodiscard]] QString suggestedName() const { return m_suggestedName; }
+    void setSuggestedName(const QString& name);
+    Q_INVOKABLE static bool fileExists(const QString& path);
+
     [[nodiscard]] bool showHidden() const { return m_showHidden; }
     [[nodiscard]] bool confirmPermanentDelete() const { return m_confirmPermanentDelete; }
     void setConfirmPermanentDelete(bool confirm);
+
+    [[nodiscard]] bool restoreTabs() const { return m_restoreTabs; }
+    void setRestoreTabs(bool restore);
+    [[nodiscard]] bool confirmMoveToTrash() const { return m_confirmMoveToTrash; }
+    void setConfirmMoveToTrash(bool confirm);
     [[nodiscard]] int dateFormat() const { return m_dateFormat; }
     void setDateFormat(int format);
+
+    [[nodiscard]] QString customDateFormat() const { return m_customDateFormat; }
+    void setCustomDateFormat(const QString& pattern);
     Q_INVOKABLE static bool shiftPressed();
     [[nodiscard]] bool thumbnailsEnabled() const { return m_thumbnailsEnabled; }
     void setThumbnailsEnabled(bool enabled);
@@ -121,9 +148,14 @@ public:
     Q_INVOKABLE QVariantMap directoryView(const QString& path) const;
     Q_INVOKABLE void rememberDirectoryView(const QString& path, int viewMode, int sortField, int sortOrder);
     Q_INVOKABLE void forgetDirectoryViews();
+    [[nodiscard]] bool showFreeSpace() const { return m_showFreeSpace; }
+    void setShowFreeSpace(bool show);
 
     [[nodiscard]] int placesIconSize() const { return m_placesIconSize; }
     void setPlacesIconSize(int size);
+
+    [[nodiscard]] int folderItemCount() const { return m_folderItemCount; }
+    void setFolderItemCount(int mode);
 
     [[nodiscard]] QString selectedPath() const { return m_selectedPath; }
     void setSelectedPath(const QString& path);
@@ -161,9 +193,14 @@ signals:
     void filterLabelChanged();
     void filtersChanged();
     void directoryOnlyChanged();
+    void saveModeChanged();
+    void suggestedNameChanged();
     void showHiddenChanged();
     void confirmPermanentDeleteChanged();
+    void restoreTabsChanged();
+    void confirmMoveToTrashChanged();
     void dateFormatChanged();
+    void customDateFormatChanged();
     void thumbnailsEnabledChanged();
     void thumbnailMaxMbChanged();
     void showSizeColumnChanged();
@@ -179,7 +216,9 @@ signals:
     void defaultSortOrderChanged();
     void showDirsFirstChanged();
     void directorySpecificViewsChanged();
+    void showFreeSpaceChanged();
     void placesIconSizeChanged();
+    void folderItemCountChanged();
     void selectedPathChanged();
     void iconThemeVersionChanged();
     void menuPreferencesChanged();
@@ -188,13 +227,19 @@ signals:
     void rejected();
 
 private:
+    explicit AppController(QObject* parent = nullptr);
     QString m_title = "Select a file";
     QString m_initialDirectory;
     QString m_filterLabel = "All files";
     QStringList m_filters = { "*" };
     bool m_directoryOnly = false;
+    bool m_saveMode = false;
+    QString m_suggestedName;
     bool m_showHidden = false;
     bool m_confirmPermanentDelete = true;
+    QString m_customDateFormat = QStringLiteral("yyyy-MM-dd hh:mm");
+    bool m_restoreTabs = false;
+    bool m_confirmMoveToTrash = false;
     int m_dateFormat = 1;
     bool m_thumbnailsEnabled = true;
     int m_thumbnailMaxMb = 0;
@@ -212,7 +257,9 @@ private:
     bool m_showDirsFirst = true;
     bool m_directorySpecificViews = false;
     QVariantMap m_directoryViews;
+    bool m_showFreeSpace = true;
     int m_placesIconSize = 20;
+    int m_folderItemCount = 0;
     QString m_selectedPath;
     int m_iconThemeVersion = 0;
     bool m_menuShowSecondaryEditor = true;

@@ -9,6 +9,7 @@ MouseArea {
 
     property bool expanded: false
     property var targetPaths: []
+    property bool permanent: true
 
     signal confirmed(var paths)
 
@@ -93,14 +94,14 @@ MouseArea {
                 spacing: Tokens.spacing.small
 
                 MaterialIcon {
-                    text: "delete_forever"
-                    color: Colours.palette.m3error
+                    text: root.permanent ? "delete_forever" : "delete"
+                    color: root.permanent ? Colours.palette.m3error : Colours.palette.m3primary
                     fontStyle: Tokens.font.icon.medium
                 }
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("Delete permanently")
+                    text: root.permanent ? qsTr("Delete permanently") : qsTr("Move to trash")
                     color: Colours.palette.m3onSurface
                     font: Tokens.font.title.medium
                 }
@@ -108,10 +109,20 @@ MouseArea {
 
             StyledText {
                 Layout.fillWidth: true
-                text: root.targetPaths.length === 1 ? qsTr("\"%1\" will be deleted permanently. This cannot be undone.").arg(root.targetPaths.length > 0 ? root.targetPaths[0].split("/").pop() : "") : qsTr("%n items will be deleted permanently. This cannot be undone.", "", root.targetPaths.length)
+                text: {
+                    const name = root.targetPaths.length > 0 ? root.targetPaths[0].split("/").pop() : "";
+                    if (root.permanent) {
+                        return root.targetPaths.length === 1
+                            ? qsTr("\"%1\" will be deleted permanently. This cannot be undone.").arg(name)
+                            : qsTr("%1 items will be deleted permanently. This cannot be undone.").arg(root.targetPaths.length);
+                    }
+                    return root.targetPaths.length === 1
+                        ? qsTr("\"%1\" will be moved to the trash.").arg(name)
+                        : qsTr("%1 items will be moved to the trash.").arg(root.targetPaths.length);
+                }
                 color: Colours.palette.m3onSurfaceVariant
                 font: Tokens.font.body.medium
-                wrapMode: Text.WordWrap
+                wrapMode: Text.Wrap
             }
 
             RowLayout {
@@ -130,11 +141,11 @@ MouseArea {
 
                 TextButton {
                     type: ButtonBase.Filled
-                    activeColour: Colours.palette.m3error
-                    activeOnColour: Colours.palette.m3onError
-                    inactiveColour: Colours.palette.m3error
-                    inactiveOnColour: Colours.palette.m3onError
-                    text: qsTr("Delete")
+                    activeColour: root.permanent ? Colours.palette.m3error : Colours.palette.m3primary
+                    activeOnColour: root.permanent ? Colours.palette.m3onError : Colours.palette.m3onPrimary
+                    inactiveColour: root.permanent ? Colours.palette.m3error : Colours.palette.m3primary
+                    inactiveOnColour: root.permanent ? Colours.palette.m3onError : Colours.palette.m3onPrimary
+                    text: root.permanent ? qsTr("Delete") : qsTr("Move to Trash")
                     onClicked: root.accept()
                 }
             }

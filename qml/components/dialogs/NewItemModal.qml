@@ -12,6 +12,7 @@ MouseArea {
     property string icon: "note_add"
     property string initialText: ""
     property string targetRenamePath: ""
+    property string templateSource: ""
 
     signal accepted(string text)
 
@@ -47,6 +48,7 @@ MouseArea {
         } else {
             input.focus = false;
             targetRenamePath = "";
+            templateSource = "";
             if (typeof splitContainer !== "undefined" && splitContainer) {
                 splitContainer.focusActiveView();
             }

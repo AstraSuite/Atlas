@@ -209,7 +209,22 @@ void FileChooserPortal::SaveFile(const QDBusObjectPath& handle,
         filterLabel = options.value("accept_label").toString();
     }
 
-    launchPrismPicker(dialogTitle, initialDir, false, filters, filterLabel, handle, message);
+    QString suggestedName;
+    if (options.contains(QStringLiteral("current_name")))
+        suggestedName = options.value(QStringLiteral("current_name")).toString();
+
+    if (options.contains(QStringLiteral("current_file"))) {
+        const QString current = QFile::decodeName(options.value(QStringLiteral("current_file")).toByteArray());
+        const QFileInfo info(current.trimmed());
+        if (!info.filePath().isEmpty()) {
+            if (suggestedName.isEmpty())
+                suggestedName = info.fileName();
+            if (initialDir.isEmpty())
+                initialDir = info.absolutePath();
+        }
+    }
+
+    launchPrismPicker(dialogTitle, initialDir, false, filters, filterLabel, handle, message, false, {}, true, suggestedName);
 }
 
 void FileChooserPortal::SaveFiles(const QDBusObjectPath& handle,
@@ -255,7 +270,9 @@ void FileChooserPortal::launchPrismPicker(const QString& title,
                                          const QDBusObjectPath& handle,
                                          const QDBusMessage& message,
                                          bool isSaveFiles,
-                                         const QStringList& fileList) {
+                                         const QStringList& fileList,
+                                         bool saveMode,
+                                         const QString& suggestedName) {
     QString handleStr = handle.path();
     auto* process = new QProcess(this);
     auto* reqObj = new PortalRequest(handleStr, this);
@@ -287,6 +304,11 @@ void FileChooserPortal::launchPrismPicker(const QString& title,
     }
     if (!filterLabel.isEmpty()) {
         args << QStringLiteral("-l") << filterLabel;
+    }
+    if (saveMode) {
+        args << QStringLiteral("--save");
+        if (!suggestedName.isEmpty())
+            args << QStringLiteral("--name") << suggestedName;
     }
 
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
