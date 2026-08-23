@@ -152,7 +152,24 @@ QVariantList FileUtils::templates() {
         QVariantMap entry;
         entry.insert(QStringLiteral("name"), fi.fileName());
         entry.insert(QStringLiteral("path"), fi.absoluteFilePath());
-        entry.insert(QStringLiteral("icon"), iconForFile(fi.fileName(), false, mimeTypeForFile(fi.absoluteFilePath())));
+        const QString mime = mimeTypeForFile(fi.absoluteFilePath());
+        QString glyph = QStringLiteral("description");
+        if (mime.startsWith(QLatin1String("image/")))
+            glyph = QStringLiteral("image");
+        else if (mime.startsWith(QLatin1String("audio/")))
+            glyph = QStringLiteral("music_note");
+        else if (mime.startsWith(QLatin1String("video/")))
+            glyph = QStringLiteral("movie");
+        else if (mime.contains(QLatin1String("shellscript")) || mime.contains(QLatin1String("executable")))
+            glyph = QStringLiteral("terminal");
+        else if (mime.contains(QLatin1String("spreadsheet")) || mime.contains(QLatin1String("csv")))
+            glyph = QStringLiteral("table");
+        else if (mime.contains(QLatin1String("presentation")))
+            glyph = QStringLiteral("slideshow");
+        else if (mime.contains(QLatin1String("pdf")))
+            glyph = QStringLiteral("picture_as_pdf");
+
+        entry.insert(QStringLiteral("icon"), glyph);
         entries.append(entry);
     }
 
