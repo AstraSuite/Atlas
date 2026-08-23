@@ -34,6 +34,9 @@ ApplicationWindow {
     property bool pickerActive: typeof isPickerMode !== "undefined" ? isPickerMode : false
     property real zoomLevel: 80
 
+    Component.onCompleted: zoomLevel = AppController.iconZoomLevel
+    onZoomLevelChanged: AppController.iconZoomLevel = Math.round(zoomLevel)
+
     function getActiveDirectory() {
         if (!TabManager.currentTab) return "";
         return (TabManager.currentTab.isSplit && TabManager.currentTab.activePane === 1)

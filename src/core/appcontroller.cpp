@@ -44,6 +44,7 @@ AppController::AppController(QObject* parent)
     m_defaultSortOrder = settings.value("preferences/defaultSortOrder", 0).toInt();
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
+    m_iconZoomLevel = qBound(48, settings.value("session/iconZoomLevel", 80).toInt(), 180);
     m_dateFormat = settings.value("preferences/dateFormat", 1).toInt();
     FileUtils::setDateFormat(m_dateFormat);
     m_thumbnailsEnabled = settings.value("preferences/thumbnailsEnabled", true).toBool();
@@ -119,6 +120,18 @@ void AppController::setConfirmPermanentDelete(bool confirm) {
         settings.setValue("session/confirmPermanentDelete", confirm);
         emit confirmPermanentDeleteChanged();
     }
+}
+
+void AppController::setIconZoomLevel(int level) {
+    const int clamped = qBound(48, level, 180);
+    if (m_iconZoomLevel == clamped)
+        return;
+
+    m_iconZoomLevel = clamped;
+
+    QSettings settings("prism", "prism");
+    settings.setValue("session/iconZoomLevel", clamped);
+    emit iconZoomLevelChanged();
 }
 
 void AppController::setDateFormat(int format) {
