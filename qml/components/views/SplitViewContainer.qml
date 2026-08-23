@@ -101,6 +101,7 @@ StyledRect {
                 path: root.activeTab ? root.activeTab.currentPath : ""
                 searchQuery: (root.isSplit && root.activePane === 1) ? "" : root.searchQuery
                 showHidden: AppController.showHidden
+                caseSensitiveSort: AppController.caseSensitiveSort
             }
 
             Loader {
@@ -218,6 +219,7 @@ StyledRect {
                 path: (root.activeTab && root.activeTab.splitPath) ? root.activeTab.splitPath : ""
                 searchQuery: (root.isSplit && root.activePane === 1) ? root.searchQuery : ""
                 showHidden: AppController.showHidden
+                caseSensitiveSort: AppController.caseSensitiveSort
             }
 
             Loader {

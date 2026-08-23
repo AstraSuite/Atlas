@@ -35,6 +35,7 @@ class AppController : public QObject {
     Q_PROPERTY(int defaultSortField READ defaultSortField WRITE setDefaultSortField NOTIFY defaultSortFieldChanged)
     Q_PROPERTY(int defaultSortOrder READ defaultSortOrder WRITE setDefaultSortOrder NOTIFY defaultSortOrderChanged)
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst NOTIFY showDirsFirstChanged)
+    Q_PROPERTY(bool caseSensitiveSort READ caseSensitiveSort WRITE setCaseSensitiveSort NOTIFY caseSensitiveSortChanged)
     Q_PROPERTY(int placesIconSize READ placesIconSize WRITE setPlacesIconSize NOTIFY placesIconSizeChanged)
     Q_PROPERTY(QString selectedPath READ selectedPath NOTIFY selectedPathChanged)
     Q_PROPERTY(int iconThemeVersion READ iconThemeVersion NOTIFY iconThemeVersionChanged)
@@ -115,6 +116,9 @@ public:
     [[nodiscard]] bool showDirsFirst() const { return m_showDirsFirst; }
     void setShowDirsFirst(bool dirsFirst);
 
+    [[nodiscard]] bool caseSensitiveSort() const { return m_caseSensitiveSort; }
+    void setCaseSensitiveSort(bool sensitive);
+
     [[nodiscard]] int placesIconSize() const { return m_placesIconSize; }
     void setPlacesIconSize(int size);
 
@@ -171,6 +175,7 @@ signals:
     void defaultSortFieldChanged();
     void defaultSortOrderChanged();
     void showDirsFirstChanged();
+    void caseSensitiveSortChanged();
     void placesIconSizeChanged();
     void selectedPathChanged();
     void iconThemeVersionChanged();
@@ -202,6 +207,7 @@ private:
     int m_defaultSortField = 0;
     int m_defaultSortOrder = 0;
     bool m_showDirsFirst = true;
+    bool m_caseSensitiveSort = false;
     int m_placesIconSize = 20;
     QString m_selectedPath;
     int m_iconThemeVersion = 0;

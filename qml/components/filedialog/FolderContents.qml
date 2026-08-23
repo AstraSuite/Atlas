@@ -16,6 +16,7 @@ Item {
         id: fsModel
         path: root.dialog.currentPath
         showHidden: root.dialog.showHidden
+        caseSensitiveSort: AppController.caseSensitiveSort
         onPathChanged: view.currentIndex = -1
     }
 

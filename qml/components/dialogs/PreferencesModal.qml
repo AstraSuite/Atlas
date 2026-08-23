@@ -602,6 +602,15 @@ MouseArea {
                                     checked: AppController.showDirsFirst
                                     onToggled: val => AppController.showDirsFirst = val
                                 }
+
+                                ToggleRow {
+                                    icon: "match_case"
+                                    text: qsTr("Case-Sensitive Sorting")
+                                    subtext: qsTr("Sort uppercase names before lowercase ones instead of mixing them")
+                                    checked: AppController.caseSensitiveSort
+                                    onToggled: checked => AppController.caseSensitiveSort = checked
+                                }
+
                             }
 
                             Item { implicitHeight: Tokens.padding.small }

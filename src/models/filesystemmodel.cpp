@@ -137,6 +137,14 @@ void FileSystemModel::setShowDirsFirst(bool dirsFirst) {
     }
 }
 
+void FileSystemModel::setCaseSensitiveSort(bool sensitive) {
+    if (m_caseSensitiveSort != sensitive) {
+        m_caseSensitiveSort = sensitive;
+        emit caseSensitiveSortChanged();
+        applyFilterAndSort();
+    }
+}
+
 void FileSystemModel::setSortField(SortField field) {
     if (m_sortField != field) {
         m_sortField = field;
@@ -568,6 +576,13 @@ QList<FileSystemEntry*> FileSystemModel::calculateFilteredAndSorted(const QList<
     collator.setCaseSensitivity(Qt::CaseInsensitive);
     collator.setNumericMode(true);
 
+    const bool caseSensitive = m_caseSensitiveSort;
+    auto compareText = [&collator, caseSensitive](const QString& a, const QString& b) -> int {
+        if (caseSensitive)
+            return QString::compare(a, b, Qt::CaseSensitive);
+        return collator.compare(a, b);
+    };
+
     auto comparator = [&](FileSystemEntry* a, FileSystemEntry* b) -> bool {
         if (m_showDirsFirst && a->isDir() != b->isDir()) {
             return a->isDir();
@@ -576,21 +591,21 @@ QList<FileSystemEntry*> FileSystemModel::calculateFilteredAndSorted(const QList<
         int res = 0;
         switch (m_sortField) {
         case SortByName:
-            res = collator.compare(a->name(), b->name());
+            res = compareText(a->name(), b->name());
             break;
         case SortBySize:
             if (a->size() < b->size()) res = -1;
             else if (a->size() > b->size()) res = 1;
-            else res = collator.compare(a->name(), b->name());
+            else res = compareText(a->name(), b->name());
             break;
         case SortByDate:
             if (a->lastModified() < b->lastModified()) res = -1;
             else if (a->lastModified() > b->lastModified()) res = 1;
-            else res = collator.compare(a->name(), b->name());
+            else res = compareText(a->name(), b->name());
             break;
         case SortByType:
-            res = collator.compare(a->mimeDescription(), b->mimeDescription());
-            if (res == 0) res = collator.compare(a->name(), b->name());
+            res = compareText(a->mimeDescription(), b->mimeDescription());
+            if (res == 0) res = compareText(a->name(), b->name());
             break;
         }
 
