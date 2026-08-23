@@ -26,6 +26,7 @@ class AppController : public QObject {
     Q_PROPERTY(QString suggestedName READ suggestedName NOTIFY suggestedNameChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
     Q_PROPERTY(bool confirmPermanentDelete READ confirmPermanentDelete WRITE setConfirmPermanentDelete NOTIFY confirmPermanentDeleteChanged)
+    Q_PROPERTY(bool restoreTabs READ restoreTabs WRITE setRestoreTabs NOTIFY restoreTabsChanged)
     Q_PROPERTY(bool confirmMoveToTrash READ confirmMoveToTrash WRITE setConfirmMoveToTrash NOTIFY confirmMoveToTrashChanged)
     Q_PROPERTY(int dateFormat READ dateFormat WRITE setDateFormat NOTIFY dateFormatChanged)
     Q_PROPERTY(bool thumbnailsEnabled READ thumbnailsEnabled WRITE setThumbnailsEnabled NOTIFY thumbnailsEnabledChanged)
@@ -89,6 +90,8 @@ public:
     [[nodiscard]] bool confirmPermanentDelete() const { return m_confirmPermanentDelete; }
     void setConfirmPermanentDelete(bool confirm);
 
+    [[nodiscard]] bool restoreTabs() const { return m_restoreTabs; }
+    void setRestoreTabs(bool restore);
     [[nodiscard]] bool confirmMoveToTrash() const { return m_confirmMoveToTrash; }
     void setConfirmMoveToTrash(bool confirm);
     [[nodiscard]] int dateFormat() const { return m_dateFormat; }
@@ -176,6 +179,7 @@ signals:
     void suggestedNameChanged();
     void showHiddenChanged();
     void confirmPermanentDeleteChanged();
+    void restoreTabsChanged();
     void confirmMoveToTrashChanged();
     void dateFormatChanged();
     void thumbnailsEnabledChanged();
@@ -211,6 +215,7 @@ private:
     QString m_suggestedName;
     bool m_showHidden = false;
     bool m_confirmPermanentDelete = true;
+    bool m_restoreTabs = false;
     bool m_confirmMoveToTrash = false;
     int m_dateFormat = 1;
     bool m_thumbnailsEnabled = true;

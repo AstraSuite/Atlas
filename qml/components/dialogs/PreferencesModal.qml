@@ -330,6 +330,14 @@ MouseArea {
                                 }
 
                                 ToggleRow {
+                                    icon: "tab_duplicate"
+                                    text: qsTr("Restore Tabs on Startup")
+                                    subtext: qsTr("Reopen the tabs that were open when the window was last closed")
+                                    checked: AppController.restoreTabs
+                                    onToggled: checked => AppController.restoreTabs = checked
+                                }
+
+                                ToggleRow {
                                     icon: "delete"
                                     text: qsTr("Confirm Move to Trash")
                                     subtext: qsTr("Ask before moving files to the trash")
