@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
 
     auto* appIntegration = prism::core::AppIntegration::instance();
     auto* papirusWatcher = prism::core::PapirusWatcher::instance();
-    auto* placesModel = new prism::core::PlacesModel(&app);
+    auto* placesModel = prism::core::PlacesModel::instance();
     auto* driveManager = new prism::core::DriveManager(&app);
     auto* networkManager = prism::core::NetworkManager::instance();
 
