@@ -11,6 +11,7 @@ StyledRect {
     required property var activeModel
     property var activeTab: null
     property int selectedCount: 0
+    property string selectedName: ""
     property string selectedSizeFormatted: ""
     property real zoomLevel: 80
     signal zoomChanged(real level)
@@ -37,10 +38,17 @@ StyledRect {
 
         // Selected summary
         StyledText {
+            Layout.maximumWidth: root.width * 0.6
             visible: root.selectedCount > 0
-            text: qsTr("•  %1 selected %2").arg(root.selectedCount).arg(root.selectedSizeFormatted.length > 0 ? `(${root.selectedSizeFormatted})` : "")
+            text: {
+                const size = root.selectedSizeFormatted.length > 0 ? ` (${root.selectedSizeFormatted})` : "";
+                if (root.selectedCount === 1 && root.selectedName.length > 0)
+                    return qsTr("•  %1%2").arg(root.selectedName).arg(size);
+                return qsTr("•  %1 selected%2").arg(root.selectedCount).arg(size);
+            }
             color: Colours.palette.m3primary
             font: Tokens.font.label.medium
+            elide: Text.ElideMiddle
         }
 
         StyledText {

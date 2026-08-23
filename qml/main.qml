@@ -286,6 +286,13 @@ ApplicationWindow {
                         activeTab: TabManager.currentTab
                         zoomLevel: window.zoomLevel
                         selectedCount: splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths.length : (contextMenu.targetItem ? 1 : 0)
+                        selectedName: {
+                            if (splitContainer.selectedPaths.length === 1)
+                                return splitContainer.selectedPaths[0].split("/").pop();
+                            if (splitContainer.selectedPaths.length === 0 && contextMenu.targetItem)
+                                return contextMenu.targetItem.name;
+                            return "";
+                        }
                         selectedSizeFormatted: contextMenu.targetItem ? (contextMenu.targetItem.isDir ? "" : contextMenu.targetItem.formattedSize) : ""
                         onZoomChanged: level => window.zoomLevel = level
                         onGitRequested: {
