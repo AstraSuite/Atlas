@@ -46,6 +46,7 @@ AppController::AppController(QObject* parent)
     m_defaultSortField = settings.value("preferences/defaultSortField", 0).toInt();
     m_defaultSortOrder = settings.value("preferences/defaultSortOrder", 0).toInt();
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
+    m_caseSensitiveSort = settings.value("preferences/caseSensitiveSort", false).toBool();
     m_directorySpecificViews = settings.value("preferences/directorySpecificViews", false).toBool();
 
     const QByteArray viewsJson = settings.value("preferences/directoryViews").toString().toUtf8();
@@ -131,6 +132,15 @@ void AppController::setConfirmPermanentDelete(bool confirm) {
         QSettings settings("prism", "prism");
         settings.setValue("session/confirmPermanentDelete", confirm);
         emit confirmPermanentDeleteChanged();
+    }
+}
+
+void AppController::setCaseSensitiveSort(bool sensitive) {
+    if (m_caseSensitiveSort != sensitive) {
+        m_caseSensitiveSort = sensitive;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/caseSensitiveSort", sensitive);
+        emit caseSensitiveSortChanged();
     }
 }
 
