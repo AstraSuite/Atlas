@@ -34,6 +34,20 @@ StyledRect {
     Layout.fillWidth: true
     implicitHeight: buttonHeight
 
+    Behavior on implicitWidth {
+        Anim {
+            duration: Tokens.anim.durations.expressiveFastSpatial
+            easing: Tokens.anim.expressiveFastSpatial
+        }
+    }
+
+    Behavior on width {
+        Anim {
+            duration: Tokens.anim.durations.expressiveFastSpatial
+            easing: Tokens.anim.expressiveFastSpatial
+        }
+    }
+
     topLeftRadius: (root.checked || (root.horizontal ? root.first : root.first)) ? Tokens.rounding.large : Tokens.rounding.extraSmall
     topRightRadius: (root.checked || (root.horizontal ? root.last : root.first)) ? Tokens.rounding.large : Tokens.rounding.extraSmall
     bottomLeftRadius: (root.checked || (root.horizontal ? root.first : root.last)) ? Tokens.rounding.large : Tokens.rounding.extraSmall

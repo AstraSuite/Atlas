@@ -513,7 +513,7 @@ ApplicationWindow {
         // New Item / Rename Modal
         BulkRenameModal {
             id: bulkRenameModal
-            onApplied: names => FileOperations.bulkRename(bulkRenameModal.targets.map(entry => entry.path), names)
+            onApplied: (paths, names) => FileOperations.bulkRename(paths, names)
         }
 
         NewItemModal {

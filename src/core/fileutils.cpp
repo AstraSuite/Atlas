@@ -184,6 +184,9 @@ QVariantList FileUtils::describePaths(const QStringList& paths) {
         entry.insert(QStringLiteral("path"), fi.absoluteFilePath());
         entry.insert(QStringLiteral("name"), fi.fileName());
         entry.insert(QStringLiteral("isDir"), fi.isDir());
+        entry.insert(QStringLiteral("modified"), fi.lastModified().toMSecsSinceEpoch());
+        entry.insert(QStringLiteral("created"), fi.birthTime().isValid() ? fi.birthTime().toMSecsSinceEpoch() : fi.lastModified().toMSecsSinceEpoch());
+        entry.insert(QStringLiteral("accessed"), fi.lastRead().isValid() ? fi.lastRead().toMSecsSinceEpoch() : fi.lastModified().toMSecsSinceEpoch());
         entries.append(entry);
     }
 

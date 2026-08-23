@@ -17,11 +17,21 @@ StyledRect {
     property bool horizontal: true
     property int buttonHeight: 40
 
-    property color activeColor: Colours.palette.m3primaryContainer
-    property color inactiveColor: Colours.tPalette.m3surfaceContainerHigh
-    property color hoverColor: Colours.tPalette.m3surfaceContainerHighest
-    property color activeOnColor: Colours.palette.m3onPrimaryContainer
-    property color inactiveOnColor: Colours.palette.m3onSurface
+    property color activeColor: (parent && "activeColor" in parent && parent.activeColor !== undefined)
+        ? parent.activeColor
+        : Colours.palette.m3primaryContainer
+    property color inactiveColor: (parent && "inactiveColor" in parent && parent.inactiveColor !== undefined)
+        ? parent.inactiveColor
+        : Colours.tPalette.m3surfaceContainerHigh
+    property color hoverColor: (parent && "hoverColor" in parent && parent.hoverColor !== undefined)
+        ? parent.hoverColor
+        : Colours.tPalette.m3surfaceContainerHighest
+    property color activeOnColor: (parent && "activeOnColor" in parent && parent.activeOnColor !== undefined)
+        ? parent.activeOnColor
+        : Colours.palette.m3onPrimaryContainer
+    property color inactiveOnColor: (parent && "inactiveOnColor" in parent && parent.inactiveOnColor !== undefined)
+        ? parent.inactiveOnColor
+        : Colours.palette.m3onSurface
     property color activeIconColor: activeOnColor
     property color inactiveIconColor: Colours.palette.m3onSurfaceVariant
 
@@ -35,6 +45,20 @@ StyledRect {
     Layout.preferredHeight: buttonHeight
     implicitHeight: buttonHeight
     implicitWidth: contentRow.implicitWidth + Tokens.padding.large * 2
+
+    Behavior on implicitWidth {
+        Anim {
+            duration: Tokens.anim.durations.expressiveFastSpatial
+            easing: Tokens.anim.expressiveFastSpatial
+        }
+    }
+
+    Behavior on width {
+        Anim {
+            duration: Tokens.anim.durations.expressiveFastSpatial
+            easing: Tokens.anim.expressiveFastSpatial
+        }
+    }
 
     topLeftRadius: (root.checked || (root.horizontal ? root.first : root.first)) ? Tokens.rounding.large : Tokens.rounding.extraSmall
     topRightRadius: (root.checked || (root.horizontal ? root.last : root.first)) ? Tokens.rounding.large : Tokens.rounding.extraSmall

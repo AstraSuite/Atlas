@@ -6,7 +6,7 @@ import "../containers"
 import "../controls"
 import prism
 
-Item {
+MouseArea {
     id: root
 
     property bool expanded: false
@@ -43,6 +43,21 @@ Item {
     visible: opacity > 0.01
     opacity: expanded ? 1.0 : 0.0
     enabled: expanded
+    hoverEnabled: expanded
+    cursorShape: expanded ? Qt.ArrowCursor : undefined
+    z: 100
+
+    onClicked: {
+        if (!NetworkManager.isConnecting) {
+            root.expanded = false;
+        }
+    }
+    onWheel: wheel => wheel.accepted = true
+    Keys.onEscapePressed: {
+        if (!NetworkManager.isConnecting) {
+            root.expanded = false;
+        }
+    }
 
     Behavior on opacity {
         Anim { type: Anim.FastEffects }
@@ -65,15 +80,6 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: Qt.alpha(Colours.palette.m3scrim, 0.45)
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                if (!NetworkManager.isConnecting) {
-                    root.expanded = false;
-                }
-            }
-        }
     }
 
     // Dialog Card
@@ -96,6 +102,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             onClicked: mouse => mouse.accepted = true
+            onWheel: wheel => wheel.accepted = true
         }
 
         ColumnLayout {

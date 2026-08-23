@@ -98,6 +98,7 @@ MouseArea {
     Behavior on opacity { Anim { type: Anim.FastEffects } }
 
     onClicked: activityTimer.restart()
+    onWheel: wheel => wheel.accepted = true
     onPositionChanged: {
         showControls = true;
         activityTimer.restart();
