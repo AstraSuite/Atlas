@@ -527,7 +527,7 @@ MouseArea {
                                     color: modeBtn.isCurrent
                                         ? Colours.palette.m3onPrimaryContainer
                                         : (modeStateLayer.containsMouse ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant)
-                                    fontStyle: Tokens.font.icon.extraSmall
+                                    fontStyle: Tokens.font.icon.small
                                     fill: modeBtn.isCurrent ? 1 : 0
 
                                     Behavior on color { CAnim { duration: Tokens.anim.durations.expressiveFastEffects } }
