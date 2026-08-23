@@ -1,4 +1,5 @@
 #include "fileoperations.hpp"
+#include "recentfiles.hpp"
 #include "trashlocations.hpp"
 #include <unistd.h>
 
@@ -550,6 +551,18 @@ void FileOperations::moveToTrash(const QStringList& paths) {
             emit operationFinished(allSuccess, allSuccess ? tr("Moved to trash") : tr("Failed to trash some items"));
         });
     });
+}
+
+void FileOperations::removeFromRecent(const QStringList& paths) {
+    if (paths.isEmpty())
+        return;
+
+    for (const QString& path : paths)
+        prism::core::RecentFiles::forget(path);
+
+    emit operationFinished(true, paths.size() == 1
+        ? tr("Removed one item from Recent")
+        : tr("Removed %1 items from Recent").arg(paths.size()));
 }
 
 void FileOperations::restoreFromTrash(const QString& targetPath) {

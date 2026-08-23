@@ -26,6 +26,7 @@ MouseArea {
     }
 
     readonly property bool isTrash: currentDir.indexOf("Trash") !== -1 || currentDir.indexOf("trash:") !== -1 || (targetItem && targetItem.isTrashItem)
+    readonly property bool isRecent: currentDir.startsWith("recent:")
     readonly property bool isArchive: targetItem && (
         targetItem.name.endsWith(".zip") || targetItem.name.endsWith(".tar.gz") ||
         targetItem.name.endsWith(".tar.xz") || targetItem.name.endsWith(".tar.zst") ||
@@ -243,6 +244,9 @@ MouseArea {
                             } else {
                                 list.push({ text: qsTr("Move to Trash"), icon: "delete", action: "trash" });
                             }
+                        }
+                        if (root.isRecent) {
+                            list.push({ text: qsTr("Remove From Recent"), icon: "playlist_remove", action: "removeFromRecent" });
                         }
                         list.push({ text: qsTr("Properties"), icon: "info", action: "properties" });
 
