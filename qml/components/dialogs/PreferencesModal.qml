@@ -586,7 +586,6 @@ MouseArea {
 
                             SplitButtonRow {
                                 first: true
-                                last: true
                                 last: AppController.dateFormat !== 3
                                 label: qsTr("Date Format")
                                 subtext: qsTr("Format: %1").arg(FileUtils.formatDateTime(new Date(), AppController.dateFormat))
