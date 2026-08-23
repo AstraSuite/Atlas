@@ -43,6 +43,18 @@ StyledRect {
             font: Tokens.font.label.medium
         }
 
+        StyledText {
+            visible: AppController.showFreeSpace && text.length > 0
+            text: {
+                if (!AppController.showFreeSpace || !root.activeTab)
+                    return "";
+                const free = FileUtils.freeSpaceFor(root.activeTab.currentPath);
+                return free.length > 0 ? qsTr("•  %1 free").arg(free) : "";
+            }
+            color: Colours.palette.m3onSurfaceVariant
+            font: Tokens.font.label.medium
+        }
+
         Item {
             Layout.fillWidth: true
         }

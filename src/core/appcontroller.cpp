@@ -43,6 +43,7 @@ AppController::AppController(QObject* parent)
     m_defaultSortField = settings.value("preferences/defaultSortField", 0).toInt();
     m_defaultSortOrder = settings.value("preferences/defaultSortOrder", 0).toInt();
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
+    m_showFreeSpace = settings.value("preferences/showFreeSpace", true).toBool();
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
     m_dateFormat = settings.value("preferences/dateFormat", 1).toInt();
     FileUtils::setDateFormat(m_dateFormat);
@@ -118,6 +119,15 @@ void AppController::setConfirmPermanentDelete(bool confirm) {
         QSettings settings("prism", "prism");
         settings.setValue("session/confirmPermanentDelete", confirm);
         emit confirmPermanentDeleteChanged();
+    }
+}
+
+void AppController::setShowFreeSpace(bool show) {
+    if (m_showFreeSpace != show) {
+        m_showFreeSpace = show;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showFreeSpace", show);
+        emit showFreeSpaceChanged();
     }
 }
 

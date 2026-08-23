@@ -50,6 +50,7 @@ public:
     Q_INVOKABLE static QString toLocalFile(const QUrl& url);
     Q_INVOKABLE static QString baseName(const QString& path);
     Q_INVOKABLE static QVariantList describePaths(const QStringList& paths);
+    Q_INVOKABLE static QString freeSpaceFor(const QString& path);
     Q_INVOKABLE static bool isImage(const QString& path);
     Q_INVOKABLE static bool isVideo(const QString& path);
     Q_INVOKABLE static bool isAudio(const QString& path);
