@@ -333,11 +333,16 @@ ApplicationWindow {
                     let serviceId = action.substring(7);
                     AppIntegration.shareFiles(serviceId, targetPaths);
                 } else if (action === "rename" && item) {
-                    newItemModal.title = qsTr("Rename");
-                    newItemModal.icon = "drive_file_rename_outline";
-                    newItemModal.targetRenamePath = item.path;
-                    newItemModal.initialText = item.name;
-                    newItemModal.expanded = true;
+                    if (targetPaths.length > 1) {
+                        bulkRenameModal.targets = FileUtils.describePaths(targetPaths);
+                        bulkRenameModal.expanded = true;
+                    } else {
+                        newItemModal.title = qsTr("Rename");
+                        newItemModal.icon = "drive_file_rename_outline";
+                        newItemModal.targetRenamePath = item.path;
+                        newItemModal.initialText = item.name;
+                        newItemModal.expanded = true;
+                    }
                 } else if (action === "trash" && item) {
                     FileOperations.moveToTrash(targetPaths);
                 } else if (action === "delete" && item) {
@@ -462,6 +467,11 @@ ApplicationWindow {
         }
 
         // New Item / Rename Modal
+        BulkRenameModal {
+            id: bulkRenameModal
+            onApplied: names => FileOperations.bulkRename(bulkRenameModal.targets.map(entry => entry.path), names)
+        }
+
         NewItemModal {
             id: newItemModal
             onAccepted: text => {

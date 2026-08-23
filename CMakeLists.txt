@@ -138,6 +138,7 @@ qt_add_qml_module(prism_app
         qml/components/dialogs/GitModal.qml
         qml/components/dialogs/CompressModal.qml
         qml/components/dialogs/OperationsModal.qml
+        qml/components/dialogs/BulkRenameModal.qml
         qml/components/dialogs/ConfirmDeleteModal.qml
         qml/components/dialogs/VectorBloomOverlay.qml
         qml/components/dialogs/RunnerGameModal.qml

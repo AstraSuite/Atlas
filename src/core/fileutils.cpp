@@ -118,6 +118,25 @@ QString FileUtils::baseName(const QString& path) {
     return QFileInfo(path).fileName();
 }
 
+QVariantList FileUtils::describePaths(const QStringList& paths) {
+    QVariantList entries;
+    entries.reserve(paths.size());
+
+    for (const QString& path : paths) {
+        const QFileInfo fi(path);
+        if (!fi.exists())
+            continue;
+
+        QVariantMap entry;
+        entry.insert(QStringLiteral("path"), fi.absoluteFilePath());
+        entry.insert(QStringLiteral("name"), fi.fileName());
+        entry.insert(QStringLiteral("isDir"), fi.isDir());
+        entries.append(entry);
+    }
+
+    return entries;
+}
+
 bool FileUtils::isImage(const QString& path) {
     if (path.isEmpty()) return false;
     static const QMimeDatabase db;

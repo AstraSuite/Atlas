@@ -123,6 +123,7 @@ public:
     Q_INVOKABLE void restoreFromTrash(const QString& trashInfoPath);
     Q_INVOKABLE void emptyTrash();
     Q_INVOKABLE void renameFile(const QString& oldPath, const QString& newName);
+    Q_INVOKABLE void bulkRename(const QStringList& paths, const QStringList& newNames);
     Q_INVOKABLE void createDirectory(const QString& parentDir, const QString& name);
     Q_INVOKABLE void createFile(const QString& parentDir, const QString& name, const QString& content = "");
     Q_INVOKABLE void duplicateFile(const QString& path);
@@ -150,7 +151,8 @@ private:
             CreateDirectory,
             Move,
             Copy,
-            MoveToTrash
+            MoveToTrash,
+            BulkRename
         } type;
         QString oldPath;
         QString newPath;
