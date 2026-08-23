@@ -36,20 +36,20 @@ Item {
     // Sound Effects
     SoundEffect {
         id: soundPress
-        source: "qrc:/qt/qml/prism/assets/runner/sounds/press.ogg"
+        source: "qrc:/qt/qml/prism/assets/runner/sounds/press.wav"
     }
 
     SoundEffect {
         id: soundHit
-        source: "qrc:/qt/qml/prism/assets/runner/sounds/hit.ogg"
+        source: "qrc:/qt/qml/prism/assets/runner/sounds/hit.wav"
     }
 
     SoundEffect {
         id: soundScore
-        source: "qrc:/qt/qml/prism/assets/runner/sounds/reached.ogg"
+        source: "qrc:/qt/qml/prism/assets/runner/sounds/reached.wav"
     }
 
-    // Modal Scrim
+    // Scrim
     Rectangle {
         anchors.fill: parent
         color: Qt.alpha(Colours.palette.m3scrim, 0.65)
@@ -60,14 +60,14 @@ Item {
         }
     }
 
-    // Modal Dialog Box
+    // Dialog Box
     StyledRect {
         id: dialogBox
         anchors.centerIn: parent
-        width: Math.min(parent.width - 32, 920)
-        height: Math.min(parent.height - 48, 520)
+        width: Math.min(parent.width - 32, 960)
+        height: Math.min(parent.height - 48, 560)
         radius: Tokens.rounding.large
-        color: RunnerGame.isNightMode ? "#202124" : "#f7f7f7"
+        color: RunnerGame.isNightMode ? "#202124" : "#ffffff"
 
         layer.enabled: true
         layer.effect: Mask {
@@ -136,7 +136,7 @@ Item {
                 }
             }
 
-            // Game Playfield Area
+            // Canvas Game View Area
             Item {
                 id: gameContainer
                 Layout.fillWidth: true
@@ -155,8 +155,8 @@ Item {
                         ctx.save();
                         ctx.clearRect(0, 0, width, height);
 
-                        // Fill canvas background seamlessly
-                        ctx.fillStyle = RunnerGame.isNightMode ? "#202124" : "#f7f7f7";
+                        let bgC = RunnerGame.bgColor;
+                        ctx.fillStyle = "rgb(" + bgC + "," + bgC + "," + bgC + ")";
                         ctx.fillRect(0, 0, width, height);
 
                         if (!isImageLoaded(spritePath)) {
@@ -165,160 +165,91 @@ Item {
                             return;
                         }
 
-                        // Responsive scaling centered in the canvas
-                        let sf = Math.min(width / 600.0, height / 150.0);
-                        let offsetX = (width - 600 * sf) / 2.0;
-                        let offsetY = (height - 150 * sf) / 2.0;
+                        // 1280 x 720 base viewport scaling
+                        let sf = Math.min(width / 1280.0, height / 720.0);
+                        let offsetX = (width - 1280 * sf) / 2.0;
+                        let offsetY = (height - 720 * sf) / 2.0;
 
                         ctx.translate(offsetX, offsetY);
 
-                        let intro = RunnerGame.introProgress;
-                        let isWaiting = (RunnerGame.state === 0);
-                        let isPlaying = (RunnerGame.state === 1);
-                        let isCrashed = (RunnerGame.state === 2);
-
-                        // Night Mode Stars & Moon
-                        if (RunnerGame.isNightMode) {
-                            ctx.drawImage(spritePath, 954, 2, 40, 80, 500 * sf, 15 * sf, 20 * sf, 40 * sf);
-                            let stars = RunnerGame.stars;
-                            for (let i = 0; i < stars.length; ++i) {
-                                let st = stars[i];
-                                ctx.drawImage(spritePath, 1276, 2, 18, 18, st.x * sf, st.y * sf, 9 * sf, 9 * sf);
-                            }
+                        // Sun / Moon
+                        if (bgC < 200) {
+                            // Moon
+                            ctx.drawImage(spritePath, 1034, 2, 40, 80, 620 * sf, 200 * sf, 40 * sf, 80 * sf);
+                            // Stars
+                            ctx.drawImage(spritePath, 1274, 39, 18, 17, 200 * sf, 200 * sf, 18 * sf, 17 * sf);
+                            ctx.drawImage(spritePath, 1274, 39, 18, 17, 800 * sf, 300 * sf, 18 * sf, 17 * sf);
+                        } else {
+                            // Sun
+                            ctx.drawImage(spritePath, 1074, 2, 80, 80, 600 * sf, 200 * sf, 80 * sf, 80 * sf);
                         }
 
                         // Clouds
-                        if (!isWaiting) {
-                            let clouds = RunnerGame.clouds;
-                            for (let i = 0; i < clouds.length; ++i) {
-                                let c = clouds[i];
-                                ctx.drawImage(spritePath, 166, 2, 92, 28, c.x * sf, c.y * sf, 46 * sf, 14 * sf);
-                            }
+                        let clouds = RunnerGame.clouds;
+                        for (let i = 0; i < clouds.length; ++i) {
+                            let c = clouds[i];
+                            ctx.drawImage(spritePath, 166, 2, 92, 27, c.x * sf, c.y * sf, 92 * sf, 27 * sf);
                         }
 
-                        // Ground Horizon Segments (Continuous dual-chunk scrolling)
-                        let groundY = 127 * sf;
-                        ctx.save();
-                        if (isWaiting) {
-                            ctx.beginPath();
-                            ctx.rect(0, 0, 44 * sf, 150 * sf);
-                            ctx.clip();
-                        } else if (intro < 1.0) {
-                            ctx.beginPath();
-                            let visW = 44.0 + (600.0 - 44.0) * intro;
-                            ctx.rect(0, 0, visW * sf, 150 * sf);
-                            ctx.clip();
-                        }
-
-                        let segs = RunnerGame.groundSegments;
-                        for (let i = 0; i < segs.length; ++i) {
-                            let seg = segs[i];
-                            ctx.drawImage(spritePath, seg.sourceX, 104, 1200, 24, seg.x * sf, groundY, 600 * sf, 12 * sf);
-                        }
-                        ctx.restore();
+                        // Ground continuous segments
+                        let go = RunnerGame.groundOffset * sf;
+                        ctx.drawImage(spritePath, 2, 104, 2440, 26, go, 520 * sf, 2440 * sf, 26 * sf);
+                        ctx.drawImage(spritePath, 2, 104, 2440, 26, go + 2400 * sf, 520 * sf, 2440 * sf, 26 * sf);
+                        ctx.drawImage(spritePath, 2, 104, 2440, 26, go + 4800 * sf, 520 * sf, 2440 * sf, 26 * sf);
 
                         // Obstacles
                         let obstacles = RunnerGame.obstacles;
                         for (let i = 0; i < obstacles.length; ++i) {
                             let obs = obstacles[i];
-                            let ox = obs.x * sf;
-                            let oType = obs.type;
-                            let size = obs.size || 1;
-
-                            if (oType === 0) {
-                                // Small Cactus
-                                let sw = 34 * size;
-                                let dw = 17 * size * sf;
-                                let dh = 35 * sf;
-                                let oy = (140 - 35) * sf;
-                                ctx.drawImage(spritePath, 446, 2, sw, 70, ox, oy, dw, dh);
-                            } else if (oType === 1) {
-                                // Large Cactus
-                                let sw = 50 * size;
-                                let dw = 25 * size * sf;
-                                let dh = 50 * sf;
-                                let oy = (140 - 50) * sf;
-                                ctx.drawImage(spritePath, 652, 2, sw, 100, ox, oy, dw, dh);
-                            } else if (oType === 2) {
-                                // Pterodactyl
-                                let frame = obs.frame || 0;
-                                let sx = (frame === 0) ? 260 : 352;
-                                let dw = 46 * sf;
-                                let dh = 40 * sf;
-                                let oy = obs.y * sf;
-                                ctx.drawImage(spritePath, sx, 2, 92, 80, ox, oy, dw, dh);
-                            }
+                            ctx.drawImage(spritePath, obs.sx, obs.sy, obs.sw, obs.sh, obs.x * sf, obs.y * sf, obs.width * sf, obs.height * sf);
                         }
 
-                        // T-Rex Character
-                        let tX = RunnerGame.playerX * sf;
-                        let tY = RunnerGame.playerY * sf;
-                        let pFrame = RunnerGame.playerFrame;
-                        let isDucking = RunnerGame.isDucking;
+                        // Dino Player
+                        let dx = RunnerGame.playerX * sf;
+                        let dy = RunnerGame.playerY * sf;
+                        let dsx = RunnerGame.dinoSpriteX;
+                        let dsy = RunnerGame.dinoSpriteY;
+                        let dsw = RunnerGame.dinoSpriteW;
+                        let dsh = RunnerGame.dinoSpriteH;
 
-                        if (isDucking && !isCrashed) {
-                            let sx = (pFrame === 4) ? 2324 : 2206;
-                            let dw = 59 * sf;
-                            let dh = 29 * sf;
-                            let oy = (RunnerGame.playerY + 18) * sf;
-                            ctx.drawImage(spritePath, sx, 36, 118, 58, tX, oy, dw, dh);
+                        if (RunnerGame.isDucking && RunnerGame.state !== 2) {
+                            ctx.drawImage(spritePath, dsx, dsy, dsw, dsh, dx, (dy + 30) * sf, dsw * sf, dsh * sf);
                         } else {
-                            let sx = 1678;
-                            if (isCrashed) {
-                                sx = 2030; // Crashed eyes
-                            } else if (isPlaying) {
-                                if (RunnerGame.isJumping) {
-                                    sx = 1678;
-                                } else {
-                                    sx = (pFrame === 0) ? 1854 : 1942;
-                                }
-                            } else if (isWaiting) {
-                                sx = (pFrame === 1) ? 1766 : 1678;
-                            }
-
-                            let dw = 44 * sf;
-                            let dh = 47 * sf;
-                            ctx.drawImage(spritePath, sx, 2, 88, 94, tX, tY, dw, dh);
+                            ctx.drawImage(spritePath, dsx, dsy, dsw, dsh, dx, dy * sf, dsw * sf, dsh * sf);
                         }
 
-                        // Score & High Score
-                        function drawScoreDigits(scoreVal, targetX, alpha) {
-                            let sStr = ("00000" + scoreVal).slice(-5);
-                            ctx.save();
-                            ctx.globalAlpha = alpha;
+                        // Digits rendering helper
+                        function drawScore(val, targetX) {
+                            let sStr = ("00000" + val).slice(-5);
+                            let digitsMap = {
+                                '0': 1294, '1': 1316, '2': 1334, '3': 1354, '4': 1374,
+                                '5': 1394, '6': 1414, '7': 1434, '8': 1454, '9': 1474
+                            };
                             for (let d = 0; d < 5; ++d) {
-                                let digit = parseInt(sStr[d]);
-                                let sx = 1294 + digit * 20;
-                                ctx.drawImage(spritePath, sx, 2, 20, 24, (targetX + d * 11) * sf, 12 * sf, 10 * sf, 12 * sf);
+                                let ch = sStr[d];
+                                let sx = digitsMap[ch] || 1294;
+                                ctx.drawImage(spritePath, sx, 2, 18, 21, (targetX + d * 20) * sf, 167 * sf, 18 * sf, 21 * sf);
                             }
-                            ctx.restore();
                         }
 
-                        if (!isWaiting || RunnerGame.score > 0 || RunnerGame.highScore > 0) {
-                            if (RunnerGame.highScore > 0) {
-                                ctx.save();
-                                ctx.globalAlpha = 0.55;
-                                ctx.drawImage(spritePath, 1494, 2, 40, 24, 460 * sf, 12 * sf, 20 * sf, 12 * sf);
-                                ctx.restore();
-                                drawScoreDigits(RunnerGame.highScore, 485, 0.55);
-                            }
-
-                            drawScoreDigits(RunnerGame.score, 545, 1.0);
+                        // High score & Current score
+                        if (RunnerGame.highScore > 0) {
+                            ctx.drawImage(spritePath, 1494, 2, 38, 21, 955 * sf, 167 * sf, 38 * sf, 21 * sf);
+                            drawScore(RunnerGame.highScore, 1010);
                         }
+                        drawScore(RunnerGame.score, 1140);
 
                         // Game Over Panel
-                        if (isCrashed) {
-                            let goW = 191 * sf;
-                            let goH = 11 * sf;
-                            let goX = (300 - 191 / 2) * sf;
-                            let goY = 40 * sf;
-                            ctx.drawImage(spritePath, 1294, 28, 382, 22, goX, goY, goW, goH);
+                        if (RunnerGame.state === 2) {
+                            // "GAME OVER"
+                            let goX = (1280 / 2 - 380 / 2) * sf;
+                            let goY = (720 / 2 - 21 / 2 - 40) * sf;
+                            ctx.drawImage(spritePath, 1295, 29, 380, 21, goX, goY, 380 * sf, 21 * sf);
 
-                            let rW = 36 * sf;
-                            let rH = 32 * sf;
-                            let rX = (300 - 18) * sf;
-                            let rY = 65 * sf;
-                            ctx.drawImage(spritePath, 2, 2, 72, 64, rX, rY, rW, rH);
+                            // Restart Icon
+                            let rX = (1280 / 2 - 72 / 2) * sf;
+                            let rY = (720 / 2 - 64 / 2 + 30) * sf;
+                            ctx.drawImage(spritePath, 2, 2, 72, 64, rX, rY, 72 * sf, 64 * sf);
                         }
 
                         ctx.restore();
@@ -348,10 +279,7 @@ Item {
                     }
 
                     Keys.onReleased: event => {
-                        if (event.key === Qt.Key_Space || event.key === Qt.Key_Up) {
-                            RunnerGame.endJump();
-                            event.accepted = true;
-                        } else if (event.key === Qt.Key_Down) {
+                        if (event.key === Qt.Key_Down) {
                             RunnerGame.setDucking(false);
                             event.accepted = true;
                         }
