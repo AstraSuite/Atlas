@@ -264,7 +264,9 @@ void CatboxUploader::onUploadProgress(qint64 bytesSent, qint64 bytesTotal) {
             foProgress->setProgress(m_uploadProgress);
             const QString queued = m_uploadQueue.isEmpty()
                 ? QString()
-                : tr(", %n more queued", "", static_cast<int>(m_uploadQueue.size()));
+                : (m_uploadQueue.size() == 1
+                       ? tr(", 1 more queued")
+                       : tr(", %1 more queued").arg(m_uploadQueue.size()));
             foProgress->setStatusText(m_uploadProgress >= 1.0
                     ? tr("Waiting for %1 to process %2...").arg(m_currentService, m_currentFileName) + queued
                     : tr("Uploading %1 to %2 (%3%)")
