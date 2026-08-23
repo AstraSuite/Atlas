@@ -102,6 +102,7 @@ qt_add_qml_module(prism_app
         qml/components/MaterialIcon.qml
         qml/components/StateLayer.qml
         qml/components/Mask.qml
+        qml/components/effects/Elevation.qml
         qml/components/StyledScrollBar.qml
         qml/components/StyledToolTip.qml
         qml/components/CachingIconImage.qml
@@ -160,6 +161,8 @@ qt_add_qml_module(prism_app
         qml/components/controls/ToggleRow.qml
         qml/components/controls/SplitButton.qml
         qml/components/controls/SplitButtonRow.qml
+        qml/components/controls/Menu.qml
+        qml/components/controls/MenuItem.qml
         qml/components/controls/StyledSlider.qml
         qml/components/controls/StyledCheckBox.qml
         qml/components/controls/CircularProgress.qml

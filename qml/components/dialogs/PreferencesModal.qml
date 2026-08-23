@@ -13,6 +13,103 @@ MouseArea {
     property bool expanded: false
     property int currentCategory: 0
 
+    readonly property list<MenuItem> startupItems: [
+        MenuItem {
+            text: qsTr("Home Directory")
+        },
+        MenuItem {
+            text: qsTr("Previous Session")
+        },
+        MenuItem {
+            text: qsTr("Custom Path")
+        }
+    ]
+    readonly property var startupValues: ["home", "last", "custom"]
+
+    function startupIndex() {
+        const v = AppController.defaultStartupDirectory;
+        if (v === "home")
+            return 0;
+        if (v === "last")
+            return 1;
+        return 2;
+    }
+
+    readonly property list<MenuItem> thumbSizeItems: [
+        MenuItem {
+            text: qsTr("10 MB")
+        },
+        MenuItem {
+            text: qsTr("100 MB")
+        },
+        MenuItem {
+            text: qsTr("1 GB")
+        },
+        MenuItem {
+            text: qsTr("No limit")
+        }
+    ]
+    readonly property var thumbSizeValues: [10, 100, 1024, 0]
+
+    readonly property list<MenuItem> viewModeItems: [
+        MenuItem {
+            text: qsTr("Grid View")
+        },
+        MenuItem {
+            text: qsTr("Details View")
+        },
+        MenuItem {
+            text: qsTr("Compact View")
+        }
+    ]
+    readonly property var viewModeValues: [0, 1, 2]
+
+    readonly property list<MenuItem> dateFormatItems: [
+        MenuItem {
+            text: qsTr("ISO (YYYY-MM-DD)")
+        },
+        MenuItem {
+            text: qsTr("Short (MM/DD/YY)")
+        },
+        MenuItem {
+            text: qsTr("Long (Date Time)")
+        }
+    ]
+    // Order matches dateFormatItems: ISO, Short, Long
+    readonly property var dateFormatValues: [1, 0, 2]
+
+    readonly property list<MenuItem> iconSizeItems: [
+        MenuItem {
+            text: qsTr("Small (16px)")
+        },
+        MenuItem {
+            text: qsTr("Medium (20px)")
+        },
+        MenuItem {
+            text: qsTr("Large (24px)")
+        },
+        MenuItem {
+            text: qsTr("X-Large (32px)")
+        }
+    ]
+    readonly property var iconSizeValues: [16, 20, 24, 32]
+
+    readonly property list<MenuItem> sortFieldItems: [
+        MenuItem {
+            text: qsTr("Name")
+        },
+        MenuItem {
+            text: qsTr("Size")
+        },
+        MenuItem {
+            text: qsTr("Date")
+        },
+        MenuItem {
+            text: qsTr("Type")
+        }
+    ]
+    readonly property var sortFieldValues: [0, 1, 2, 3]
+
     anchors.fill: parent
     visible: opacity > 0.001
     enabled: expanded
@@ -149,23 +246,18 @@ MouseArea {
                             SplitButtonRow {
                                 first: true
                                 last: !(AppController.defaultStartupDirectory !== "home" && AppController.defaultStartupDirectory !== "last")
-                                icon: "home"
-                                text: qsTr("Startup Directory")
+                                label: qsTr("Startup Directory")
                                 subtext: qsTr("Initial directory opened on application launch")
-                                model: [
-                                    { id: "home", label: qsTr("Home Directory"), icon: "home" },
-                                    { id: "last", label: qsTr("Previous Session"), icon: "history" },
-                                    { id: "custom", label: qsTr("Custom Path"), icon: "folder" }
-                                ]
-                                valueKey: "id"
-                                currentValue: (AppController.defaultStartupDirectory === "home" || AppController.defaultStartupDirectory === "last") ? AppController.defaultStartupDirectory : "custom"
-                                onSelected: (val) => {
-                                    if (val === "custom") {
+                                menuItems: root.startupItems
+                                active: root.startupItems[root.startupIndex()]
+                                onSelected: item => {
+                                    const v = root.startupValues[root.startupItems.indexOf(item)];
+                                    if (v === "custom") {
                                         if (AppController.defaultStartupDirectory === "home" || AppController.defaultStartupDirectory === "last") {
                                             AppController.defaultStartupDirectory = FileUtils.home;
                                         }
                                     } else {
-                                        AppController.defaultStartupDirectory = val;
+                                        AppController.defaultStartupDirectory = v;
                                     }
                                 }
                             }
@@ -265,20 +357,13 @@ MouseArea {
                             SplitButtonRow {
                                 first: true
                                 last: true
-                                icon: "image"
-                                text: qsTr("Thumbnail Size Limit")
+                                label: qsTr("Thumbnail Size Limit")
                                 subtext: qsTr("Maximum file size for preview thumbnail generation")
                                 enabled: AppController.thumbnailsEnabled
                                 opacity: enabled ? 1 : 0.4
-                                model: [
-                                    { mb: 10, label: qsTr("10 MB") },
-                                    { mb: 100, label: qsTr("100 MB") },
-                                    { mb: 1024, label: qsTr("1 GB") },
-                                    { mb: 0, label: qsTr("No limit") }
-                                ]
-                                valueKey: "mb"
-                                currentValue: AppController.thumbnailMaxMb
-                                onSelected: val => AppController.thumbnailMaxMb = val
+                                menuItems: root.thumbSizeItems
+                                active: root.thumbSizeItems[Math.max(0, root.thumbSizeValues.indexOf(AppController.thumbnailMaxMb))]
+                                onSelected: item => AppController.thumbnailMaxMb = root.thumbSizeValues[root.thumbSizeItems.indexOf(item)]
                             }
 
                             Item { implicitHeight: 4 }
@@ -374,17 +459,11 @@ MouseArea {
                             SplitButtonRow {
                                 first: true
                                 last: true
-                                icon: "grid_view"
-                                text: qsTr("Default View Mode")
+                                label: qsTr("Default View Mode")
                                 subtext: qsTr("Initial view layout when opening directories")
-                                model: [
-                                    { mode: 0, label: qsTr("Grid View"), icon: "grid_view" },
-                                    { mode: 1, label: qsTr("Details View"), icon: "view_list" },
-                                    { mode: 2, label: qsTr("Compact View"), icon: "view_stream" }
-                                ]
-                                valueKey: "mode"
-                                currentValue: AppController.defaultViewMode
-                                onSelected: val => AppController.defaultViewMode = val
+                                menuItems: root.viewModeItems
+                                active: root.viewModeItems[Math.max(0, root.viewModeValues.indexOf(AppController.defaultViewMode))]
+                                onSelected: item => AppController.defaultViewMode = root.viewModeValues[root.viewModeItems.indexOf(item)]
                             }
 
                             Item { implicitHeight: 4 }
@@ -449,17 +528,11 @@ MouseArea {
                             SplitButtonRow {
                                 first: true
                                 last: true
-                                icon: "calendar_month"
-                                text: qsTr("Date Format")
+                                label: qsTr("Date Format")
                                 subtext: qsTr("Format: %1").arg(FileUtils.formatDateTime(new Date(), AppController.dateFormat))
-                                model: [
-                                    { mode: 1, label: qsTr("ISO (YYYY-MM-DD)"), icon: "calendar_month" },
-                                    { mode: 0, label: qsTr("Short (MM/DD/YY)"), icon: "schedule" },
-                                    { mode: 2, label: qsTr("Long (Date Time)"), icon: "event_note" }
-                                ]
-                                valueKey: "mode"
-                                currentValue: AppController.dateFormat
-                                onSelected: val => AppController.dateFormat = val
+                                menuItems: root.dateFormatItems
+                                active: root.dateFormatItems[Math.max(0, root.dateFormatValues.indexOf(AppController.dateFormat))]
+                                onSelected: item => AppController.dateFormat = root.dateFormatValues[root.dateFormatItems.indexOf(item)]
                             }
 
                             Item { implicitHeight: 4 }
@@ -476,18 +549,11 @@ MouseArea {
 
                                 SplitButtonRow {
                                     first: true
-                                    icon: "photo_size_select_small"
-                                    text: qsTr("Sidebar Icon Size")
+                                    label: qsTr("Sidebar Icon Size")
                                     subtext: qsTr("Size of icons in the navigation sidebar")
-                                    model: [
-                                        { size: 16, label: qsTr("Small (16px)"), icon: "photo_size_select_small" },
-                                        { size: 20, label: qsTr("Medium (20px)"), icon: "photo_size_select_large" },
-                                        { size: 24, label: qsTr("Large (24px)"), icon: "crop_free" },
-                                        { size: 32, label: qsTr("X-Large (32px)"), icon: "fullscreen" }
-                                    ]
-                                    valueKey: "size"
-                                    currentValue: AppController.placesIconSize
-                                    onSelected: val => AppController.placesIconSize = val
+                                    menuItems: root.iconSizeItems
+                                    active: root.iconSizeItems[Math.max(0, root.iconSizeValues.indexOf(AppController.placesIconSize))]
+                                    onSelected: item => AppController.placesIconSize = root.iconSizeValues[root.iconSizeItems.indexOf(item)]
                                 }
 
                                 ToggleRow {
@@ -514,18 +580,11 @@ MouseArea {
 
                                 SplitButtonRow {
                                     first: true
-                                    icon: "sort"
-                                    text: qsTr("Default Sort Field")
+                                    label: qsTr("Default Sort Field")
                                     subtext: qsTr("Primary criterion for sorting file entries")
-                                    model: [
-                                        { field: 0, label: qsTr("Name"), icon: "sort_by_alpha" },
-                                        { field: 1, label: qsTr("Size"), icon: "straighten" },
-                                        { field: 2, label: qsTr("Date"), icon: "schedule" },
-                                        { field: 3, label: qsTr("Type"), icon: "category" }
-                                    ]
-                                    valueKey: "field"
-                                    currentValue: AppController.defaultSortField
-                                    onSelected: val => AppController.defaultSortField = val
+                                    menuItems: root.sortFieldItems
+                                    active: root.sortFieldItems[Math.max(0, root.sortFieldValues.indexOf(AppController.defaultSortField))]
+                                    onSelected: item => AppController.defaultSortField = root.sortFieldValues[root.sortFieldItems.indexOf(item)]
                                 }
 
                                 RowButton {

@@ -1,64 +1,52 @@
 import QtQuick
 import QtQuick.Layouts
+import prism
 import "../"
 import "../containers"
-import prism
 
 ConnectedRect {
     id: root
 
-    property alias icon: iconLabel.text
-    property alias text: label.text
-    property alias subtext: subLabel.text
-    property alias model: splitBtn.model
-    property alias currentValue: splitBtn.currentValue
-    property alias valueKey: splitBtn.valueKey
-    property alias labelKey: splitBtn.labelKey
-    property alias iconKey: splitBtn.iconKey
-    property alias disabled: splitBtn.disabled
-    property color iconColor: Colours.palette.m3onSurfaceVariant
+    property alias label: label.text
+    property string subtext
+    property alias menuItems: splitButton.menuItems
+    property alias active: splitButton.active
+    property alias fallbackText: splitButton.fallbackText
+    property alias fallbackIcon: splitButton.fallbackIcon
+    property alias menuOnTop: splitButton.menuOnTop
 
-    readonly property alias splitButton: splitBtn
-
-    signal selected(var value, int index)
+    signal selected(item: MenuItem)
 
     Layout.fillWidth: true
-    implicitHeight: Math.max(56, row.implicitHeight + Tokens.padding.medium * 2)
+    implicitHeight: rowLayout.implicitHeight + rowLayout.anchors.margins * 2
+    clip: false
+    z: splitButton.expanded ? 1 : 0
 
     RowLayout {
-        id: row
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.leftMargin: Tokens.padding.large
-        anchors.rightMargin: Tokens.padding.large
-        spacing: Tokens.spacing.medium
+        id: rowLayout
 
-        MaterialIcon {
-            id: iconLabel
-            visible: text.length > 0
-            color: root.iconColor
-            fontStyle: Tokens.font.icon.medium
-            Layout.alignment: Qt.AlignVCenter
-        }
+        anchors.fill: parent
+        anchors.margins: Tokens.padding.medium
+        anchors.leftMargin: Tokens.padding.largeIncreased
+        anchors.rightMargin: Tokens.padding.largeIncreased
+        spacing: Tokens.spacing.medium
 
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignVCenter
-            spacing: 2
+            spacing: 0
 
             StyledText {
                 id: label
+
                 Layout.fillWidth: true
                 font: Tokens.font.body.small
-                color: Colours.palette.m3onSurface
                 elide: Text.ElideRight
             }
 
             StyledText {
-                id: subLabel
                 Layout.fillWidth: true
-                visible: text.length > 0
+                visible: root.subtext
+                text: root.subtext
                 color: Colours.palette.m3outline
                 font: Tokens.font.label.small
                 elide: Text.ElideRight
@@ -66,9 +54,10 @@ ConnectedRect {
         }
 
         SplitButton {
-            id: splitBtn
-            Layout.alignment: Qt.AlignVCenter
-            onSelected: (val, idx) => root.selected(val, idx)
+            id: splitButton
+
+            type: SplitButton.Tonal
+            menu.onItemSelected: item => root.selected(item)
         }
     }
 }
