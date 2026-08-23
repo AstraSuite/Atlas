@@ -7,7 +7,9 @@ Item {
 
     property var currentItem: null
 
-    implicitWidth: content.implicitWidth + Tokens.padding.medium + content.anchors.rightMargin
+    readonly property real availableWidth: parent ? parent.width - Tokens.padding.extraSmall * 2 : 0
+
+    implicitWidth: Math.min(availableWidth, content.implicitWidth + Tokens.padding.medium + content.anchors.rightMargin)
     implicitHeight: currentItem ? content.implicitHeight + Tokens.padding.medium + content.anchors.bottomMargin : 0
 
     Shape {
@@ -76,6 +78,9 @@ Item {
             anchors.bottom: parent.bottom
             anchors.rightMargin: Tokens.padding.medium - Tokens.padding.extraSmall
             anchors.bottomMargin: Tokens.padding.medium - Tokens.padding.extraSmall
+
+            width: Math.min(implicitWidth, root.availableWidth - Tokens.padding.medium - anchors.rightMargin)
+            elide: Text.ElideMiddle
 
             Connections {
                 function onCurrentItemChanged() {
