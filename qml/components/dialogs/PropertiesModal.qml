@@ -63,10 +63,10 @@ MouseArea {
         id: dialog
 
         anchors.centerIn: parent
-        width: Math.min(parent.width - 32, 480)
-        height: Math.min(parent.height - 32, 560)
-        implicitWidth: 480
-        implicitHeight: 560
+        width: Math.min(parent.width - 64, 620)
+        height: Math.min(parent.height - 64, 600)
+        implicitWidth: 620
+        implicitHeight: 600
 
         radius: Tokens.rounding.large
         color: Colours.palette.m3surfaceContainer
@@ -149,31 +149,34 @@ MouseArea {
                 RowLayout {
                     Layout.fillWidth: true
                     StyledText { Layout.preferredWidth: 110; text: meta.isDir ? qsTr("Contents:") : qsTr("Size:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.isDir ? qsTr("%1 items").arg(meta.itemCount) : meta.formattedSize; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
+                    StyledText { Layout.fillWidth: true; text: meta.isDir ? qsTr("%1 items").arg(meta.itemCount) : meta.formattedSize; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface; elide: Text.ElideRight }
                 }
                 RowLayout {
                     visible: meta.imageDimensions.length > 0
                     Layout.fillWidth: true
                     StyledText { Layout.preferredWidth: 110; text: qsTr("Dimensions:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.imageDimensions; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
+                    StyledText { Layout.fillWidth: true; text: meta.imageDimensions; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface; elide: Text.ElideRight }
                 }
 
                 Rectangle { Layout.fillWidth: true; height: 1; color: Colours.palette.m3outlineVariant; opacity: 0.5 }
 
                 RowLayout {
                     Layout.fillWidth: true
-                    StyledText { Layout.preferredWidth: 110; text: qsTr("Created:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.formattedCreated; font: Tokens.font.body.small; color: Colours.palette.m3onSurface }
+                    Layout.alignment: Qt.AlignTop
+                    StyledText { Layout.preferredWidth: 110; Layout.alignment: Qt.AlignTop; text: qsTr("Created:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                    StyledText { Layout.fillWidth: true; text: meta.formattedCreated; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
                 }
                 RowLayout {
                     Layout.fillWidth: true
-                    StyledText { Layout.preferredWidth: 110; text: qsTr("Modified:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.formattedModified; font: Tokens.font.body.small; color: Colours.palette.m3onSurface }
+                    Layout.alignment: Qt.AlignTop
+                    StyledText { Layout.preferredWidth: 110; Layout.alignment: Qt.AlignTop; text: qsTr("Modified:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                    StyledText { Layout.fillWidth: true; text: meta.formattedModified; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
                 }
                 RowLayout {
                     Layout.fillWidth: true
-                    StyledText { Layout.preferredWidth: 110; text: qsTr("Accessed:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.formattedAccessed; font: Tokens.font.body.small; color: Colours.palette.m3onSurface }
+                    Layout.alignment: Qt.AlignTop
+                    StyledText { Layout.preferredWidth: 110; Layout.alignment: Qt.AlignTop; text: qsTr("Accessed:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                    StyledText { Layout.fillWidth: true; text: meta.formattedAccessed; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
                 }
 
                 RowLayout {
