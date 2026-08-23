@@ -196,7 +196,8 @@ Item {
         deleted: {
             label: qsTr("Deletion Time"),
             width: 180,
-            sort: -1
+            sort: FileSystemModel.SortByDeleted,
+            descendingFirst: true
         }
     })
 

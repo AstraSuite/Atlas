@@ -251,6 +251,7 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
                     QDateTime dt = QDateTime::fromString(dStr, Qt::ISODate);
                     if (dt.isValid()) {
                         d.deletionTime = prism::core::FileUtils::formatDateTime(dt);
+                        d.deletionDateTime = dt;
                     } else {
                         d.deletionTime = dStr;
                     }
@@ -289,6 +290,7 @@ bool FileSystemEntry::updateFromRaw(const RawEntryData& d) {
     if (m_isText != d.isText) { m_isText = d.isText; changed = true; }
     if (m_originalPath != d.originalPath) { m_originalPath = d.originalPath; changed = true; }
     if (m_deletionTime != d.deletionTime) { m_deletionTime = d.deletionTime; changed = true; }
+    if (m_deletionDateTime != d.deletionDateTime) { m_deletionDateTime = d.deletionDateTime; changed = true; }
     if (m_isTrashItem != d.isTrashItem) { m_isTrashItem = d.isTrashItem; changed = true; }
     return changed;
 }
@@ -320,6 +322,7 @@ static FileSystemEntry* createEntryFromRawData(const RawEntryData& d, QObject* p
     entry->m_isText = d.isText;
     entry->m_originalPath = d.originalPath;
     entry->m_deletionTime = d.deletionTime;
+    entry->m_deletionDateTime = d.deletionDateTime;
     entry->m_isTrashItem = d.isTrashItem;
     return entry;
 }
@@ -591,6 +594,11 @@ QList<FileSystemEntry*> FileSystemModel::calculateFilteredAndSorted(const QList<
         case SortByType:
             res = collator.compare(a->mimeDescription(), b->mimeDescription());
             if (res == 0) res = collator.compare(a->name(), b->name());
+            break;
+        case SortByDeleted:
+            if (a->deletionDateTime() < b->deletionDateTime()) res = -1;
+            else if (a->deletionDateTime() > b->deletionDateTime()) res = 1;
+            else res = collator.compare(a->name(), b->name());
             break;
         }
 
