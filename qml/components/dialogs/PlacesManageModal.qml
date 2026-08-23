@@ -175,8 +175,8 @@ MouseArea {
                                     required property bool isCustom
 
                                     width: placesList.width
-                                    height: 46
-                                    implicitHeight: 46
+                                    height: implicitHeight
+                                    implicitHeight: Math.max(46, placeTextCol.implicitHeight + Tokens.padding.extraSmall * 2)
                                     radius: Tokens.rounding.medium
                                     color: rowHoverArea.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
 
@@ -325,7 +325,7 @@ MouseArea {
                                         anchors.right: placeActions.left
                                         anchors.rightMargin: Tokens.spacing.small
                                         anchors.verticalCenter: parent.verticalCenter
-                                        spacing: 0
+                                        spacing: 2
 
                                         StyledText {
                                             width: parent.width
@@ -388,8 +388,8 @@ MouseArea {
                                     required property var modelData
 
                                     width: devicesList.width
-                                    height: 46
-                                    implicitHeight: 46
+                                    height: implicitHeight
+                                    implicitHeight: Math.max(46, devTextCol.implicitHeight + Tokens.padding.extraSmall * 2)
                                     radius: Tokens.rounding.medium
                                     color: devHoverArea.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
 
@@ -445,7 +445,7 @@ MouseArea {
                                         anchors.right: visBtn.left
                                         anchors.rightMargin: Tokens.spacing.small
                                         anchors.verticalCenter: parent.verticalCenter
-                                        spacing: 0
+                                        spacing: 2
 
                                         StyledText {
                                             width: parent.width
