@@ -1,4 +1,5 @@
 #include "placesmodel.hpp"
+#include "recentfiles.hpp"
 #include "fileutils.hpp"
 
 #include <QDir>
@@ -270,6 +271,7 @@ void PlacesModel::loadStandardPlaces() {
     
     QString trash = home + "/.local/share/Trash/files";
     if (!m_hiddenPlaces.contains(trash) && !m_hiddenPlaces.contains("trash:"))
+        m_places.append({ tr("Recent"), RecentFiles::virtualPath(), "history", false, false, true, false, false, 0, 0 });
         m_places.append({ tr("Trash"), trash, "delete", false, false, true, false, false, 0, 0 });
 }
 
