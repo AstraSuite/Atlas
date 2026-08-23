@@ -107,78 +107,24 @@ MouseArea {
             }
 
             // Tab Bar Switcher
-            StyledRect {
+            ButtonRow {
                 Layout.fillWidth: true
-                implicitHeight: 36
-                radius: Tokens.rounding.full
-                color: Colours.tPalette.m3surfaceContainerHigh
-
-                RowLayout {
-                    anchors.fill: parent
-                    spacing: 0
-
-                    StyledRect {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: Tokens.rounding.full
-                        color: root.currentTab === 0 ? Colours.palette.m3secondaryContainer : "transparent"
-
-                        StyledText {
-                            anchors.centerIn: parent
-                            text: qsTr("General")
-                            font: Tokens.font.label.medium
-                            color: root.currentTab === 0 ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.currentTab = 0
-                        }
+                model: {
+                    let tabs = [
+                        { tab: 0, label: qsTr("General"), icon: "info" },
+                        { tab: 1, label: qsTr("Permissions"), icon: "lock" }
+                    ];
+                    if (!meta.isDir) {
+                        tabs.push({ tab: 2, label: qsTr("Checksums"), icon: "tag" });
                     }
-
-                    StyledRect {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: Tokens.rounding.full
-                        color: root.currentTab === 1 ? Colours.palette.m3secondaryContainer : "transparent"
-
-                        StyledText {
-                            anchors.centerIn: parent
-                            text: qsTr("Permissions")
-                            font: Tokens.font.label.medium
-                            color: root.currentTab === 1 ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.currentTab = 1
-                        }
-                    }
-
-                    StyledRect {
-                        visible: !meta.isDir
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: Tokens.rounding.full
-                        color: root.currentTab === 2 ? Colours.palette.m3secondaryContainer : "transparent"
-
-                        StyledText {
-                            anchors.centerIn: parent
-                            text: qsTr("Checksums")
-                            font: Tokens.font.label.medium
-                            color: root.currentTab === 2 ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.currentTab = 2;
-                                if (!meta.md5) meta.calculateChecksums();
-                            }
-                        }
+                    return tabs;
+                }
+                valueKey: "tab"
+                currentValue: root.currentTab
+                onSelected: (val) => {
+                    root.currentTab = val;
+                    if (val === 2 && !meta.md5) {
+                        meta.calculateChecksums();
                     }
                 }
             }

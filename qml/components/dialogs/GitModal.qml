@@ -131,56 +131,15 @@ MouseArea {
             }
 
             // Segmented Switcher
-            StyledRect {
+            ButtonRow {
                 Layout.fillWidth: true
-                implicitHeight: 36
-                radius: Tokens.rounding.full
-                color: Colours.tPalette.m3surfaceContainerHigh
-
-                RowLayout {
-                    anchors.fill: parent
-                    spacing: 0
-
-                    StyledRect {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: Tokens.rounding.full
-                        color: root.currentTab === 0 ? Colours.palette.m3secondaryContainer : "transparent"
-
-                        StyledText {
-                            anchors.centerIn: parent
-                            text: qsTr("Branches (%1)").arg(GitManager.branches.length)
-                            font: Tokens.font.label.medium
-                            color: root.currentTab === 0 ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.currentTab = 0
-                        }
-                    }
-
-                    StyledRect {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        radius: Tokens.rounding.full
-                        color: root.currentTab === 1 ? Colours.palette.m3secondaryContainer : "transparent"
-
-                        StyledText {
-                            anchors.centerIn: parent
-                            text: qsTr("Recent Commits (%1)").arg(GitManager.commits.length)
-                            font: Tokens.font.label.medium
-                            color: root.currentTab === 1 ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.currentTab = 1
-                        }
-                    }
-                }
+                model: [
+                    { tab: 0, label: qsTr("Branches (%1)").arg(GitManager.branches.length), icon: "fork_right" },
+                    { tab: 1, label: qsTr("Recent Commits (%1)").arg(GitManager.commits.length), icon: "history" }
+                ]
+                valueKey: "tab"
+                currentValue: root.currentTab
+                onSelected: val => root.currentTab = val
             }
 
             // Tab 0: Branches List

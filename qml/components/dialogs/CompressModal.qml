@@ -122,52 +122,18 @@ MouseArea {
                 font: Tokens.font.label.medium
             }
 
-            RowLayout {
+            ButtonRow {
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.small
-
-                Repeater {
-                    model: [
-                        { label: ".zip", format: "zip" },
-                        { label: ".tar.gz", format: "tar.gz" },
-                        { label: ".tar.xz", format: "tar.xz" },
-                        { label: ".tar.zst", format: "tar.zst" },
-                        { label: ".7z", format: "7z" }
-                    ]
-
-                    delegate: StyledRect {
-                        id: fmtChip
-                        required property int index
-                        required property var modelData
-
-                        implicitWidth: fmtRow.implicitWidth + 24
-                        implicitHeight: 34
-                        radius: Tokens.rounding.full
-                        color: root.selectedFormat === modelData.format
-                            ? Colours.palette.m3primaryContainer
-                            : (chipHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
-
-                        RowLayout {
-                            id: fmtRow
-                            anchors.centerIn: parent
-                            spacing: 4
-
-                            StyledText {
-                                text: fmtChip.modelData.label
-                                font: Tokens.font.label.large
-                                color: root.selectedFormat === fmtChip.modelData.format ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                            }
-                        }
-
-                        MouseArea {
-                            id: chipHover
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.selectedFormat = fmtChip.modelData.format
-                        }
-                    }
-                }
+                model: [
+                    { label: ".zip", format: "zip" },
+                    { label: ".tar.gz", format: "tar.gz" },
+                    { label: ".tar.xz", format: "tar.xz" },
+                    { label: ".tar.zst", format: "tar.zst" },
+                    { label: ".7z", format: "7z" }
+                ]
+                valueKey: "format"
+                currentValue: root.selectedFormat
+                onSelected: val => root.selectedFormat = val
             }
 
             // Buttons

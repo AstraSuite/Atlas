@@ -298,50 +298,19 @@ MouseArea {
                                 opacity: AppController.thumbnailsEnabled ? 1 : 0.4
                             }
 
-                            RowLayout {
+                            ButtonRow {
                                 Layout.fillWidth: true
-                                spacing: Tokens.spacing.small
                                 enabled: AppController.thumbnailsEnabled
                                 opacity: enabled ? 1 : 0.4
-
-                                Repeater {
-                                    model: [
-                                        { mb: 10, label: qsTr("10 MB") },
-                                        { mb: 100, label: qsTr("100 MB") },
-                                        { mb: 1024, label: qsTr("1 GB") },
-                                        { mb: 0, label: qsTr("No limit") }
-                                    ]
-
-                                    StyledRect {
-                                        id: limitCard
-                                        required property int index
-                                        required property var modelData
-
-                                        Layout.fillWidth: true
-                                        implicitHeight: 44
-                                        radius: Tokens.rounding.medium
-                                        readonly property bool isSelected: AppController.thumbnailMaxMb === limitCard.modelData.mb
-                                        color: isSelected
-                                            ? Colours.palette.m3primaryContainer
-                                            : (limitHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
-
-                                        StyledText {
-                                            anchors.centerIn: parent
-                                            text: limitCard.modelData.label
-                                            color: limitCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-
-                                        MouseArea {
-                                            id: limitHover
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: AppController.thumbnailMaxMb = limitCard.modelData.mb
-                                        }
-                                    }
-                                }
+                                model: [
+                                    { mb: 10, label: qsTr("10 MB") },
+                                    { mb: 100, label: qsTr("100 MB") },
+                                    { mb: 1024, label: qsTr("1 GB") },
+                                    { mb: 0, label: qsTr("No limit") }
+                                ]
+                                valueKey: "mb"
+                                currentValue: AppController.thumbnailMaxMb
+                                onSelected: val => AppController.thumbnailMaxMb = val
                             }
 
                             Item { implicitHeight: 4 }
@@ -435,57 +404,16 @@ MouseArea {
                             }
 
                             // View mode selection
-                            RowLayout {
+                            ButtonRow {
                                 Layout.fillWidth: true
-                                spacing: Tokens.spacing.small
-
-                                Repeater {
-                                    model: [
-                                        { mode: 0, label: qsTr("Grid View"), icon: "grid_view" },
-                                        { mode: 1, label: qsTr("Details View"), icon: "view_list" },
-                                        { mode: 2, label: qsTr("Compact View"), icon: "view_stream" }
-                                    ]
-
-                                    StyledRect {
-                                        id: viewCard
-                                        required property int index
-                                        required property var modelData
-
-                                        Layout.fillWidth: true
-                                        implicitHeight: 44
-                                        radius: Tokens.rounding.medium
-                                        readonly property bool isSelected: AppController.defaultViewMode === viewCard.modelData.mode
-                                        color: isSelected
-                                            ? Colours.palette.m3primaryContainer
-                                            : (viewHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
-
-                                        RowLayout {
-                                            anchors.centerIn: parent
-                                            spacing: 6
-
-                                            MaterialIcon {
-                                                text: viewCard.modelData.icon
-                                                color: viewCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
-                                                fontStyle: Tokens.font.icon.small
-                                            }
-
-                                            StyledText {
-                                                text: viewCard.modelData.label
-                                                color: viewCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                                                font: Tokens.font.body.small
-                                                elide: Text.ElideRight
-                                            }
-                                        }
-
-                                        MouseArea {
-                                            id: viewHover
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: AppController.defaultViewMode = viewCard.modelData.mode
-                                        }
-                                    }
-                                }
+                                model: [
+                                    { mode: 0, label: qsTr("Grid View"), icon: "grid_view" },
+                                    { mode: 1, label: qsTr("Details View"), icon: "view_list" },
+                                    { mode: 2, label: qsTr("Compact View"), icon: "view_stream" }
+                                ]
+                                valueKey: "mode"
+                                currentValue: AppController.defaultViewMode
+                                onSelected: val => AppController.defaultViewMode = val
                             }
 
                             Item { implicitHeight: 4 }
@@ -498,150 +426,36 @@ MouseArea {
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: Tokens.spacing.small
+                                spacing: 2
 
-                                StyledRect {
-                                    Layout.fillWidth: true
-                                    implicitHeight: 44
-                                    radius: Tokens.rounding.medium
-                                    readonly property bool isSelected: AppController.showSizeColumn
-                                    color: isSelected
-                                        ? Colours.palette.m3primaryContainer
-                                        : (colSizeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
-
-                                    RowLayout {
-                                        anchors.centerIn: parent
-                                        spacing: 6
-
-                                        MaterialIcon {
-                                            text: "straighten"
-                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
-                                            fontStyle: Tokens.font.icon.small
-                                        }
-
-                                        StyledText {
-                                            text: qsTr("Size")
-                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: colSizeHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: AppController.showSizeColumn = !AppController.showSizeColumn
-                                    }
+                                ButtonRowItem {
+                                    first: true
+                                    icon: "straighten"
+                                    text: qsTr("Size")
+                                    checked: AppController.showSizeColumn
+                                    onClicked: AppController.showSizeColumn = !AppController.showSizeColumn
                                 }
 
-                                StyledRect {
-                                    Layout.fillWidth: true
-                                    implicitHeight: 44
-                                    radius: Tokens.rounding.medium
-                                    readonly property bool isSelected: AppController.showTypeColumn
-                                    color: isSelected
-                                        ? Colours.palette.m3primaryContainer
-                                        : (colTypeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
-
-                                    RowLayout {
-                                        anchors.centerIn: parent
-                                        spacing: 6
-
-                                        MaterialIcon {
-                                            text: "category"
-                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
-                                            fontStyle: Tokens.font.icon.small
-                                        }
-
-                                        StyledText {
-                                            text: qsTr("Type")
-                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: colTypeHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: AppController.showTypeColumn = !AppController.showTypeColumn
-                                    }
+                                ButtonRowItem {
+                                    icon: "category"
+                                    text: qsTr("Type")
+                                    checked: AppController.showTypeColumn
+                                    onClicked: AppController.showTypeColumn = !AppController.showTypeColumn
                                 }
 
-                                StyledRect {
-                                    Layout.fillWidth: true
-                                    implicitHeight: 44
-                                    radius: Tokens.rounding.medium
-                                    readonly property bool isSelected: AppController.showDateColumn
-                                    color: isSelected
-                                        ? Colours.palette.m3primaryContainer
-                                        : (colDateHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
-
-                                    RowLayout {
-                                        anchors.centerIn: parent
-                                        spacing: 6
-
-                                        MaterialIcon {
-                                            text: "schedule"
-                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
-                                            fontStyle: Tokens.font.icon.small
-                                        }
-
-                                        StyledText {
-                                            text: qsTr("Date Modified")
-                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: colDateHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: AppController.showDateColumn = !AppController.showDateColumn
-                                    }
+                                ButtonRowItem {
+                                    icon: "schedule"
+                                    text: qsTr("Date Modified")
+                                    checked: AppController.showDateColumn
+                                    onClicked: AppController.showDateColumn = !AppController.showDateColumn
                                 }
 
-                                StyledRect {
-                                    Layout.fillWidth: true
-                                    implicitHeight: 44
-                                    radius: Tokens.rounding.medium
-                                    readonly property bool isSelected: AppController.showPermissionsColumn
-                                    color: isSelected
-                                        ? Colours.palette.m3primaryContainer
-                                        : (colPermissionsHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
-
-                                    RowLayout {
-                                        anchors.centerIn: parent
-                                        spacing: 6
-
-                                        MaterialIcon {
-                                            text: "lock"
-                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
-                                            fontStyle: Tokens.font.icon.small
-                                        }
-
-                                        StyledText {
-                                            text: qsTr("Permissions")
-                                            color: parent.parent.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: colPermissionsHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: AppController.showPermissionsColumn = !AppController.showPermissionsColumn
-                                    }
+                                ButtonRowItem {
+                                    last: true
+                                    icon: "lock"
+                                    text: qsTr("Permissions")
+                                    checked: AppController.showPermissionsColumn
+                                    onClicked: AppController.showPermissionsColumn = !AppController.showPermissionsColumn
                                 }
                             }
 
@@ -661,57 +475,16 @@ MouseArea {
                                 font: Tokens.font.label.large
                             }
 
-                            RowLayout {
+                            ButtonRow {
                                 Layout.fillWidth: true
-                                spacing: Tokens.spacing.small
-
-                                Repeater {
-                                    model: [
-                                        { mode: 1, label: qsTr("ISO"), icon: "calendar_month" },
-                                        { mode: 0, label: qsTr("Short"), icon: "schedule" },
-                                        { mode: 2, label: qsTr("Long"), icon: "event_note" }
-                                    ]
-
-                                    StyledRect {
-                                        id: dateCard
-                                        required property int index
-                                        required property var modelData
-
-                                        Layout.fillWidth: true
-                                        implicitHeight: 44
-                                        radius: Tokens.rounding.medium
-                                        readonly property bool isSelected: AppController.dateFormat === dateCard.modelData.mode
-                                        color: isSelected
-                                            ? Colours.palette.m3primaryContainer
-                                            : (dateHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
-
-                                        RowLayout {
-                                            anchors.centerIn: parent
-                                            spacing: 6
-
-                                            MaterialIcon {
-                                                text: dateCard.modelData.icon
-                                                color: dateCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
-                                                fontStyle: Tokens.font.icon.small
-                                            }
-
-                                            StyledText {
-                                                text: dateCard.modelData.label
-                                                color: dateCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                                                font: Tokens.font.body.small
-                                                elide: Text.ElideRight
-                                            }
-                                        }
-
-                                        MouseArea {
-                                            id: dateHover
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: AppController.dateFormat = dateCard.modelData.mode
-                                        }
-                                    }
-                                }
+                                model: [
+                                    { mode: 1, label: qsTr("ISO"), icon: "calendar_month" },
+                                    { mode: 0, label: qsTr("Short"), icon: "schedule" },
+                                    { mode: 2, label: qsTr("Long"), icon: "event_note" }
+                                ]
+                                valueKey: "mode"
+                                currentValue: AppController.dateFormat
+                                onSelected: val => AppController.dateFormat = val
                             }
 
                             StyledText {
@@ -731,58 +504,17 @@ MouseArea {
                             }
 
                             // Places Sidebar Icon Size Selection
-                            RowLayout {
+                            ButtonRow {
                                 Layout.fillWidth: true
-                                spacing: Tokens.spacing.small
-
-                                Repeater {
-                                    model: [
-                                        { size: 16, label: qsTr("Small (16px)"), icon: "photo_size_select_small" },
-                                        { size: 20, label: qsTr("Medium (20px)"), icon: "photo_size_select_large" },
-                                        { size: 24, label: qsTr("Large (24px)"), icon: "crop_free" },
-                                        { size: 32, label: qsTr("X-Large (32px)"), icon: "fullscreen" }
-                                    ]
-
-                                    StyledRect {
-                                        id: sizeCard
-                                        required property int index
-                                        required property var modelData
-
-                                        Layout.fillWidth: true
-                                        implicitHeight: 44
-                                        radius: Tokens.rounding.medium
-                                        readonly property bool isSelected: AppController.placesIconSize === sizeCard.modelData.size
-                                        color: isSelected
-                                            ? Colours.palette.m3primaryContainer
-                                            : (sizeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
-
-                                        RowLayout {
-                                            anchors.centerIn: parent
-                                            spacing: 6
-
-                                            MaterialIcon {
-                                                text: sizeCard.modelData.icon
-                                                color: sizeCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
-                                                fontStyle: Tokens.font.icon.small
-                                            }
-
-                                            StyledText {
-                                                text: sizeCard.modelData.label
-                                                color: sizeCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                                                font: Tokens.font.body.small
-                                                elide: Text.ElideRight
-                                            }
-                                        }
-
-                                        MouseArea {
-                                            id: sizeHover
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: AppController.placesIconSize = sizeCard.modelData.size
-                                        }
-                                    }
-                                }
+                                model: [
+                                    { size: 16, label: qsTr("Small (16px)"), icon: "photo_size_select_small" },
+                                    { size: 20, label: qsTr("Medium (20px)"), icon: "photo_size_select_large" },
+                                    { size: 24, label: qsTr("Large (24px)"), icon: "crop_free" },
+                                    { size: 32, label: qsTr("X-Large (32px)"), icon: "fullscreen" }
+                                ]
+                                valueKey: "size"
+                                currentValue: AppController.placesIconSize
+                                onSelected: val => AppController.placesIconSize = val
                             }
 
                             // Show Network Section in Sidebar Toggle
@@ -805,121 +537,38 @@ MouseArea {
                             }
 
                             // Sort By Row
-                            RowLayout {
+                            ButtonRow {
                                 Layout.fillWidth: true
-                                spacing: Tokens.spacing.small
-
-                                Repeater {
-                                    model: [
-                                        { field: 0, label: qsTr("Name") },
-                                        { field: 1, label: qsTr("Size") },
-                                        { field: 2, label: qsTr("Date") },
-                                        { field: 3, label: qsTr("Type") }
-                                    ]
-
-                                    StyledRect {
-                                        id: sortCard
-                                        required property int index
-                                        required property var modelData
-
-                                        Layout.fillWidth: true
-                                        implicitHeight: 38
-                                        radius: Tokens.rounding.medium
-                                        readonly property bool isSelected: AppController.defaultSortField === sortCard.modelData.field
-                                        color: isSelected
-                                            ? Colours.palette.m3primaryContainer
-                                            : (sortHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
-
-                                        StyledText {
-                                            anchors.centerIn: parent
-                                            text: sortCard.modelData.label
-                                            color: sortCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-
-                                        MouseArea {
-                                            id: sortHover
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: AppController.defaultSortField = sortCard.modelData.field
-                                        }
-                                    }
-                                }
+                                model: [
+                                    { field: 0, label: qsTr("Name") },
+                                    { field: 1, label: qsTr("Size") },
+                                    { field: 2, label: qsTr("Date") },
+                                    { field: 3, label: qsTr("Type") }
+                                ]
+                                valueKey: "field"
+                                currentValue: AppController.defaultSortField
+                                onSelected: val => AppController.defaultSortField = val
                             }
 
                             // Sort Order & Folders First
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: Tokens.spacing.small
+                                spacing: 2
 
-                                // Ascending / Descending
-                                StyledRect {
-                                    Layout.fillWidth: true
-                                    implicitHeight: 44
-                                    radius: Tokens.rounding.medium
-                                    color: orderHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
-
-                                    RowLayout {
-                                        anchors.centerIn: parent
-                                        spacing: 8
-
-                                        MaterialIcon {
-                                            text: AppController.defaultSortOrder === 0 ? "arrow_upward" : "arrow_downward"
-                                            color: Colours.palette.m3primary
-                                            fontStyle: Tokens.font.icon.small
-                                        }
-
-                                        StyledText {
-                                            text: AppController.defaultSortOrder === 0 ? qsTr("Order: Ascending") : qsTr("Order: Descending")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: orderHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: AppController.defaultSortOrder = (AppController.defaultSortOrder === 0 ? 1 : 0)
-                                    }
+                                ButtonRowItem {
+                                    first: true
+                                    icon: AppController.defaultSortOrder === 0 ? "arrow_upward" : "arrow_downward"
+                                    text: AppController.defaultSortOrder === 0 ? qsTr("Order: Ascending") : qsTr("Order: Descending")
+                                    checked: false
+                                    onClicked: AppController.defaultSortOrder = (AppController.defaultSortOrder === 0 ? 1 : 0)
                                 }
 
-                                // Show Folders First
-                                StyledRect {
-                                    Layout.fillWidth: true
-                                    implicitHeight: 44
-                                    radius: Tokens.rounding.medium
-                                    color: dirsHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
-
-                                    RowLayout {
-                                        anchors.centerIn: parent
-                                        spacing: 8
-
-                                        MaterialIcon {
-                                            text: "folder"
-                                            color: AppController.showDirsFirst ? Colours.palette.m3primary : Colours.palette.m3outline
-                                            fontStyle: Tokens.font.icon.small
-                                        }
-
-                                        StyledText {
-                                            text: qsTr("Folders First: ") + (AppController.showDirsFirst ? qsTr("Yes") : qsTr("No"))
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: dirsHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: AppController.showDirsFirst = !AppController.showDirsFirst
-                                    }
+                                ButtonRowItem {
+                                    last: true
+                                    icon: "folder"
+                                    text: qsTr("Folders First: ") + (AppController.showDirsFirst ? qsTr("Yes") : qsTr("No"))
+                                    checked: AppController.showDirsFirst
+                                    onClicked: AppController.showDirsFirst = !AppController.showDirsFirst
                                 }
                             }
 
