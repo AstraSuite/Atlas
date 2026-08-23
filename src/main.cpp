@@ -63,6 +63,8 @@ int main(int argc, char* argv[]) {
     QCommandLineOption filterOption(QStringList{ "f", "filter" }, "File extensions filter, e.g. 'png,jpg' or '*.png,*.jpg'", "filter");
     QCommandLineOption filterLabelOption(QStringList{ "l", "filter-label" }, "Filter label, e.g. 'Images'", "label");
     QCommandLineOption dirOnlyOption(QStringList{ "directory-only" }, "Select directories only");
+    QCommandLineOption saveOption(QStringList{ "save" }, "Pick a destination for saving rather than an existing file");
+    QCommandLineOption nameOption(QStringList{ "name" }, "Suggested file name when saving", "name");
     QCommandLineOption hiddenOption(QStringList{ "hidden" }, "Show hidden files by default");
     QCommandLineOption lightOption(QStringList{ "light" }, "Force light theme");
     QCommandLineOption darkOption(QStringList{ "dark" }, "Force dark theme");
@@ -73,6 +75,8 @@ int main(int argc, char* argv[]) {
     parser.addOption(filterOption);
     parser.addOption(filterLabelOption);
     parser.addOption(dirOnlyOption);
+    parser.addOption(saveOption);
+    parser.addOption(nameOption);
     parser.addOption(hiddenOption);
     parser.addOption(lightOption);
     parser.addOption(darkOption);
@@ -103,7 +107,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    bool isPickerMode = parser.isSet(pickerOption) || parser.isSet(filterOption) || parser.isSet(dirOnlyOption);
+    bool isPickerMode = parser.isSet(pickerOption) || parser.isSet(filterOption) || parser.isSet(dirOnlyOption) || parser.isSet(saveOption);
 
     auto* controller = prism::core::AppController::instance();
     controller->setTitle(parser.isSet(titleOption) ? parser.value(titleOption) : QStringLiteral("Select a file"));
@@ -129,6 +133,9 @@ int main(int argc, char* argv[]) {
         controller->setFilters(filters);
     }
     controller->setDirectoryOnly(parser.isSet(dirOnlyOption));
+    controller->setSaveMode(parser.isSet(saveOption));
+    if (parser.isSet(nameOption))
+        controller->setSuggestedName(parser.value(nameOption));
     if (parser.isSet(hiddenOption)) {
         controller->setShowHidden(true);
     }

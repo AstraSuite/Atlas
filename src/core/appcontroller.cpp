@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include "iconprovider.hpp"
+#include <QFileInfo>
 #include <QSettings>
 #include <iostream>
 
@@ -307,6 +308,24 @@ void AppController::setPlacesIconSize(int size) {
         settings.setValue("preferences/placesIconSize", size);
         emit placesIconSizeChanged();
     }
+}
+
+void AppController::setSaveMode(bool save) {
+    if (m_saveMode != save) {
+        m_saveMode = save;
+        emit saveModeChanged();
+    }
+}
+
+void AppController::setSuggestedName(const QString& name) {
+    if (m_suggestedName != name) {
+        m_suggestedName = name;
+        emit suggestedNameChanged();
+    }
+}
+
+bool AppController::fileExists(const QString& path) {
+    return QFileInfo::exists(path);
 }
 
 void AppController::accept(const QString& path) {
