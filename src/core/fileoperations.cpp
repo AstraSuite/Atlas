@@ -157,30 +157,61 @@ bool FileOperations::copyRecursively(const QString& src, const QString& dest, st
         if (!in.open(QIODevice::ReadOnly))
             return false;
 
-        QFile out(dest);
+        const QString partial = dest + QStringLiteral(".prism-partial");
+        QFile::remove(partial);
+
+        QFile out(partial);
         if (!out.open(QIODevice::WriteOnly))
             return false;
 
+        const auto abandon = [&out, &partial]() {
+            out.close();
+            QFile::remove(partial);
+            return false;
+        };
+
         QByteArray buf(64 * 1024, 0);
         while (!in.atEnd()) {
-            if (cancelFlag.load()) {
-                out.close();
-                QFile::remove(dest);
-                return false;
-            }
-            qint64 bytesRead = in.read(buf.data(), buf.size());
-            if (bytesRead > 0) {
-                out.write(buf.constData(), bytesRead);
-                processedBytes += bytesRead;
-                if (totalBytes > 0) {
-                    qreal p = static_cast<qreal>(processedBytes) / totalBytes;
-                    QMetaObject::invokeMethod(m_progress, [this, p, src]() {
-                        m_progress->setProgress(p);
-                        m_progress->setCurrentItem(src);
-                    });
-                }
+            if (cancelFlag.load())
+                return abandon();
+
+            const qint64 bytesRead = in.read(buf.data(), buf.size());
+            if (bytesRead < 0)
+                return abandon();
+            if (bytesRead == 0)
+                continue;
+
+            if (out.write(buf.constData(), bytesRead) != bytesRead)
+                return abandon();
+
+            processedBytes += bytesRead;
+            if (totalBytes > 0) {
+                qreal p = static_cast<qreal>(processedBytes) / totalBytes;
+                QMetaObject::invokeMethod(m_progress, [this, p, src]() {
+                    m_progress->setProgress(p);
+                    m_progress->setCurrentItem(src);
+                });
             }
         }
+
+        if (!out.flush())
+            return abandon();
+        out.close();
+        if (out.error() != QFile::NoError)
+            return abandon();
+
+        out.setPermissions(srcInfo.permissions());
+
+        if (QFileInfo::exists(dest) && !QFile::remove(dest)) {
+            QFile::remove(partial);
+            return false;
+        }
+
+        if (!QFile::rename(partial, dest)) {
+            QFile::remove(partial);
+            return false;
+        }
+
         return true;
     }
 }
