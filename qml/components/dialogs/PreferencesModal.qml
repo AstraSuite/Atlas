@@ -330,6 +330,14 @@ MouseArea {
                                 }
 
                                 ToggleRow {
+                                    icon: "delete"
+                                    text: qsTr("Confirm Move to Trash")
+                                    subtext: qsTr("Ask before moving files to the trash")
+                                    checked: AppController.confirmMoveToTrash
+                                    onToggled: checked => AppController.confirmMoveToTrash = checked
+                                }
+
+                                ToggleRow {
                                     icon: "image"
                                     text: qsTr("Show Thumbnails")
                                     subtext: qsTr("Preview images and videos instead of generic icons")

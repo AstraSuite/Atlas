@@ -26,6 +26,7 @@ class AppController : public QObject {
     Q_PROPERTY(QString suggestedName READ suggestedName NOTIFY suggestedNameChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
     Q_PROPERTY(bool confirmPermanentDelete READ confirmPermanentDelete WRITE setConfirmPermanentDelete NOTIFY confirmPermanentDeleteChanged)
+    Q_PROPERTY(bool confirmMoveToTrash READ confirmMoveToTrash WRITE setConfirmMoveToTrash NOTIFY confirmMoveToTrashChanged)
     Q_PROPERTY(int dateFormat READ dateFormat WRITE setDateFormat NOTIFY dateFormatChanged)
     Q_PROPERTY(bool thumbnailsEnabled READ thumbnailsEnabled WRITE setThumbnailsEnabled NOTIFY thumbnailsEnabledChanged)
     Q_PROPERTY(int thumbnailMaxMb READ thumbnailMaxMb WRITE setThumbnailMaxMb NOTIFY thumbnailMaxMbChanged)
@@ -87,6 +88,9 @@ public:
     [[nodiscard]] bool showHidden() const { return m_showHidden; }
     [[nodiscard]] bool confirmPermanentDelete() const { return m_confirmPermanentDelete; }
     void setConfirmPermanentDelete(bool confirm);
+
+    [[nodiscard]] bool confirmMoveToTrash() const { return m_confirmMoveToTrash; }
+    void setConfirmMoveToTrash(bool confirm);
     [[nodiscard]] int dateFormat() const { return m_dateFormat; }
     void setDateFormat(int format);
     Q_INVOKABLE static bool shiftPressed();
@@ -172,6 +176,7 @@ signals:
     void suggestedNameChanged();
     void showHiddenChanged();
     void confirmPermanentDeleteChanged();
+    void confirmMoveToTrashChanged();
     void dateFormatChanged();
     void thumbnailsEnabledChanged();
     void thumbnailMaxMbChanged();
@@ -206,6 +211,7 @@ private:
     QString m_suggestedName;
     bool m_showHidden = false;
     bool m_confirmPermanentDelete = true;
+    bool m_confirmMoveToTrash = false;
     int m_dateFormat = 1;
     bool m_thumbnailsEnabled = true;
     int m_thumbnailMaxMb = 0;

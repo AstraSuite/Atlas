@@ -44,10 +44,22 @@ ApplicationWindow {
     function requestPermanentDelete(paths) {
         if (!paths || paths.length === 0) return;
         if (AppController.confirmPermanentDelete) {
+            confirmDeleteModal.permanent = true;
             confirmDeleteModal.targetPaths = paths;
             confirmDeleteModal.expanded = true;
         } else {
             FileOperations.deletePermanently(paths);
+        }
+    }
+
+    function requestMoveToTrash(paths) {
+        if (!paths || paths.length === 0) return;
+        if (AppController.confirmMoveToTrash) {
+            confirmDeleteModal.permanent = false;
+            confirmDeleteModal.targetPaths = paths;
+            confirmDeleteModal.expanded = true;
+        } else {
+            FileOperations.moveToTrash(paths);
         }
     }
 
@@ -349,7 +361,7 @@ ApplicationWindow {
                         newItemModal.expanded = true;
                     }
                 } else if (action === "trash" && item) {
-                    FileOperations.moveToTrash(targetPaths);
+                    window.requestMoveToTrash(targetPaths);
                 } else if (action === "delete" && item) {
                     window.requestPermanentDelete(targetPaths);
                 } else if (action === "newFolder") {
@@ -451,7 +463,12 @@ ApplicationWindow {
         // Permanent Delete Confirmation Modal
         ConfirmDeleteModal {
             id: confirmDeleteModal
-            onConfirmed: paths => FileOperations.deletePermanently(paths)
+            onConfirmed: paths => {
+                if (confirmDeleteModal.permanent)
+                    FileOperations.deletePermanently(paths);
+                else
+                    FileOperations.moveToTrash(paths);
+            }
         }
 
         // Places & Devices Management Modal
@@ -720,7 +737,7 @@ ApplicationWindow {
             context: Qt.ApplicationShortcut
             onActivated: {
                 let paths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : (splitContainer.currentSelectedPath ? [splitContainer.currentSelectedPath] : []);
-                if (paths.length > 0) FileOperations.moveToTrash(paths);
+                if (paths.length > 0) window.requestMoveToTrash(paths);
             }
         }
 
