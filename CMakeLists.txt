@@ -159,6 +159,7 @@ qt_add_qml_module(prism_app
         qml/components/controls/RowButton.qml
         qml/components/controls/ToggleRow.qml
         qml/components/controls/SplitButton.qml
+        qml/components/controls/SplitButtonRow.qml
         qml/components/controls/StyledSlider.qml
         qml/components/controls/StyledCheckBox.qml
         qml/components/controls/CircularProgress.qml

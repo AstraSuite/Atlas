@@ -146,64 +146,26 @@ MouseArea {
                                 font: Tokens.font.label.large
                             }
 
-                            // Startup mode buttons
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: Tokens.spacing.small
-
-                                Repeater {
-                                    model: [
-                                        { id: "home", label: qsTr("Home Directory"), icon: "home" },
-                                        { id: "last", label: qsTr("Previous Session"), icon: "history" },
-                                        { id: "custom", label: qsTr("Custom Path"), icon: "folder" }
-                                    ]
-
-                                    StyledRect {
-                                        id: startModeCard
-                                        required property int index
-                                        required property var modelData
-
-                                        Layout.fillWidth: true
-                                        implicitHeight: 44
-                                        radius: Tokens.rounding.medium
-                                        readonly property bool isSelected: (startModeCard.modelData.id === "custom" && AppController.defaultStartupDirectory !== "home" && AppController.defaultStartupDirectory !== "last") || (AppController.defaultStartupDirectory === startModeCard.modelData.id)
-                                        color: isSelected
-                                            ? Colours.palette.m3primaryContainer
-                                            : (startModeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
-
-                                        RowLayout {
-                                            anchors.centerIn: parent
-                                            spacing: 6
-
-                                            MaterialIcon {
-                                                text: startModeCard.modelData.icon
-                                                color: startModeCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
-                                                fontStyle: Tokens.font.icon.small
-                                            }
-
-                                            StyledText {
-                                                text: startModeCard.modelData.label
-                                                color: startModeCard.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                                                font: Tokens.font.body.small
-                                                elide: Text.ElideRight
-                                            }
+                            SplitButtonRow {
+                                first: true
+                                last: !(AppController.defaultStartupDirectory !== "home" && AppController.defaultStartupDirectory !== "last")
+                                icon: "home"
+                                text: qsTr("Startup Directory")
+                                subtext: qsTr("Initial directory opened on application launch")
+                                model: [
+                                    { id: "home", label: qsTr("Home Directory"), icon: "home" },
+                                    { id: "last", label: qsTr("Previous Session"), icon: "history" },
+                                    { id: "custom", label: qsTr("Custom Path"), icon: "folder" }
+                                ]
+                                valueKey: "id"
+                                currentValue: (AppController.defaultStartupDirectory === "home" || AppController.defaultStartupDirectory === "last") ? AppController.defaultStartupDirectory : "custom"
+                                onSelected: (val) => {
+                                    if (val === "custom") {
+                                        if (AppController.defaultStartupDirectory === "home" || AppController.defaultStartupDirectory === "last") {
+                                            AppController.defaultStartupDirectory = FileUtils.home;
                                         }
-
-                                        MouseArea {
-                                            id: startModeHover
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                if (startModeCard.modelData.id === "custom") {
-                                                    if (AppController.defaultStartupDirectory === "home" || AppController.defaultStartupDirectory === "last") {
-                                                        AppController.defaultStartupDirectory = FileUtils.home;
-                                                    }
-                                                } else {
-                                                    AppController.defaultStartupDirectory = startModeCard.modelData.id;
-                                                }
-                                            }
-                                        }
+                                    } else {
+                                        AppController.defaultStartupDirectory = val;
                                     }
                                 }
                             }
@@ -291,15 +253,21 @@ MouseArea {
                                 }
                             }
 
+                            Item { implicitHeight: 4 }
+
                             StyledText {
-                                text: qsTr("Thumbnail Size Limit")
+                                text: qsTr("Thumbnail Generation")
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                                 opacity: AppController.thumbnailsEnabled ? 1 : 0.4
                             }
 
-                            ButtonRow {
-                                Layout.fillWidth: true
+                            SplitButtonRow {
+                                first: true
+                                last: true
+                                icon: "image"
+                                text: qsTr("Thumbnail Size Limit")
+                                subtext: qsTr("Maximum file size for preview thumbnail generation")
                                 enabled: AppController.thumbnailsEnabled
                                 opacity: enabled ? 1 : 0.4
                                 model: [
@@ -398,14 +366,17 @@ MouseArea {
                             spacing: Tokens.spacing.medium
 
                             StyledText {
-                                text: qsTr("Default View Mode")
+                                text: qsTr("Layout & View Mode")
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
 
-                            // View mode selection
-                            ButtonRow {
-                                Layout.fillWidth: true
+                            SplitButtonRow {
+                                first: true
+                                last: true
+                                icon: "grid_view"
+                                text: qsTr("Default View Mode")
+                                subtext: qsTr("Initial view layout when opening directories")
                                 model: [
                                     { mode: 0, label: qsTr("Grid View"), icon: "grid_view" },
                                     { mode: 1, label: qsTr("Details View"), icon: "view_list" },
@@ -470,62 +441,63 @@ MouseArea {
                             Item { implicitHeight: 4 }
 
                             StyledText {
-                                text: qsTr("Date Format")
+                                text: qsTr("Date & Time")
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
 
-                            ButtonRow {
-                                Layout.fillWidth: true
+                            SplitButtonRow {
+                                first: true
+                                last: true
+                                icon: "calendar_month"
+                                text: qsTr("Date Format")
+                                subtext: qsTr("Format: %1").arg(FileUtils.formatDateTime(new Date(), AppController.dateFormat))
                                 model: [
-                                    { mode: 1, label: qsTr("ISO"), icon: "calendar_month" },
-                                    { mode: 0, label: qsTr("Short"), icon: "schedule" },
-                                    { mode: 2, label: qsTr("Long"), icon: "event_note" }
+                                    { mode: 1, label: qsTr("ISO (YYYY-MM-DD)"), icon: "calendar_month" },
+                                    { mode: 0, label: qsTr("Short (MM/DD/YY)"), icon: "schedule" },
+                                    { mode: 2, label: qsTr("Long (Date Time)"), icon: "event_note" }
                                 ]
                                 valueKey: "mode"
                                 currentValue: AppController.dateFormat
                                 onSelected: val => AppController.dateFormat = val
                             }
 
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: FileUtils.formatDateTime(new Date(), AppController.dateFormat)
-                                color: Colours.palette.m3onSurfaceVariant
-                                font: Tokens.font.label.small
-                                elide: Text.ElideRight
-                            }
-
                             Item { implicitHeight: 4 }
 
                             StyledText {
-                                text: qsTr("Places Sidebar Icon Size")
+                                text: qsTr("Sidebar Navigation")
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
 
-                            // Places Sidebar Icon Size Selection
-                            ButtonRow {
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                model: [
-                                    { size: 16, label: qsTr("Small (16px)"), icon: "photo_size_select_small" },
-                                    { size: 20, label: qsTr("Medium (20px)"), icon: "photo_size_select_large" },
-                                    { size: 24, label: qsTr("Large (24px)"), icon: "crop_free" },
-                                    { size: 32, label: qsTr("X-Large (32px)"), icon: "fullscreen" }
-                                ]
-                                valueKey: "size"
-                                currentValue: AppController.placesIconSize
-                                onSelected: val => AppController.placesIconSize = val
-                            }
+                                spacing: 2
 
-                            // Show Network Section in Sidebar Toggle
-                            ToggleRow {
-                                first: true
-                                last: true
-                                icon: "cloud"
-                                text: qsTr("Show Network Section")
-                                subtext: qsTr("Display remote servers and network locations in sidebar")
-                                checked: AppController.showNetworkSection
-                                onToggled: val => AppController.showNetworkSection = val
+                                SplitButtonRow {
+                                    first: true
+                                    icon: "photo_size_select_small"
+                                    text: qsTr("Sidebar Icon Size")
+                                    subtext: qsTr("Size of icons in the navigation sidebar")
+                                    model: [
+                                        { size: 16, label: qsTr("Small (16px)"), icon: "photo_size_select_small" },
+                                        { size: 20, label: qsTr("Medium (20px)"), icon: "photo_size_select_large" },
+                                        { size: 24, label: qsTr("Large (24px)"), icon: "crop_free" },
+                                        { size: 32, label: qsTr("X-Large (32px)"), icon: "fullscreen" }
+                                    ]
+                                    valueKey: "size"
+                                    currentValue: AppController.placesIconSize
+                                    onSelected: val => AppController.placesIconSize = val
+                                }
+
+                                ToggleRow {
+                                    last: true
+                                    icon: "cloud"
+                                    text: qsTr("Show Network Section")
+                                    subtext: qsTr("Display remote servers and network locations in sidebar")
+                                    checked: AppController.showNetworkSection
+                                    onToggled: val => AppController.showNetworkSection = val
+                                }
                             }
 
                             Item { implicitHeight: 4 }
@@ -536,39 +508,40 @@ MouseArea {
                                 font: Tokens.font.label.large
                             }
 
-                            // Sort By Row
-                            ButtonRow {
-                                Layout.fillWidth: true
-                                model: [
-                                    { field: 0, label: qsTr("Name") },
-                                    { field: 1, label: qsTr("Size") },
-                                    { field: 2, label: qsTr("Date") },
-                                    { field: 3, label: qsTr("Type") }
-                                ]
-                                valueKey: "field"
-                                currentValue: AppController.defaultSortField
-                                onSelected: val => AppController.defaultSortField = val
-                            }
-
-                            // Sort Order & Folders First
-                            RowLayout {
+                            ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 2
 
-                                ButtonRowItem {
+                                SplitButtonRow {
                                     first: true
+                                    icon: "sort"
+                                    text: qsTr("Default Sort Field")
+                                    subtext: qsTr("Primary criterion for sorting file entries")
+                                    model: [
+                                        { field: 0, label: qsTr("Name"), icon: "sort_by_alpha" },
+                                        { field: 1, label: qsTr("Size"), icon: "straighten" },
+                                        { field: 2, label: qsTr("Date"), icon: "schedule" },
+                                        { field: 3, label: qsTr("Type"), icon: "category" }
+                                    ]
+                                    valueKey: "field"
+                                    currentValue: AppController.defaultSortField
+                                    onSelected: val => AppController.defaultSortField = val
+                                }
+
+                                RowButton {
                                     icon: AppController.defaultSortOrder === 0 ? "arrow_upward" : "arrow_downward"
-                                    text: AppController.defaultSortOrder === 0 ? qsTr("Order: Ascending") : qsTr("Order: Descending")
-                                    checked: false
+                                    text: qsTr("Sort Direction")
+                                    subtext: AppController.defaultSortOrder === 0 ? qsTr("Ascending (A to Z, oldest first)") : qsTr("Descending (Z to A, newest first)")
                                     onClicked: AppController.defaultSortOrder = (AppController.defaultSortOrder === 0 ? 1 : 0)
                                 }
 
-                                ButtonRowItem {
+                                ToggleRow {
                                     last: true
                                     icon: "folder"
-                                    text: qsTr("Folders First: ") + (AppController.showDirsFirst ? qsTr("Yes") : qsTr("No"))
+                                    text: qsTr("Folders First")
+                                    subtext: qsTr("Always display folders above files when sorting")
                                     checked: AppController.showDirsFirst
-                                    onClicked: AppController.showDirsFirst = !AppController.showDirsFirst
+                                    onToggled: val => AppController.showDirsFirst = val
                                 }
                             }
 
