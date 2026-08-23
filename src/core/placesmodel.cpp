@@ -269,9 +269,12 @@ void PlacesModel::loadStandardPlaces() {
     if (!m_hiddenPlaces.contains(videos))
         m_places.append({ tr("Videos"), videos, "video_library", false, false, false, false, false, 0, 0 });
     
+    const QString recent = RecentFiles::virtualPath();
+    if (!m_hiddenPlaces.contains(recent))
+        m_places.append({ tr("Recent"), recent, "history", false, false, true, false, false, 0, 0 });
+
     QString trash = home + "/.local/share/Trash/files";
     if (!m_hiddenPlaces.contains(trash) && !m_hiddenPlaces.contains("trash:"))
-        m_places.append({ tr("Recent"), RecentFiles::virtualPath(), "history", false, false, true, false, false, 0, 0 });
         m_places.append({ tr("Trash"), trash, "delete", false, false, true, false, false, 0, 0 });
 }
 
