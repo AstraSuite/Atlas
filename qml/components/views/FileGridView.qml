@@ -12,8 +12,9 @@ Item {
     required property var activeTab
     property int paneIndex: 0
     property real zoomSize: 80
-    readonly property int labelLines: zoomSize < 64 ? 2 : (zoomSize < 80 ? 3 : 4)
+    readonly property int labelLines: Math.max(2, Math.min(4, Math.round(2 + (zoomSize - 48) / 60)))
     readonly property int labelHeight: Math.ceil(labelMetrics.height) * labelLines
+    readonly property int iconPadding: Math.max(6, Math.round(zoomSize * 0.1))
 
     FontMetrics {
         id: labelMetrics
@@ -171,7 +172,7 @@ Item {
 
         // Exact uniform cell dimensions
         cellWidth: Math.max(144, root.zoomSize + 48)
-        cellHeight: 16 + root.zoomSize + root.labelHeight
+        cellHeight: root.iconPadding * 2 + root.zoomSize + root.labelHeight
 
         clip: true
         focus: true
@@ -550,7 +551,7 @@ Item {
                     id: iconContainer
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: 8
+                    anchors.topMargin: root.iconPadding
                     width: root.zoomSize
                     height: root.zoomSize
 
