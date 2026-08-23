@@ -164,6 +164,131 @@ Item {
         return stored !== undefined ? stored : fallback;
     }
 
+    readonly property var columnSpecs: ({
+        size: {
+            label: qsTr("Size"),
+            width: 100,
+            sort: FileSystemModel.SortBySize
+        },
+        type: {
+            label: qsTr("Type"),
+            width: 150,
+            sort: FileSystemModel.SortByType
+        },
+        date: {
+            label: qsTr("Date Modified"),
+            width: 140,
+            sort: FileSystemModel.SortByDate,
+            descendingFirst: true
+        },
+        perms: {
+            label: qsTr("Permissions"),
+            width: 90,
+            sort: -1,
+            muted: true
+        },
+        origPath: {
+            label: qsTr("Original Path"),
+            width: 320,
+            sort: -1
+        },
+        deleted: {
+            label: qsTr("Deletion Time"),
+            width: 180,
+            sort: -1
+        }
+    })
+
+    readonly property var activeColumns: {
+        if (root.isTrash)
+            return AppController.detailsColumnOrder.filter(key => key === "origPath" || key === "deleted");
+
+        const shown = {
+            size: AppController.showSizeColumn,
+            type: AppController.showTypeColumn,
+            date: AppController.showDateColumn,
+            perms: AppController.showPermissionsColumn
+        };
+        return AppController.detailsColumnOrder.filter(key => shown[key] === true);
+    }
+
+    property string dragKey: ""
+    property int dropIndex: -1
+    property real dropIndicatorX: 0
+
+    function toggleSort(field, descendingFirst) {
+        if (root.model.sortField === field) {
+            root.model.sortOrder = root.model.sortOrder === Qt.AscendingOrder ? Qt.DescendingOrder : Qt.AscendingOrder;
+        } else {
+            root.model.sortField = field;
+            root.model.sortOrder = descendingFirst ? Qt.DescendingOrder : Qt.AscendingOrder;
+        }
+    }
+
+    function cellText(file, key) {
+        if (!file)
+            return "";
+        switch (key) {
+        case "size":
+            return file.isDir ? "" : file.formattedSize;
+        case "type":
+            return file.mimeDescription;
+        case "date":
+            return file.formattedDate;
+        case "perms":
+            return file.permissions;
+        case "origPath":
+            return file.originalPath || "";
+        case "deleted":
+            return file.deletionTime || file.formattedDate;
+        }
+        return "";
+    }
+
+    function updateDropTarget(x) {
+        const count = headerRepeater.count;
+        let index = count;
+        for (let i = 0; i < count; i++) {
+            const item = headerRepeater.itemAt(i);
+            if (item && x < item.x + item.width / 2) {
+                index = i;
+                break;
+            }
+        }
+        root.dropIndex = index;
+
+        const edge = headerRepeater.itemAt(index < count ? index : count - 1);
+        if (edge)
+            root.dropIndicatorX = headerRow.x + (index < count ? edge.x - Tokens.spacing.small / 2 : edge.x + edge.width);
+    }
+
+    function commitColumnDrag() {
+        const columns = root.activeColumns;
+        const from = columns.indexOf(root.dragKey);
+        let to = root.dropIndex;
+        if (from < 0 || to < 0)
+            return;
+        if (to > from)
+            to -= 1;
+        if (to === from)
+            return;
+
+        const reordered = columns.slice();
+        reordered.splice(from, 1);
+        reordered.splice(to, 0, root.dragKey);
+
+        const stored = AppController.detailsColumnOrder.slice();
+        const slots = [];
+        for (let i = 0; i < stored.length; i++) {
+            if (reordered.indexOf(stored[i]) >= 0)
+                slots.push(i);
+        }
+        for (let i = 0; i < slots.length; i++)
+            stored[slots[i]] = reordered[i];
+
+        AppController.setDetailsColumnOrder(stored);
+    }
+
     Flickable {
         id: hScroll
 
@@ -233,219 +358,101 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (root.model.sortField === FileSystemModel.SortByName) {
-                                root.model.sortOrder = root.model.sortOrder === Qt.AscendingOrder ? Qt.DescendingOrder : Qt.AscendingOrder;
-                            } else {
-                                root.model.sortField = FileSystemModel.SortByName;
-                                root.model.sortOrder = Qt.AscendingOrder;
+                        onClicked: root.toggleSort(FileSystemModel.SortByName, false)
+                    }
+                }
+
+                Repeater {
+                    id: headerRepeater
+
+                    model: root.activeColumns
+
+                    delegate: Item {
+                        id: headerCell
+
+                        required property string modelData
+                        readonly property var spec: root.columnSpecs[modelData]
+
+                        Layout.preferredWidth: root.colWidth(modelData, spec.width)
+                        implicitHeight: parent.height
+                        opacity: root.dragKey === modelData ? 0.4 : 1
+
+                        ColumnResizeHandle {
+                            columnKey: headerCell.modelData
+                            defaultWidth: headerCell.spec.width
+                        }
+
+                        RowLayout {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            spacing: 4
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: headerCell.spec.label
+                                font: Tokens.font.label.medium
+                                color: headerCell.spec.muted ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
+                                elide: Text.ElideRight
+                            }
+
+                            MaterialIcon {
+                                visible: headerCell.spec.sort >= 0 && root.model.sortField === headerCell.spec.sort
+                                text: root.model.sortOrder === Qt.AscendingOrder ? "arrow_upward" : "arrow_downward"
+                                fontStyle: Tokens.font.icon.small
+                                color: Colours.palette.m3primary
+                            }
+                        }
+
+                        MouseArea {
+                            property real pressX: 0
+                            property bool moved: false
+
+                            anchors.fill: parent
+                            cursorShape: moved ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+
+                            onPressed: event => {
+                                pressX = event.x;
+                                moved = false;
+                            }
+
+                            onPositionChanged: event => {
+                                if (!pressed)
+                                    return;
+                                if (!moved && Math.abs(event.x - pressX) < 8)
+                                    return;
+                                moved = true;
+                                root.dragKey = headerCell.modelData;
+                                root.updateDropTarget(mapToItem(headerRow, event.x, 0).x);
+                            }
+
+                            onReleased: {
+                                if (moved)
+                                    root.commitColumnDrag();
+                                else if (headerCell.spec.sort >= 0)
+                                    root.toggleSort(headerCell.spec.sort, headerCell.spec.descendingFirst === true);
+                                moved = false;
+                                root.dragKey = "";
+                            }
+
+                            onCanceled: {
+                                moved = false;
+                                root.dragKey = "";
                             }
                         }
                     }
                 }
+            }
 
-                // Normal Mode Columns
-                Item {
-                    visible: !root.isTrash && AppController.showSizeColumn
-                    Layout.preferredWidth: root.colWidth("size", 100)
-                    implicitHeight: parent.height
-
-                    ColumnResizeHandle {
-                        columnKey: "size"
-                        defaultWidth: 100
-                    }
-
-                    RowLayout {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        spacing: 4
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Size")
-                            font: Tokens.font.label.medium
-                            color: Colours.palette.m3onSurface
-                            elide: Text.ElideRight
-                        }
-
-                        MaterialIcon {
-                            visible: root.model.sortField === FileSystemModel.SortBySize
-                            text: root.model.sortOrder === Qt.AscendingOrder ? "arrow_upward" : "arrow_downward"
-                            fontStyle: Tokens.font.icon.small
-                            color: Colours.palette.m3primary
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (root.model.sortField === FileSystemModel.SortBySize) {
-                                root.model.sortOrder = root.model.sortOrder === Qt.AscendingOrder ? Qt.DescendingOrder : Qt.AscendingOrder;
-                            } else {
-                                root.model.sortField = FileSystemModel.SortBySize;
-                                root.model.sortOrder = Qt.AscendingOrder;
-                            }
-                        }
-                    }
-                }
-
-                Item {
-                    visible: !root.isTrash && AppController.showTypeColumn
-                    Layout.preferredWidth: root.colWidth("type", 150)
-                    implicitHeight: parent.height
-
-                    ColumnResizeHandle {
-                        columnKey: "type"
-                        defaultWidth: 150
-                    }
-
-                    RowLayout {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        spacing: 4
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Type")
-                            font: Tokens.font.label.medium
-                            color: Colours.palette.m3onSurface
-                            elide: Text.ElideRight
-                        }
-
-                        MaterialIcon {
-                            visible: root.model.sortField === FileSystemModel.SortByType
-                            text: root.model.sortOrder === Qt.AscendingOrder ? "arrow_upward" : "arrow_downward"
-                            fontStyle: Tokens.font.icon.small
-                            color: Colours.palette.m3primary
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (root.model.sortField === FileSystemModel.SortByType) {
-                                root.model.sortOrder = root.model.sortOrder === Qt.AscendingOrder ? Qt.DescendingOrder : Qt.AscendingOrder;
-                            } else {
-                                root.model.sortField = FileSystemModel.SortByType;
-                                root.model.sortOrder = Qt.AscendingOrder;
-                            }
-                        }
-                    }
-                }
-
-                Item {
-                    visible: !root.isTrash && AppController.showDateColumn
-                    Layout.preferredWidth: root.colWidth("date", 140)
-                    implicitHeight: parent.height
-
-                    ColumnResizeHandle {
-                        columnKey: "date"
-                        defaultWidth: 140
-                    }
-
-                    RowLayout {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        spacing: 4
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Date Modified")
-                            font: Tokens.font.label.medium
-                            color: Colours.palette.m3onSurface
-                            elide: Text.ElideRight
-                        }
-
-                        MaterialIcon {
-                            visible: root.model.sortField === FileSystemModel.SortByDate
-                            text: root.model.sortOrder === Qt.AscendingOrder ? "arrow_upward" : "arrow_downward"
-                            fontStyle: Tokens.font.icon.small
-                            color: Colours.palette.m3primary
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (root.model.sortField === FileSystemModel.SortByDate) {
-                                root.model.sortOrder = root.model.sortOrder === Qt.AscendingOrder ? Qt.DescendingOrder : Qt.AscendingOrder;
-                            } else {
-                                root.model.sortField = FileSystemModel.SortByDate;
-                                root.model.sortOrder = Qt.DescendingOrder;
-                            }
-                        }
-                    }
-                }
-
-                Item {
-                    visible: !root.isTrash && AppController.showPermissionsColumn
-                    Layout.preferredWidth: root.colWidth("perms", 90)
-                    implicitHeight: parent.height
-
-                    ColumnResizeHandle {
-                        columnKey: "perms"
-                        defaultWidth: 90
-                    }
-
-                    StyledText {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        text: qsTr("Permissions")
-                        font: Tokens.font.label.medium
-                        color: Colours.palette.m3onSurfaceVariant
-                        elide: Text.ElideRight
-                    }
-                }
-
-                // Trash Mode Columns
-                Item {
-                    visible: root.isTrash
-                    Layout.preferredWidth: root.colWidth("origPath", 320)
-                    implicitHeight: parent.height
-
-                    ColumnResizeHandle {
-                        columnKey: "origPath"
-                        defaultWidth: 320
-                    }
-
-                    StyledText {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        text: qsTr("Original Path")
-                        font: Tokens.font.label.medium
-                        color: Colours.palette.m3onSurface
-                        elide: Text.ElideRight
-                        width: parent.width
-                    }
-                }
-
-                Item {
-                    visible: root.isTrash
-                    Layout.preferredWidth: root.colWidth("deleted", 180)
-                    implicitHeight: parent.height
-
-                    ColumnResizeHandle {
-                        columnKey: "deleted"
-                        defaultWidth: 180
-                    }
-
-                    StyledText {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        text: qsTr("Deletion Time")
-                        font: Tokens.font.label.medium
-                        color: Colours.palette.m3onSurface
-                        elide: Text.ElideRight
-                        width: parent.width
-                    }
-                }
+            Rectangle {
+                visible: root.dragKey !== ""
+                x: root.dropIndicatorX
+                y: Tokens.padding.extraSmall
+                width: 2
+                height: parent.height - Tokens.padding.extraSmall * 2
+                radius: width / 2
+                color: Colours.palette.m3primary
+                z: 10
             }
         }
 
@@ -852,60 +859,18 @@ Item {
                         }
                     }
 
-                    // Normal Mode Details
-                    StyledText {
-                        visible: !root.isTrash && AppController.showSizeColumn
-                        Layout.preferredWidth: root.colWidth("size", 100)
-                        text: rowItem.modelData ? (rowItem.modelData.isDir ? "" : rowItem.modelData.formattedSize) : ""
-                        color: Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.body.small
-                        elide: Text.ElideRight
-                    }
+                    Repeater {
+                        model: root.activeColumns
 
-                    StyledText {
-                        visible: !root.isTrash && AppController.showTypeColumn
-                        Layout.preferredWidth: root.colWidth("type", 150)
-                        text: rowItem.modelData ? rowItem.modelData.mimeDescription : ""
-                        color: Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.body.small
-                        elide: Text.ElideRight
-                    }
+                        delegate: StyledText {
+                            required property string modelData
 
-                    StyledText {
-                        visible: !root.isTrash && AppController.showDateColumn
-                        Layout.preferredWidth: root.colWidth("date", 140)
-                        text: rowItem.modelData ? rowItem.modelData.formattedDate : ""
-                        color: Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.body.small
-                        elide: Text.ElideRight
-                    }
-
-                    StyledText {
-                        visible: !root.isTrash && AppController.showPermissionsColumn
-                        Layout.preferredWidth: root.colWidth("perms", 90)
-                        text: rowItem.modelData ? rowItem.modelData.permissions : ""
-                        color: Colours.palette.m3outline
-                        font: Tokens.font.mono.small
-                        elide: Text.ElideRight
-                    }
-
-                    // Trash Mode Details
-                    StyledText {
-                        visible: root.isTrash
-                        Layout.preferredWidth: root.colWidth("origPath", 320)
-                        text: rowItem.modelData ? (rowItem.modelData.originalPath || "") : ""
-                        color: Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.body.small
-                        elide: Text.ElideMiddle
-                    }
-
-                    StyledText {
-                        visible: root.isTrash
-                        Layout.preferredWidth: root.colWidth("deleted", 180)
-                        text: rowItem.modelData ? (rowItem.modelData.deletionTime || rowItem.modelData.formattedDate) : ""
-                        color: Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.body.small
-                        elide: Text.ElideRight
+                            Layout.preferredWidth: root.colWidth(modelData, root.columnSpecs[modelData].width)
+                            text: root.cellText(rowItem.modelData, modelData)
+                            color: modelData === "perms" ? Colours.palette.m3outline : Colours.palette.m3onSurfaceVariant
+                            font: modelData === "perms" ? Tokens.font.mono.small : Tokens.font.body.small
+                            elide: modelData === "origPath" ? Text.ElideMiddle : Text.ElideRight
+                        }
                     }
                 }
             }

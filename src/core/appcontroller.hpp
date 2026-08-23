@@ -28,6 +28,7 @@ class AppController : public QObject {
     Q_PROPERTY(bool showDateColumn READ showDateColumn WRITE setShowDateColumn NOTIFY showDateColumnChanged)
     Q_PROPERTY(bool showPermissionsColumn READ showPermissionsColumn WRITE setShowPermissionsColumn NOTIFY showPermissionsColumnChanged)
     Q_PROPERTY(QVariantMap detailsColumnWidths READ detailsColumnWidths NOTIFY detailsColumnWidthsChanged)
+    Q_PROPERTY(QStringList detailsColumnOrder READ detailsColumnOrder NOTIFY detailsColumnOrderChanged)
     Q_PROPERTY(bool singleClick READ singleClick WRITE setSingleClick NOTIFY singleClickChanged)
     Q_PROPERTY(QString defaultStartupDirectory READ defaultStartupDirectory WRITE setDefaultStartupDirectory NOTIFY defaultStartupDirectoryChanged)
     Q_PROPERTY(int defaultViewMode READ defaultViewMode WRITE setDefaultViewMode NOTIFY defaultViewModeChanged)
@@ -90,6 +91,10 @@ public:
     [[nodiscard]] QVariantMap detailsColumnWidths() const { return m_detailsColumnWidths; }
     Q_INVOKABLE void setDetailsColumnWidth(const QString& key, int width);
     Q_INVOKABLE void resetDetailsColumnWidths();
+
+    [[nodiscard]] QStringList detailsColumnOrder() const { return m_detailsColumnOrder; }
+    Q_INVOKABLE void setDetailsColumnOrder(const QStringList& order);
+    Q_INVOKABLE void resetDetailsColumnOrder();
     void setShowHidden(bool show);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
@@ -159,6 +164,7 @@ signals:
     void showDateColumnChanged();
     void showPermissionsColumnChanged();
     void detailsColumnWidthsChanged();
+    void detailsColumnOrderChanged();
     void singleClickChanged();
     void defaultStartupDirectoryChanged();
     void defaultViewModeChanged();
@@ -189,6 +195,7 @@ private:
     bool m_showDateColumn = true;
     bool m_showPermissionsColumn = true;
     QVariantMap m_detailsColumnWidths;
+    QStringList m_detailsColumnOrder;
     bool m_singleClick = false;
     QString m_defaultStartupDirectory = "home";
     int m_defaultViewMode = 0;
