@@ -38,6 +38,7 @@ AppController::AppController(QObject* parent)
     m_showHidden = settings.value("session/showHidden", legacy1.value("session/showHidden", legacy2.value("session/showHidden", false))).toBool();
     m_singleClick = settings.value("session/singleClick", legacy1.value("session/singleClick", legacy2.value("session/singleClick", false))).toBool();
     m_confirmPermanentDelete = settings.value("session/confirmPermanentDelete", true).toBool();
+    m_restoreTabs = settings.value("preferences/restoreTabs", false).toBool();
     m_defaultStartupDirectory = settings.value("preferences/startupDirectory", "home").toString();
     m_defaultViewMode = settings.value("preferences/defaultViewMode", 0).toInt();
     m_defaultSortField = settings.value("preferences/defaultSortField", 0).toInt();
@@ -118,6 +119,15 @@ void AppController::setConfirmPermanentDelete(bool confirm) {
         QSettings settings("prism", "prism");
         settings.setValue("session/confirmPermanentDelete", confirm);
         emit confirmPermanentDeleteChanged();
+    }
+}
+
+void AppController::setRestoreTabs(bool restore) {
+    if (m_restoreTabs != restore) {
+        m_restoreTabs = restore;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/restoreTabs", restore);
+        emit restoreTabsChanged();
     }
 }
 

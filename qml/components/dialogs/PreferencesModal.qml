@@ -328,6 +328,14 @@ MouseArea {
                                 }
 
                                 ToggleRow {
+                                    icon: "tab_duplicate"
+                                    text: qsTr("Restore Tabs on Startup")
+                                    subtext: qsTr("Reopen the tabs that were open when the window was last closed")
+                                    checked: AppController.restoreTabs
+                                    onToggled: checked => AppController.restoreTabs = checked
+                                }
+
+                                ToggleRow {
                                     icon: "image"
                                     text: qsTr("Show Thumbnails")
                                     subtext: qsTr("Preview images and videos instead of generic icons")

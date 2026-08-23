@@ -59,6 +59,9 @@ void TabItem::setCurrentPath(const QString& path) {
 
         QSettings settings("prism", "prism");
         settings.setValue("session/lastPath", m_currentPath);
+
+        if (auto* manager = qobject_cast<TabManager*>(parent()))
+            manager->saveSession();
     }
 }
 
@@ -153,10 +156,40 @@ TabManager::TabManager(QObject* parent)
     if (startupPath.isEmpty() || !QDir(startupPath).exists()) {
         startupPath = QDir::homePath();
     }
-    newTab(startupPath);
-    if (!m_tabs.isEmpty()) {
-        m_tabs.first()->setViewMode(defViewMode);
+
+    QStringList restored;
+    if (settings.value("preferences/restoreTabs", false).toBool()) {
+        const QStringList saved = settings.value("session/tabPaths").toStringList();
+        for (const QString& path : saved) {
+            if (!path.isEmpty() && (QDir(path).exists() || path.startsWith(QLatin1String("recent:"))))
+                restored.append(path);
+        }
     }
+
+    if (restored.isEmpty()) {
+        newTab(startupPath);
+    } else {
+        for (const QString& path : std::as_const(restored))
+            newTab(path);
+
+        const int savedIndex = settings.value("session/currentTab", 0).toInt();
+        if (savedIndex >= 0 && savedIndex < m_tabs.size())
+            setCurrentIndex(savedIndex);
+    }
+
+    for (TabItem* tab : std::as_const(m_tabs))
+        tab->setViewMode(defViewMode);
+}
+
+void TabManager::saveSession() {
+    QStringList paths;
+    paths.reserve(m_tabs.size());
+    for (const TabItem* tab : std::as_const(m_tabs))
+        paths.append(tab->currentPath());
+
+    QSettings settings("prism", "prism");
+    settings.setValue("session/tabPaths", paths);
+    settings.setValue("session/currentTab", m_currentIndex);
 }
 
 TabManager* TabManager::instance() {
@@ -251,6 +284,7 @@ void TabManager::newTab(const QString& path) {
     endInsertRows();
     emit countChanged();
     setCurrentIndex(idx);
+    saveSession();
 }
 
 void TabManager::closeTab(int index) {
@@ -268,6 +302,7 @@ void TabManager::closeTab(int index) {
     }
     emit currentTabChanged();
     emit countChanged();
+    saveSession();
 }
 
 void TabManager::duplicateTab(int index) {
