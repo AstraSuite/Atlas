@@ -14,11 +14,11 @@ RowLayout {
     property string iconKey: "icon"
     property var isSelected: null // optional custom callback: (modelData, index) => bool
     property bool multiSelect: false
+    property int buttonHeight: 40
 
     signal selected(var value, int index)
 
     spacing: 2
-    implicitHeight: 40
 
     Repeater {
         id: repeater
@@ -61,15 +61,18 @@ RowLayout {
             last: index === repeater.count - 1
 
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            implicitHeight: root.implicitHeight
+            Layout.preferredHeight: root.buttonHeight
+            implicitHeight: root.buttonHeight
 
             color: itemRect.checked
                 ? Colours.palette.m3primaryContainer
                 : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
 
             Behavior on color {
-                Anim { type: Anim.FastEffects }
+            CAnim {
+                duration: Tokens.anim.durations.expressiveFastEffects
+                easing: Tokens.anim.expressiveFastEffects
+            }
             }
 
             StateLayer {

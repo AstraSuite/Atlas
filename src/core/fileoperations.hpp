@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QElapsedTimer>
 #include <QStringList>
 #include <QFutureWatcher>
 #include <atomic>
@@ -61,7 +62,6 @@ class FileOperations : public QObject {
     Q_PROPERTY(QVariantList completedTasks READ completedTasks NOTIFY completedTasksChanged)
 
 public:
-    explicit FileOperations(QObject* parent = nullptr);
 
     static FileOperations* instance();
     static FileOperations* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
@@ -126,6 +126,7 @@ public:
     Q_INVOKABLE void bulkRename(const QStringList& paths, const QStringList& newNames);
     Q_INVOKABLE void createDirectory(const QString& parentDir, const QString& name);
     Q_INVOKABLE void createFile(const QString& parentDir, const QString& name, const QString& content = "");
+    Q_INVOKABLE void createFromTemplate(const QString& templatePath, const QString& parentDir, const QString& name);
     Q_INVOKABLE void duplicateFile(const QString& path);
     Q_INVOKABLE void createSymlink(const QString& target, const QString& linkPath);
     Q_INVOKABLE void pasteAsSymlink(const QString& destinationDir);
@@ -144,6 +145,8 @@ signals:
     void conflictOccurred(const QString& source, const QString& destination);
 
 private:
+    explicit FileOperations(QObject* parent = nullptr);
+
     struct UndoAction {
         enum Type {
             Rename,
@@ -173,6 +176,8 @@ private:
     QStringList m_clipboardFiles;
     QStringList m_activeDragFiles;
     QVariantList m_completedTasks;
+    QString m_lastCompletedTaskKey;
+    QElapsedTimer m_lastCompletedTaskTimer;
     QList<UndoAction> m_undoStack;
     QList<UndoAction> m_redoStack;
     bool m_isCut = false;

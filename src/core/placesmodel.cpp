@@ -1,4 +1,5 @@
 #include "placesmodel.hpp"
+#include "recentfiles.hpp"
 #include "fileutils.hpp"
 
 #include <QDir>
@@ -231,6 +232,23 @@ void PlacesModel::refresh() {
 
     if (!loadedXbel || m_places.isEmpty()) {
         loadStandardPlaces();
+    }
+
+    const QString recentPath = RecentFiles::virtualPath();
+    if (!m_hiddenPlaces.contains(recentPath)) {
+        int trashIndex = -1;
+        for (int i = 0; i < m_places.size(); ++i) {
+            if (m_places.at(i).isTrash) {
+                trashIndex = i;
+                break;
+            }
+        }
+
+        const PlaceItem recentItem { tr("Recent"), recentPath, "history", false, false, false, false, false, 0, 0 };
+        if (trashIndex >= 0)
+            m_places.insert(trashIndex, recentItem);
+        else
+            m_places.append(recentItem);
     }
 
     loadBookmarks();

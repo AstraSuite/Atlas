@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include "iconprovider.hpp"
+#include <QFileInfo>
 #include <QSettings>
 #include <iostream>
 
@@ -39,6 +40,7 @@ AppController::AppController(QObject* parent)
     m_singleClick = settings.value("session/singleClick", legacy1.value("session/singleClick", legacy2.value("session/singleClick", false))).toBool();
     m_confirmPermanentDelete = settings.value("session/confirmPermanentDelete", true).toBool();
     m_restoreTabs = settings.value("preferences/restoreTabs", false).toBool();
+    m_confirmMoveToTrash = settings.value("session/confirmMoveToTrash", false).toBool();
     m_defaultStartupDirectory = settings.value("preferences/startupDirectory", "home").toString();
     m_defaultViewMode = settings.value("preferences/defaultViewMode", 0).toInt();
     m_defaultSortField = settings.value("preferences/defaultSortField", 0).toInt();
@@ -128,6 +130,15 @@ void AppController::setRestoreTabs(bool restore) {
         QSettings settings("prism", "prism");
         settings.setValue("preferences/restoreTabs", restore);
         emit restoreTabsChanged();
+    }
+}
+
+void AppController::setConfirmMoveToTrash(bool confirm) {
+    if (m_confirmMoveToTrash != confirm) {
+        m_confirmMoveToTrash = confirm;
+        QSettings settings("prism", "prism");
+        settings.setValue("session/confirmMoveToTrash", confirm);
+        emit confirmMoveToTrashChanged();
     }
 }
 
@@ -317,6 +328,24 @@ void AppController::setPlacesIconSize(int size) {
         settings.setValue("preferences/placesIconSize", size);
         emit placesIconSizeChanged();
     }
+}
+
+void AppController::setSaveMode(bool save) {
+    if (m_saveMode != save) {
+        m_saveMode = save;
+        emit saveModeChanged();
+    }
+}
+
+void AppController::setSuggestedName(const QString& name) {
+    if (m_suggestedName != name) {
+        m_suggestedName = name;
+        emit suggestedNameChanged();
+    }
+}
+
+bool AppController::fileExists(const QString& path) {
+    return QFileInfo::exists(path);
 }
 
 void AppController::accept(const QString& path) {

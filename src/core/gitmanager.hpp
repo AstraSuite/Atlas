@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QQmlEngine>
+#include <QJSEngine>
+
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -22,8 +25,10 @@ class GitManager : public QObject {
     Q_PROPERTY(QString lastStatusMessage READ lastStatusMessage NOTIFY statusMessageChanged)
 
 public:
-    explicit GitManager(QObject* parent = nullptr);
     static GitManager* instance();
+    static GitManager* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
+        return instance();
+    }
 
     QString currentPath() const { return m_currentPath; }
     void setCurrentPath(const QString& path);
@@ -47,6 +52,7 @@ signals:
     void statusMessageChanged();
 
 private:
+    explicit GitManager(QObject* parent = nullptr);
     QString findGitRoot(const QString& startPath) const;
 
     QString m_currentPath;
