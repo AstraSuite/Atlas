@@ -72,6 +72,10 @@ private slots:
     void onReplyFinished();
 
 private:
+    void enqueue(const QStringList& filePaths, Service service, const QString& time);
+    void clearSharedProgress(const QString& finalStatusText = QString());
+    static QString serviceDisplayName(Service service, const QString& time);
+
     void processNextInQueue();
 
     QNetworkAccessManager* m_nam = nullptr;
@@ -86,6 +90,7 @@ private:
     QString m_lastUrl;
     qint64 m_currentFileSize = 0;
     bool m_isUploading = false;
+    bool m_ownsSharedProgress = false;
     qreal m_uploadProgress = 0.0;
 };
 

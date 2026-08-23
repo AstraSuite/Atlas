@@ -33,20 +33,61 @@ void CatboxUploader::uploadFile(const QString& filePath) {
     uploadFiles(QStringList{ filePath });
 }
 
-void CatboxUploader::uploadFiles(const QStringList& filePaths) {
+QString CatboxUploader::serviceDisplayName(Service service, const QString& time) {
+    return service == Service::Catbox
+        ? QStringLiteral("Catbox")
+        : QStringLiteral("Litterbox (%1)").arg(time.isEmpty() ? QStringLiteral("24h") : time);
+}
+
+void CatboxUploader::clearSharedProgress(const QString& finalStatusText) {
+    if (!m_ownsSharedProgress)
+        return;
+
+    m_ownsSharedProgress = false;
+
+    auto* foProgress = FileOperations::instance()->progress();
+    if (foProgress) {
+        foProgress->setRunning(false);
+        foProgress->setProgress(0.0);
+        foProgress->setStatusText(finalStatusText);
+        foProgress->setCurrentItem(QString());
+    }
+}
+
+void CatboxUploader::enqueue(const QStringList& filePaths, Service service, const QString& time) {
+    const QString serviceName = serviceDisplayName(service, time);
+    const QString validTime = time.isEmpty() ? QStringLiteral("24h") : time;
+
+    int accepted = 0;
     for (const QString& rawPath : filePaths) {
         QString path = rawPath;
-        if (path.startsWith(QLatin1String("file://"))) {
+        if (path.startsWith(QLatin1String("file://")))
             path = QUrl(rawPath).toLocalFile();
+        if (path.isEmpty())
+            continue;
+
+        const QFileInfo fi(path);
+        if (!fi.exists() || fi.isDir()) {
+            FileOperations::instance()->addCompletedTask(
+                false, tr("Skipped %1: only existing files can be uploaded to %2").arg(fi.fileName().isEmpty() ? path : fi.fileName(), serviceName), QString());
+            continue;
         }
-        if (!path.isEmpty() && QFileInfo::exists(path) && !QFileInfo(path).isDir()) {
-            m_uploadQueue.append(UploadItem{ path, Service::Catbox, QString() });
-        }
+
+        m_uploadQueue.append(UploadItem{ path, service, validTime });
+        ++accepted;
     }
 
-    if (!m_isUploading && !m_uploadQueue.isEmpty()) {
-        processNextInQueue();
+    if (accepted == 0) {
+        FileOperations::instance()->operationFinished(false, tr("Nothing to upload to %1").arg(serviceName));
+        return;
     }
+
+    if (!m_isUploading)
+        processNextInQueue();
+}
+
+void CatboxUploader::uploadFiles(const QStringList& filePaths) {
+    enqueue(filePaths, Service::Catbox, QString());
 }
 
 void CatboxUploader::uploadToLitterbox(const QString& filePath, const QString& time) {
@@ -55,20 +96,7 @@ void CatboxUploader::uploadToLitterbox(const QString& filePath, const QString& t
 }
 
 void CatboxUploader::uploadFilesToLitterbox(const QStringList& filePaths, const QString& time) {
-    QString validTime = time.isEmpty() ? QStringLiteral("24h") : time;
-    for (const QString& rawPath : filePaths) {
-        QString path = rawPath;
-        if (path.startsWith(QLatin1String("file://"))) {
-            path = QUrl(rawPath).toLocalFile();
-        }
-        if (!path.isEmpty() && QFileInfo::exists(path) && !QFileInfo(path).isDir()) {
-            m_uploadQueue.append(UploadItem{ path, Service::Litterbox, validTime });
-        }
-    }
-
-    if (!m_isUploading && !m_uploadQueue.isEmpty()) {
-        processNextInQueue();
-    }
+    enqueue(filePaths, Service::Litterbox, time);
 }
 
 void CatboxUploader::cancelUpload() {
@@ -89,15 +117,9 @@ void CatboxUploader::cancelUpload() {
         emit uploadProgressChanged();
         emit currentFileNameChanged();
         emit currentServiceChanged();
-
-        auto* foProgress = FileOperations::instance()->progress();
-        if (foProgress && foProgress->running()) {
-            foProgress->setRunning(false);
-            foProgress->setProgress(0.0);
-            foProgress->setStatusText(QStringLiteral("Upload cancelled"));
-            foProgress->setCurrentItem(QString());
-        }
     }
+
+    clearSharedProgress(tr("Upload cancelled"));
 }
 
 void CatboxUploader::processNextInQueue() {
@@ -112,13 +134,7 @@ void CatboxUploader::processNextInQueue() {
         emit currentFileNameChanged();
         emit currentServiceChanged();
 
-        auto* foProgress = FileOperations::instance()->progress();
-        if (foProgress) {
-            foProgress->setRunning(false);
-            foProgress->setProgress(0.0);
-            foProgress->setStatusText(QString());
-            foProgress->setCurrentItem(QString());
-        }
+        clearSharedProgress();
         return;
     }
 
@@ -134,10 +150,8 @@ void CatboxUploader::processNextInQueue() {
     m_isUploading = true;
     m_uploadProgress = 0.0;
 
-    QString serviceDisplayName = (m_currentItem.service == Service::Catbox)
-        ? QStringLiteral("Catbox")
-        : QStringLiteral("Litterbox (%1)").arg(m_currentItem.time);
-    m_currentService = serviceDisplayName;
+    const QString serviceName = serviceDisplayName(m_currentItem.service, m_currentItem.time);
+    m_currentService = serviceName;
 
     emit isUploadingChanged();
     emit uploadProgressChanged();
@@ -145,19 +159,21 @@ void CatboxUploader::processNextInQueue() {
     emit currentServiceChanged();
     emit uploadStarted(m_currentItem.filePath);
 
+    m_ownsSharedProgress = true;
+
     auto* foProgress = FileOperations::instance()->progress();
     if (foProgress) {
         foProgress->setRunning(true);
         foProgress->setProgress(0.0);
         foProgress->setCurrentItem(m_currentFileName);
-        foProgress->setStatusText(tr("Uploading %1 to %2...").arg(m_currentFileName, serviceDisplayName));
+        foProgress->setStatusText(tr("Uploading %1 to %2...").arg(m_currentFileName, serviceName));
     }
 
     QFile file(m_currentItem.filePath);
     if (!file.open(QIODevice::ReadOnly)) {
         QString err = tr("Failed to open file for reading");
         emit uploadFinished(false, err, m_currentItem.filePath);
-        FileOperations::instance()->operationFinished(false, tr("%1 upload failed: %2").arg(serviceDisplayName, err));
+        FileOperations::instance()->operationFinished(false, tr("%1 upload failed: %2").arg(serviceName, err));
         processNextInQueue();
         return;
     }
@@ -230,9 +246,11 @@ void CatboxUploader::onUploadProgress(qint64 bytesSent, qint64 bytesTotal) {
         auto* foProgress = FileOperations::instance()->progress();
         if (foProgress && foProgress->running()) {
             foProgress->setProgress(m_uploadProgress);
-            foProgress->setStatusText(tr("Uploading %1 to %2 (%3%)")
-                                          .arg(m_currentFileName, m_currentService)
-                                          .arg(static_cast<int>(m_uploadProgress * 100)));
+            foProgress->setStatusText(m_uploadProgress >= 1.0
+                    ? tr("Waiting for %1 to process %2...").arg(m_currentService, m_currentFileName)
+                    : tr("Uploading %1 to %2 (%3%)")
+                          .arg(m_currentFileName, m_currentService)
+                          .arg(static_cast<int>(m_uploadProgress * 100)));
         }
     }
 }
