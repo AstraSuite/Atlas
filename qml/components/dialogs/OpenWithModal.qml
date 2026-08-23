@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import "../containers"
 import "../controls"
 import prism
 
@@ -142,12 +143,17 @@ MouseArea {
             }
 
             // Applications List
-            ListView {
+            VerticalFadeListView {
                 id: appListView
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
                 spacing: 6
+                boundsBehavior: Flickable.StopAtBounds
+
+                ScrollBar.vertical: StyledScrollBar {
+                    flickable: appListView
+                }
 
                 model: root.filteredApps
 
@@ -242,6 +248,13 @@ MouseArea {
                         }
                     }
                 }
+            }
+
+            StyledRect {
+                Layout.fillWidth: true
+                Layout.topMargin: Tokens.spacing.extraSmall
+                implicitHeight: 1
+                color: Qt.alpha(Colours.palette.m3outlineVariant, 0.6)
             }
 
             // Always use as default checkbox
