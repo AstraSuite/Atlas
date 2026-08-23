@@ -428,6 +428,34 @@ StyledRect {
         }
     }
 
+    function selectByPattern(pattern) {
+        const trimmed = (pattern || "").trim();
+        if (trimmed.length === 0)
+            return;
+
+        const escaped = trimmed.replace(/[.+^${}()|[\]\\]/g, "\\$&")
+                               .replace(/\*/g, ".*")
+                               .replace(/\?/g, ".");
+        let matcher;
+        try {
+            matcher = new RegExp("^" + escaped + "$", "i");
+        } catch (e) {
+            return;
+        }
+
+        const loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
+        if (!activeModel || !loader || !loader.item)
+            return;
+
+        let matched = [];
+        for (let i = 0; i < activeModel.count; ++i) {
+            const e = activeModel.get(i);
+            if (e && matcher.test(e.name))
+                matched.push(e.path);
+        }
+        loader.item.selectedPaths = matched;
+    }
+
     function invertSelection() {
         let loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
         if (activeModel && loader && loader.item) {

@@ -480,6 +480,8 @@ ApplicationWindow {
                     FileOperations.createDirectory(currentDir, text);
                 } else if (title === qsTr("Create New File")) {
                     FileOperations.createFile(currentDir, text);
+                } else if (title === qsTr("Select by Pattern")) {
+                    splitContainer.selectByPattern(text);
                 } else if (title === qsTr("Rename")) {
                     let oldPath = newItemModal.targetRenamePath || (contextMenu.targetItem ? contextMenu.targetItem.path : "");
                     if (oldPath) {
@@ -774,6 +776,17 @@ ApplicationWindow {
             sequence: "Ctrl+I"
             context: Qt.ApplicationShortcut
             onActivated: splitContainer.invertSelection()
+        }
+
+        Shortcut {
+            sequence: "Ctrl+S"
+            context: Qt.ApplicationShortcut
+            onActivated: {
+                newItemModal.title = qsTr("Select by Pattern");
+                newItemModal.icon = "filter_alt";
+                newItemModal.initialText = "*";
+                newItemModal.expanded = true;
+            }
         }
 
         Shortcut {
