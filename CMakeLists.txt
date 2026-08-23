@@ -160,6 +160,7 @@ qt_add_qml_module(prism_app
         assets/prism.png
         assets/prism.svg
         assets/runner/assets/default_200_percent/200-offline-sprite.png
+        assets/runner/assets/default_200_percent/200-offline-sprite-inverted.png
         assets/runner/sounds/press.wav
         assets/runner/sounds/hit.wav
         assets/runner/sounds/reached.wav
