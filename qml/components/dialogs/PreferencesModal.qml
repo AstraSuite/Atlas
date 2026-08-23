@@ -1016,18 +1016,23 @@ MouseArea {
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
                                         spacing: 2
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Show Network Section")
                                             color: Colours.palette.m3onSurface
                                             font: Tokens.font.body.medium
+                                            elide: Text.ElideRight
                                         }
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Display remote servers and network locations in sidebar")
                                             color: Colours.palette.m3onSurfaceVariant
                                             font: Tokens.font.label.small
+                                            elide: Text.ElideRight
                                         }
                                     }
 
@@ -1231,18 +1236,23 @@ MouseArea {
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
                                         spacing: 2
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Secondary Code Editor")
                                             color: Colours.palette.m3onSurface
                                             font: Tokens.font.body.medium
+                                            elide: Text.ElideRight
                                         }
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Show detected editor like VS Code or VSCodium under Open")
                                             color: Colours.palette.m3onSurfaceVariant
                                             font: Tokens.font.label.small
+                                            elide: Text.ElideRight
                                         }
                                     }
 
@@ -1281,18 +1291,23 @@ MouseArea {
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
                                         spacing: 2
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Upload Online")
                                             color: Colours.palette.m3onSurface
                                             font: Tokens.font.body.medium
+                                            elide: Text.ElideRight
                                         }
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Upload directly to Catbox and Litterbox")
                                             color: Colours.palette.m3onSurfaceVariant
                                             font: Tokens.font.label.small
+                                            elide: Text.ElideRight
                                         }
                                     }
 
@@ -1331,18 +1346,23 @@ MouseArea {
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
                                         spacing: 2
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Send To Submenu")
                                             color: Colours.palette.m3onSurface
                                             font: Tokens.font.body.medium
+                                            elide: Text.ElideRight
                                         }
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Include sharing destinations and external targets")
                                             color: Colours.palette.m3onSurfaceVariant
                                             font: Tokens.font.label.small
+                                            elide: Text.ElideRight
                                         }
                                     }
 
@@ -1381,18 +1401,23 @@ MouseArea {
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
                                         spacing: 2
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Compress & Archive")
                                             color: Colours.palette.m3onSurface
                                             font: Tokens.font.body.medium
+                                            elide: Text.ElideRight
                                         }
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Archive presets and extraction tools")
                                             color: Colours.palette.m3onSurfaceVariant
                                             font: Tokens.font.label.small
+                                            elide: Text.ElideRight
                                         }
                                     }
 
@@ -1431,18 +1456,23 @@ MouseArea {
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
                                         spacing: 2
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Symlinks")
                                             color: Colours.palette.m3onSurface
                                             font: Tokens.font.body.medium
+                                            elide: Text.ElideRight
                                         }
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Show Create Symlink and Paste as Symlink")
                                             color: Colours.palette.m3onSurfaceVariant
                                             font: Tokens.font.label.small
+                                            elide: Text.ElideRight
                                         }
                                     }
 
@@ -1481,18 +1511,23 @@ MouseArea {
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
                                         spacing: 2
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Open in Terminal")
                                             color: Colours.palette.m3onSurface
                                             font: Tokens.font.body.medium
+                                            elide: Text.ElideRight
                                         }
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Launch default terminal emulator in directory")
                                             color: Colours.palette.m3onSurfaceVariant
                                             font: Tokens.font.label.small
+                                            elide: Text.ElideRight
                                         }
                                     }
 
@@ -1531,18 +1566,23 @@ MouseArea {
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
                                         spacing: 2
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Delete Actions")
                                             color: Colours.palette.m3onSurface
                                             font: Tokens.font.body.medium
+                                            elide: Text.ElideRight
                                         }
 
                                         StyledText {
+                                            Layout.fillWidth: true
                                             text: qsTr("Show Move to Trash and Delete Permanently")
                                             color: Colours.palette.m3onSurfaceVariant
                                             font: Tokens.font.label.small
+                                            elide: Text.ElideRight
                                         }
                                     }
 

@@ -12,27 +12,27 @@ Item {
     signal toggled(bool checked)
     signal clicked()
 
-    implicitWidth: root.text.length > 0 ? (rowLayout.implicitWidth + 4) : 36
-    implicitHeight: 36
+    implicitWidth: root.text.length > 0 ? (rowLayout.implicitWidth + 4) : 24
+    implicitHeight: 24
     opacity: root.enabled ? 1.0 : 0.38
 
     RowLayout {
         id: rowLayout
         anchors.centerIn: parent
-        spacing: 4
+        spacing: 6
 
         // Checkbox Touch / Hover Target & Box
         Item {
-            implicitWidth: 36
-            implicitHeight: 36
+            implicitWidth: 24
+            implicitHeight: 24
             Layout.alignment: Qt.AlignVCenter
 
             // State Layer
             Rectangle {
                 anchors.centerIn: parent
-                width: 36
-                height: 36
-                radius: 18
+                width: 32
+                height: 32
+                radius: 16
                 color: root.checked ? Colours.palette.m3primary : Colours.palette.m3onSurface
                 opacity: checkArea.containsMouse ? (root.checked ? 0.12 : 0.08) : 0.0
 
@@ -48,9 +48,9 @@ Item {
             Rectangle {
                 id: box
                 anchors.centerIn: parent
-                width: 18
-                height: 18
-                radius: 2
+                width: 20
+                height: 20
+                radius: 4
                 color: "transparent"
                 border.color: root.checked
                     ? Colours.palette.m3primary
@@ -64,7 +64,7 @@ Item {
                 // Checked fill background
                 Rectangle {
                     anchors.fill: parent
-                    radius: 2
+                    radius: 3
                     color: Colours.palette.m3primary
                     opacity: root.checked ? 1.0 : 0.0
                     Behavior on opacity {
@@ -77,7 +77,7 @@ Item {
                     id: checkIcon
                     anchors.centerIn: parent
                     text: "check"
-                    fontStyle.pixelSize: 14
+                    pointSize: 15
                     color: Colours.palette.m3onPrimary
                     scale: root.checked ? 1.0 : 0.2
                     opacity: root.checked ? 1.0 : 0.0
