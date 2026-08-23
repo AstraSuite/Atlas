@@ -35,7 +35,8 @@ public:
     enum DateFormat {
         SystemLocale = 0,
         Iso = 1,
-        LongLocale = 2
+        LongLocale = 2,
+        Custom = 3
     };
     Q_ENUM(DateFormat)
 
@@ -45,12 +46,14 @@ public:
     static int dateFormat();
     Q_INVOKABLE static bool shouldThumbnail(bool isImage, bool isVideo, qint64 size);
     static void setThumbnailsEnabled(bool enabled);
+    static void setCustomDateFormat(const QString& pattern);
     static void setThumbnailMaxBytes(qint64 bytes);
     Q_INVOKABLE static QString shortenHome(const QString& path);
     Q_INVOKABLE static QString toLocalFile(const QUrl& url);
     Q_INVOKABLE static QString baseName(const QString& path);
     Q_INVOKABLE static QVariantList describePaths(const QStringList& paths);
     Q_INVOKABLE static QString freeSpaceFor(const QString& path);
+    Q_INVOKABLE static QVariantList templates();
     Q_INVOKABLE static bool isImage(const QString& path);
     Q_INVOKABLE static bool isVideo(const QString& path);
     Q_INVOKABLE static bool isAudio(const QString& path);

@@ -157,30 +157,61 @@ bool FileOperations::copyRecursively(const QString& src, const QString& dest, st
         if (!in.open(QIODevice::ReadOnly))
             return false;
 
-        QFile out(dest);
+        const QString partial = dest + QStringLiteral(".prism-partial");
+        QFile::remove(partial);
+
+        QFile out(partial);
         if (!out.open(QIODevice::WriteOnly))
             return false;
 
+        const auto abandon = [&out, &partial]() {
+            out.close();
+            QFile::remove(partial);
+            return false;
+        };
+
         QByteArray buf(64 * 1024, 0);
         while (!in.atEnd()) {
-            if (cancelFlag.load()) {
-                out.close();
-                QFile::remove(dest);
-                return false;
-            }
-            qint64 bytesRead = in.read(buf.data(), buf.size());
-            if (bytesRead > 0) {
-                out.write(buf.constData(), bytesRead);
-                processedBytes += bytesRead;
-                if (totalBytes > 0) {
-                    qreal p = static_cast<qreal>(processedBytes) / totalBytes;
-                    QMetaObject::invokeMethod(m_progress, [this, p, src]() {
-                        m_progress->setProgress(p);
-                        m_progress->setCurrentItem(src);
-                    });
-                }
+            if (cancelFlag.load())
+                return abandon();
+
+            const qint64 bytesRead = in.read(buf.data(), buf.size());
+            if (bytesRead < 0)
+                return abandon();
+            if (bytesRead == 0)
+                continue;
+
+            if (out.write(buf.constData(), bytesRead) != bytesRead)
+                return abandon();
+
+            processedBytes += bytesRead;
+            if (totalBytes > 0) {
+                qreal p = static_cast<qreal>(processedBytes) / totalBytes;
+                QMetaObject::invokeMethod(m_progress, [this, p, src]() {
+                    m_progress->setProgress(p);
+                    m_progress->setCurrentItem(src);
+                });
             }
         }
+
+        if (!out.flush())
+            return abandon();
+        out.close();
+        if (out.error() != QFile::NoError)
+            return abandon();
+
+        out.setPermissions(srcInfo.permissions());
+
+        if (QFileInfo::exists(dest) && !QFile::remove(dest)) {
+            QFile::remove(partial);
+            return false;
+        }
+
+        if (!QFile::rename(partial, dest)) {
+            QFile::remove(partial);
+            return false;
+        }
+
         return true;
     }
 }
@@ -707,7 +738,46 @@ void FileOperations::bulkRename(const QStringList& paths, const QStringList& new
     m_redoStack.clear();
     emit undoStackChanged();
 
-    emit operationFinished(true, tr("Renamed %n item(s)", "", static_cast<int>(sources.size())));
+    emit operationFinished(true, sources.size() == 1
+                                     ? tr("Renamed 1 item")
+                                     : tr("Renamed %1 items").arg(sources.size()));
+}
+
+void FileOperations::createFromTemplate(const QString& templatePath, const QString& parentDir, const QString& name) {
+    const QString trimmed = name.trimmed();
+    if (templatePath.isEmpty() || parentDir.isEmpty() || trimmed.isEmpty() || trimmed.contains(QLatin1Char('/'))) {
+        emit operationFinished(false, tr("Invalid name"));
+        return;
+    }
+
+    if (!QFileInfo::exists(templatePath)) {
+        emit operationFinished(false, tr("Template no longer exists"));
+        return;
+    }
+
+    const QString destination = parentDir + QLatin1Char('/') + trimmed;
+    if (QFileInfo::exists(destination)) {
+        emit operationFinished(false, tr("%1 already exists").arg(trimmed));
+        return;
+    }
+
+    if (!QFile::copy(templatePath, destination)) {
+        emit operationFinished(false, tr("Could not create %1").arg(trimmed));
+        return;
+    }
+
+    QFile::setPermissions(destination, QFile::permissions(destination) | QFile::WriteOwner);
+
+    UndoAction action;
+    action.type = UndoAction::CreateFile;
+    action.newPath = destination;
+    action.parentDir = parentDir;
+    action.name = trimmed;
+    m_undoStack.push_back(action);
+    m_redoStack.clear();
+    emit undoStackChanged();
+
+    emit operationFinished(true, tr("Created %1").arg(trimmed));
 }
 
 void FileOperations::createDirectory(const QString& parentDir, const QString& name) {
@@ -1012,13 +1082,13 @@ void FileOperations::addCompletedTask(bool success, const QString& message, cons
     task[QStringLiteral("url")] = url;
     task[QStringLiteral("time")] = QTime::currentTime().toString(QStringLiteral("hh:mm:ss"));
 
-    if (!m_completedTasks.isEmpty()) {
-        const auto first = m_completedTasks.first().toMap();
-        if (first.value(QStringLiteral("message")).toString() == message &&
-            first.value(QStringLiteral("url")).toString() == url) {
-            return;
-        }
+    const QString key = message + QLatin1Char('\n') + url;
+    if (key == m_lastCompletedTaskKey && m_lastCompletedTaskTimer.isValid()
+        && m_lastCompletedTaskTimer.elapsed() < 1000) {
+        return;
     }
+    m_lastCompletedTaskKey = key;
+    m_lastCompletedTaskTimer.restart();
 
     m_completedTasks.prepend(task);
     if (m_completedTasks.size() > 30) {

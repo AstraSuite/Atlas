@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QMimeDatabase>
+#include <QReadWriteLock>
 #include <QStandardPaths>
 #include <QStorageInfo>
 #include <QIcon>
@@ -47,6 +48,8 @@ namespace {
 std::atomic<int> g_dateFormat{FileUtils::Iso};
 std::atomic<bool> g_thumbsEnabled{true};
 std::atomic<qint64> g_thumbMaxBytes{0};
+QReadWriteLock g_customDateLock;
+QString g_customDateFormat = QStringLiteral("yyyy-MM-dd hh:mm");
 }
 
 void FileUtils::setDateFormat(int format) {
@@ -55,6 +58,11 @@ void FileUtils::setDateFormat(int format) {
 
 int FileUtils::dateFormat() {
     return g_dateFormat.load(std::memory_order_relaxed);
+}
+
+void FileUtils::setCustomDateFormat(const QString& pattern) {
+    QWriteLocker locker(&g_customDateLock);
+    g_customDateFormat = pattern.trimmed().isEmpty() ? QStringLiteral("yyyy-MM-dd hh:mm") : pattern;
 }
 
 QString FileUtils::formatDateTime(const QDateTime& dt, int format) {
@@ -69,6 +77,13 @@ QString FileUtils::formatDateTime(const QDateTime& dt, int format) {
         return QLocale::system().toString(dt, QLocale::ShortFormat);
     case LongLocale:
         return QLocale::system().toString(dt, QLocale::LongFormat);
+    case Custom: {
+        QReadLocker locker(&g_customDateLock);
+        const QString pattern = g_customDateFormat;
+        locker.unlock();
+        const QString rendered = QLocale::system().toString(dt, pattern);
+        return rendered.isEmpty() ? dt.toString(QStringLiteral("yyyy-MM-dd hh:mm")) : rendered;
+    }
     default:
         return dt.toString(QStringLiteral("yyyy-MM-dd hh:mm"));
     }
@@ -147,6 +162,45 @@ QString FileUtils::freeSpaceFor(const QString& path) {
         return {};
 
     return formatSize(storage.bytesAvailable());
+}
+
+QVariantList FileUtils::templates() {
+    QVariantList entries;
+
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::TemplatesLocation);
+    if (dir.isEmpty() || !QDir(dir).exists())
+        return entries;
+
+    const QFileInfoList files = QDir(dir).entryInfoList(QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
+    for (const QFileInfo& fi : files) {
+        if (entries.size() >= 50)
+            break;
+
+        QVariantMap entry;
+        entry.insert(QStringLiteral("name"), fi.fileName());
+        entry.insert(QStringLiteral("path"), fi.absoluteFilePath());
+        const QString mime = mimeTypeForFile(fi.absoluteFilePath());
+        QString glyph = QStringLiteral("description");
+        if (mime.startsWith(QLatin1String("image/")))
+            glyph = QStringLiteral("image");
+        else if (mime.startsWith(QLatin1String("audio/")))
+            glyph = QStringLiteral("music_note");
+        else if (mime.startsWith(QLatin1String("video/")))
+            glyph = QStringLiteral("movie");
+        else if (mime.contains(QLatin1String("shellscript")) || mime.contains(QLatin1String("executable")))
+            glyph = QStringLiteral("terminal");
+        else if (mime.contains(QLatin1String("spreadsheet")) || mime.contains(QLatin1String("csv")))
+            glyph = QStringLiteral("table");
+        else if (mime.contains(QLatin1String("presentation")))
+            glyph = QStringLiteral("slideshow");
+        else if (mime.contains(QLatin1String("pdf")))
+            glyph = QStringLiteral("picture_as_pdf");
+
+        entry.insert(QStringLiteral("icon"), glyph);
+        entries.append(entry);
+    }
+
+    return entries;
 }
 
 bool FileUtils::isImage(const QString& path) {

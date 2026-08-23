@@ -39,6 +39,16 @@ QString CatboxUploader::serviceDisplayName(Service service, const QString& time)
         : QStringLiteral("Litterbox (%1)").arg(time.isEmpty() ? QStringLiteral("24h") : time);
 }
 
+void CatboxUploader::beginSharedProgress(const QString& statusText) {
+    m_ownsSharedProgress = true;
+
+    auto* foProgress = FileOperations::instance()->progress();
+    if (foProgress) {
+        foProgress->setRunning(true);
+        foProgress->setStatusText(statusText);
+    }
+}
+
 void CatboxUploader::clearSharedProgress(const QString& finalStatusText) {
     if (!m_ownsSharedProgress)
         return;
@@ -82,6 +92,11 @@ void CatboxUploader::enqueue(const QStringList& filePaths, Service service, cons
         return;
     }
 
+    if (m_isUploading && !m_currentReply)
+        m_isUploading = false;
+
+    beginSharedProgress(tr("Preparing to upload to %1...").arg(serviceName));
+
     if (!m_isUploading)
         processNextInQueue();
 }
@@ -102,10 +117,11 @@ void CatboxUploader::uploadFilesToLitterbox(const QStringList& filePaths, const 
 void CatboxUploader::cancelUpload() {
     m_uploadQueue.clear();
 
-    if (m_currentReply) {
-        m_currentReply->abort();
-        m_currentReply->deleteLater();
+    if (QNetworkReply* reply = m_currentReply) {
         m_currentReply = nullptr;
+        reply->disconnect(this);
+        reply->abort();
+        reply->deleteLater();
     }
 
     if (m_isUploading) {
@@ -246,19 +262,24 @@ void CatboxUploader::onUploadProgress(qint64 bytesSent, qint64 bytesTotal) {
         auto* foProgress = FileOperations::instance()->progress();
         if (foProgress && foProgress->running()) {
             foProgress->setProgress(m_uploadProgress);
+            const QString queued = m_uploadQueue.isEmpty()
+                ? QString()
+                : (m_uploadQueue.size() == 1
+                       ? tr(", 1 more queued")
+                       : tr(", %1 more queued").arg(m_uploadQueue.size()));
             foProgress->setStatusText(m_uploadProgress >= 1.0
-                    ? tr("Waiting for %1 to process %2...").arg(m_currentService, m_currentFileName)
+                    ? tr("Waiting for %1 to process %2...").arg(m_currentService, m_currentFileName) + queued
                     : tr("Uploading %1 to %2 (%3%)")
                           .arg(m_currentFileName, m_currentService)
-                          .arg(static_cast<int>(m_uploadProgress * 100)));
+                          .arg(static_cast<int>(m_uploadProgress * 100)) + queued);
         }
     }
 }
 
 void CatboxUploader::onReplyFinished() {
-    if (!m_currentReply) return;
-
-    QNetworkReply* reply = m_currentReply;
+    QNetworkReply* reply = m_currentReply ? m_currentReply : qobject_cast<QNetworkReply*>(sender());
+    if (!reply)
+        return;
     m_currentReply = nullptr;
 
     QString currentFilePath = m_currentItem.filePath;

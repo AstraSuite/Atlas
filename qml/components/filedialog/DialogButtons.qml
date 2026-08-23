@@ -12,6 +12,15 @@ StyledRect {
 
     property bool uploadingFromDialog: false
 
+    function commitSave() {
+        if (!root.dialog.saveMode)
+            return;
+        const name = root.dialog.saveName.trim();
+        if (name.length === 0 || name.indexOf("/") >= 0)
+            return;
+        root.dialog.accepted(root.dialog.savePath);
+    }
+
     Connections {
         target: CatboxUploader
         function onUploadFinished(success, result, path) {
@@ -30,12 +39,56 @@ StyledRect {
 
     color: Colours.tPalette.m3surfaceContainer
 
-    RowLayout {
+    ColumnLayout {
         id: inner
 
         anchors.fill: parent
         anchors.margins: Tokens.padding.medium
 
+        spacing: Tokens.spacing.small
+
+        RowLayout {
+            Layout.fillWidth: true
+            visible: root.dialog.saveMode
+            spacing: Tokens.spacing.small
+
+            StyledText {
+                text: qsTr("Name:")
+            }
+
+            StyledRect {
+                Layout.fillWidth: true
+                implicitHeight: 34
+                radius: Tokens.rounding.medium
+                color: Colours.tPalette.m3surfaceContainerHigh
+                border.color: saveNameInput.activeFocus ? Colours.palette.m3primary : "transparent"
+                border.width: saveNameInput.activeFocus ? 2 : 0
+
+                TextInput {
+                    id: saveNameInput
+                    anchors.fill: parent
+                    anchors.margins: Tokens.padding.small
+                    verticalAlignment: TextInput.AlignVCenter
+                    text: root.dialog.saveName
+                    color: Colours.palette.m3onSurface
+                    font: Tokens.font.body.medium
+                    selectByMouse: true
+                    clip: true
+                    onTextChanged: root.dialog.saveName = text
+                    onAccepted: root.commitSave()
+                }
+            }
+
+            StyledText {
+                visible: root.dialog.saveWouldOverwrite
+                text: qsTr("already exists")
+                color: Colours.palette.m3error
+                font: Tokens.font.label.medium
+            }
+        }
+
+        RowLayout {
+        Layout.fillWidth: true
         spacing: Tokens.spacing.small
 
         StyledText {
@@ -214,9 +267,13 @@ StyledRect {
             implicitHeight: selectText.implicitHeight + Tokens.padding.medium * 2
 
             StateLayer {
-                disabled: !root.dialog.selectionValid || CatboxUploader.isUploading
+                disabled: root.dialog.saveMode
+                    ? (root.dialog.saveName.trim().length === 0 || CatboxUploader.isUploading)
+                    : (!root.dialog.selectionValid || CatboxUploader.isUploading)
                 onClicked: {
-                    if (root.dialog.selectionValid && !CatboxUploader.isUploading) {
+                    if (root.dialog.saveMode) {
+                        root.commitSave();
+                    } else if (root.dialog.selectionValid && !CatboxUploader.isUploading) {
                         if (root.dialog.directoryOnly) {
                             if (root.folder && root.folder.currentItem && root.folder.currentItem.modelData && root.folder.currentItem.modelData.isDir) {
                                 root.dialog.accepted(root.folder.currentItem.modelData.path);
@@ -236,8 +293,19 @@ StyledRect {
                 anchors.centerIn: parent
                 anchors.margins: Tokens.padding.medium
 
-                text: root.dialog.directoryOnly ? qsTr("Select Folder") : qsTr("Select")
-                color: root.dialog.selectionValid && !CatboxUploader.isUploading ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                text: root.dialog.saveMode
+                    ? (root.dialog.saveWouldOverwrite ? qsTr("Overwrite") : qsTr("Save"))
+                    : (root.dialog.directoryOnly ? qsTr("Select Folder") : qsTr("Select"))
+                color: {
+                    if (root.dialog.saveMode) {
+                        if (root.dialog.saveName.trim().length === 0)
+                            return Colours.palette.m3outline;
+                        return root.dialog.saveWouldOverwrite ? Colours.palette.m3error : Colours.palette.m3onSurface;
+                    }
+                    return root.dialog.selectionValid && !CatboxUploader.isUploading
+                        ? Colours.palette.m3onSurface
+                        : Colours.palette.m3outline;
+                }
             }
         }
 
@@ -266,6 +334,7 @@ StyledRect {
 
                 text: qsTr("Cancel")
             }
+        }
         }
     }
 }
