@@ -44,10 +44,22 @@ ApplicationWindow {
     function requestPermanentDelete(paths) {
         if (!paths || paths.length === 0) return;
         if (AppController.confirmPermanentDelete) {
+            confirmDeleteModal.permanent = true;
             confirmDeleteModal.targetPaths = paths;
             confirmDeleteModal.expanded = true;
         } else {
             FileOperations.deletePermanently(paths);
+        }
+    }
+
+    function requestMoveToTrash(paths) {
+        if (!paths || paths.length === 0) return;
+        if (AppController.confirmMoveToTrash) {
+            confirmDeleteModal.permanent = false;
+            confirmDeleteModal.targetPaths = paths;
+            confirmDeleteModal.expanded = true;
+        } else {
+            FileOperations.moveToTrash(paths);
         }
     }
 
@@ -242,6 +254,11 @@ ApplicationWindow {
                                 dropActionMenu.expanded = true;
                             }
 
+                            onItemOpenedInNewTab: item => {
+                                if (item && item.isDir)
+                                    TabManager.newTab(item.path);
+                            }
+
                             onItemOpened: (item, pane) => {
                                 AppIntegration.openWithDefault(item.path);
                             }
@@ -344,7 +361,7 @@ ApplicationWindow {
                         newItemModal.expanded = true;
                     }
                 } else if (action === "trash" && item) {
-                    FileOperations.moveToTrash(targetPaths);
+                    window.requestMoveToTrash(targetPaths);
                 } else if (action === "delete" && item) {
                     window.requestPermanentDelete(targetPaths);
                 } else if (action === "newFolder") {
@@ -387,6 +404,13 @@ ApplicationWindow {
                         operationsModal.expanded = true;
                         FileOperations.uploadToLitterbox(pathsToUpload, time);
                     }
+                } else if (action.startsWith("newFromTemplate:")) {
+                    const templatePath = action.substring(16);
+                    newItemModal.title = qsTr("New from Template");
+                    newItemModal.icon = "file_copy";
+                    newItemModal.templateSource = templatePath;
+                    newItemModal.initialText = templatePath.split("/").pop();
+                    newItemModal.expanded = true;
                 } else if (action === "newFile") {
                     newItemModal.title = qsTr("Create New File");
                     newItemModal.icon = "note_add";
@@ -439,7 +463,12 @@ ApplicationWindow {
         // Permanent Delete Confirmation Modal
         ConfirmDeleteModal {
             id: confirmDeleteModal
-            onConfirmed: paths => FileOperations.deletePermanently(paths)
+            onConfirmed: paths => {
+                if (confirmDeleteModal.permanent)
+                    FileOperations.deletePermanently(paths);
+                else
+                    FileOperations.moveToTrash(paths);
+            }
         }
 
         // Places & Devices Management Modal
@@ -480,6 +509,10 @@ ApplicationWindow {
                     FileOperations.createDirectory(currentDir, text);
                 } else if (title === qsTr("Create New File")) {
                     FileOperations.createFile(currentDir, text);
+                } else if (title === qsTr("Select by Pattern")) {
+                    splitContainer.selectByPattern(text);
+                } else if (title === qsTr("New from Template")) {
+                    FileOperations.createFromTemplate(newItemModal.templateSource, currentDir, text);
                 } else if (title === qsTr("Rename")) {
                     let oldPath = newItemModal.targetRenamePath || (contextMenu.targetItem ? contextMenu.targetItem.path : "");
                     if (oldPath) {
@@ -495,6 +528,12 @@ ApplicationWindow {
         }
 
         // Git Repository Modal
+        Binding {
+            target: GitManager
+            property: "currentPath"
+            value: TabManager.currentTab ? TabManager.currentTab.currentPath : ""
+        }
+
         GitModal {
             id: gitModal
         }
@@ -700,7 +739,7 @@ ApplicationWindow {
             context: Qt.ApplicationShortcut
             onActivated: {
                 let paths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : (splitContainer.currentSelectedPath ? [splitContainer.currentSelectedPath] : []);
-                if (paths.length > 0) FileOperations.moveToTrash(paths);
+                if (paths.length > 0) window.requestMoveToTrash(paths);
             }
         }
 
@@ -774,6 +813,17 @@ ApplicationWindow {
             sequence: "Ctrl+I"
             context: Qt.ApplicationShortcut
             onActivated: splitContainer.invertSelection()
+        }
+
+        Shortcut {
+            sequence: "Ctrl+S"
+            context: Qt.ApplicationShortcut
+            onActivated: {
+                newItemModal.title = qsTr("Select by Pattern");
+                newItemModal.icon = "filter_alt";
+                newItemModal.initialText = "*";
+                newItemModal.expanded = true;
+            }
         }
 
         Shortcut {

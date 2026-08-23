@@ -152,6 +152,45 @@ QVariantList FileUtils::describePaths(const QStringList& paths) {
     return entries;
 }
 
+QVariantList FileUtils::templates() {
+    QVariantList entries;
+
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::TemplatesLocation);
+    if (dir.isEmpty() || !QDir(dir).exists())
+        return entries;
+
+    const QFileInfoList files = QDir(dir).entryInfoList(QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
+    for (const QFileInfo& fi : files) {
+        if (entries.size() >= 50)
+            break;
+
+        QVariantMap entry;
+        entry.insert(QStringLiteral("name"), fi.fileName());
+        entry.insert(QStringLiteral("path"), fi.absoluteFilePath());
+        const QString mime = mimeTypeForFile(fi.absoluteFilePath());
+        QString glyph = QStringLiteral("description");
+        if (mime.startsWith(QLatin1String("image/")))
+            glyph = QStringLiteral("image");
+        else if (mime.startsWith(QLatin1String("audio/")))
+            glyph = QStringLiteral("music_note");
+        else if (mime.startsWith(QLatin1String("video/")))
+            glyph = QStringLiteral("movie");
+        else if (mime.contains(QLatin1String("shellscript")) || mime.contains(QLatin1String("executable")))
+            glyph = QStringLiteral("terminal");
+        else if (mime.contains(QLatin1String("spreadsheet")) || mime.contains(QLatin1String("csv")))
+            glyph = QStringLiteral("table");
+        else if (mime.contains(QLatin1String("presentation")))
+            glyph = QStringLiteral("slideshow");
+        else if (mime.contains(QLatin1String("pdf")))
+            glyph = QStringLiteral("picture_as_pdf");
+
+        entry.insert(QStringLiteral("icon"), glyph);
+        entries.append(entry);
+    }
+
+    return entries;
+}
+
 bool FileUtils::isImage(const QString& path) {
     if (path.isEmpty()) return false;
     static const QMimeDatabase db;
