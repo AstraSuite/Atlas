@@ -903,17 +903,11 @@ void FileOperations::clearCompletedTasks() {
 
 void FileOperations::uploadToCatbox(const QStringList& paths) {
     if (paths.isEmpty()) return;
-    m_progress->setRunning(true);
-    m_progress->setProgress(0.0);
-    m_progress->setStatusText(tr("Uploading to Catbox..."));
     CatboxUploader::instance()->uploadFiles(paths);
 }
 
 void FileOperations::uploadToLitterbox(const QStringList& paths, const QString& time) {
     if (paths.isEmpty()) return;
-    m_progress->setRunning(true);
-    m_progress->setProgress(0.0);
-    m_progress->setStatusText(tr("Uploading to Litterbox (%1)...").arg(time.isEmpty() ? QStringLiteral("24h") : time));
     CatboxUploader::instance()->uploadFilesToLitterbox(paths, time);
 }
 
