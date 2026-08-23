@@ -14,6 +14,8 @@ class RoundingTokens : public QObject {
     Q_OBJECT
     QML_ANONYMOUS
 
+    Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY valuesChanged)
+
 #define TOKEN_PROP(name, defaultVal) \
     Q_PROPERTY(int name READ name NOTIFY valuesChanged) \
 public: \
@@ -37,7 +39,13 @@ private: \
 public:
     explicit RoundingTokens(QObject* parent = nullptr) : QObject(parent) {}
 
-    void setScale(qreal scale) { m_scale = scale; emit valuesChanged(); }
+    [[nodiscard]] qreal scale() const { return m_scale; }
+    void setScale(qreal scale) {
+        if (qFuzzyCompare(m_scale, scale))
+            return;
+        m_scale = scale;
+        emit valuesChanged();
+    }
     void loadJson(const QJsonObject& json);
 
 signals:
@@ -50,6 +58,8 @@ private:
 class SpacingTokens : public QObject {
     Q_OBJECT
     QML_ANONYMOUS
+
+    Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY valuesChanged)
 
 #define TOKEN_PROP(name, defaultVal) \
     Q_PROPERTY(int name READ name NOTIFY valuesChanged) \
@@ -73,7 +83,13 @@ private: \
 public:
     explicit SpacingTokens(QObject* parent = nullptr) : QObject(parent) {}
 
-    void setScale(qreal scale) { m_scale = scale; emit valuesChanged(); }
+    [[nodiscard]] qreal scale() const { return m_scale; }
+    void setScale(qreal scale) {
+        if (qFuzzyCompare(m_scale, scale))
+            return;
+        m_scale = scale;
+        emit valuesChanged();
+    }
     void loadJson(const QJsonObject& json);
 
 signals:
@@ -86,6 +102,8 @@ private:
 class PaddingTokens : public QObject {
     Q_OBJECT
     QML_ANONYMOUS
+
+    Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY valuesChanged)
 
 #define TOKEN_PROP(name, defaultVal) \
     Q_PROPERTY(int name READ name NOTIFY valuesChanged) \
@@ -109,7 +127,13 @@ private: \
 public:
     explicit PaddingTokens(QObject* parent = nullptr) : QObject(parent) {}
 
-    void setScale(qreal scale) { m_scale = scale; emit valuesChanged(); }
+    [[nodiscard]] qreal scale() const { return m_scale; }
+    void setScale(qreal scale) {
+        if (qFuzzyCompare(m_scale, scale))
+            return;
+        m_scale = scale;
+        emit valuesChanged();
+    }
     void loadJson(const QJsonObject& json);
 
 signals:
@@ -122,6 +146,8 @@ private:
 class AnimDurationTokens : public QObject {
     Q_OBJECT
     QML_ANONYMOUS
+
+    Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY valuesChanged)
 
 #define TOKEN_PROP(name, defaultVal) \
     Q_PROPERTY(int name READ name NOTIFY valuesChanged) \
@@ -147,7 +173,13 @@ private: \
 public:
     explicit AnimDurationTokens(QObject* parent = nullptr) : QObject(parent) {}
 
-    void setScale(qreal scale) { m_scale = scale; emit valuesChanged(); }
+    [[nodiscard]] qreal scale() const { return m_scale; }
+    void setScale(qreal scale) {
+        if (qFuzzyCompare(m_scale, scale))
+            return;
+        m_scale = scale;
+        emit valuesChanged();
+    }
     void loadJson(const QJsonObject& json);
 
 signals:
