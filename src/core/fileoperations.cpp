@@ -1,4 +1,5 @@
 #include "fileoperations.hpp"
+#include <unistd.h>
 
 #include "catboxuploader.hpp"
 #include <QDir>
@@ -100,6 +101,24 @@ qint64 FileOperations::calculateTotalSize(const QStringList& paths) {
     return total;
 }
 
+static bool entryExists(const QFileInfo& info) {
+    return info.exists() || info.isSymLink();
+}
+
+static QString rawSymLinkTarget(const QString& path) {
+    const QByteArray encoded = QFile::encodeName(path);
+    QByteArray buffer(1024, Qt::Uninitialized);
+
+    while (true) {
+        const ssize_t written = ::readlink(encoded.constData(), buffer.data(), buffer.size());
+        if (written < 0)
+            return {};
+        if (written < buffer.size())
+            return QFile::decodeName(buffer.left(written));
+        buffer.resize(buffer.size() * 2);
+    }
+}
+
 bool FileOperations::copyRecursively(const QString& src, const QString& dest, std::atomic<bool>& cancelFlag, qint64& processedBytes, qint64 totalBytes) {
     if (cancelFlag.load())
         return false;
@@ -110,6 +129,15 @@ bool FileOperations::copyRecursively(const QString& src, const QString& dest, st
     // Prevent copying a file or folder onto its exact self
     if (srcInfo.canonicalFilePath() == destInfo.canonicalFilePath() && !srcInfo.canonicalFilePath().isEmpty()) {
         return false;
+    }
+
+    if (srcInfo.isSymLink()) {
+        const QString target = rawSymLinkTarget(src);
+        if (target.isEmpty())
+            return false;
+        if (QFileInfo(dest).isSymLink() || QFileInfo::exists(dest))
+            QFile::remove(dest);
+        return QFile::link(target, dest);
     }
 
     if (srcInfo.isDir()) {
@@ -158,12 +186,13 @@ bool FileOperations::copyRecursively(const QString& src, const QString& dest, st
 
 bool FileOperations::removeRecursively(const QString& path) {
     QFileInfo fi(path);
+    if (fi.isSymLink())
+        return QFile::remove(path);
     if (fi.isDir()) {
         QDir dir(path);
         return dir.removeRecursively();
-    } else {
-        return QFile::remove(path);
     }
+    return QFile::remove(path);
 }
 
 void FileOperations::copyFiles(const QStringList& sources, const QString& destinationDir) {
@@ -251,7 +280,7 @@ void FileOperations::moveFiles(const QStringList& sources, const QString& destin
                     break;
                 }
                 QFileInfo srcFi(src);
-                if (!srcFi.exists()) {
+                if (!entryExists(srcFi)) {
                     continue;
                 }
 
@@ -440,7 +469,7 @@ void FileOperations::moveToTrash(const QStringList& paths) {
 
         for (const QString& p : paths) {
             QFileInfo fi(p);
-            if (!fi.exists())
+            if (!entryExists(fi))
                 continue;
 
             QString fileName = fi.fileName();
