@@ -32,7 +32,6 @@ public:
     Q_INVOKABLE QString scriptsFolderPath() const;
     Q_INVOKABLE int handleCustomProtocol(const QString& uri);
     Q_INVOKABLE QString getSystemGeometry(int index);
-    Q_INVOKABLE QString getGameAssetUrl();
 
     // Papirus folder color and icon theme management
     Q_INVOKABLE bool isPapirusAvailable();

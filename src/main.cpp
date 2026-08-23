@@ -11,8 +11,6 @@
 #include <QSettings>
 #include <QMouseEvent>
 
-#include <QtWebEngineQuick/qtwebenginequickglobal.h>
-
 #include "config/colours.hpp"
 #include "config/tokens.hpp"
 #include "controllers/tabmanager.hpp"
@@ -28,11 +26,10 @@
 #include "core/placesmodel.hpp"
 #include "core/drivemanager.hpp"
 #include "core/networkmanager.hpp"
+#include "core/runnergame.hpp"
 #include "models/filesystemmodel.hpp"
 
 int main(int argc, char* argv[]) {
-    QtWebEngineQuick::initialize();
-
     // Explicitly configure 32-bit RGBA8888 surface format to avoid RGB565 color quantization
     QSurfaceFormat format;
     format.setRedBufferSize(8);
@@ -177,6 +174,7 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("PlacesModel", placesModel);
     engine.rootContext()->setContextProperty("DriveManager", driveManager);
     engine.rootContext()->setContextProperty("NetworkManager", networkManager);
+    engine.rootContext()->setContextProperty("RunnerGame", prism::core::RunnerGame::instance());
     engine.rootContext()->setContextProperty("isPickerMode", isPickerMode);
 
     const QUrl url(QStringLiteral("qrc:/qt/qml/prism/qml/main.qml"));

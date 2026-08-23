@@ -21,7 +21,6 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     Concurrent
     Svg
     Multimedia
-    WebEngineQuick
     DBus
     Network
 )
@@ -72,6 +71,8 @@ qt_add_executable(prism_app
     src/core/networkmanager.cpp
     src/core/circularindicatormanager.hpp
     src/core/circularindicatormanager.cpp
+    src/core/runnergame.hpp
+    src/core/runnergame.cpp
     src/core/appcontroller.hpp
     src/core/appcontroller.cpp
 )
@@ -158,13 +159,7 @@ qt_add_qml_module(prism_app
         assets/material_icons.txt
         assets/prism.png
         assets/prism.svg
-        assets/runner/index.html
-        assets/runner/index.js
-        assets/runner/index.css
-        assets/runner/assets/default_100_percent/100-offline-sprite.png
-        assets/runner/assets/default_100_percent/100-error-offline.png
         assets/runner/assets/default_200_percent/200-offline-sprite.png
-        assets/runner/assets/default_200_percent/200-error-offline.png
 )
 
 target_link_libraries(prism_app PRIVATE
@@ -177,7 +172,6 @@ target_link_libraries(prism_app PRIVATE
     Qt6::Concurrent
     Qt6::Svg
     Qt6::Multimedia
-    Qt6::WebEngineQuick
     Qt6::Network
 )
 
