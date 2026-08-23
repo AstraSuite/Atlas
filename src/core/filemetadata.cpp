@@ -201,6 +201,16 @@ void FileMetadata::calculateChecksums() {
     });
 }
 
+static QFile::Permissions traversablePermissions(QFile::Permissions perms) {
+    if (perms & QFile::ReadUser)
+        perms |= QFile::ExeUser;
+    if (perms & QFile::ReadGroup)
+        perms |= QFile::ExeGroup;
+    if (perms & QFile::ReadOther)
+        perms |= QFile::ExeOther;
+    return perms;
+}
+
 bool FileMetadata::applyPermissions(int userRead, int userWrite, int userExec,
                                     int groupRead, int groupWrite, int groupExec,
                                     int otherRead, int otherWrite, int otherExec,
@@ -218,9 +228,32 @@ bool FileMetadata::applyPermissions(int userRead, int userWrite, int userExec,
     if (otherWrite) perms |= QFile::WriteOther;
     if (otherExec) perms |= QFile::ExeOther;
 
-    bool success = QFile::setPermissions(m_path, perms);
-    reload();
-    return success;
+    if (!recursive) {
+        const bool success = QFile::setPermissions(m_path, perms);
+        reload();
+        return success;
+    }
+
+    const QString root = m_path;
+    (void)QtConcurrent::run([this, root, perms]() {
+        QFile::setPermissions(root, traversablePermissions(perms));
+
+        QDirIterator it(root, QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System,
+                        QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            const QString entry = it.next();
+            const QFileInfo info = it.fileInfo();
+            if (info.isSymLink())
+                continue;
+            QFile::setPermissions(entry, info.isDir() ? traversablePermissions(perms) : perms);
+        }
+
+        QMetaObject::invokeMethod(this, [this]() {
+            reload();
+        });
+    });
+
+    return true;
 }
 
 } // namespace prism::core

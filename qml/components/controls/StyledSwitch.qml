@@ -148,23 +148,27 @@ T.Switch {
                 }
 
                 Behavior on start1 {
-                    Anim {
-                        type: Anim.FastSpatial
+                    PropertyAnimation {
+                        duration: Tokens.anim.durations.expressiveFastSpatial
+                        easing: Tokens.anim.expressiveFastSpatial
                     }
                 }
                 Behavior on end1 {
-                    Anim {
-                        type: Anim.FastSpatial
+                    PropertyAnimation {
+                        duration: Tokens.anim.durations.expressiveFastSpatial
+                        easing: Tokens.anim.expressiveFastSpatial
                     }
                 }
                 Behavior on start2 {
-                    Anim {
-                        type: Anim.FastSpatial
+                    PropertyAnimation {
+                        duration: Tokens.anim.durations.expressiveFastSpatial
+                        easing: Tokens.anim.expressiveFastSpatial
                     }
                 }
                 Behavior on end2 {
-                    Anim {
-                        type: Anim.FastSpatial
+                    PropertyAnimation {
+                        duration: Tokens.anim.durations.expressiveFastSpatial
+                        easing: Tokens.anim.expressiveFastSpatial
                     }
                 }
             }

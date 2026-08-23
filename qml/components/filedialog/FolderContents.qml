@@ -16,6 +16,7 @@ Item {
         id: fsModel
         path: root.dialog.currentPath
         showHidden: root.dialog.showHidden
+        showDirsFirst: AppController.showDirsFirst
         onPathChanged: view.currentIndex = -1
     }
 
@@ -309,6 +310,8 @@ Item {
             let newCwd = root.dialog.cwd.slice();
             newCwd.push(file.name);
             root.dialog.cwd = newCwd;
+        } else if (root.dialog.saveMode) {
+            root.dialog.saveName = file.name;
         } else if (root.dialog.selectionValid && !root.dialog.directoryOnly) {
             root.dialog.accepted(file.path);
         }
