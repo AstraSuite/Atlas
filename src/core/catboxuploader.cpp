@@ -1,5 +1,6 @@
 #include "catboxuploader.hpp"
 #include "fileoperations.hpp"
+#include <QFile>
 #include <QFileInfo>
 #include <QMimeDatabase>
 #include <QMimeType>
@@ -13,6 +14,95 @@
 #include <algorithm>
 
 namespace prism::core {
+namespace {
+
+class MultipartFileDevice : public QIODevice {
+public:
+    MultipartFileDevice(QByteArray prologue, const QString& filePath, QByteArray epilogue, QObject* parent = nullptr)
+        : QIODevice(parent)
+        , m_prologue(std::move(prologue))
+        , m_epilogue(std::move(epilogue))
+        , m_file(filePath) {}
+
+    bool open(OpenMode mode) override {
+        if (!(mode & ReadOnly))
+            return false;
+        if (!m_file.open(QIODevice::ReadOnly))
+            return false;
+        m_fileSize = m_file.size();
+        m_pos = 0;
+        return QIODevice::open(mode | Unbuffered);
+    }
+
+    void close() override {
+        m_file.close();
+        QIODevice::close();
+    }
+
+    [[nodiscard]] bool isSequential() const override { return false; }
+    [[nodiscard]] qint64 size() const override { return m_prologue.size() + m_fileSize + m_epilogue.size(); }
+    [[nodiscard]] qint64 pos() const override { return m_pos; }
+    [[nodiscard]] bool atEnd() const override { return m_pos >= size(); }
+
+    bool seek(qint64 pos) override {
+        if (pos < 0 || pos > size())
+            return false;
+        const qint64 filePart = pos - m_prologue.size();
+        if (filePart >= 0 && filePart <= m_fileSize && !m_file.seek(filePart))
+            return false;
+        if (filePart < 0 && !m_file.seek(0))
+            return false;
+        m_pos = pos;
+        return QIODevice::seek(pos);
+    }
+
+protected:
+    qint64 readData(char* data, qint64 maxlen) override {
+        if (maxlen <= 0 || m_pos >= size())
+            return m_pos >= size() ? 0 : -1;
+
+        qint64 written = 0;
+        while (written < maxlen && m_pos < size()) {
+            const qint64 want = maxlen - written;
+            if (m_pos < m_prologue.size()) {
+                const qint64 take = qMin(want, m_prologue.size() - m_pos);
+                memcpy(data + written, m_prologue.constData() + m_pos, static_cast<size_t>(take));
+                written += take;
+                m_pos += take;
+            } else if (m_pos < m_prologue.size() + m_fileSize) {
+                const qint64 offset = m_pos - m_prologue.size();
+                if (m_file.pos() != offset && !m_file.seek(offset))
+                    return written > 0 ? written : -1;
+                const qint64 take = qMin(want, m_fileSize - offset);
+                const qint64 got = m_file.read(data + written, take);
+                if (got < 0)
+                    return written > 0 ? written : -1;
+                if (got == 0)
+                    break;
+                written += got;
+                m_pos += got;
+            } else {
+                const qint64 offset = m_pos - m_prologue.size() - m_fileSize;
+                const qint64 take = qMin(want, m_epilogue.size() - offset);
+                memcpy(data + written, m_epilogue.constData() + offset, static_cast<size_t>(take));
+                written += take;
+                m_pos += take;
+            }
+        }
+        return written;
+    }
+
+    qint64 writeData(const char*, qint64) override { return -1; }
+
+private:
+    QByteArray m_prologue;
+    QByteArray m_epilogue;
+    QFile m_file;
+    qint64 m_fileSize = 0;
+    qint64 m_pos = 0;
+};
+
+} // namespace
 
 CatboxUploader::CatboxUploader(QObject* parent)
     : QObject(parent)
@@ -185,17 +275,6 @@ void CatboxUploader::processNextInQueue() {
         foProgress->setStatusText(tr("Uploading %1 to %2...").arg(m_currentFileName, serviceName));
     }
 
-    QFile file(m_currentItem.filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        QString err = tr("Failed to open file for reading");
-        emit uploadFinished(false, err, m_currentItem.filePath);
-        FileOperations::instance()->operationFinished(false, tr("%1 upload failed: %2").arg(serviceName, err));
-        processNextInQueue();
-        return;
-    }
-    QByteArray fileData = file.readAll();
-    file.close();
-
     QString boundary = QStringLiteral("----PrismBoundary%1%2")
         .arg(QDateTime::currentMSecsSinceEpoch())
         .arg(QRandomGenerator::global()->generate());
@@ -204,22 +283,33 @@ void CatboxUploader::processNextInQueue() {
     QMimeType mimeType = mimeDb.mimeTypeForFile(m_currentItem.filePath);
     QString mimeName = mimeType.isValid() ? mimeType.name() : QStringLiteral("application/octet-stream");
 
-    QByteArray body;
-    body.append("--" + boundary.toUtf8() + "\r\n");
-    body.append("Content-Disposition: form-data; name=\"reqtype\"\r\n\r\n");
-    body.append("fileupload\r\n");
+    QByteArray prologue;
+    prologue.append("--" + boundary.toUtf8() + "\r\n");
+    prologue.append("Content-Disposition: form-data; name=\"reqtype\"\r\n\r\n");
+    prologue.append("fileupload\r\n");
 
     if (m_currentItem.service == Service::Litterbox) {
-        body.append("--" + boundary.toUtf8() + "\r\n");
-        body.append("Content-Disposition: form-data; name=\"time\"\r\n\r\n");
-        body.append(m_currentItem.time.toUtf8() + "\r\n");
+        prologue.append("--" + boundary.toUtf8() + "\r\n");
+        prologue.append("Content-Disposition: form-data; name=\"time\"\r\n\r\n");
+        prologue.append(m_currentItem.time.toUtf8() + "\r\n");
     }
 
-    body.append("--" + boundary.toUtf8() + "\r\n");
-    body.append("Content-Disposition: form-data; name=\"fileToUpload\"; filename=\"" + m_currentFileName.toUtf8() + "\"\r\n");
-    body.append("Content-Type: " + mimeName.toUtf8() + "\r\n\r\n");
-    body.append(fileData);
-    body.append("\r\n--" + boundary.toUtf8() + "--\r\n");
+    prologue.append("--" + boundary.toUtf8() + "\r\n");
+    prologue.append("Content-Disposition: form-data; name=\"fileToUpload\"; filename=\"" + m_currentFileName.toUtf8() + "\"\r\n");
+    prologue.append("Content-Type: " + mimeName.toUtf8() + "\r\n\r\n");
+
+    QByteArray epilogue;
+    epilogue.append("\r\n--" + boundary.toUtf8() + "--\r\n");
+
+    auto* body = new MultipartFileDevice(prologue, m_currentItem.filePath, epilogue);
+    if (!body->open(QIODevice::ReadOnly)) {
+        delete body;
+        QString err = tr("Failed to open file for reading");
+        emit uploadFinished(false, err, m_currentItem.filePath);
+        FileOperations::instance()->operationFinished(false, tr("%1 upload failed: %2").arg(serviceName, err));
+        processNextInQueue();
+        return;
+    }
 
     QUrl apiUrl = (m_currentItem.service == Service::Catbox)
         ? QUrl(QStringLiteral("https://catbox.moe/user/api.php"))
@@ -228,7 +318,7 @@ void CatboxUploader::processNextInQueue() {
     QNetworkRequest request(apiUrl);
     request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("Mozilla/5.0 Prism/1.0"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, QString("multipart/form-data; boundary=%1").arg(boundary).toUtf8());
-    request.setHeader(QNetworkRequest::ContentLengthHeader, body.size());
+    request.setHeader(QNetworkRequest::ContentLengthHeader, body->size());
     request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setTransferTimeout(120000);
@@ -238,6 +328,7 @@ void CatboxUploader::processNextInQueue() {
     request.setSslConfiguration(sslConf);
 
     m_currentReply = m_nam->post(request, body);
+    body->setParent(m_currentReply);
     connect(m_currentReply, &QNetworkReply::uploadProgress, this, &CatboxUploader::onUploadProgress);
     connect(m_currentReply, &QNetworkReply::finished, this, &CatboxUploader::onReplyFinished);
     connect(m_currentReply, &QNetworkReply::sslErrors, this, [this](const QList<QSslError>& errors) {
