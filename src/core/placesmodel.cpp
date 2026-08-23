@@ -234,6 +234,23 @@ void PlacesModel::refresh() {
         loadStandardPlaces();
     }
 
+    const QString recentPath = RecentFiles::virtualPath();
+    if (!m_hiddenPlaces.contains(recentPath)) {
+        int trashIndex = -1;
+        for (int i = 0; i < m_places.size(); ++i) {
+            if (m_places.at(i).isTrash) {
+                trashIndex = i;
+                break;
+            }
+        }
+
+        const PlaceItem recentItem { tr("Recent"), recentPath, "history", false, false, false, false, false, 0, 0 };
+        if (trashIndex >= 0)
+            m_places.insert(trashIndex, recentItem);
+        else
+            m_places.append(recentItem);
+    }
+
     loadBookmarks();
 
     endResetModel();
@@ -269,10 +286,6 @@ void PlacesModel::loadStandardPlaces() {
     if (!m_hiddenPlaces.contains(videos))
         m_places.append({ tr("Videos"), videos, "video_library", false, false, false, false, false, 0, 0 });
     
-    const QString recent = RecentFiles::virtualPath();
-    if (!m_hiddenPlaces.contains(recent))
-        m_places.append({ tr("Recent"), recent, "history", false, false, true, false, false, 0, 0 });
-
     QString trash = home + "/.local/share/Trash/files";
     if (!m_hiddenPlaces.contains(trash) && !m_hiddenPlaces.contains("trash:"))
         m_places.append({ tr("Trash"), trash, "delete", false, false, true, false, false, 0, 0 });
