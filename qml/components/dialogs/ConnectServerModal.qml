@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import "../containers"
 import "../controls"
 import prism
 
@@ -11,23 +12,24 @@ Item {
     property bool expanded: false
     property var activeTab: null
 
-    readonly property var knownProtocols: [
-        { scheme: "sftp", label: qsTr("SFTP") },
-        { scheme: "smb", label: qsTr("SMB") },
-        { scheme: "ftp", label: qsTr("FTP") },
-        { scheme: "ftps", label: qsTr("FTPS") },
-        { scheme: "nfs", label: qsTr("NFS") },
-        { scheme: "afp", label: qsTr("AFP") },
-        { scheme: "dav", label: qsTr("WebDAV") },
-        { scheme: "davs", label: qsTr("WebDAV TLS") }
+    readonly property list<MenuItem> protocolMenuItems: [
+        MenuItem { text: qsTr("SFTP (SSH File Transfer)"); property string scheme: "sftp"; icon: "terminal" },
+        MenuItem { text: qsTr("SMB (Windows Share)"); property string scheme: "smb"; icon: "folder_shared" },
+        MenuItem { text: qsTr("FTP"); property string scheme: "ftp"; icon: "cloud" },
+        MenuItem { text: qsTr("FTPS (FTP over TLS)"); property string scheme: "ftps"; icon: "lock" },
+        MenuItem { text: qsTr("NFS (Network File System)"); property string scheme: "nfs"; icon: "storage" },
+        MenuItem { text: qsTr("AFP (Apple Filing)"); property string scheme: "afp"; icon: "folder" },
+        MenuItem { text: qsTr("WebDAV (HTTP)"); property string scheme: "dav"; icon: "public" },
+        MenuItem { text: qsTr("WebDAV TLS (HTTPS)"); property string scheme: "davs"; icon: "https" }
     ]
 
-    readonly property var protocols: {
-        const available = NetworkManager.supportedSchemes;
-        if (available.length === 0)
-            return root.knownProtocols;
-        const usable = root.knownProtocols.filter(p => available.indexOf(p.scheme) >= 0);
-        return usable.length > 0 ? usable : root.knownProtocols;
+    function getActiveProtocolItem() {
+        for (let i = 0; i < protocolMenuItems.length; i++) {
+            if (protocolMenuItems[i].scheme === root.scheme) {
+                return protocolMenuItems[i];
+            }
+        }
+        return protocolMenuItems[0];
     }
 
     property string scheme: "sftp"
@@ -78,8 +80,8 @@ Item {
     StyledRect {
         id: card
         anchors.centerIn: parent
-        implicitWidth: 440
-        implicitHeight: dialogCol.implicitHeight + Tokens.padding.large * 2
+        width: Math.min(parent.width - 32, 480)
+        height: Math.min(parent.height - 32, formCol.implicitHeight + headerRow.implicitHeight + actionRow.implicitHeight + (errorBanner.visible ? errorBanner.implicitHeight + Tokens.spacing.medium : 0) + Tokens.padding.large * 2 + Tokens.spacing.medium * 2)
         radius: Tokens.rounding.large
         color: Colours.palette.m3surfaceContainer
 
@@ -97,13 +99,14 @@ Item {
         }
 
         ColumnLayout {
-            id: dialogCol
+            id: mainCol
             anchors.fill: parent
             anchors.margins: Tokens.padding.large
             spacing: Tokens.spacing.medium
 
             // Header
             RowLayout {
+                id: headerRow
                 Layout.fillWidth: true
                 spacing: Tokens.spacing.small
 
@@ -133,6 +136,7 @@ Item {
 
             // Error Banner
             StyledRect {
+                id: errorBanner
                 Layout.fillWidth: true
                 implicitHeight: errorText.implicitHeight + Tokens.padding.small * 2
                 radius: Tokens.rounding.medium
@@ -150,280 +154,267 @@ Item {
                 }
             }
 
-            ColumnLayout {
+            // Scrollable Form Body
+            VerticalFadeFlickable {
+                id: flickable
                 Layout.fillWidth: true
-                spacing: 4
+                Layout.fillHeight: true
+                implicitHeight: formCol.implicitHeight
+                contentHeight: formCol.implicitHeight
+                clip: true
+                fadeAmount: 0.06
+                boundsBehavior: Flickable.StopAtBounds
 
-                StyledText {
-                    text: qsTr("Protocol")
-                    font: Tokens.font.label.medium
-                    color: Colours.palette.m3onSurfaceVariant
+                ScrollBar.vertical: StyledScrollBar {
+                    flickable: flickable
                 }
 
-                Flow {
-                    Layout.fillWidth: true
-                    spacing: Tokens.spacing.extraSmall
+                ColumnLayout {
+                    id: formCol
+                    width: flickable.width
+                    spacing: Tokens.spacing.medium
 
-                    Repeater {
-                        model: root.protocols
+                    // Protocol Selection as SplitButtonRow
+                    SplitButtonRow {
+                        Layout.fillWidth: true
+                        first: true
+                        last: true
+                        label: qsTr("Protocol")
+                        subtext: qsTr("File transfer protocol")
+                        menuItems: root.protocolMenuItems
+                        active: root.getActiveProtocolItem()
+                        onSelected: item => {
+                            if (item && item.scheme) {
+                                root.scheme = item.scheme;
+                                portInput.text = String(NetworkManager.defaultPort(root.scheme));
+                            }
+                        }
+                    }
 
-                        delegate: StyledRect {
-                            id: protoChip
+                    // Server / Host & Port
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Tokens.spacing.small
 
-                            required property var modelData
-                            readonly property bool isSelected: root.scheme === modelData.scheme
-
-                            implicitWidth: protoLabel.implicitWidth + Tokens.padding.medium * 2
-                            implicitHeight: 32
-                            radius: Tokens.rounding.full
-                            color: isSelected
-                                ? Colours.palette.m3primaryContainer
-                                : (protoHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
 
                             StyledText {
-                                id: protoLabel
-                                anchors.centerIn: parent
-                                text: protoChip.modelData.label
+                                text: qsTr("Server / Host")
                                 font: Tokens.font.label.medium
-                                color: protoChip.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                                color: Colours.palette.m3onSurfaceVariant
                             }
 
-                            MouseArea {
-                                id: protoHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    root.scheme = protoChip.modelData.scheme;
-                                    portInput.text = String(NetworkManager.defaultPort(root.scheme));
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 38
+                                radius: Tokens.rounding.medium
+                                color: Colours.tPalette.m3surfaceContainerHigh
+
+                                TextInput {
+                                    id: hostInput
+                                    anchors.fill: parent
+                                    anchors.margins: Tokens.padding.small
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    font: Tokens.font.body.medium
+                                    color: Colours.palette.m3onSurface
+                                    selectByMouse: true
+                                    clip: true
+
+                                    Text {
+                                        text: qsTr("e.g. 192.168.1.100 or server.com")
+                                        visible: !parent.text && !parent.activeFocus
+                                        color: Colours.palette.m3outline
+                                        font: parent.font
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+                            }
+                        }
+
+                        ColumnLayout {
+                            implicitWidth: 80
+                            spacing: 4
+
+                            StyledText {
+                                text: qsTr("Port")
+                                font: Tokens.font.label.medium
+                                color: Colours.palette.m3onSurfaceVariant
+                            }
+
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 38
+                                radius: Tokens.rounding.medium
+                                color: Colours.tPalette.m3surfaceContainerHigh
+
+                                TextInput {
+                                    id: portInput
+                                    text: "22"
+                                    anchors.fill: parent
+                                    anchors.margins: Tokens.padding.small
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    font: Tokens.font.body.medium
+                                    color: Colours.palette.m3onSurface
+                                    selectByMouse: true
+                                    validator: IntValidator { bottom: 1; top: 65535 }
                                 }
                             }
                         }
                     }
-                }
-            }
 
-            // Server / Host & Port
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Tokens.spacing.small
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 4
-
-                    StyledText {
-                        text: qsTr("Server / Host")
-                        font: Tokens.font.label.medium
-                        color: Colours.palette.m3onSurfaceVariant
-                    }
-
-                    StyledRect {
+                    // Username
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        implicitHeight: 38
-                        radius: Tokens.rounding.medium
-                        color: Colours.tPalette.m3surfaceContainerHigh
+                        visible: root.usesCredentials
+                        spacing: 4
 
-                        TextInput {
-                            id: hostInput
-                            anchors.fill: parent
-                            anchors.margins: Tokens.padding.small
-                            verticalAlignment: TextInput.AlignVCenter
-                            font: Tokens.font.body.medium
-                            color: Colours.palette.m3onSurface
-                            selectByMouse: true
-                            clip: true
+                        StyledText {
+                            text: qsTr("Username")
+                            font: Tokens.font.label.medium
+                            color: Colours.palette.m3onSurfaceVariant
+                        }
 
-                            Text {
-                                text: qsTr("e.g. 192.168.1.100 or server.com")
-                                visible: !parent.text && !parent.activeFocus
-                                color: Colours.palette.m3outline
-                                font: parent.font
-                                anchors.verticalCenter: parent.verticalCenter
+                        StyledRect {
+                            Layout.fillWidth: true
+                            implicitHeight: 38
+                            radius: Tokens.rounding.medium
+                            color: Colours.tPalette.m3surfaceContainerHigh
+
+                            TextInput {
+                                id: userInput
+                                anchors.fill: parent
+                                anchors.margins: Tokens.padding.small
+                                verticalAlignment: TextInput.AlignVCenter
+                                font: Tokens.font.body.medium
+                                color: Colours.palette.m3onSurface
+                                selectByMouse: true
+                                clip: true
+
+                                Text {
+                                    text: qsTr("Optional username")
+                                    visible: !parent.text && !parent.activeFocus
+                                    color: Colours.palette.m3outline
+                                    font: parent.font
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
                             }
                         }
                     }
-                }
 
-                ColumnLayout {
-                    implicitWidth: 80
-                    spacing: 4
-
-                    StyledText {
-                        text: qsTr("Port")
-                        font: Tokens.font.label.medium
-                        color: Colours.palette.m3onSurfaceVariant
-                    }
-
-                    StyledRect {
+                    // Remote Directory Path
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        implicitHeight: 38
-                        radius: Tokens.rounding.medium
-                        color: Colours.tPalette.m3surfaceContainerHigh
+                        spacing: 4
 
-                        TextInput {
-                            id: portInput
-                            text: "22"
-                            anchors.fill: parent
-                            anchors.margins: Tokens.padding.small
-                            verticalAlignment: TextInput.AlignVCenter
-                            font: Tokens.font.body.medium
-                            color: Colours.palette.m3onSurface
-                            selectByMouse: true
-                            validator: IntValidator { bottom: 1; top: 65535 }
-                        }
-                    }
-                }
-            }
-
-            // Username
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: root.usesCredentials
-                spacing: 4
-
-                StyledText {
-                    text: qsTr("Username")
-                    font: Tokens.font.label.medium
-                    color: Colours.palette.m3onSurfaceVariant
-                }
-
-                StyledRect {
-                    Layout.fillWidth: true
-                    implicitHeight: 38
-                    radius: Tokens.rounding.medium
-                    color: Colours.tPalette.m3surfaceContainerHigh
-
-                    TextInput {
-                        id: userInput
-                        anchors.fill: parent
-                        anchors.margins: Tokens.padding.small
-                        verticalAlignment: TextInput.AlignVCenter
-                        font: Tokens.font.body.medium
-                        color: Colours.palette.m3onSurface
-                        selectByMouse: true
-                        clip: true
-
-                        Text {
-                            text: qsTr("Optional username")
-                            visible: !parent.text && !parent.activeFocus
-                            color: Colours.palette.m3outline
-                            font: parent.font
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-                }
-            }
-
-            // Remote Directory Path
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 4
-
-                StyledText {
-                    text: root.usesShare ? qsTr("Share / Path") : qsTr("Remote Path")
-                    font: Tokens.font.label.medium
-                    color: Colours.palette.m3onSurfaceVariant
-                }
-
-                StyledRect {
-                    Layout.fillWidth: true
-                    implicitHeight: 38
-                    radius: Tokens.rounding.medium
-                    color: Colours.tPalette.m3surfaceContainerHigh
-
-                    TextInput {
-                        id: pathInput
-                        text: "/"
-                        anchors.fill: parent
-                        anchors.margins: Tokens.padding.small
-                        verticalAlignment: TextInput.AlignVCenter
-                        font: Tokens.font.body.medium
-                        color: Colours.palette.m3onSurface
-                        selectByMouse: true
-                        clip: true
-                    }
-                }
-            }
-
-            // Password
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: root.usesCredentials
-                spacing: 4
-
-                StyledText {
-                    text: qsTr("Password / Key Passphrase")
-                    font: Tokens.font.label.medium
-                    color: Colours.palette.m3onSurfaceVariant
-                }
-
-                StyledRect {
-                    id: passRect
-                    Layout.fillWidth: true
-                    implicitHeight: 38
-                    radius: Tokens.rounding.medium
-                    color: Colours.tPalette.m3surfaceContainerHigh
-                    property bool showPass: false
-
-                    TextInput {
-                        id: passInput
-                        echoMode: passRect.showPass ? TextInput.Normal : TextInput.Password
-                        anchors.left: parent.left
-                        anchors.right: showPassBtn.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.margins: Tokens.padding.small
-                        verticalAlignment: TextInput.AlignVCenter
-                        font: Tokens.font.body.medium
-                        color: Colours.palette.m3onSurface
-                        selectByMouse: true
-                        clip: true
-
-                        Text {
-                            text: qsTr("Optional or required password")
-                            visible: !parent.text && !parent.activeFocus
-                            color: Colours.palette.m3outline
-                            font: parent.font
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    Item {
-                        id: showPassBtn
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: 38
-
-                        MaterialIcon {
-                            anchors.centerIn: parent
-                            text: passRect.showPass ? "visibility_off" : "visibility"
+                        StyledText {
+                            text: root.usesShare ? qsTr("Share / Path") : qsTr("Remote Path")
+                            font: Tokens.font.label.medium
                             color: Colours.palette.m3onSurfaceVariant
-                            fontStyle: Tokens.font.icon.small
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: passRect.showPass = !passRect.showPass
+                        StyledRect {
+                            Layout.fillWidth: true
+                            implicitHeight: 38
+                            radius: Tokens.rounding.medium
+                            color: Colours.tPalette.m3surfaceContainerHigh
+
+                            TextInput {
+                                id: pathInput
+                                text: "/"
+                                anchors.fill: parent
+                                anchors.margins: Tokens.padding.small
+                                verticalAlignment: TextInput.AlignVCenter
+                                font: Tokens.font.body.medium
+                                color: Colours.palette.m3onSurface
+                                selectByMouse: true
+                                clip: true
+                            }
                         }
                     }
-                }
-            }
 
-            // Remember Bookmark Checkbox
-            StyledCheckBox {
-                id: bookmarkCheck
-                text: qsTr("Remember in Places sidebar")
-                checked: true
+                    // Password
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        visible: root.usesCredentials
+                        spacing: 4
+
+                        StyledText {
+                            text: qsTr("Password / Key Passphrase")
+                            font: Tokens.font.label.medium
+                            color: Colours.palette.m3onSurfaceVariant
+                        }
+
+                        StyledRect {
+                            id: passRect
+                            Layout.fillWidth: true
+                            implicitHeight: 38
+                            radius: Tokens.rounding.medium
+                            color: Colours.tPalette.m3surfaceContainerHigh
+                            property bool showPass: false
+
+                            TextInput {
+                                id: passInput
+                                echoMode: passRect.showPass ? TextInput.Normal : TextInput.Password
+                                anchors.left: parent.left
+                                anchors.right: showPassBtn.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                anchors.margins: Tokens.padding.small
+                                verticalAlignment: TextInput.AlignVCenter
+                                font: Tokens.font.body.medium
+                                color: Colours.palette.m3onSurface
+                                selectByMouse: true
+                                clip: true
+
+                                Text {
+                                    text: qsTr("Optional or required password")
+                                    visible: !parent.text && !parent.activeFocus
+                                    color: Colours.palette.m3outline
+                                    font: parent.font
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            Item {
+                                id: showPassBtn
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: 38
+
+                                MaterialIcon {
+                                    anchors.centerIn: parent
+                                    text: passRect.showPass ? "visibility_off" : "visibility"
+                                    color: Colours.palette.m3onSurfaceVariant
+                                    fontStyle: Tokens.font.icon.small
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: passRect.showPass = !passRect.showPass
+                                }
+                            }
+                        }
+                    }
+
+                    // Remember Bookmark Checkbox
+                    StyledCheckBox {
+                        id: bookmarkCheck
+                        text: qsTr("Remember in Places sidebar")
+                        checked: true
+                    }
+                }
             }
 
             // Action Buttons
             RowLayout {
+                id: actionRow
                 Layout.fillWidth: true
-                Layout.topMargin: Tokens.spacing.small
+                Layout.topMargin: Tokens.spacing.extraSmall
                 spacing: Tokens.spacing.small
 
                 Item { Layout.fillWidth: true }
