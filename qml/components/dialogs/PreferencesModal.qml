@@ -325,6 +325,15 @@ MouseArea {
                                 }
 
                                 ToggleRow {
+                                    icon: "hard_drive_2"
+                                    text: qsTr("Show Free Space")
+                                    subtext: qsTr("Report the space left on the current volume in the status bar")
+                                    checked: AppController.showFreeSpace
+                                    onToggled: checked => AppController.showFreeSpace = checked
+                                }
+
+
+                                ToggleRow {
                                     icon: "delete_forever"
                                     text: qsTr("Confirm Permanent Deletion")
                                     subtext: qsTr("Ask before deleting files without using the trash (Shift+Delete)")

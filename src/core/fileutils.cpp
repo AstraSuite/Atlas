@@ -8,6 +8,7 @@
 #include <QMimeDatabase>
 #include <QReadWriteLock>
 #include <QStandardPaths>
+#include <QStorageInfo>
 #include <QIcon>
 #include <QRegularExpression>
 
@@ -150,6 +151,17 @@ QVariantList FileUtils::describePaths(const QStringList& paths) {
     }
 
     return entries;
+}
+
+QString FileUtils::freeSpaceFor(const QString& path) {
+    if (path.isEmpty() || path.contains(QLatin1String("://")) || path.startsWith(QLatin1String("recent:")))
+        return {};
+
+    const QStorageInfo storage(path);
+    if (!storage.isValid() || !storage.isReady())
+        return {};
+
+    return formatSize(storage.bytesAvailable());
 }
 
 QVariantList FileUtils::templates() {
