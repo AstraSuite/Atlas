@@ -48,6 +48,8 @@ AppController::AppController(QObject* parent)
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
     m_showFreeSpace = settings.value("preferences/showFreeSpace", true).toBool();
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
+    m_folderItemCount = settings.value("preferences/folderItemCount", 0).toInt();
+    FileUtils::setFolderCountMode(m_folderItemCount);
     m_dateFormat = settings.value("preferences/dateFormat", 1).toInt();
     m_customDateFormat = settings.value("preferences/customDateFormat", "yyyy-MM-dd hh:mm").toString();
     FileUtils::setCustomDateFormat(m_customDateFormat);
@@ -124,6 +126,16 @@ void AppController::setConfirmPermanentDelete(bool confirm) {
         QSettings settings("prism", "prism");
         settings.setValue("session/confirmPermanentDelete", confirm);
         emit confirmPermanentDeleteChanged();
+    }
+}
+
+void AppController::setFolderItemCount(int mode) {
+    if (m_folderItemCount != mode) {
+        m_folderItemCount = mode;
+        FileUtils::setFolderCountMode(mode);
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/folderItemCount", mode);
+        emit folderItemCountChanged();
     }
 }
 

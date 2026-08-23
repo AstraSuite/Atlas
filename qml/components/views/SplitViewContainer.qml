@@ -41,6 +41,11 @@ StyledRect {
 
     Connections {
         target: AppController
+        function onFolderItemCountChanged() {
+            if (mainModel) mainModel.refresh();
+            if (splitModel) splitModel.refresh();
+        }
+
         function onDefaultSortFieldChanged() {
             if (mainModel) mainModel.sortField = AppController.defaultSortField;
             if (splitModel) splitModel.sortField = AppController.defaultSortField;

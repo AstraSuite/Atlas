@@ -6,6 +6,8 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QMimeDatabase>
+#include <QDirIterator>
+#include <QStorageInfo>
 #include <QReadWriteLock>
 #include <QStandardPaths>
 #include <QStorageInfo>
@@ -48,6 +50,7 @@ namespace {
 std::atomic<int> g_dateFormat{FileUtils::Iso};
 std::atomic<bool> g_thumbsEnabled{true};
 std::atomic<qint64> g_thumbMaxBytes{0};
+std::atomic<int> g_folderCountMode{FileUtils::FolderCountNever};
 QReadWriteLock g_customDateLock;
 QString g_customDateFormat = QStringLiteral("yyyy-MM-dd hh:mm");
 }
@@ -105,6 +108,40 @@ bool FileUtils::shouldThumbnail(bool isImage, bool isVideo, qint64 size) {
 
     const qint64 limit = g_thumbMaxBytes.load(std::memory_order_relaxed);
     return limit <= 0 || size <= limit;
+}
+
+void FileUtils::setFolderCountMode(int mode) {
+    g_folderCountMode.store(mode, std::memory_order_relaxed);
+}
+
+int FileUtils::folderCountMode() {
+    return g_folderCountMode.load(std::memory_order_relaxed);
+}
+
+QString FileUtils::countFolderItems(const QString& path) {
+    const int mode = g_folderCountMode.load(std::memory_order_relaxed);
+    if (mode == FolderCountNever)
+        return {};
+
+    if (mode == FolderCountLocalOnly) {
+        const QStorageInfo storage(path);
+        const QByteArray device = storage.device();
+        if (!device.startsWith('/'))
+            return {};
+    }
+
+    QDir dir(path);
+    if (!dir.isReadable())
+        return {};
+
+    int count = 0;
+    QDirIterator it(path, QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
+    while (it.hasNext()) {
+        it.next();
+        ++count;
+    }
+
+    return count == 1 ? QObject::tr("1 item") : QObject::tr("%1 items").arg(count);
 }
 
 QString FileUtils::formatSize(qint64 bytes) {
