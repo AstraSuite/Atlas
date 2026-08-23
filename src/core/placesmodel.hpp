@@ -46,7 +46,6 @@ public:
     };
     Q_ENUM(PlaceRoles)
 
-    explicit PlacesModel(QObject* parent = nullptr);
     ~PlacesModel() override = default;
 
     static PlacesModel* instance();
@@ -85,6 +84,7 @@ signals:
     void countChanged();
 
 private:
+    explicit PlacesModel(QObject* parent = nullptr);
     void loadHiddenPlaces();
     void saveHiddenPlaces();
     void loadStandardPlaces();

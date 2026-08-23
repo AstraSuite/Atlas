@@ -1,4 +1,5 @@
 #include "filesystemmodel.hpp"
+#include "../core/recentfiles.hpp"
 #include "../core/trashlocations.hpp"
 #include "../core/fileutils.hpp"
 
@@ -205,7 +206,8 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
     d.isSymLink = fi.isSymLink();
     d.symLinkTarget = fi.symLinkTarget();
     d.size = fi.isDir() ? 0 : fi.size();
-    d.formattedSize = fi.isDir() ? QString() : prism::core::FileUtils::formatSize(d.size);
+    d.formattedSize = fi.isDir() ? prism::core::FileUtils::countFolderItems(fi.absoluteFilePath())
+                                 : prism::core::FileUtils::formatSize(d.size);
     d.suffix = fi.suffix();
     d.isHidden = fi.isHidden() || d.name.startsWith('.');
     d.isWritable = fi.isWritable();
@@ -244,6 +246,8 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
 
     d.hasThumbnail = prism::core::FileUtils::shouldThumbnail(d.isImage, d.isVideo, d.size);
 
+    d.originalPath = fi.absolutePath();
+
     const prism::core::TrashLocation trashLocation = prism::core::TrashLocations::forTrashedFile(fi.absoluteFilePath());
     if (trashLocation.isValid()) {
         d.isTrashItem = true;
@@ -259,6 +263,7 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
                     QDateTime dt = QDateTime::fromString(dStr, Qt::ISODate);
                     if (dt.isValid()) {
                         d.deletionTime = prism::core::FileUtils::formatDateTime(dt);
+                        d.deletionDateTime = dt;
                     } else {
                         d.deletionTime = dStr;
                     }
@@ -297,6 +302,7 @@ bool FileSystemEntry::updateFromRaw(const RawEntryData& d) {
     if (m_isText != d.isText) { m_isText = d.isText; changed = true; }
     if (m_originalPath != d.originalPath) { m_originalPath = d.originalPath; changed = true; }
     if (m_deletionTime != d.deletionTime) { m_deletionTime = d.deletionTime; changed = true; }
+    if (m_deletionDateTime != d.deletionDateTime) { m_deletionDateTime = d.deletionDateTime; changed = true; }
     if (m_isTrashItem != d.isTrashItem) { m_isTrashItem = d.isTrashItem; changed = true; }
     return changed;
 }
@@ -328,6 +334,7 @@ static FileSystemEntry* createEntryFromRawData(const RawEntryData& d, QObject* p
     entry->m_isText = d.isText;
     entry->m_originalPath = d.originalPath;
     entry->m_deletionTime = d.deletionTime;
+    entry->m_deletionDateTime = d.deletionDateTime;
     entry->m_isTrashItem = d.isTrashItem;
     return entry;
 }
@@ -339,7 +346,7 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
     if (!m_watcher.directories().isEmpty())
         m_watcher.removePaths(m_watcher.directories());
 
-    if (m_path.isEmpty() || !QDir(m_path).exists()) {
+    if (m_path.isEmpty() || (!prism::core::RecentFiles::isRecentPath(m_path) && !QDir(m_path).exists())) {
         if (m_isLoading) {
             m_isLoading = false;
             emit isLoadingChanged();
@@ -360,7 +367,7 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
             if (QDir(location.filesDir).exists())
                 m_watcher.addPath(location.filesDir);
         }
-    } else {
+    } else if (!prism::core::RecentFiles::isRecentPath(m_path)) {
         m_watcher.addPath(m_path);
     }
 
@@ -375,7 +382,11 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
         const auto filters = QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System;
 
         QFileInfoList list;
-        if (prism::core::TrashLocations::isTrashRoot(scanPath)) {
+        if (prism::core::RecentFiles::isRecentPath(scanPath)) {
+            const QStringList recent = prism::core::RecentFiles::paths();
+            for (const QString& entry : recent)
+                list.append(QFileInfo(entry));
+        } else if (prism::core::TrashLocations::isTrashRoot(scanPath)) {
             const auto locations = prism::core::TrashLocations::all();
             for (const auto& location : locations)
                 list += QDir(location.filesDir).entryInfoList(filters);
@@ -607,10 +618,18 @@ QList<FileSystemEntry*> FileSystemModel::calculateFilteredAndSorted(const QList<
             res = compareText(a->mimeDescription(), b->mimeDescription());
             if (res == 0) res = compareText(a->name(), b->name());
             break;
+        case SortByDeleted:
+            if (a->deletionDateTime() < b->deletionDateTime()) res = -1;
+            else if (a->deletionDateTime() > b->deletionDateTime()) res = 1;
+            else res = collator.compare(a->name(), b->name());
+            break;
         }
 
         return (m_sortOrder == Qt::AscendingOrder) ? (res < 0) : (res > 0);
     };
+
+    if (prism::core::RecentFiles::isRecentPath(m_path))
+        return result;
 
     std::sort(result.begin(), result.end(), comparator);
     return result;

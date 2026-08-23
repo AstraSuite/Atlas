@@ -38,6 +38,7 @@ struct RawEntryData {
     bool isText = false;
     QString originalPath;
     QString deletionTime;
+    QDateTime deletionDateTime;
     bool isTrashItem = false;
 };
 
@@ -101,6 +102,7 @@ public:
     bool isText() const { return m_isText; }
     QString originalPath() const { return m_originalPath; }
     QString deletionTime() const { return m_deletionTime; }
+    QDateTime deletionDateTime() const { return m_deletionDateTime; }
     bool isTrashItem() const { return m_isTrashItem; }
 
     bool updateFromRaw(const RawEntryData& d);
@@ -109,6 +111,7 @@ public:
     QString m_path;
     QString m_originalPath;
     QString m_deletionTime;
+    QDateTime m_deletionDateTime;
     bool m_isTrashItem = false;
     bool m_isDir = false;
     bool m_isSymLink = false;
@@ -155,7 +158,8 @@ public:
         SortByName,
         SortBySize,
         SortByDate,
-        SortByType
+        SortByType,
+        SortByDeleted
     };
     Q_ENUM(SortField)
 
