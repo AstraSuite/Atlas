@@ -18,6 +18,7 @@ class NetworkManager : public QObject {
     Q_PROPERTY(bool isConnecting READ isConnecting NOTIFY isConnectingChanged)
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
     Q_PROPERTY(QString lastMountedPath READ lastMountedPath NOTIFY lastMountedPathChanged)
+    Q_PROPERTY(QStringList supportedSchemes READ supportedSchemes CONSTANT)
 
 public:
     explicit NetworkManager(QObject* parent = nullptr);
@@ -33,6 +34,9 @@ public:
     QString lastMountedPath() const { return m_lastMountedPath; }
 
     Q_INVOKABLE void connectSftp(const QString& host, int port = 22, const QString& user = QString(), const QString& path = QStringLiteral("/"), const QString& password = QString(), bool saveBookmark = true);
+    Q_INVOKABLE void connectServer(const QString& scheme, const QString& host, int port = 0, const QString& user = QString(), const QString& path = QStringLiteral("/"), const QString& password = QString(), bool saveBookmark = true);
+    Q_INVOKABLE static int defaultPort(const QString& scheme);
+    [[nodiscard]] static QStringList supportedSchemes();
     Q_INVOKABLE void connectUri(const QString& uri, const QString& password = QString(), bool saveBookmark = true);
     Q_INVOKABLE void unmount(const QString& pathOrUri);
     Q_INVOKABLE QString findLocalMountPath(const QString& uri) const;
