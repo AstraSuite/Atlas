@@ -234,125 +234,147 @@ StyledRect {
             border.width: (root.isEditingPath || root.isSearching) ? 1.5 : 0
 
             // Normal Breadcrumbs Mode
-            RowLayout {
+            Flickable {
+                id: crumbFlick
+
                 anchors.fill: parent
                 anchors.leftMargin: Tokens.padding.small
                 anchors.rightMargin: Tokens.padding.small
-                spacing: Tokens.spacing.extraSmall
                 visible: !root.isEditingPath && !root.isSearching
 
-                Repeater {
-                    id: breadcrumbRepeater
-                    model: {
-                        if (!root.activeTab) return [];
-                        let current = (root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath;
-                        if (!current) return [];
-                        let home = FileUtils.home;
+                clip: true
+                contentWidth: crumbRow.width
+                contentHeight: height
+                flickableDirection: Flickable.HorizontalFlick
+                boundsBehavior: Flickable.StopAtBounds
 
-                        if (current.startsWith("recent:")) {
-                            return [{ name: qsTr("Recent"), path: current, icon: "history" }];
-                        } else if (current.indexOf("/.local/share/Trash") !== -1 || current.indexOf("trash:") !== -1) {
-                            return [{ name: qsTr("Trash"), path: current, icon: "delete" }];
-                        } else if (current === home) {
-                            return [{ name: qsTr("Home"), path: home, icon: "home" }];
-                        } else if (current.startsWith(home + "/")) {
-                            let rel = current.substring(home.length + 1);
-                            let parts = rel.split("/").filter(s => s.length > 0);
-                            let list = [{ name: qsTr("Home"), path: home, icon: "home" }];
-                            let accum = home;
-                            for (let part of parts) {
-                                accum += "/" + part;
-                                list.push({ name: part, path: accum, icon: "" });
+                function pinToEnd(): void {
+                    contentX = Math.max(0, contentWidth - width);
+                }
+
+                onContentWidthChanged: pinToEnd()
+                onWidthChanged: pinToEnd()
+
+                RowLayout {
+                    id: crumbRow
+
+                    height: crumbFlick.height
+                    width: Math.max(implicitWidth, crumbFlick.width)
+                    spacing: Tokens.spacing.extraSmall
+
+                    Repeater {
+                        id: breadcrumbRepeater
+                        model: {
+                            if (!root.activeTab) return [];
+                            let current = (root.activePane === 1 && root.activeTab.isSplit) ? root.activeTab.splitPath : root.activeTab.currentPath;
+                            if (!current) return [];
+                            let home = FileUtils.home;
+
+                            if (current.startsWith("recent:")) {
+                                return [{ name: qsTr("Recent"), path: current, icon: "history" }];
+                            } else if (current.indexOf("/.local/share/Trash") !== -1 || current.indexOf("trash:") !== -1) {
+                                return [{ name: qsTr("Trash"), path: current, icon: "delete" }];
+                            } else if (current === home) {
+                                return [{ name: qsTr("Home"), path: home, icon: "home" }];
+                            } else if (current.startsWith(home + "/")) {
+                                let rel = current.substring(home.length + 1);
+                                let parts = rel.split("/").filter(s => s.length > 0);
+                                let list = [{ name: qsTr("Home"), path: home, icon: "home" }];
+                                let accum = home;
+                                for (let part of parts) {
+                                    accum += "/" + part;
+                                    list.push({ name: part, path: accum, icon: "" });
+                                }
+                                return list;
+                            } else {
+                                let parts = current.split("/").filter(s => s.length > 0);
+                                let list = [{ name: qsTr("Root"), path: "/", icon: "hard_drive" }];
+                                let accum = "";
+                                for (let part of parts) {
+                                    accum += "/" + part;
+                                    list.push({ name: part, path: accum, icon: "" });
+                                }
+                                return list;
                             }
-                            return list;
-                        } else {
-                            let parts = current.split("/").filter(s => s.length > 0);
-                            let list = [{ name: qsTr("Root"), path: "/", icon: "hard_drive" }];
-                            let accum = "";
-                            for (let part of parts) {
-                                accum += "/" + part;
-                                list.push({ name: part, path: accum, icon: "" });
-                            }
-                            return list;
                         }
-                    }
 
-                    RowLayout {
-                        id: crumb
-                        required property var modelData
-                        required property int index
-                        spacing: Tokens.spacing.extraSmall
+                        RowLayout {
+                            id: crumb
+                            required property var modelData
+                            required property int index
+                            spacing: Tokens.spacing.extraSmall
 
-                        readonly property bool isActiveSegment: crumb.index === (breadcrumbRepeater.count - 1)
+                            readonly property bool isActiveSegment: crumb.index === (breadcrumbRepeater.count - 1)
 
-                        StyledRect {
-                            implicitHeight: 22
-                            implicitWidth: crumbContent.implicitWidth + Tokens.padding.small * 2
-                            radius: Tokens.rounding.full
-                            color: crumbMouse.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
+                            StyledRect {
+                                implicitHeight: 22
+                                implicitWidth: crumbContent.implicitWidth + Tokens.padding.small * 2
+                                radius: Tokens.rounding.full
+                                color: crumbMouse.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, 0)
 
-                            MouseArea {
-                                id: crumbMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (crumb.isActiveSegment) {
-                                        root.isEditingPath = true;
-                                        pathInput.forceActiveFocus();
-                                        pathInput.selectAll();
-                                    } else if (root.activeTab) {
-                                        if (root.activePane === 1 && root.activeTab.isSplit) {
-                                            root.activeTab.splitPath = crumb.modelData.path;
-                                        } else {
-                                            root.activeTab.currentPath = crumb.modelData.path;
+                                MouseArea {
+                                    id: crumbMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (crumb.isActiveSegment) {
+                                            root.isEditingPath = true;
+                                            pathInput.forceActiveFocus();
+                                            pathInput.selectAll();
+                                        } else if (root.activeTab) {
+                                            if (root.activePane === 1 && root.activeTab.isSplit) {
+                                                root.activeTab.splitPath = crumb.modelData.path;
+                                            } else {
+                                                root.activeTab.currentPath = crumb.modelData.path;
+                                            }
                                         }
+                                    }
+                                }
+
+                                RowLayout {
+                                    id: crumbContent
+                                    anchors.centerIn: parent
+                                    spacing: 4
+
+                                    MaterialIcon {
+                                        visible: crumb.modelData.icon.length > 0
+                                        text: crumb.modelData.icon
+                                        fill: 1
+                                        fontStyle: Tokens.font.icon.small
+                                        color: crumb.isActiveSegment ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                                    }
+
+                                    StyledText {
+                                        text: crumb.modelData.name
+                                        color: crumb.isActiveSegment ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                                        font: Tokens.font.body.builders.small.weight(Font.Bold).build()
                                     }
                                 }
                             }
 
-                            RowLayout {
-                                id: crumbContent
-                                anchors.centerIn: parent
-                                spacing: 4
-
-                                MaterialIcon {
-                                    visible: crumb.modelData.icon.length > 0
-                                    text: crumb.modelData.icon
-                                    fill: 1
-                                    fontStyle: Tokens.font.icon.small
-                                    color: crumb.isActiveSegment ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
-                                }
-
-                                StyledText {
-                                    text: crumb.modelData.name
-                                    color: crumb.isActiveSegment ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
-                                    font: Tokens.font.body.builders.small.weight(Font.Bold).build()
-                                }
+                            StyledText {
+                                text: "/"
+                                color: Colours.palette.m3onSurfaceVariant
+                                font: Tokens.font.body.builders.small.weight(Font.Bold).build()
+                                visible: crumb.index < (breadcrumbRepeater.count - 1)
                             }
                         }
-
-                        StyledText {
-                            text: "/"
-                            color: Colours.palette.m3onSurfaceVariant
-                            font: Tokens.font.body.builders.small.weight(Font.Bold).build()
-                            visible: crumb.index < (breadcrumbRepeater.count - 1)
-                        }
                     }
-                }
 
-                // Clickable blank area to edit path
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    // Clickable blank area to edit path
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.IBeamCursor
-                        onClicked: {
-                            root.isEditingPath = true;
-                            pathInput.forceActiveFocus();
-                            pathInput.selectAll();
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.IBeamCursor
+                            onClicked: {
+                                root.isEditingPath = true;
+                                pathInput.forceActiveFocus();
+                                pathInput.selectAll();
+                            }
                         }
                     }
                 }
