@@ -21,7 +21,6 @@ class NetworkManager : public QObject {
     Q_PROPERTY(QStringList supportedSchemes READ supportedSchemes CONSTANT)
 
 public:
-    explicit NetworkManager(QObject* parent = nullptr);
     ~NetworkManager() override = default;
 
     static NetworkManager* instance();
@@ -50,6 +49,7 @@ signals:
     void unmounted(const QString& path);
 
 private:
+    explicit NetworkManager(QObject* parent = nullptr);
     void handleMountProcessFinished(int exitCode, QProcess::ExitStatus exitStatus, const QString& uri, bool saveBookmark);
     QString resolveGvfsPath(const QString& uri) const;
 

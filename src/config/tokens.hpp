@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QQmlEngine>
+#include <QJSEngine>
+
 #include "font.hpp"
 #include <QObject>
 #include <QEasingCurve>
@@ -265,7 +268,6 @@ class TokensSingleton : public QObject {
     Q_PROPERTY(prism::config::SizeTokens* sizes READ sizes CONSTANT)
 
 public:
-    explicit TokensSingleton(QObject* parent = nullptr);
 
     RoundingTokens* rounding() const { return m_rounding; }
     SpacingTokens* spacing() const { return m_spacing; }
@@ -279,8 +281,12 @@ public:
     void reload();
 
     static TokensSingleton* instance();
+    static TokensSingleton* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
+        return instance();
+    }
 
 private:
+    explicit TokensSingleton(QObject* parent = nullptr);
     RoundingTokens* m_rounding = nullptr;
     SpacingTokens* m_spacing = nullptr;
     PaddingTokens* m_padding = nullptr;

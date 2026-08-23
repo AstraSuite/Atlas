@@ -61,7 +61,6 @@ class FileOperations : public QObject {
     Q_PROPERTY(QVariantList completedTasks READ completedTasks NOTIFY completedTasksChanged)
 
 public:
-    explicit FileOperations(QObject* parent = nullptr);
 
     static FileOperations* instance();
     static FileOperations* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
@@ -144,6 +143,8 @@ signals:
     void conflictOccurred(const QString& source, const QString& destination);
 
 private:
+    explicit FileOperations(QObject* parent = nullptr);
+
     struct UndoAction {
         enum Type {
             Rename,

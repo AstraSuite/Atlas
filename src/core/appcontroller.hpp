@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QQmlEngine>
+#include <QJSEngine>
+
 #include <QObject>
 #include <QVariantMap>
 #include <QString>
@@ -49,9 +52,11 @@ class AppController : public QObject {
     Q_PROPERTY(bool showNetworkSection READ showNetworkSection WRITE setShowNetworkSection NOTIFY showNetworkSectionChanged)
 
 public:
-    explicit AppController(QObject* parent = nullptr);
 
     static AppController* instance();
+    static AppController* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
+        return instance();
+    }
 
     [[nodiscard]] int iconThemeVersion() const { return m_iconThemeVersion; }
     Q_INVOKABLE void triggerIconReload();
@@ -181,6 +186,7 @@ signals:
     void rejected();
 
 private:
+    explicit AppController(QObject* parent = nullptr);
     QString m_title = "Select a file";
     QString m_initialDirectory;
     QString m_filterLabel = "All files";

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QQmlEngine>
+#include <QJSEngine>
+
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -15,8 +18,10 @@ class IconCatalog : public QObject {
     Q_PROPERTY(int totalIcons READ totalIcons CONSTANT)
 
 public:
-    explicit IconCatalog(QObject* parent = nullptr);
     static IconCatalog* instance();
+    static IconCatalog* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
+        return instance();
+    }
 
     int totalIcons() const { return m_icons.size(); }
 
@@ -24,6 +29,7 @@ public:
     Q_INVOKABLE QStringList getAllIcons() const { return m_icons; }
 
 private:
+    explicit IconCatalog(QObject* parent = nullptr);
     void loadIcons();
     QStringList m_icons;
 };
