@@ -4,7 +4,7 @@ Prism is a fast, lightweight Material Design 3 file manager and file picker buil
 
 ## Dependencies
 
-### Build Dependencies
+### Build Dependencies (Required)
 
 - C++20 compiler: GCC 11+ or Clang 14+
 - CMake 3.19+
@@ -23,7 +23,7 @@ Prism is a fast, lightweight Material Design 3 file manager and file picker buil
   - `Qt6Network`
   - `Qt6DBus`
 
-### Runtime Dependencies
+### Runtime Dependencies (Required)
 
 - Qt 6 runtime libraries:
   - `qt6-declarative` / `qt6-qml`
@@ -33,16 +33,18 @@ Prism is a fast, lightweight Material Design 3 file manager and file picker buil
   - `qt6-multimedia`
   - `qt6-network`
   - `qt6-dbus`
-- System Services and Utilities:
-  - `udisks2`: external drive and partition detection and mounting
-  - `gvfs` and `gvfs-backends`: remote network filesystem mounting for SFTP, SMB, FTP, NFS, WebDAV
-  - `gio`: command-line URI mounting and volume management
-  - `xdg-desktop-portal`: desktop portal integration for file chooser dialogs
-  - `xdg-utils`: default application launching
-  - `git`: inline repository status and branch tracking
-  - Archive utilities: `p7zip`, `tar`, `gzip`, `bzip2`, `xz`, `zip`, `unzip` for compression and extraction
-- Optional:
-  - `papirus-icon-theme`: dynamic system icon integration
+
+### Optional Dependencies
+
+- `udisks2`: external drive and partition detection, mounting, and unmounting
+- `gvfs` and `gvfs-backends`: remote network filesystem mounting for SFTP, SMB, FTP, NFS, WebDAV
+- `gio`: command-line URI mounting and volume management
+- `xdg-desktop-portal`: desktop portal integration for system-wide file chooser dialogs
+- `xdg-utils`: default application launching via `xdg-open`
+- `git`: inline repository status, branch tracking, and Git modal operations
+- `caelestia-cli`: dynamic color palette and accent syncing with Caelestia
+- `papirus-icon-theme` and `papirus-folders`: dynamic folder color and system icon theme integration
+- Archive tools: `p7zip`, `tar`, `gzip`, `bzip2`, `xz`, `zip`, `unzip` for archive extraction and compression
 
 ## Build Instructions
 
