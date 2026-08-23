@@ -86,6 +86,7 @@ Item {
     }
 
     signal openItem(var item)
+    signal openItemInNewTab(var item)
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
     signal filesDropped(var sourceFiles, string targetDir, real mouseX, real mouseY)
@@ -723,7 +724,7 @@ Item {
                     id: rowHover
                     anchors.fill: parent
                     hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton | Qt.ExtraButton1 | Qt.ExtraButton2
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton | Qt.ExtraButton1 | Qt.ExtraButton2
 
                     property real pressX: 0
                     property real pressY: 0
@@ -731,6 +732,14 @@ Item {
 
                     onPressed: mouse => {
                         root.notifyFocus();
+
+                        if (mouse.button === Qt.MiddleButton) {
+
+                            mouse.accepted = true;
+
+                            return;
+
+                        }
                         pressX = mouse.x;
                         pressY = mouse.y;
                         isDragging = false;
@@ -757,6 +766,11 @@ Item {
 
                     onClicked: mouse => {
                         root.notifyFocus();
+                        if (mouse.button === Qt.MiddleButton) {
+                            if (modelData && modelData.isDir)
+                                root.openItemInNewTab(modelData);
+                            return;
+                        }
                         if (isDragging || dragSelectArea.isSelecting) return;
                         if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
                             if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();

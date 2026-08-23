@@ -61,6 +61,7 @@ StyledRect {
     signal createNewFolder()
     signal createNewFile()
     signal itemOpened(var item, int pane)
+    signal itemOpenedInNewTab(var item)
 
     color: Colours.tPalette.m3surfaceContainer
 
@@ -263,6 +264,7 @@ StyledRect {
             paneIndex: 0
             zoomSize: root.zoomSize
             onOpenItem: item => root.handleOpen(item, 0)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 0;
                 root.itemContextMenu(item, x, y);
@@ -286,6 +288,7 @@ StyledRect {
             activeTab: root.activeTab
             paneIndex: 0
             onOpenItem: item => root.handleOpen(item, 0)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 0;
                 root.itemContextMenu(item, x, y);
@@ -309,6 +312,7 @@ StyledRect {
             activeTab: root.activeTab
             paneIndex: 0
             onOpenItem: item => root.handleOpen(item, 0)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 0;
                 root.itemContextMenu(item, x, y);
@@ -333,6 +337,7 @@ StyledRect {
             paneIndex: 1
             zoomSize: root.zoomSize
             onOpenItem: item => root.handleOpen(item, 1)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 1;
                 root.itemContextMenu(item, x, y);
@@ -356,6 +361,7 @@ StyledRect {
             activeTab: root.activeTab
             paneIndex: 1
             onOpenItem: item => root.handleOpen(item, 1)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 1;
                 root.itemContextMenu(item, x, y);
@@ -379,6 +385,7 @@ StyledRect {
             activeTab: root.activeTab
             paneIndex: 1
             onOpenItem: item => root.handleOpen(item, 1)
+            onOpenItemInNewTab: item => root.itemOpenedInNewTab(item)
             onItemContextMenu: (item, x, y) => {
                 if (root.activeTab) root.activeTab.activePane = 1;
                 root.itemContextMenu(item, x, y);
