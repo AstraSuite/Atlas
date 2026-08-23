@@ -259,7 +259,7 @@ Item {
                         let isDucking = RunnerGame.isDucking;
 
                         if (isDucking && !isCrashed) {
-                            let sx = (pFrame === 4) ? 2324 : 2206;
+                            let sx = (pFrame === 4) ? 2321 : 2203;
                             let dw = 59 * sf;
                             let dh = 29 * sf;
                             let oy = (RunnerGame.playerY + 18) * sf;
