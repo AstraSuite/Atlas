@@ -357,19 +357,17 @@ MouseArea {
                                 first: true
                                 last: true
                                 Layout.fillWidth: true
-                                implicitHeight: Math.max(52, scrollRow.implicitHeight + Tokens.padding.medium * 2)
+                                implicitHeight: scrollRow.implicitHeight + Tokens.padding.largeIncreased + Tokens.padding.large
 
                                 RowLayout {
                                     id: scrollRow
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.leftMargin: Tokens.padding.large
-                                    anchors.rightMargin: Tokens.padding.large
+
+                                    anchors.fill: parent
+                                    anchors.margins: Tokens.padding.largeIncreased
+                                    anchors.topMargin: Tokens.padding.large
                                     spacing: Tokens.spacing.medium
 
                                     MaterialIcon {
-                                        Layout.alignment: Qt.AlignVCenter
                                         text: "speed"
                                         color: Colours.palette.m3onSurfaceVariant
                                         fontStyle: Tokens.font.icon.medium
@@ -377,51 +375,54 @@ MouseArea {
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
-                                        Layout.alignment: Qt.AlignVCenter
-                                        spacing: 2
+                                        spacing: Tokens.spacing.medium
 
-                                        StyledText {
+                                        RowLayout {
                                             Layout.fillWidth: true
-                                            text: qsTr("Scroll Speed")
-                                            font: Tokens.font.body.small
-                                            color: Colours.palette.m3onSurface
-                                            elide: Text.ElideRight
+                                            spacing: Tokens.spacing.small
+
+                                            StyledText {
+                                                text: qsTr("Scroll Speed")
+                                                color: Colours.palette.m3onSurface
+                                                font: Tokens.font.body.small
+                                                elide: Text.ElideRight
+                                            }
+
+                                            IconButton {
+                                                type: ButtonBase.Text
+                                                icon: "restart_alt"
+                                                fontStyle: Tokens.font.icon.small
+                                                opacity: Math.abs(AppController.scrollSpeed - 1.0) >= 0.05 ? 1 : 0
+                                                enabled: opacity > 0.01
+                                                onClicked: AppController.resetScrollSpeed()
+
+                                                Behavior on opacity {
+                                                    Anim { type: Anim.FastEffects }
+                                                }
+                                            }
+
+                                            Item {
+                                                Layout.fillWidth: true
+                                            }
+
+                                            StyledText {
+                                                text: qsTr("%1x").arg(AppController.scrollSpeed.toFixed(1))
+                                                color: Colours.palette.m3outline
+                                                font: Tokens.font.body.small
+                                            }
                                         }
 
-                                        StyledText {
+                                        StyledSlider {
                                             Layout.fillWidth: true
-                                            text: qsTr("Sensitivity: %1x%2")
-                                                .arg(AppController.scrollSpeed.toFixed(1))
-                                                .arg(Math.abs(AppController.scrollSpeed - 1.0) < 0.05 ? qsTr(" (Default)") : "")
-                                            color: Colours.palette.m3outline
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
+                                            implicitHeight: Tokens.padding.medium * 2
 
-                                    StyledSlider {
-                                        id: scrollSlider
-                                        Layout.alignment: Qt.AlignVCenter
-                                        implicitWidth: 120
-                                        implicitHeight: 8
-                                        from: 0.5
-                                        to: 2.5
-                                        value: AppController.scrollSpeed
-                                        onInteraction: v => {
-                                            AppController.scrollSpeed = Math.round(v * 10) / 10;
-                                        }
-                                    }
-
-                                    IconButton {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        type: ButtonBase.Text
-                                        icon: "restart_alt"
-                                        opacity: Math.abs(AppController.scrollSpeed - 1.0) >= 0.05 ? 1.0 : 0.0
-                                        enabled: opacity > 0.01
-                                        onClicked: AppController.resetScrollSpeed()
-
-                                        Behavior on opacity {
-                                            Anim { type: Anim.FastEffects }
+                                            radius: Tokens.rounding.small
+                                            from: 0.5
+                                            to: 2.5
+                                            value: AppController.scrollSpeed
+                                            onInteraction: v => {
+                                                AppController.scrollSpeed = Math.round(v * 10) / 10;
+                                            }
                                         }
                                     }
                                 }
