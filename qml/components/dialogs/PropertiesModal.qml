@@ -286,11 +286,28 @@ MouseArea {
                     StyledCheckBox { id: oX; checked: meta.permissions.length >= 9 && meta.permissions[8] === 'x' }
                 }
 
+                StyledCheckBox {
+                    id: recursiveCheck
+                    Layout.fillWidth: true
+                    Layout.topMargin: Tokens.spacing.small
+                    visible: meta.isDir
+                    text: qsTr("Apply to enclosed files and folders")
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: recursiveCheck.visible && recursiveCheck.checked
+                    text: qsTr("Folders keep the execute bit wherever they are readable, so they stay open-able.")
+                    color: Colours.palette.m3outline
+                    font: Tokens.font.label.small
+                    wrapMode: Text.WordWrap
+                }
+
                 TextButton {
                     Layout.alignment: Qt.AlignRight
                     type: ButtonBase.Tonal
                     text: qsTr("Apply Permissions")
-                    onClicked: meta.applyPermissions(uR.checked, uW.checked, uX.checked, gR.checked, gW.checked, gX.checked, oR.checked, oW.checked, oX.checked)
+                    onClicked: meta.applyPermissions(uR.checked, uW.checked, uX.checked, gR.checked, gW.checked, gX.checked, oR.checked, oW.checked, oX.checked, meta.isDir && recursiveCheck.checked)
                 }
 
                 Item { Layout.fillHeight: true }
