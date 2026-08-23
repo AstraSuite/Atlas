@@ -242,6 +242,11 @@ ApplicationWindow {
                                 dropActionMenu.expanded = true;
                             }
 
+                            onItemOpenedInNewTab: item => {
+                                if (item && item.isDir)
+                                    TabManager.newTab(item.path);
+                            }
+
                             onItemOpened: (item, pane) => {
                                 AppIntegration.openWithDefault(item.path);
                             }
