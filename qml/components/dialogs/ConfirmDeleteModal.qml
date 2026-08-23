@@ -122,7 +122,7 @@ MouseArea {
                 }
                 color: Colours.palette.m3onSurfaceVariant
                 font: Tokens.font.body.medium
-                wrapMode: Text.WordWrap
+                wrapMode: Text.Wrap
             }
 
             RowLayout {
