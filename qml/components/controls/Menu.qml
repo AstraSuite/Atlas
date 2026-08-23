@@ -9,18 +9,7 @@ import "../effects"
 MouseArea {
     id: root
 
-    enum Side {
-        Top,
-        Bottom,
-        Left,
-        Right
-    }
-
     required property Item attachTo
-    property int attachSideX: Menu.Right
-    property int attachSideY: Menu.Bottom
-    property int thisSideX: Menu.Right
-    property int thisSideY: Menu.Top
     property real marginX
     property real marginY
 
@@ -64,6 +53,29 @@ MouseArea {
         }
     }
 
+    readonly property Item scrollParent: {
+        let item = attachTo;
+        while (item) {
+            if (item.contentY !== undefined && item.contentHeight !== undefined)
+                return item;
+            item = item.parent;
+        }
+        return null;
+    }
+
+    Connections {
+        target: root.expanded ? root.scrollParent : null
+        ignoreUnknownSignals: true
+
+        function onContentYChanged(): void {
+            root.expanded = false;
+        }
+
+        function onContentXChanged(): void {
+            root.expanded = false;
+        }
+    }
+
     // mapToItem is not reactive so this forces updates when ancestor geometry changes (scrolling, moving)
     readonly property real transformSync: {
         let sync = 0;
@@ -93,20 +105,14 @@ MouseArea {
             const item = root.attachTo;
             if (!item || !root.parent)
                 return 0;
-            let off = root.attachSideX === Menu.Left ? 0 : item.width;
-            if (root.thisSideX === Menu.Right)
-                off -= width;
-            return item.mapToItem(root.parent, off, 0).x + root.marginX;
+            return item.mapToItem(root.parent, item.width - width, 0).x + root.marginX;
         }
         y: {
             root.transformSync; // force updates
             const item = root.attachTo;
             if (!item || !root.parent)
                 return 0;
-            let off = root.attachSideY === Menu.Top ? 0 : item.height;
-            if (root.thisSideY === Menu.Bottom)
-                off -= height;
-            return item.mapToItem(root.parent, 0, off).y + root.marginY;
+            return item.mapToItem(root.parent, 0, item.height).y + root.marginY;
         }
 
         radius: Tokens.rounding.large
@@ -117,7 +123,7 @@ MouseArea {
 
         transform: Scale {
             yScale: root.expanded ? 1 : 0.1
-            origin.y: root.thisSideY === Menu.Bottom ? menu.height : 0
+            origin.y: 0
 
             Behavior on yScale {
                 Anim {}
