@@ -69,7 +69,7 @@ MouseArea {
         let sync = 0;
         let item = attachTo;
         while (item && item !== root) {
-            sync += item.x + item.y + item.width + item.height;
+            sync += item.x + item.y + item.width + item.height + item.scale + item.rotation;
             item = item.parent;
         }
         return sync;
