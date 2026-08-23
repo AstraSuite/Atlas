@@ -137,6 +137,28 @@ QVariantList FileUtils::describePaths(const QStringList& paths) {
     return entries;
 }
 
+QVariantList FileUtils::templates() {
+    QVariantList entries;
+
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::TemplatesLocation);
+    if (dir.isEmpty() || !QDir(dir).exists())
+        return entries;
+
+    const QFileInfoList files = QDir(dir).entryInfoList(QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
+    for (const QFileInfo& fi : files) {
+        if (entries.size() >= 50)
+            break;
+
+        QVariantMap entry;
+        entry.insert(QStringLiteral("name"), fi.fileName());
+        entry.insert(QStringLiteral("path"), fi.absoluteFilePath());
+        entry.insert(QStringLiteral("icon"), iconForFile(fi.fileName(), false, mimeTypeForFile(fi.absoluteFilePath())));
+        entries.append(entry);
+    }
+
+    return entries;
+}
+
 bool FileUtils::isImage(const QString& path) {
     if (path.isEmpty()) return false;
     static const QMimeDatabase db;
