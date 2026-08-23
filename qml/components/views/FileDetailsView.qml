@@ -30,6 +30,9 @@ Item {
     }
     property var selectedPaths: []
     property int anchorIndex: -1
+    readonly property bool isRecent: root.activeTab
+        && (root.activeTab.isSplit && root.paneIndex === 1 ? root.activeTab.splitPath : root.activeTab.currentPath).startsWith("recent:")
+
     readonly property bool isTrash: root.activeTab && (
         ((root.activeTab.isSplit && root.paneIndex === 1 ? root.activeTab.splitPath : root.activeTab.currentPath).indexOf("Trash") !== -1)
         || ((root.activeTab.isSplit && root.paneIndex === 1 ? root.activeTab.splitPath : root.activeTab.currentPath).indexOf("trash:") !== -1)
@@ -86,6 +89,7 @@ Item {
     }
 
     signal openItem(var item)
+    signal openItemInNewTab(var item)
     signal itemContextMenu(var item, real mouseX, real mouseY)
     signal blankContextMenu(real mouseX, real mouseY)
     signal filesDropped(var sourceFiles, string targetDir, real mouseX, real mouseY)
@@ -188,20 +192,31 @@ Item {
             muted: true
         },
         origPath: {
-            label: qsTr("Original Path"),
+            label: root.isRecent ? qsTr("Location") : qsTr("Original Path"),
             width: 320,
             sort: -1
         },
         deleted: {
             label: qsTr("Deletion Time"),
             width: 180,
-            sort: -1
+            sort: FileSystemModel.SortByDeleted,
+            descendingFirst: true
         }
     })
 
     readonly property var activeColumns: {
         if (root.isTrash)
             return AppController.detailsColumnOrder.filter(key => key === "origPath" || key === "deleted");
+
+        if (root.isRecent) {
+            const shownRecent = {
+                origPath: true,
+                size: AppController.showSizeColumn,
+                type: AppController.showTypeColumn,
+                date: AppController.showDateColumn
+            };
+            return AppController.detailsColumnOrder.filter(key => shownRecent[key] === true);
+        }
 
         const shown = {
             size: AppController.showSizeColumn,
@@ -230,7 +245,7 @@ Item {
             return "";
         switch (key) {
         case "size":
-            return file.isDir ? "" : file.formattedSize;
+            return file.formattedSize;
         case "type":
             return file.mimeDescription;
         case "date":
@@ -724,7 +739,7 @@ Item {
                     id: rowHover
                     anchors.fill: parent
                     hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.BackButton | Qt.ForwardButton | Qt.ExtraButton1 | Qt.ExtraButton2
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton | Qt.ExtraButton1 | Qt.ExtraButton2
 
                     property real pressX: 0
                     property real pressY: 0
@@ -732,6 +747,14 @@ Item {
 
                     onPressed: mouse => {
                         root.notifyFocus();
+
+                        if (mouse.button === Qt.MiddleButton) {
+
+                            mouse.accepted = true;
+
+                            return;
+
+                        }
                         pressX = mouse.x;
                         pressY = mouse.y;
                         isDragging = false;
@@ -758,6 +781,11 @@ Item {
 
                     onClicked: mouse => {
                         root.notifyFocus();
+                        if (mouse.button === Qt.MiddleButton) {
+                            if (modelData && modelData.isDir)
+                                root.openItemInNewTab(modelData);
+                            return;
+                        }
                         if (isDragging || dragSelectArea.isSelecting) return;
                         if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
                             if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();

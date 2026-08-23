@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QQmlEngine>
+#include <QJSEngine>
+
 #include <QObject>
 #include <QVariantList>
 #include <QVariantMap>
@@ -75,10 +78,12 @@ public:
     };
     Q_ENUM(ObstacleType)
 
-    explicit RunnerGame(QObject* parent = nullptr);
     ~RunnerGame() override = default;
 
     static RunnerGame* instance();
+    static RunnerGame* create(QQmlEngine* = nullptr, QJSEngine* = nullptr) {
+        return instance();
+    }
 
     [[nodiscard]] int state() const { return m_state; }
     [[nodiscard]] int score() const { return m_score; }
@@ -125,6 +130,7 @@ private slots:
     void gameLoop();
 
 private:
+    explicit RunnerGame(QObject* parent = nullptr);
     void updatePhysics(qreal framesElapsed, qreal dt);
     void updateObstacles(qreal framesElapsed, qreal dt);
     void updateClouds(qreal framesElapsed, qreal dt);

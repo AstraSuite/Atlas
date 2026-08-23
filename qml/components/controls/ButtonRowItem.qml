@@ -23,7 +23,10 @@ ConnectedRect {
         : (itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
 
     Behavior on color {
-        Anim { type: Anim.FastEffects }
+        CAnim {
+            duration: Tokens.anim.durations.expressiveFastEffects
+            easing: Tokens.anim.expressiveFastEffects
+        }
     }
 
     StateLayer {
