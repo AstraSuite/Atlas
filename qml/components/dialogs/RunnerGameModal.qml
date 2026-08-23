@@ -70,14 +70,14 @@ Item {
         color: RunnerGame.isNightMode ? "#202124" : "#f7f7f7"
         border.width: 1
         border.color: RunnerGame.isNightMode ? Qt.alpha("#8ab4f8", 0.35) : Qt.alpha("#000000", 0.12)
-
-        Behavior on border.color {
-            CAnim {}
-        }
+        clip: true
 
         layer.enabled: true
-        layer.effect: Mask {
-            maskSource: maskItem
+        layer.effect: MultiEffect {
+            maskEnabled: true
+            maskSpreadAtMin: 1
+            maskThresholdMin: 0.5
+            maskSource: maskSourceItem
         }
 
         scale: root.isOpen ? 1.0 : 0.92
@@ -139,14 +139,6 @@ Item {
                 }
             }
 
-            // Header Divider
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: RunnerGame.isNightMode ? Qt.alpha("#ffffff", 0.08) : Qt.alpha("#000000", 0.06)
-                Behavior on color { CAnim {} }
-            }
-
             // Game Playfield Area
             Item {
                 id: gameContainer
@@ -167,10 +159,6 @@ Item {
                         let ctx = getContext("2d");
                         ctx.save();
                         ctx.clearRect(0, 0, width, height);
-
-                        // Fill canvas background seamlessly
-                        ctx.fillStyle = RunnerGame.isNightMode ? "#202124" : "#f7f7f7";
-                        ctx.fillRect(0, 0, width, height);
 
                         if (!isImageLoaded(normalSprite)) loadImage(normalSprite);
                         if (!isImageLoaded(invertedSprite)) loadImage(invertedSprite);
@@ -382,14 +370,6 @@ Item {
                 }
             }
 
-            // Footer Divider
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: RunnerGame.isNightMode ? Qt.alpha("#ffffff", 0.08) : Qt.alpha("#000000", 0.06)
-                Behavior on color { CAnim {} }
-            }
-
             // Controls Hint Footer
             Item {
                 Layout.fillWidth: true
@@ -408,15 +388,17 @@ Item {
     }
 
     Item {
-        id: maskItem
+        id: maskSourceItem
+        x: -10000
+        y: -10000
         width: dialogBox.width
         height: dialogBox.height
         layer.enabled: true
-        visible: false
 
         Rectangle {
             anchors.fill: parent
             radius: Tokens.rounding.large
+            color: "black"
         }
     }
 
