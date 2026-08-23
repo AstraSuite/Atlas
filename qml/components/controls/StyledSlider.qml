@@ -7,6 +7,10 @@ T.Slider {
     id: root
 
     property int radius: Tokens.rounding.full
+    property int trackHeight: 6
+    property int handleWidth: 3
+    property int handleHeight: 14
+    property int handleHeightPressed: 18
     property bool interactionOnMove: true
     readonly property bool dragging: mouse.pressed
 
@@ -35,7 +39,7 @@ T.Slider {
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: Tokens.spacing.extraSmall
 
-            implicitHeight: 6
+            implicitHeight: root.trackHeight
             opacity: Math.min(width, 10) / 10
 
             radius: root.radius
@@ -62,8 +66,8 @@ T.Slider {
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: 2
 
-            implicitWidth: 3
-            implicitHeight: mouse.pressed ? 18 : 14
+            implicitWidth: root.handleWidth
+            implicitHeight: mouse.pressed ? root.handleHeightPressed : root.handleHeight
 
             radius: Tokens.rounding.full
             color: root.fgColour
@@ -82,7 +86,7 @@ T.Slider {
             anchors.verticalCenter: parent.verticalCenter
 
             implicitWidth: root.filledWidth
-            implicitHeight: 6
+            implicitHeight: root.trackHeight
 
             radius: root.radius
             color: root.fgColour
@@ -101,7 +105,7 @@ T.Slider {
         anchors.verticalCenter: parent.verticalCenter
 
         preventStealing: true
-        implicitHeight: 18
+        implicitHeight: Math.max(18, root.handleHeightPressed)
 
         onPressed: e => {
             widthBehavior.enabled = false;

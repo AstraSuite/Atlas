@@ -412,6 +412,89 @@ MouseArea {
                             Item { implicitHeight: 4 }
 
                             StyledText {
+                                text: qsTr("Scroll Sensitivity")
+                                color: Colours.palette.m3primary
+                                font: Tokens.font.label.large
+                            }
+
+                            ConnectedRect {
+                                first: true
+                                last: true
+                                Layout.fillWidth: true
+                                implicitHeight: scrollColumn.implicitHeight + Tokens.padding.largeIncreased + Tokens.padding.large
+
+                                ColumnLayout {
+                                    id: scrollColumn
+
+                                    anchors.fill: parent
+                                    anchors.margins: Tokens.padding.largeIncreased
+                                    anchors.topMargin: Tokens.padding.large
+                                    spacing: Tokens.spacing.medium
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Tokens.spacing.small
+
+                                        MaterialIcon {
+                                            text: "speed"
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            fontStyle: Tokens.font.icon.medium
+                                        }
+
+                                        StyledText {
+                                            Layout.leftMargin: Tokens.spacing.extraSmall
+                                            text: qsTr("Scroll Speed")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.small
+                                            elide: Text.ElideRight
+                                        }
+
+                                        IconButton {
+                                            type: ButtonBase.Text
+                                            icon: "restart_alt"
+                                            fontStyle: Tokens.font.icon.small
+                                            opacity: Math.abs(AppController.scrollSpeed - 1.0) >= 0.05 ? 1 : 0
+                                            enabled: opacity > 0.01
+                                            onClicked: AppController.resetScrollSpeed()
+
+                                            Behavior on opacity {
+                                                Anim { type: Anim.FastEffects }
+                                            }
+                                        }
+
+                                        Item {
+                                            Layout.fillWidth: true
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("%1x").arg(AppController.scrollSpeed.toFixed(1))
+                                            color: Colours.palette.m3outline
+                                            font: Tokens.font.body.small
+                                        }
+                                    }
+
+                                    StyledSlider {
+                                        Layout.fillWidth: true
+                                        implicitHeight: Tokens.padding.medium * 2
+
+                                        radius: Tokens.rounding.small
+                                        trackHeight: 10
+                                        handleWidth: 4
+                                        handleHeight: 26
+                                        handleHeightPressed: 32
+                                        from: 0.5
+                                        to: 2.5
+                                        value: AppController.scrollSpeed
+                                        onInteraction: v => {
+                                            AppController.scrollSpeed = Math.round(v * 10) / 10;
+                                        }
+                                    }
+                                }
+                            }
+
+                            Item { implicitHeight: 4 }
+
+                            StyledText {
                                 text: qsTr("Thumbnail Generation")
                                 Layout.topMargin: Tokens.spacing.small
                                 color: Colours.palette.m3primary

@@ -490,10 +490,11 @@ Item {
                 acceptedModifiers: Qt.NoModifier
                 onWheel: event => {
                     let vy = 0;
+                    let factor = AppController.scrollSpeed;
                     if (event.pixelDelta.y !== 0) {
-                        vy = event.pixelDelta.y * 25;
+                        vy = event.pixelDelta.y * 25 * factor;
                     } else if (event.angleDelta.y !== 0) {
-                        vy = event.angleDelta.y * 14;
+                        vy = event.angleDelta.y * 14 * factor;
                     }
                     if (vy !== 0) {
                         listView.flick(0, vy);
@@ -923,10 +924,11 @@ Item {
                 wheel.accepted = true;
             } else {
                 let vy = 0;
+                let factor = AppController.scrollSpeed;
                 if (wheel.pixelDelta.y !== 0) {
-                    vy = wheel.pixelDelta.y * 25;
+                    vy = wheel.pixelDelta.y * 25 * factor;
                 } else if (wheel.angleDelta.y !== 0) {
-                    vy = wheel.angleDelta.y * 14;
+                    vy = wheel.angleDelta.y * 14 * factor;
                 }
                 if (vy !== 0) {
                     listView.flick(0, vy);
