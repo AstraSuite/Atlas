@@ -4,12 +4,45 @@ Prism is a fast, lightweight Material Design 3 file manager and file picker buil
 
 ## Dependencies
 
-- C++20 compiler (GCC 11+ or Clang 14+)
+### Build Dependencies
+
+- C++20 compiler: GCC 11+ or Clang 14+
 - CMake 3.19+
-- Ninja
-- Qt 6.5+ (Qt6Core, Qt6Gui, Qt6Qml, Qt6Quick, Qt6QuickControls2, Qt6QuickEffects, Qt6Concurrent, Qt6Svg, Qt6DBus)
-- udisks2 (for mounting external drives and storage partitions)
-- xdg-desktop-portal (for system-wide file chooser integration)
+- Ninja build system
+- pkg-config
+- Qt 6.5+ development packages:
+  - `Qt6Core`
+  - `Qt6Gui`
+  - `Qt6Qml`
+  - `Qt6Quick`
+  - `Qt6QuickControls2`
+  - `Qt6QuickEffects`
+  - `Qt6Concurrent`
+  - `Qt6Svg`
+  - `Qt6Multimedia`
+  - `Qt6Network`
+  - `Qt6DBus`
+
+### Runtime Dependencies
+
+- Qt 6 runtime libraries:
+  - `qt6-declarative` / `qt6-qml`
+  - `qt6-quickcontrols2`
+  - `qt6-quickeffects`
+  - `qt6-svg`
+  - `qt6-multimedia`
+  - `qt6-network`
+  - `qt6-dbus`
+- System Services and Utilities:
+  - `udisks2`: external drive and partition detection and mounting
+  - `gvfs` and `gvfs-backends`: remote network filesystem mounting for SFTP, SMB, FTP, NFS, WebDAV
+  - `gio`: command-line URI mounting and volume management
+  - `xdg-desktop-portal`: desktop portal integration for file chooser dialogs
+  - `xdg-utils`: default application launching
+  - `git`: inline repository status and branch tracking
+  - Archive utilities: `p7zip`, `tar`, `gzip`, `bzip2`, `xz`, `zip`, `unzip` for compression and extraction
+- Optional:
+  - `papirus-icon-theme`: dynamic system icon integration
 
 ## Build Instructions
 
@@ -30,7 +63,7 @@ cmake --build build
 ## Installation
 
 ```bash
-# Install system-wide (installs prism, xdg-desktop-portal-prism, and services)
+# Install system-wide: installs prism, xdg-desktop-portal-prism, and services
 sudo cmake --install build
 
 # Or install to a custom prefix
@@ -46,7 +79,7 @@ sudo xargs rm -fv < build/install_manifest.txt
 
 ## XDG Desktop File Picker Setup
 
-Prism provides a native XDG Desktop Portal backend (`xdg-desktop-portal-prism`) implementing `org.freedesktop.impl.portal.FileChooser`. This allows browsers, editors (such as VS Code and VSCodium), and desktop applications to use Prism as their default file open and save dialog.
+Prism provides a native XDG Desktop Portal backend `xdg-desktop-portal-prism` implementing `org.freedesktop.impl.portal.FileChooser`. This allows browsers, editors such as VS Code and VSCodium, and desktop applications to use Prism as their default file open and save dialog.
 
 ### 1. Configure Portal Routing
 
@@ -72,7 +105,7 @@ Run the user session portal helper:
 prism-portal-openrc
 ```
 
-You can also add `prism-portal-openrc &` to your compositor startup configuration (such as `hyprland.conf`).
+You can also add `prism-portal-openrc &` to your compositor startup configuration such as `hyprland.conf`.
 
 #### Systemd Desktops
 
@@ -83,7 +116,7 @@ systemctl --user daemon-reload
 systemctl --user enable --now xdg-desktop-portal-prism.service
 ```
 
-### 3. Window Rules (Wayland Compositors)
+### 3. Window Rules on Wayland Compositors
 
 To ensure the picker opens centered as a floating modal, add a window rule for the picker title.
 
@@ -98,7 +131,7 @@ windowrulev2 = size 1000 620, title:^(.*Prism File Picker.*)$
 windowrulev2 = focusonactivate, title:^(.*Prism File Picker.*)$
 ```
 
-#### Caelestia (`~/.config/caelestia/hypr-user.lua`)
+#### Caelestia in ~/.config/caelestia/hypr-user.lua
 
 ```lua
 local rules = {
