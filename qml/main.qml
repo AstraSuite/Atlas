@@ -495,6 +495,12 @@ ApplicationWindow {
         }
 
         // Git Repository Modal
+        Binding {
+            target: GitManager
+            property: "currentPath"
+            value: TabManager.currentTab ? TabManager.currentTab.currentPath : ""
+        }
+
         GitModal {
             id: gitModal
         }

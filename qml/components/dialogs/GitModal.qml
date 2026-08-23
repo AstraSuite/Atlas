@@ -32,10 +32,10 @@ MouseArea {
         id: dialog
 
         anchors.centerIn: parent
-        width: Math.min(parent.width - 32, 500)
-        height: Math.min(parent.height - 32, 560)
-        implicitWidth: 500
-        implicitHeight: 560
+        width: Math.min(parent.width - 64, 580)
+        height: Math.min(parent.height - 64, 600)
+        implicitWidth: 580
+        implicitHeight: 600
 
         radius: Tokens.rounding.large
         color: Colours.palette.m3surfaceContainer
@@ -68,18 +68,24 @@ MouseArea {
 
                 ColumnLayout {
                     Layout.fillWidth: true
+                    Layout.rightMargin: Tokens.spacing.small
                     spacing: 2
 
                     StyledText {
+                        Layout.fillWidth: true
                         text: qsTr("Git Repository")
                         font: Tokens.font.title.medium
                         color: Colours.palette.m3onSurface
+                        elide: Text.ElideRight
                     }
 
                     StyledText {
+                        Layout.fillWidth: true
+                        visible: GitManager.branchName.length > 0
                         text: qsTr("Current branch: %1").arg(GitManager.branchName)
                         font: Tokens.font.label.medium
                         color: Colours.palette.m3tertiary
+                        elide: Text.ElideMiddle
                     }
                 }
 
@@ -201,6 +207,18 @@ MouseArea {
                         }
                     }
                 }
+
+                StyledText {
+                    anchors.centerIn: parent
+                    width: parent.width - Tokens.padding.large * 2
+                    visible: branchesList.count === 0
+                    text: qsTr("No branches found in this repository")
+                    color: Colours.palette.m3outline
+                    font: Tokens.font.body.small
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                }
+
             }
 
             // Tab 1: Commits History Feed
@@ -273,6 +291,18 @@ MouseArea {
                         }
                     }
                 }
+
+                StyledText {
+                    anchors.centerIn: parent
+                    width: parent.width - Tokens.padding.large * 2
+                    visible: commitsList.count === 0
+                    text: qsTr("No commits yet")
+                    color: Colours.palette.m3outline
+                    font: Tokens.font.body.small
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                }
+
             }
 
             // Close Button
