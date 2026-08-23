@@ -354,6 +354,28 @@ MouseArea {
                                 }
 
                                 ToggleRow {
+                                    icon: "folder_managed"
+                                    text: qsTr("Remember View per Folder")
+                                    subtext: qsTr("Keep the view mode and sort order each folder was last left in")
+                                    checked: AppController.directorySpecificViews
+                                    onToggled: checked => AppController.directorySpecificViews = checked
+                                }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    visible: AppController.directorySpecificViews
+                                    spacing: Tokens.spacing.small
+
+                                    Item { Layout.fillWidth: true }
+
+                                    TextButton {
+                                        type: ButtonBase.Text
+                                        text: qsTr("Forget saved folder views")
+                                        onClicked: AppController.forgetDirectoryViews()
+                                    }
+                                }
+
+                                ToggleRow {
                                     icon: "tab_duplicate"
                                     text: qsTr("Restore Tabs on Startup")
                                     subtext: qsTr("Reopen the tabs that were open when the window was last closed")

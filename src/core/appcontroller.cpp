@@ -46,6 +46,11 @@ AppController::AppController(QObject* parent)
     m_defaultSortField = settings.value("preferences/defaultSortField", 0).toInt();
     m_defaultSortOrder = settings.value("preferences/defaultSortOrder", 0).toInt();
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
+    m_directorySpecificViews = settings.value("preferences/directorySpecificViews", false).toBool();
+
+    const QByteArray viewsJson = settings.value("preferences/directoryViews").toString().toUtf8();
+    if (!viewsJson.isEmpty())
+        m_directoryViews = QJsonDocument::fromJson(viewsJson).object().toVariantMap();
     m_showFreeSpace = settings.value("preferences/showFreeSpace", true).toBool();
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
     m_folderItemCount = settings.value("preferences/folderItemCount", 0).toInt();
@@ -127,6 +132,56 @@ void AppController::setConfirmPermanentDelete(bool confirm) {
         settings.setValue("session/confirmPermanentDelete", confirm);
         emit confirmPermanentDeleteChanged();
     }
+}
+
+void AppController::setDirectorySpecificViews(bool enabled) {
+    if (m_directorySpecificViews == enabled)
+        return;
+
+    m_directorySpecificViews = enabled;
+
+    QSettings settings("prism", "prism");
+    settings.setValue("preferences/directorySpecificViews", enabled);
+    emit directorySpecificViewsChanged();
+}
+
+QVariantMap AppController::directoryView(const QString& path) const {
+    if (!m_directorySpecificViews || path.isEmpty())
+        return {};
+    return m_directoryViews.value(path).toMap();
+}
+
+void AppController::rememberDirectoryView(const QString& path, int viewMode, int sortField, int sortOrder) {
+    if (!m_directorySpecificViews || path.isEmpty())
+        return;
+
+    QVariantMap entry;
+    entry.insert(QStringLiteral("viewMode"), viewMode);
+    entry.insert(QStringLiteral("sortField"), sortField);
+    entry.insert(QStringLiteral("sortOrder"), sortOrder);
+
+    if (m_directoryViews.value(path).toMap() == entry)
+        return;
+
+    m_directoryViews.remove(path);
+    m_directoryViews.insert(path, entry);
+
+    while (m_directoryViews.size() > 300)
+        m_directoryViews.erase(m_directoryViews.begin());
+
+    QSettings settings("prism", "prism");
+    settings.setValue("preferences/directoryViews",
+                      QString::fromUtf8(QJsonDocument(QJsonObject::fromVariantMap(m_directoryViews)).toJson(QJsonDocument::Compact)));
+}
+
+void AppController::forgetDirectoryViews() {
+    if (m_directoryViews.isEmpty())
+        return;
+
+    m_directoryViews.clear();
+
+    QSettings settings("prism", "prism");
+    settings.remove("preferences/directoryViews");
 }
 
 void AppController::setFolderItemCount(int mode) {

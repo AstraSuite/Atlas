@@ -44,6 +44,7 @@ class AppController : public QObject {
     Q_PROPERTY(int defaultSortField READ defaultSortField WRITE setDefaultSortField NOTIFY defaultSortFieldChanged)
     Q_PROPERTY(int defaultSortOrder READ defaultSortOrder WRITE setDefaultSortOrder NOTIFY defaultSortOrderChanged)
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst NOTIFY showDirsFirstChanged)
+    Q_PROPERTY(bool directorySpecificViews READ directorySpecificViews WRITE setDirectorySpecificViews NOTIFY directorySpecificViewsChanged)
     Q_PROPERTY(bool showFreeSpace READ showFreeSpace WRITE setShowFreeSpace NOTIFY showFreeSpaceChanged)
     Q_PROPERTY(int placesIconSize READ placesIconSize WRITE setPlacesIconSize NOTIFY placesIconSizeChanged)
     Q_PROPERTY(int folderItemCount READ folderItemCount WRITE setFolderItemCount NOTIFY folderItemCountChanged)
@@ -142,6 +143,11 @@ public:
     [[nodiscard]] bool showDirsFirst() const { return m_showDirsFirst; }
     void setShowDirsFirst(bool dirsFirst);
 
+    [[nodiscard]] bool directorySpecificViews() const { return m_directorySpecificViews; }
+    void setDirectorySpecificViews(bool enabled);
+    Q_INVOKABLE QVariantMap directoryView(const QString& path) const;
+    Q_INVOKABLE void rememberDirectoryView(const QString& path, int viewMode, int sortField, int sortOrder);
+    Q_INVOKABLE void forgetDirectoryViews();
     [[nodiscard]] bool showFreeSpace() const { return m_showFreeSpace; }
     void setShowFreeSpace(bool show);
 
@@ -209,6 +215,7 @@ signals:
     void defaultSortFieldChanged();
     void defaultSortOrderChanged();
     void showDirsFirstChanged();
+    void directorySpecificViewsChanged();
     void showFreeSpaceChanged();
     void placesIconSizeChanged();
     void folderItemCountChanged();
@@ -248,6 +255,8 @@ private:
     int m_defaultSortField = 0;
     int m_defaultSortOrder = 0;
     bool m_showDirsFirst = true;
+    bool m_directorySpecificViews = false;
+    QVariantMap m_directoryViews;
     bool m_showFreeSpace = true;
     int m_placesIconSize = 20;
     int m_folderItemCount = 0;

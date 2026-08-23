@@ -39,6 +39,44 @@ StyledRect {
     }
     readonly property var activeModel: (isSplit && activePane === 1) ? splitModel : mainModel
 
+    property bool applyingDirectoryView: false
+
+    function applyDirectoryView() {
+        if (!AppController.directorySpecificViews || !root.activeTab)
+            return;
+
+        const stored = AppController.directoryView(root.activeTab.currentPath);
+        const known = stored && stored.viewMode !== undefined;
+
+        root.applyingDirectoryView = true;
+        root.activeTab.viewMode = known ? stored.viewMode : AppController.defaultViewMode;
+        mainModel.sortField = known ? stored.sortField : AppController.defaultSortField;
+        mainModel.sortOrder = known ? stored.sortOrder
+                                    : (AppController.defaultSortOrder === 0 ? Qt.AscendingOrder : Qt.DescendingOrder);
+        root.applyingDirectoryView = false;
+    }
+
+    function rememberDirectoryView() {
+        if (!AppController.directorySpecificViews || root.applyingDirectoryView || !root.activeTab)
+            return;
+        AppController.rememberDirectoryView(root.activeTab.currentPath,
+                                            root.activeTab.viewMode,
+                                            mainModel.sortField,
+                                            mainModel.sortOrder);
+    }
+
+    Connections {
+        target: root.activeTab
+        function onCurrentPathChanged() { root.applyDirectoryView(); }
+        function onViewModeChanged() { root.rememberDirectoryView(); }
+    }
+
+    Connections {
+        target: mainModel
+        function onSortFieldChanged() { root.rememberDirectoryView(); }
+        function onSortOrderChanged() { root.rememberDirectoryView(); }
+    }
+
     Connections {
         target: AppController
         function onFolderItemCountChanged() {
