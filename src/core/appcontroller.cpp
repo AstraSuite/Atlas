@@ -35,6 +35,14 @@ AppController::AppController(QObject* parent)
     m_showDateColumn = settings.value("preferences/showDateColumn", true).toBool();
     m_showPermissionsColumn = settings.value("preferences/showPermissionsColumn", true).toBool();
 
+    m_menuShowSecondaryEditor = settings.value("contextMenu/showSecondaryEditor", true).toBool();
+    m_menuShowUploadOnline = settings.value("contextMenu/showUploadOnline", true).toBool();
+    m_menuShowSendTo = settings.value("contextMenu/showSendTo", true).toBool();
+    m_menuShowCompress = settings.value("contextMenu/showCompress", true).toBool();
+    m_menuShowSymlink = settings.value("contextMenu/showSymlink", true).toBool();
+    m_menuShowTerminal = settings.value("contextMenu/showTerminal", true).toBool();
+    m_menuShowDelete = settings.value("contextMenu/showDelete", true).toBool();
+
     const QByteArray widthsJson = settings.value("preferences/detailsColumnWidths").toString().toUtf8();
     if (!widthsJson.isEmpty()) {
         m_detailsColumnWidths = QJsonDocument::fromJson(widthsJson).object().toVariantMap();
@@ -266,6 +274,69 @@ void AppController::accept(const QString& path) {
 void AppController::reject() {
     emit rejected();
     QGuiApplication::exit(1);
+}
+
+void AppController::setMenuShowSecondaryEditor(bool val) {
+    if (m_menuShowSecondaryEditor != val) {
+        m_menuShowSecondaryEditor = val;
+        QSettings settings("prism", "prism");
+        settings.setValue("contextMenu/showSecondaryEditor", val);
+        emit menuPreferencesChanged();
+    }
+}
+
+void AppController::setMenuShowUploadOnline(bool val) {
+    if (m_menuShowUploadOnline != val) {
+        m_menuShowUploadOnline = val;
+        QSettings settings("prism", "prism");
+        settings.setValue("contextMenu/showUploadOnline", val);
+        emit menuPreferencesChanged();
+    }
+}
+
+void AppController::setMenuShowSendTo(bool val) {
+    if (m_menuShowSendTo != val) {
+        m_menuShowSendTo = val;
+        QSettings settings("prism", "prism");
+        settings.setValue("contextMenu/showSendTo", val);
+        emit menuPreferencesChanged();
+    }
+}
+
+void AppController::setMenuShowCompress(bool val) {
+    if (m_menuShowCompress != val) {
+        m_menuShowCompress = val;
+        QSettings settings("prism", "prism");
+        settings.setValue("contextMenu/showCompress", val);
+        emit menuPreferencesChanged();
+    }
+}
+
+void AppController::setMenuShowSymlink(bool val) {
+    if (m_menuShowSymlink != val) {
+        m_menuShowSymlink = val;
+        QSettings settings("prism", "prism");
+        settings.setValue("contextMenu/showSymlink", val);
+        emit menuPreferencesChanged();
+    }
+}
+
+void AppController::setMenuShowTerminal(bool val) {
+    if (m_menuShowTerminal != val) {
+        m_menuShowTerminal = val;
+        QSettings settings("prism", "prism");
+        settings.setValue("contextMenu/showTerminal", val);
+        emit menuPreferencesChanged();
+    }
+}
+
+void AppController::setMenuShowDelete(bool val) {
+    if (m_menuShowDelete != val) {
+        m_menuShowDelete = val;
+        QSettings settings("prism", "prism");
+        settings.setValue("contextMenu/showDelete", val);
+        emit menuPreferencesChanged();
+    }
 }
 
 void AppController::triggerIconReload() {

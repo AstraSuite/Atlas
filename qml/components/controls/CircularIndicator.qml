@@ -1,117 +1,111 @@
 import QtQuick
-import QtQuick.Shapes
+import QtQuick.Templates
 import "../"
 import prism
 
-Item {
+BusyIndicator {
     id: root
 
-    property bool running: true
-    property real size: 24
+    enum AnimType {
+        Advance = 0,
+        Retreat
+    }
+
+    enum AnimState {
+        Stopped,
+        Running,
+        Completing
+    }
+
+    property real implicitSize: (Tokens.font.body.medium.pointSize || 12) * 3
     property real strokeWidth: Tokens.padding.extraSmall || 3
-    property color color: Colours.palette.m3primary
-    property color trackColor: Qt.alpha(Colours.palette.m3secondaryContainer, 0.4)
-    property bool showTrack: true
+    property color fgColour: Colours.palette.m3primary
+    property color bgColour: Qt.alpha(Colours.palette.m3secondaryContainer, 0.45)
+    property alias color: root.fgColour
+    property alias size: root.implicitSize
 
-    implicitWidth: size
-    implicitHeight: size
+    property alias type: manager.indeterminateAnimationType
+    readonly property alias progress: manager.progress
 
-    visible: opacity > 0.001
-    opacity: running ? 1.0 : 0.0
-    Behavior on opacity {
-        Anim { type: Anim.FastEffects }
-    }
+    property real internalStrokeWidth: strokeWidth
+    property int animState: CircularIndicator.Running
 
-    readonly property real arcRadius: Math.max(1, (Math.min(width, height) - strokeWidth) / 2)
+    padding: 0
+    implicitWidth: implicitSize
+    implicitHeight: implicitSize
 
-    property real progress: 0
-    property real startAngle: 0
-    property real sweepAngle: 45
-
-    function getFraction(playtime, start, dur) {
-        return Math.max(0, Math.min(1, (playtime - start) / dur));
-    }
-
-    function bezierValue(t) {
-        // Fast-out slow-in curve matching (0.4, 0.0), (0.2, 1.0), (1.0, 1.0)
-        let u = 1 - t;
-        return 3 * u * u * t * 0.0 + 3 * u * t * t * 1.0 + t * t * t;
-    }
-
-    onProgressChanged: {
-        let playtime = progress * 5400;
-        let startDeg = 1520 * progress - 20;
-        let endDeg = 1520 * progress;
-
-        let expandDelays = [0, 1350, 2700, 4050];
-        let collapseDelays = [667, 2017, 3367, 4717];
-
-        for (let i = 0; i < 4; ++i) {
-            let fExpand = getFraction(playtime, expandDelays[i], 667);
-            endDeg += bezierValue(fExpand) * 250;
-
-            let fCollapse = getFraction(playtime, collapseDelays[i], 667);
-            startDeg += bezierValue(fCollapse) * 250;
+    Component.onCompleted: {
+        if (running) {
+            running = false;
+            running = true;
         }
-
-        root.startAngle = startDeg;
-        root.sweepAngle = Math.max(1, endDeg - startDeg);
     }
 
-    NumberAnimation on progress {
-        running: root.running && root.visible
+    onRunningChanged: {
+        if (running) {
+            manager.completeEndProgress = 0;
+            animState = CircularIndicator.Running;
+        } else {
+            if (animState == CircularIndicator.Running)
+                animState = CircularIndicator.Completing;
+        }
+    }
+
+    states: State {
+        name: "stopped"
+        when: !root.running
+
+        PropertyChanges {
+            target: root
+            opacity: 0
+            internalStrokeWidth: root.strokeWidth / 3
+        }
+    }
+
+    transitions: Transition {
+        Anim {
+            type: Anim.DefaultEffects
+            properties: "opacity,internalStrokeWidth"
+            duration: manager.completeEndDuration
+        }
+    }
+
+    contentItem: CircularProgress {
+        anchors.fill: parent
+        strokeWidth: root.internalStrokeWidth
+        fgColour: root.fgColour
+        bgColour: root.bgColour
+        padding: root.padding
+        rotation: manager.rotation
+        startAngle: manager.startFraction * 360
+        value: manager.endFraction - manager.startFraction
+        hasEndIndicator: false
+    }
+
+    CircularIndicatorManager {
+        id: manager
+    }
+
+    NumberAnimation {
+        running: root.animState !== CircularIndicator.Stopped
         loops: Animation.Infinite
+        target: manager
+        property: "progress"
         from: 0
         to: 1
-        duration: 5400
-        easing.type: Easing.Linear
+        duration: manager.duration
     }
 
-    // Track Background
-    Shape {
-        id: trackShape
-        anchors.fill: parent
-        visible: root.showTrack
-        preferredRendererType: Shape.CurveRenderer
-
-        ShapePath {
-            fillColor: "transparent"
-            strokeColor: root.trackColor
-            strokeWidth: root.strokeWidth
-            capStyle: ShapePath.RoundCap
-
-            PathAngleArc {
-                centerX: root.width / 2
-                centerY: root.height / 2
-                radiusX: root.arcRadius
-                radiusY: root.arcRadius
-                startAngle: 0
-                sweepAngle: 360
-            }
-        }
-    }
-
-    // Active Indicator Arc
-    Shape {
-        id: shape
-        anchors.fill: parent
-        preferredRendererType: Shape.CurveRenderer
-
-        ShapePath {
-            fillColor: "transparent"
-            strokeColor: root.color
-            strokeWidth: root.strokeWidth
-            capStyle: ShapePath.RoundCap
-
-            PathAngleArc {
-                centerX: root.width / 2
-                centerY: root.height / 2
-                radiusX: root.arcRadius
-                radiusY: root.arcRadius
-                startAngle: root.startAngle
-                sweepAngle: root.sweepAngle
-            }
+    NumberAnimation {
+        running: root.animState === CircularIndicator.Completing
+        target: manager
+        property: "completeEndProgress"
+        from: 0
+        to: 1
+        duration: manager.completeEndDuration
+        onFinished: {
+            if (root.animState === CircularIndicator.Completing)
+                root.animState = CircularIndicator.Stopped;
         }
     }
 }
-

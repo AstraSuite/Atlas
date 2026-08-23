@@ -345,13 +345,36 @@ void AppIntegration::scanCustomActions() {
         });
     }
 
-    // Code Editors
+    // Code Editors (adaptive detection)
     if (!QStandardPaths::findExecutable("code").isEmpty()) {
         m_customActions.append({
             "tool_vscode",
             "Open with VS Code",
             "code",
             "code %F",
+            "all",
+            {},
+            false,
+            {}
+        });
+    } else if (!QStandardPaths::findExecutable("codium").isEmpty() || !QStandardPaths::findExecutable("vscodium").isEmpty()) {
+        QString codiumCmd = !QStandardPaths::findExecutable("codium").isEmpty() ? QStringLiteral("codium") : QStringLiteral("vscodium");
+        m_customActions.append({
+            "tool_vscodium",
+            "Open with VSCodium",
+            "code",
+            codiumCmd + QStringLiteral(" %F"),
+            "all",
+            {},
+            false,
+            {}
+        });
+    } else if (!QStandardPaths::findExecutable("code-insiders").isEmpty()) {
+        m_customActions.append({
+            "tool_vscode_insiders",
+            "Open with VS Code Insiders",
+            "code",
+            "code-insiders %F",
             "all",
             {},
             false,

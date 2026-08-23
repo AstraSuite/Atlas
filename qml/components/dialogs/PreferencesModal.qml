@@ -89,6 +89,7 @@ MouseArea {
                 model: [
                     { label: qsTr("General"), icon: "tune" },
                     { label: qsTr("View & Sorting"), icon: "grid_view" },
+                    { label: qsTr("Context Menu"), icon: "menu" },
                     { label: qsTr("Scripts & Tools"), icon: "terminal" }
                 ]
                 onTabSelected: index => root.currentCategory = index
@@ -103,7 +104,7 @@ MouseArea {
 
                 Row {
                     id: pagesRow
-                    width: contentArea.width * 3
+                    width: contentArea.width * 4
                     height: contentArea.height
                     x: -root.currentCategory * contentArea.width
 
@@ -1125,7 +1126,7 @@ MouseArea {
                         }
                     }
 
-                    // --- TAB 2: Custom Scripts & Tools ---
+                    // --- TAB 2: Context Menu Customization ---
                     VerticalFadeFlickable {
                         id: tab2Flickable
                         width: contentArea.width
@@ -1143,6 +1144,394 @@ MouseArea {
                         ColumnLayout {
                             id: tab2Col
                             width: tab2Flickable.width
+                            spacing: Tokens.spacing.medium
+
+                            StyledText {
+                                text: qsTr("Context Menu Visibility")
+                                color: Colours.palette.m3primary
+                                font: Tokens.font.label.large
+                            }
+
+                            StyledText {
+                                text: qsTr("Customize which items and submenus appear in right-click context menus.")
+                                color: Colours.palette.m3onSurfaceVariant
+                                font: Tokens.font.body.small
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                            }
+
+                            // Secondary Code Editor Toggle
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 52
+                                radius: Tokens.rounding.medium
+                                color: Colours.tPalette.m3surfaceContainer
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.medium
+                                    spacing: Tokens.spacing.medium
+
+                                    MaterialIcon {
+                                        text: "code"
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        fontStyle: Tokens.font.icon.small
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        StyledText {
+                                            text: qsTr("Secondary Code Editor")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.medium
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Show detected editor like VS Code or VSCodium under Open")
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font: Tokens.font.label.small
+                                        }
+                                    }
+
+                                    StyledCheckBox {
+                                        checked: AppController.menuShowSecondaryEditor
+                                        onToggled: AppController.menuShowSecondaryEditor = checked
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: AppController.menuShowSecondaryEditor = !AppController.menuShowSecondaryEditor
+                                }
+                            }
+
+                            // Upload Online Toggle
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 52
+                                radius: Tokens.rounding.medium
+                                color: Colours.tPalette.m3surfaceContainer
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.medium
+                                    spacing: Tokens.spacing.medium
+
+                                    MaterialIcon {
+                                        text: "cloud_upload"
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        fontStyle: Tokens.font.icon.small
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        StyledText {
+                                            text: qsTr("Upload Online")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.medium
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Upload directly to Catbox and Litterbox")
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font: Tokens.font.label.small
+                                        }
+                                    }
+
+                                    StyledCheckBox {
+                                        checked: AppController.menuShowUploadOnline
+                                        onToggled: AppController.menuShowUploadOnline = checked
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: AppController.menuShowUploadOnline = !AppController.menuShowUploadOnline
+                                }
+                            }
+
+                            // Send To Submenu Toggle
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 52
+                                radius: Tokens.rounding.medium
+                                color: Colours.tPalette.m3surfaceContainer
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.medium
+                                    spacing: Tokens.spacing.medium
+
+                                    MaterialIcon {
+                                        text: "send"
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        fontStyle: Tokens.font.icon.small
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        StyledText {
+                                            text: qsTr("Send To Submenu")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.medium
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Include sharing destinations and external targets")
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font: Tokens.font.label.small
+                                        }
+                                    }
+
+                                    StyledCheckBox {
+                                        checked: AppController.menuShowSendTo
+                                        onToggled: AppController.menuShowSendTo = checked
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: AppController.menuShowSendTo = !AppController.menuShowSendTo
+                                }
+                            }
+
+                            // Compress & Archive Toggle
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 52
+                                radius: Tokens.rounding.medium
+                                color: Colours.tPalette.m3surfaceContainer
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.medium
+                                    spacing: Tokens.spacing.medium
+
+                                    MaterialIcon {
+                                        text: "archive"
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        fontStyle: Tokens.font.icon.small
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        StyledText {
+                                            text: qsTr("Compress & Archive")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.medium
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Archive presets and extraction tools")
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font: Tokens.font.label.small
+                                        }
+                                    }
+
+                                    StyledCheckBox {
+                                        checked: AppController.menuShowCompress
+                                        onToggled: AppController.menuShowCompress = checked
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: AppController.menuShowCompress = !AppController.menuShowCompress
+                                }
+                            }
+
+                            // Create Symlink Toggle
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 52
+                                radius: Tokens.rounding.medium
+                                color: Colours.tPalette.m3surfaceContainer
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.medium
+                                    spacing: Tokens.spacing.medium
+
+                                    MaterialIcon {
+                                        text: "link"
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        fontStyle: Tokens.font.icon.small
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        StyledText {
+                                            text: qsTr("Symlinks")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.medium
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Show Create Symlink and Paste as Symlink")
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font: Tokens.font.label.small
+                                        }
+                                    }
+
+                                    StyledCheckBox {
+                                        checked: AppController.menuShowSymlink
+                                        onToggled: AppController.menuShowSymlink = checked
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: AppController.menuShowSymlink = !AppController.menuShowSymlink
+                                }
+                            }
+
+                            // Open in Terminal Toggle
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 52
+                                radius: Tokens.rounding.medium
+                                color: Colours.tPalette.m3surfaceContainer
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.medium
+                                    spacing: Tokens.spacing.medium
+
+                                    MaterialIcon {
+                                        text: "terminal"
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        fontStyle: Tokens.font.icon.small
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        StyledText {
+                                            text: qsTr("Open in Terminal")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.medium
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Launch default terminal emulator in directory")
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font: Tokens.font.label.small
+                                        }
+                                    }
+
+                                    StyledCheckBox {
+                                        checked: AppController.menuShowTerminal
+                                        onToggled: AppController.menuShowTerminal = checked
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: AppController.menuShowTerminal = !AppController.menuShowTerminal
+                                }
+                            }
+
+                            // Permanent Delete Toggle
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 52
+                                radius: Tokens.rounding.medium
+                                color: Colours.tPalette.m3surfaceContainer
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.medium
+                                    spacing: Tokens.spacing.medium
+
+                                    MaterialIcon {
+                                        text: "delete"
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        fontStyle: Tokens.font.icon.small
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        StyledText {
+                                            text: qsTr("Delete Actions")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.medium
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Show Move to Trash and Delete Permanently")
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font: Tokens.font.label.small
+                                        }
+                                    }
+
+                                    StyledCheckBox {
+                                        checked: AppController.menuShowDelete
+                                        onToggled: AppController.menuShowDelete = checked
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: AppController.menuShowDelete = !AppController.menuShowDelete
+                                }
+                            }
+
+                            Item { implicitHeight: Tokens.padding.small }
+                        }
+                    }
+
+                    // --- TAB 3: Custom Scripts & Tools ---
+                    VerticalFadeFlickable {
+                        id: tab3Flickable
+                        width: contentArea.width
+                        height: contentArea.height
+                        contentWidth: width
+                        contentHeight: tab3Col.implicitHeight + Tokens.padding.medium
+                        clip: true
+                        fadeAmount: 0.08
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        ScrollBar.vertical: StyledScrollBar {
+                            flickable: tab3Flickable
+                        }
+
+                        ColumnLayout {
+                            id: tab3Col
+                            width: tab3Flickable.width
                             spacing: Tokens.spacing.medium
 
                             StyledText {

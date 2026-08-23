@@ -296,14 +296,16 @@ Item {
                 }
 
                 StyledRect {
+                    id: passRect
                     Layout.fillWidth: true
                     implicitHeight: 38
                     radius: Tokens.rounding.medium
                     color: Colours.tPalette.m3surfaceContainerHigh
+                    property bool showPass: false
 
                     TextInput {
                         id: passInput
-                        echoMode: showPass ? TextInput.Normal : TextInput.Password
+                        echoMode: passRect.showPass ? TextInput.Normal : TextInput.Password
                         anchors.left: parent.left
                         anchors.right: showPassBtn.left
                         anchors.top: parent.top
@@ -324,8 +326,6 @@ Item {
                         }
                     }
 
-                    property bool showPass: false
-
                     Item {
                         id: showPassBtn
                         anchors.right: parent.right
@@ -335,7 +335,7 @@ Item {
 
                         MaterialIcon {
                             anchors.centerIn: parent
-                            text: parent.parent.showPass ? "visibility_off" : "visibility"
+                            text: passRect.showPass ? "visibility_off" : "visibility"
                             color: Colours.palette.m3onSurfaceVariant
                             fontStyle: Tokens.font.icon.small
                         }
@@ -344,7 +344,7 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: parent.parent.showPass = !parent.parent.showPass
+                            onClicked: passRect.showPass = !passRect.showPass
                         }
                     }
                 }

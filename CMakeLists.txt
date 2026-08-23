@@ -70,6 +70,8 @@ qt_add_executable(prism_app
     src/core/papiruswatcher.cpp
     src/core/networkmanager.hpp
     src/core/networkmanager.cpp
+    src/core/circularindicatormanager.hpp
+    src/core/circularindicatormanager.cpp
     src/core/appcontroller.hpp
     src/core/appcontroller.cpp
 )
@@ -147,6 +149,7 @@ qt_add_qml_module(prism_app
         qml/components/containers/VerticalFadeGridView.qml
         qml/components/controls/StyledSlider.qml
         qml/components/controls/StyledCheckBox.qml
+        qml/components/controls/CircularProgress.qml
         qml/components/controls/CircularIndicator.qml
         qml/components/statusbar/StatusBar.qml
     RESOURCES

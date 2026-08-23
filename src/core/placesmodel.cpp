@@ -108,6 +108,7 @@ QVariant PlacesModel::data(const QModelIndex& index, int role) const {
     case IsRemovableRole: return p.isRemovable;
     case IsTrashRole: return p.isTrash;
     case IsCustomRole: return p.isCustom;
+    case IsNetworkRole: return p.isNetwork;
     case BytesFreeRole: return p.bytesFree;
     case BytesTotalRole: return p.bytesTotal;
     case FreeSpaceFormattedRole: {
@@ -129,6 +130,7 @@ QHash<int, QByteArray> PlacesModel::roleNames() const {
         { IsRemovableRole, "isRemovable" },
         { IsTrashRole, "isTrash" },
         { IsCustomRole, "isCustom" },
+        { IsNetworkRole, "isNetwork" },
         { BytesFreeRole, "bytesFree" },
         { BytesTotalRole, "bytesTotal" },
         { FreeSpaceFormattedRole, "freeSpaceFormatted" }
@@ -213,6 +215,7 @@ void PlacesModel::refresh() {
                                         false,
                                         isTrash,
                                         !isSystem,
+                                        false,
                                         0,
                                         0
                                     });
@@ -239,35 +242,35 @@ void PlacesModel::refresh() {
 void PlacesModel::loadStandardPlaces() {
     QString home = QDir::homePath();
     if (!m_hiddenPlaces.contains(home))
-        m_places.append({ tr("Home"), home, "home", false, false, false, false, 0, 0 });
+        m_places.append({ tr("Home"), home, "home", false, false, false, false, false, 0, 0 });
     
     QString downloads = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
     if (!m_hiddenPlaces.contains(downloads))
-        m_places.append({ tr("Downloads"), downloads, "file_download", false, false, false, false, 0, 0 });
+        m_places.append({ tr("Downloads"), downloads, "file_download", false, false, false, false, false, 0, 0 });
     
     QString documents = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
     if (!m_hiddenPlaces.contains(documents))
-        m_places.append({ tr("Documents"), documents, "description", false, false, false, false, 0, 0 });
+        m_places.append({ tr("Documents"), documents, "description", false, false, false, false, false, 0, 0 });
     
     QString desktop = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
     if (!m_hiddenPlaces.contains(desktop))
-        m_places.append({ tr("Desktop"), desktop, "desktop_windows", false, false, false, false, 0, 0 });
+        m_places.append({ tr("Desktop"), desktop, "desktop_windows", false, false, false, false, false, 0, 0 });
     
     QString pictures = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
     if (!m_hiddenPlaces.contains(pictures))
-        m_places.append({ tr("Pictures"), pictures, "image", false, false, false, false, 0, 0 });
+        m_places.append({ tr("Pictures"), pictures, "image", false, false, false, false, false, 0, 0 });
     
     QString music = QStandardPaths::writableLocation(QStandardPaths::MusicLocation);
     if (!m_hiddenPlaces.contains(music))
-        m_places.append({ tr("Music"), music, "music_note", false, false, false, false, 0, 0 });
+        m_places.append({ tr("Music"), music, "music_note", false, false, false, false, false, 0, 0 });
     
     QString videos = QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
     if (!m_hiddenPlaces.contains(videos))
-        m_places.append({ tr("Videos"), videos, "video_library", false, false, false, false, 0, 0 });
+        m_places.append({ tr("Videos"), videos, "video_library", false, false, false, false, false, 0, 0 });
     
     QString trash = home + "/.local/share/Trash/files";
     if (!m_hiddenPlaces.contains(trash) && !m_hiddenPlaces.contains("trash:"))
-        m_places.append({ tr("Trash"), trash, "delete", false, false, true, false, 0, 0 });
+        m_places.append({ tr("Trash"), trash, "delete", false, false, true, false, false, 0, 0 });
 }
 
 void PlacesModel::loadBookmarks() {
@@ -293,7 +296,7 @@ void PlacesModel::loadBookmarks() {
                     }
                     if (!alreadyPresent) {
                         if (name.isEmpty()) name = QFileInfo(path).fileName();
-                        m_places.append({ name, path, isTrash ? "delete" : "bookmark", false, false, isTrash, true, 0, 0 });
+                        m_places.append({ name, path, isTrash ? "delete" : "bookmark", false, false, isTrash, true, false, 0, 0 });
                     }
                 }
             }
@@ -326,7 +329,7 @@ void PlacesModel::loadBookmarks() {
                     icon = QStringLiteral("lan");
                     title = fn.mid(10);
                 }
-                m_places.append({ title, path, icon, true, true, false, true, 0, 0 });
+                m_places.append({ title, path, icon, false, false, false, true, true, 0, 0 });
             }
         }
     }
@@ -418,8 +421,9 @@ void PlacesModel::addBookmark(const QString& path, const QString& name, const QS
     if (n.isEmpty()) n = path;
     QString ic = icon.isEmpty() ? "bookmark" : icon;
 
+    bool isNet = (ic == "cloud" || ic == "dns" || ic == "lan" || path.contains("/gvfs/"));
     beginInsertRows(QModelIndex(), m_places.size(), m_places.size());
-    m_places.append({ n, path, ic, false, false, false, true, 0, 0 });
+    m_places.append({ n, path, ic, false, false, false, true, isNet, 0, 0 });
     endInsertRows();
     emit countChanged();
     saveBookmarks();

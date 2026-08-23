@@ -123,7 +123,9 @@ MouseArea {
                             list.push({ text: qsTr("Open in New Tab"), icon: "tab", action: "openNewTab" });
                             list.push({ text: qsTr("Open in New Window"), icon: "open_in_new", action: "openNewWindow" });
                             list.push({ text: qsTr("Open in Split View"), icon: "splitscreen", action: "openSplit" });
-                            list.push({ text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminalItem" });
+                            if (AppController.menuShowTerminal) {
+                                list.push({ text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminalItem" });
+                            }
                         } else {
                             if (root.targetItem.isImage || root.targetItem.isVideo || FileUtils.isImage(root.targetItem.path) || FileUtils.isVideo(root.targetItem.path)) {
                                 list.push({ text: qsTr("Preview (Space)"), icon: "visibility", action: "preview" });
@@ -132,8 +134,8 @@ MouseArea {
                             list.push({ text: qsTr("Open With..."), icon: "open_with", action: "openWith" });
                         }
 
-                        // Secondary Open Actions (e.g. Open with VS Code) right under Open / Open With
-                        if (root.customActions && root.customActions.length > 0) {
+                        // Secondary Open Actions (e.g. Open with VS Code / VSCodium)
+                        if (AppController.menuShowSecondaryEditor && root.customActions && root.customActions.length > 0) {
                             for (let i = 0; i < root.customActions.length; ++i) {
                                 let ca = root.customActions[i];
                                 list.push({ text: ca.name, icon: ca.icon || "code", action: "custom:" + ca.id });
@@ -152,10 +154,14 @@ MouseArea {
                         list.push({ text: qsTr("Rename"), icon: "drive_file_rename_outline", action: "rename" });
                         list.push({ text: qsTr("Duplicate"), icon: "control_point_duplicate", action: "duplicate" });
 
-                        list.push({ isSeparator: true });
+                        let hasSection3 = false;
 
                         // 3. Sharing, Upload & External Services (Submenus)
-                        if (!root.targetItem.isDir) {
+                        if (!root.targetItem.isDir && AppController.menuShowUploadOnline) {
+                            if (!hasSection3) {
+                                list.push({ isSeparator: true });
+                                hasSection3 = true;
+                            }
                             list.push({
                                 text: qsTr("Upload Online"),
                                 icon: "cloud_upload",
@@ -171,55 +177,72 @@ MouseArea {
                         }
 
                         // Send To Submenu (includes Create Symlink and sharing services)
-                        let sendToList = [
-                            { text: qsTr("Create Symlink"), icon: "link", action: "symlink" }
-                        ];
-                        if (root.sharingServices && root.sharingServices.length > 0) {
-                            sendToList.push({ isSeparator: true });
-                            for (let sIdx = 0; sIdx < root.sharingServices.length; ++sIdx) {
-                                let s = root.sharingServices[sIdx];
-                                sendToList.push({
-                                    text: s.name || "",
-                                    icon: s.icon || "share",
-                                    action: "sendTo:" + s.id
+                        if (AppController.menuShowSendTo) {
+                            let sendToList = [];
+                            if (AppController.menuShowSymlink) {
+                                sendToList.push({ text: qsTr("Create Symlink"), icon: "link", action: "symlink" });
+                            }
+                            if (root.sharingServices && root.sharingServices.length > 0) {
+                                if (sendToList.length > 0) sendToList.push({ isSeparator: true });
+                                for (let sIdx = 0; sIdx < root.sharingServices.length; ++sIdx) {
+                                    let s = root.sharingServices[sIdx];
+                                    sendToList.push({
+                                        text: s.name || "",
+                                        icon: s.icon || "share",
+                                        action: "sendTo:" + s.id
+                                    });
+                                }
+                            }
+                            if (sendToList.length > 0) {
+                                if (!hasSection3) {
+                                    list.push({ isSeparator: true });
+                                    hasSection3 = true;
+                                }
+                                list.push({
+                                    text: qsTr("Send To"),
+                                    icon: "send",
+                                    hasSubmenu: true,
+                                    submenuItems: sendToList
                                 });
                             }
                         }
-                        list.push({
-                            text: qsTr("Send To"),
-                            icon: "send",
-                            hasSubmenu: true,
-                            submenuItems: sendToList
-                        });
 
                         // Compress / Archive Submenu
-                        let compressSubmenu = [];
-                        if (root.isArchive) {
-                            compressSubmenu.push({ text: qsTr("Extract Here"), icon: "unarchive", action: "extractHere" });
-                            compressSubmenu.push({ text: qsTr("Extract to Folder"), icon: "folder_zip", action: "extractTo" });
+                        if (AppController.menuShowCompress) {
+                            let compressSubmenu = [];
+                            if (root.isArchive) {
+                                compressSubmenu.push({ text: qsTr("Extract Here"), icon: "unarchive", action: "extractHere" });
+                                compressSubmenu.push({ text: qsTr("Extract to Folder"), icon: "folder_zip", action: "extractTo" });
+                                compressSubmenu.push({ isSeparator: true });
+                            }
+                            compressSubmenu.push({ text: qsTr("Compress as .zip"), icon: "folder_zip", action: "quickCompress:zip" });
+                            compressSubmenu.push({ text: qsTr("Compress as .tar.gz"), icon: "archive", action: "quickCompress:tar.gz" });
+                            compressSubmenu.push({ text: qsTr("Compress as .tar.xz"), icon: "archive", action: "quickCompress:tar.xz" });
+                            compressSubmenu.push({ text: qsTr("Compress as .7z"), icon: "archive", action: "quickCompress:7z" });
                             compressSubmenu.push({ isSeparator: true });
-                        }
-                        compressSubmenu.push({ text: qsTr("Compress as .zip"), icon: "folder_zip", action: "quickCompress:zip" });
-                        compressSubmenu.push({ text: qsTr("Compress as .tar.gz"), icon: "archive", action: "quickCompress:tar.gz" });
-                        compressSubmenu.push({ text: qsTr("Compress as .tar.xz"), icon: "archive", action: "quickCompress:tar.xz" });
-                        compressSubmenu.push({ text: qsTr("Compress as .7z"), icon: "archive", action: "quickCompress:7z" });
-                        compressSubmenu.push({ isSeparator: true });
-                        compressSubmenu.push({ text: qsTr("Custom Options..."), icon: "tune", action: "compress" });
+                            compressSubmenu.push({ text: qsTr("Custom Options..."), icon: "tune", action: "compress" });
 
-                        list.push({
-                            text: root.isArchive ? qsTr("Archive") : qsTr("Compress"),
-                            icon: "archive",
-                            hasSubmenu: true,
-                            submenuItems: compressSubmenu
-                        });
+                            if (!hasSection3) {
+                                list.push({ isSeparator: true });
+                                hasSection3 = true;
+                            }
+                            list.push({
+                                text: root.isArchive ? qsTr("Archive") : qsTr("Compress"),
+                                icon: "archive",
+                                hasSubmenu: true,
+                                submenuItems: compressSubmenu
+                            });
+                        }
 
                         list.push({ isSeparator: true });
 
                         // 4. Deletion & Properties
-                        if (root.shiftHeld) {
-                            list.push({ text: qsTr("Delete Permanently"), icon: "delete_forever", action: "delete" });
-                        } else {
-                            list.push({ text: qsTr("Move to Trash"), icon: "delete", action: "trash" });
+                        if (AppController.menuShowDelete) {
+                            if (root.shiftHeld) {
+                                list.push({ text: qsTr("Delete Permanently"), icon: "delete_forever", action: "delete" });
+                            } else {
+                                list.push({ text: qsTr("Move to Trash"), icon: "delete", action: "trash" });
+                            }
                         }
                         list.push({ text: qsTr("Properties"), icon: "info", action: "properties" });
 
@@ -232,14 +255,18 @@ MouseArea {
 
                         if (FileOperations.canPaste) {
                             blankList.push({ text: qsTr("Paste"), icon: "content_paste", action: "paste" });
-                            blankList.push({ text: qsTr("Paste as Symlink"), icon: "link", action: "pasteSymlink" });
+                            if (AppController.menuShowSymlink) {
+                                blankList.push({ text: qsTr("Paste as Symlink"), icon: "link", action: "pasteSymlink" });
+                            }
                         }
 
                         blankList.push({ isSeparator: true });
 
                         blankList.push({ text: qsTr("Copy Path"), icon: "link", action: "copyCurrentDirPath" });
                         blankList.push({ text: qsTr("Add to Bookmarks"), icon: "bookmark_add", action: "bookmark" });
-                        blankList.push({ text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminal" });
+                        if (AppController.menuShowTerminal) {
+                            blankList.push({ text: qsTr("Open in Terminal"), icon: "terminal", action: "openTerminal" });
+                        }
 
                         if (root.customActions && root.customActions.length > 0) {
                             for (let i = 0; i < root.customActions.length; ++i) {
@@ -428,6 +455,30 @@ MouseArea {
         scale: root.submenuOpen ? 1.0 : 0.94
         opacity: root.submenuOpen ? 1.0 : 0.0
 
+        Behavior on y {
+            Anim {
+                type: Anim.FastEffects
+                easing: Tokens.anim.standard
+            }
+        }
+        Behavior on x {
+            Anim {
+                type: Anim.FastEffects
+                easing: Tokens.anim.standard
+            }
+        }
+        Behavior on implicitWidth {
+            Anim {
+                type: Anim.FastEffects
+                easing: Tokens.anim.standard
+            }
+        }
+        Behavior on implicitHeight {
+            Anim {
+                type: Anim.FastEffects
+                easing: Tokens.anim.standard
+            }
+        }
         Behavior on opacity {
             Anim {
                 type: Anim.FastEffects

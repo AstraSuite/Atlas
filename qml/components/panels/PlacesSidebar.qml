@@ -33,71 +33,38 @@ StyledRect {
             Layout.bottomMargin: Tokens.spacing.small
 
             StyledText {
-                anchors.left: parent.left
-                anchors.leftMargin: Tokens.padding.extraSmall
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.centerIn: parent
                 text: qsTr("Places")
                 color: Colours.palette.m3onSurface
                 font: Tokens.font.body.builders.large.weight(Font.Bold).build()
             }
 
-            RowLayout {
+            StyledRect {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 2
+                implicitWidth: 26
+                implicitHeight: 26
+                radius: Tokens.rounding.full
+                color: cfgHover.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.08) : "transparent"
 
-                StyledRect {
-                    implicitWidth: 26
-                    implicitHeight: 26
-                    radius: Tokens.rounding.full
-                    color: srvHover.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.08) : "transparent"
-
-                    MaterialIcon {
-                        anchors.centerIn: parent
-                        text: "cloud"
-                        fontStyle: Tokens.font.icon.small
-                        color: Colours.palette.m3onSurfaceVariant
-                    }
-
-                    MouseArea {
-                        id: srvHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.connectServerRequested()
-                    }
-
-                    StyledToolTip {
-                        text: qsTr("Connect to Server")
-                        visible: srvHover.containsMouse
-                    }
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    text: "tune"
+                    fontStyle: Tokens.font.icon.small
+                    color: Colours.palette.m3onSurfaceVariant
                 }
 
-                StyledRect {
-                    implicitWidth: 26
-                    implicitHeight: 26
-                    radius: Tokens.rounding.full
-                    color: cfgHover.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.08) : "transparent"
+                MouseArea {
+                    id: cfgHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.managePlacesRequested()
+                }
 
-                    MaterialIcon {
-                        anchors.centerIn: parent
-                        text: "tune"
-                        fontStyle: Tokens.font.icon.small
-                        color: Colours.palette.m3onSurfaceVariant
-                    }
-
-                    MouseArea {
-                        id: cfgHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.managePlacesRequested()
-                    }
-
-                    StyledToolTip {
-                        text: qsTr("Configure Places")
-                        visible: cfgHover.containsMouse
-                    }
+                StyledToolTip {
+                    text: qsTr("Configure Places")
+                    visible: cfgHover.containsMouse
                 }
             }
         }
@@ -137,7 +104,7 @@ StyledRect {
                 width: flickable.width
                 spacing: Tokens.spacing.small
 
-                // Section 1: Places
+                // Section 1: Local Places & Bookmarks
                 Repeater {
                     model: PlacesModel
 
@@ -151,7 +118,10 @@ StyledRect {
                         required property bool isDevice
                         required property bool isTrash
                         required property bool isCustom
+                        required property bool isNetwork
                         required property string freeSpaceFormatted
+
+                        visible: !placeItem.isNetwork
 
                         readonly property bool selected: root.activeTab && (
                             (root.activeTab.isSplit && root.activeTab.activePane === 1)
@@ -160,7 +130,7 @@ StyledRect {
                         )
 
                         Layout.fillWidth: true
-                        implicitHeight: placeRow.implicitHeight + Tokens.padding.small * 2
+                        implicitHeight: visible ? (placeRow.implicitHeight + Tokens.padding.small * 2) : 0
 
                         radius: Tokens.rounding.full
                         color: "transparent"
@@ -264,7 +234,144 @@ StyledRect {
                     }
                 }
 
-                // Section 2: Devices Header
+                // Section 2: Network Header & Add Button
+                Item {
+                    Layout.fillWidth: true
+                    implicitHeight: 26
+                    Layout.topMargin: Tokens.spacing.medium
+                    Layout.bottomMargin: Tokens.spacing.extraSmall
+
+                    StyledText {
+                        anchors.centerIn: parent
+                        text: qsTr("Network")
+                        color: Colours.palette.m3onSurface
+                        font: Tokens.font.body.builders.large.weight(Font.Bold).build()
+                    }
+
+                    StyledRect {
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        implicitWidth: 26
+                        implicitHeight: 26
+                        radius: Tokens.rounding.full
+                        color: srvHover.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.08) : "transparent"
+
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: "add"
+                            fontStyle: Tokens.font.icon.small
+                            color: Colours.palette.m3onSurfaceVariant
+                        }
+
+                        MouseArea {
+                            id: srvHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.connectServerRequested()
+                        }
+
+                        StyledToolTip {
+                            text: qsTr("Connect to Server")
+                            visible: srvHover.containsMouse
+                        }
+                    }
+                }
+
+                // Section 2: Network Items
+                Repeater {
+                    model: PlacesModel
+
+                    delegate: StyledRect {
+                        id: netItem
+
+                        required property int index
+                        required property string name
+                        required property string path
+                        required property string iconName
+                        required property bool isDevice
+                        required property bool isTrash
+                        required property bool isCustom
+                        required property bool isNetwork
+                        required property string freeSpaceFormatted
+
+                        visible: netItem.isNetwork === true
+
+                        readonly property bool selected: root.activeTab && (
+                            (root.activeTab.isSplit && root.activeTab.activePane === 1)
+                                ? root.activeTab.splitPath === path
+                                : root.activeTab.currentPath === path
+                        )
+
+                        Layout.fillWidth: true
+                        implicitHeight: visible ? (netRow.implicitHeight + Tokens.padding.small * 2) : 0
+
+                        radius: Tokens.rounding.full
+                        color: "transparent"
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Tokens.rounding.full
+                            color: Colours.palette.m3secondaryContainer
+                            opacity: netItem.selected ? 1.0 : 0.0
+                            Behavior on opacity {
+                                Anim { type: Anim.FastEffects }
+                            }
+                        }
+
+                        RowLayout {
+                            id: netRow
+
+                            anchors.fill: parent
+                            anchors.margins: Tokens.padding.small
+                            anchors.leftMargin: Tokens.padding.medium
+                            anchors.rightMargin: Tokens.padding.medium
+                            spacing: Tokens.spacing.medium
+
+                            MaterialIcon {
+                                text: netItem.iconName || "cloud"
+                                color: netItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3primary
+                                pointSize: AppController.placesIconSize
+                                fill: netItem.selected ? 1 : 0
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: netItem.name
+                                color: netItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                                font: Tokens.font.body.small
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        StateLayer {
+                            id: netHover
+                            anchors.fill: parent
+                            radius: Tokens.rounding.full
+                            color: netItem.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+
+                            onClicked: mouse => {
+                                if (mouse.button === Qt.MiddleButton) {
+                                    TabManager.newTab(netItem.path);
+                                } else if (mouse.button === Qt.RightButton) {
+                                    let globalPos = mapToItem(null, mouse.x, mouse.y);
+                                    root.placeContextMenuRequested(globalPos.x, globalPos.y, netItem.index, netItem.name, netItem.path, netItem.iconName, netItem.isCustom, netItem.isTrash);
+                                } else {
+                                    if (root.activeTab) {
+                                        if (root.activeTab.isSplit && root.activeTab.activePane === 1) {
+                                            root.activeTab.splitPath = netItem.path;
+                                        } else {
+                                            root.activeTab.currentPath = netItem.path;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Section 3: Devices Header
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: Tokens.spacing.medium
@@ -275,7 +382,7 @@ StyledRect {
                     font: Tokens.font.body.builders.large.weight(Font.Bold).build()
                 }
 
-                // Section 2: Devices / Drives List
+                // Section 3: Devices / Drives List
                 Repeater {
                     model: DriveManager
 

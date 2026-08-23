@@ -37,6 +37,13 @@ class AppController : public QObject {
     Q_PROPERTY(int placesIconSize READ placesIconSize WRITE setPlacesIconSize NOTIFY placesIconSizeChanged)
     Q_PROPERTY(QString selectedPath READ selectedPath NOTIFY selectedPathChanged)
     Q_PROPERTY(int iconThemeVersion READ iconThemeVersion NOTIFY iconThemeVersionChanged)
+    Q_PROPERTY(bool menuShowSecondaryEditor READ menuShowSecondaryEditor WRITE setMenuShowSecondaryEditor NOTIFY menuPreferencesChanged)
+    Q_PROPERTY(bool menuShowUploadOnline READ menuShowUploadOnline WRITE setMenuShowUploadOnline NOTIFY menuPreferencesChanged)
+    Q_PROPERTY(bool menuShowSendTo READ menuShowSendTo WRITE setMenuShowSendTo NOTIFY menuPreferencesChanged)
+    Q_PROPERTY(bool menuShowCompress READ menuShowCompress WRITE setMenuShowCompress NOTIFY menuPreferencesChanged)
+    Q_PROPERTY(bool menuShowSymlink READ menuShowSymlink WRITE setMenuShowSymlink NOTIFY menuPreferencesChanged)
+    Q_PROPERTY(bool menuShowTerminal READ menuShowTerminal WRITE setMenuShowTerminal NOTIFY menuPreferencesChanged)
+    Q_PROPERTY(bool menuShowDelete READ menuShowDelete WRITE setMenuShowDelete NOTIFY menuPreferencesChanged)
 
 public:
     explicit AppController(QObject* parent = nullptr);
@@ -106,6 +113,28 @@ public:
     void setPlacesIconSize(int size);
 
     [[nodiscard]] QString selectedPath() const { return m_selectedPath; }
+    void setSelectedPath(const QString& path);
+
+    [[nodiscard]] bool menuShowSecondaryEditor() const { return m_menuShowSecondaryEditor; }
+    void setMenuShowSecondaryEditor(bool val);
+
+    [[nodiscard]] bool menuShowUploadOnline() const { return m_menuShowUploadOnline; }
+    void setMenuShowUploadOnline(bool val);
+
+    [[nodiscard]] bool menuShowSendTo() const { return m_menuShowSendTo; }
+    void setMenuShowSendTo(bool val);
+
+    [[nodiscard]] bool menuShowCompress() const { return m_menuShowCompress; }
+    void setMenuShowCompress(bool val);
+
+    [[nodiscard]] bool menuShowSymlink() const { return m_menuShowSymlink; }
+    void setMenuShowSymlink(bool val);
+
+    [[nodiscard]] bool menuShowTerminal() const { return m_menuShowTerminal; }
+    void setMenuShowTerminal(bool val);
+
+    [[nodiscard]] bool menuShowDelete() const { return m_menuShowDelete; }
+    void setMenuShowDelete(bool val);
 
     Q_INVOKABLE void accept(const QString& path);
     Q_INVOKABLE void reject();
@@ -135,6 +164,7 @@ signals:
     void placesIconSizeChanged();
     void selectedPathChanged();
     void iconThemeVersionChanged();
+    void menuPreferencesChanged();
     void accepted(const QString& path);
     void rejected();
 
@@ -163,6 +193,13 @@ private:
     int m_placesIconSize = 20;
     QString m_selectedPath;
     int m_iconThemeVersion = 0;
+    bool m_menuShowSecondaryEditor = true;
+    bool m_menuShowUploadOnline = true;
+    bool m_menuShowSendTo = true;
+    bool m_menuShowCompress = true;
+    bool m_menuShowSymlink = true;
+    bool m_menuShowTerminal = true;
+    bool m_menuShowDelete = true;
 };
 
 } // namespace prism::core

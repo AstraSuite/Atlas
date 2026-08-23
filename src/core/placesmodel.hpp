@@ -18,6 +18,7 @@ struct PlaceItem {
     bool isRemovable = false;
     bool isTrash = false;
     bool isCustom = false;
+    bool isNetwork = false;
     qint64 bytesFree = 0;
     qint64 bytesTotal = 0;
 };
@@ -38,6 +39,7 @@ public:
         IsRemovableRole,
         IsTrashRole,
         IsCustomRole,
+        IsNetworkRole,
         BytesFreeRole,
         BytesTotalRole,
         FreeSpaceFormattedRole

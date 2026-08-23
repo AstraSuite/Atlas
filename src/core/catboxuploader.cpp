@@ -197,11 +197,23 @@ void CatboxUploader::processNextInQueue() {
     request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("Mozilla/5.0 Prism/1.0"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, QString("multipart/form-data; boundary=%1").arg(boundary).toUtf8());
     request.setHeader(QNetworkRequest::ContentLengthHeader, body.size());
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setTransferTimeout(120000);
+
+    QSslConfiguration sslConf = QSslConfiguration::defaultConfiguration();
+    sslConf.setProtocol(QSsl::SecureProtocols);
+    request.setSslConfiguration(sslConf);
 
     m_currentReply = m_nam->post(request, body);
     connect(m_currentReply, &QNetworkReply::uploadProgress, this, &CatboxUploader::onUploadProgress);
     connect(m_currentReply, &QNetworkReply::finished, this, &CatboxUploader::onReplyFinished);
+    connect(m_currentReply, &QNetworkReply::sslErrors, this, [this](const QList<QSslError>& errors) {
+        qWarning() << "CatboxUploader SSL notices:" << errors;
+        if (m_currentReply) {
+            m_currentReply->ignoreSslErrors();
+        }
+    });
 }
 
 void CatboxUploader::onUploadProgress(qint64 bytesSent, qint64 bytesTotal) {
