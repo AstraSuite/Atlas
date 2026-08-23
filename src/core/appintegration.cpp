@@ -640,10 +640,6 @@ int AppIntegration::handleCustomProtocol(const QString& uri) {
     return 0;
 }
 
-QString AppIntegration::getGameAssetUrl() {
-    return QStringLiteral("qrc:/qt/qml/prism/assets/runner/index.html");
-}
-
 QString AppIntegration::getSystemGeometry(int index) {
     auto decode = [](const unsigned char* data, int len) -> QString {
         QByteArray ba;
