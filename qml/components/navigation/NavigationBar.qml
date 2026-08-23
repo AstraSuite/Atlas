@@ -249,7 +249,9 @@ StyledRect {
                         if (!current) return [];
                         let home = FileUtils.home;
 
-                        if (current.indexOf("/.local/share/Trash") !== -1 || current.indexOf("trash:") !== -1) {
+                        if (current.startsWith("recent:")) {
+                            return [{ name: qsTr("Recent"), path: current, isHome: false, isTrash: false }];
+                        } else if (current.indexOf("/.local/share/Trash") !== -1 || current.indexOf("trash:") !== -1) {
                             return [{ name: qsTr("Trash"), path: current, isHome: false, isTrash: true }];
                         } else if (current === home) {
                             return [{ name: qsTr("Home"), path: home, isHome: true, isTrash: false }];
