@@ -38,6 +38,7 @@ struct RawEntryData {
     bool isText = false;
     QString originalPath;
     QString deletionTime;
+    QDateTime deletionDateTime;
     bool isTrashItem = false;
 };
 
@@ -101,6 +102,7 @@ public:
     bool isText() const { return m_isText; }
     QString originalPath() const { return m_originalPath; }
     QString deletionTime() const { return m_deletionTime; }
+    QDateTime deletionDateTime() const { return m_deletionDateTime; }
     bool isTrashItem() const { return m_isTrashItem; }
 
     bool updateFromRaw(const RawEntryData& d);
@@ -109,6 +111,7 @@ public:
     QString m_path;
     QString m_originalPath;
     QString m_deletionTime;
+    QDateTime m_deletionDateTime;
     bool m_isTrashItem = false;
     bool m_isDir = false;
     bool m_isSymLink = false;
@@ -145,6 +148,7 @@ class FileSystemModel : public QAbstractListModel {
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters NOTIFY nameFiltersChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst NOTIFY showDirsFirstChanged)
+    Q_PROPERTY(bool caseSensitiveSort READ caseSensitiveSort WRITE setCaseSensitiveSort NOTIFY caseSensitiveSortChanged)
     Q_PROPERTY(SortField sortField READ sortField WRITE setSortField NOTIFY sortFieldChanged)
     Q_PROPERTY(Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder NOTIFY sortOrderChanged)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
@@ -154,7 +158,8 @@ public:
         SortByName,
         SortBySize,
         SortByDate,
-        SortByType
+        SortByType,
+        SortByDeleted
     };
     Q_ENUM(SortField)
 
@@ -203,6 +208,9 @@ public:
     bool showDirsFirst() const { return m_showDirsFirst; }
     void setShowDirsFirst(bool dirsFirst);
 
+    bool caseSensitiveSort() const { return m_caseSensitiveSort; }
+    void setCaseSensitiveSort(bool sensitive);
+
     SortField sortField() const { return m_sortField; }
     void setSortField(SortField field);
 
@@ -225,6 +233,7 @@ signals:
     void nameFiltersChanged();
     void showHiddenChanged();
     void showDirsFirstChanged();
+    void caseSensitiveSortChanged();
     void sortFieldChanged();
     void sortOrderChanged();
     void countChanged();
@@ -247,6 +256,7 @@ private:
     QStringList m_nameFilters;
     bool m_showHidden = false;
     bool m_showDirsFirst = true;
+    bool m_caseSensitiveSort = false;
     SortField m_sortField = SortByName;
     Qt::SortOrder m_sortOrder = Qt::AscendingOrder;
 

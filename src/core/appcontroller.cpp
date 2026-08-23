@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include "iconprovider.hpp"
+#include <QFileInfo>
 #include <QSettings>
 #include <iostream>
 
@@ -38,14 +39,27 @@ AppController::AppController(QObject* parent)
     m_showHidden = settings.value("session/showHidden", legacy1.value("session/showHidden", legacy2.value("session/showHidden", false))).toBool();
     m_singleClick = settings.value("session/singleClick", legacy1.value("session/singleClick", legacy2.value("session/singleClick", false))).toBool();
     m_confirmPermanentDelete = settings.value("session/confirmPermanentDelete", true).toBool();
+    m_restoreTabs = settings.value("preferences/restoreTabs", false).toBool();
+    m_confirmMoveToTrash = settings.value("session/confirmMoveToTrash", false).toBool();
     m_defaultStartupDirectory = settings.value("preferences/startupDirectory", "home").toString();
     m_defaultViewMode = settings.value("preferences/defaultViewMode", 0).toInt();
     m_defaultSortField = settings.value("preferences/defaultSortField", 0).toInt();
     m_defaultSortOrder = settings.value("preferences/defaultSortOrder", 0).toInt();
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
+    m_caseSensitiveSort = settings.value("preferences/caseSensitiveSort", false).toBool();
+    m_directorySpecificViews = settings.value("preferences/directorySpecificViews", false).toBool();
+
+    const QByteArray viewsJson = settings.value("preferences/directoryViews").toString().toUtf8();
+    if (!viewsJson.isEmpty())
+        m_directoryViews = QJsonDocument::fromJson(viewsJson).object().toVariantMap();
+    m_showFreeSpace = settings.value("preferences/showFreeSpace", true).toBool();
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
     m_iconZoomLevel = qBound(48, settings.value("session/iconZoomLevel", 80).toInt(), 180);
+    m_folderItemCount = settings.value("preferences/folderItemCount", 0).toInt();
+    FileUtils::setFolderCountMode(m_folderItemCount);
     m_dateFormat = settings.value("preferences/dateFormat", 1).toInt();
+    m_customDateFormat = settings.value("preferences/customDateFormat", "yyyy-MM-dd hh:mm").toString();
+    FileUtils::setCustomDateFormat(m_customDateFormat);
     FileUtils::setDateFormat(m_dateFormat);
     m_thumbnailsEnabled = settings.value("preferences/thumbnailsEnabled", true).toBool();
     m_thumbnailMaxMb = settings.value("preferences/thumbnailMaxMb", 0).toInt();
@@ -132,6 +146,114 @@ void AppController::setIconZoomLevel(int level) {
     QSettings settings("prism", "prism");
     settings.setValue("session/iconZoomLevel", clamped);
     emit iconZoomLevelChanged();
+}
+
+void AppController::setCaseSensitiveSort(bool sensitive) {
+    if (m_caseSensitiveSort != sensitive) {
+        m_caseSensitiveSort = sensitive;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/caseSensitiveSort", sensitive);
+        emit caseSensitiveSortChanged();
+    }
+}
+
+void AppController::setDirectorySpecificViews(bool enabled) {
+    if (m_directorySpecificViews == enabled)
+        return;
+
+    m_directorySpecificViews = enabled;
+
+    QSettings settings("prism", "prism");
+    settings.setValue("preferences/directorySpecificViews", enabled);
+    emit directorySpecificViewsChanged();
+}
+
+QVariantMap AppController::directoryView(const QString& path) const {
+    if (!m_directorySpecificViews || path.isEmpty())
+        return {};
+    return m_directoryViews.value(path).toMap();
+}
+
+void AppController::rememberDirectoryView(const QString& path, int viewMode, int sortField, int sortOrder) {
+    if (!m_directorySpecificViews || path.isEmpty())
+        return;
+
+    QVariantMap entry;
+    entry.insert(QStringLiteral("viewMode"), viewMode);
+    entry.insert(QStringLiteral("sortField"), sortField);
+    entry.insert(QStringLiteral("sortOrder"), sortOrder);
+
+    if (m_directoryViews.value(path).toMap() == entry)
+        return;
+
+    m_directoryViews.remove(path);
+    m_directoryViews.insert(path, entry);
+
+    while (m_directoryViews.size() > 300)
+        m_directoryViews.erase(m_directoryViews.begin());
+
+    QSettings settings("prism", "prism");
+    settings.setValue("preferences/directoryViews",
+                      QString::fromUtf8(QJsonDocument(QJsonObject::fromVariantMap(m_directoryViews)).toJson(QJsonDocument::Compact)));
+}
+
+void AppController::forgetDirectoryViews() {
+    if (m_directoryViews.isEmpty())
+        return;
+
+    m_directoryViews.clear();
+
+    QSettings settings("prism", "prism");
+    settings.remove("preferences/directoryViews");
+}
+
+void AppController::setFolderItemCount(int mode) {
+    if (m_folderItemCount != mode) {
+        m_folderItemCount = mode;
+        FileUtils::setFolderCountMode(mode);
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/folderItemCount", mode);
+        emit folderItemCountChanged();
+    }
+}
+
+void AppController::setShowFreeSpace(bool show) {
+    if (m_showFreeSpace != show) {
+        m_showFreeSpace = show;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showFreeSpace", show);
+        emit showFreeSpaceChanged();
+    }
+}
+
+void AppController::setCustomDateFormat(const QString& pattern) {
+    if (m_customDateFormat == pattern)
+        return;
+
+    m_customDateFormat = pattern;
+    FileUtils::setCustomDateFormat(pattern);
+
+    QSettings settings("prism", "prism");
+    settings.setValue("preferences/customDateFormat", pattern);
+    emit customDateFormatChanged();
+}
+
+void AppController::setRestoreTabs(bool restore) {
+    if (m_restoreTabs != restore) {
+        m_restoreTabs = restore;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/restoreTabs", restore);
+        emit restoreTabsChanged();
+    }
+}
+
+void AppController::setConfirmMoveToTrash(bool confirm) {
+    if (m_confirmMoveToTrash != confirm) {
+        m_confirmMoveToTrash = confirm;
+        QSettings settings("prism", "prism");
+        settings.setValue("session/confirmMoveToTrash", confirm);
+        emit confirmMoveToTrashChanged();
+    }
 }
 
 void AppController::setDateFormat(int format) {
@@ -320,6 +442,24 @@ void AppController::setPlacesIconSize(int size) {
         settings.setValue("preferences/placesIconSize", size);
         emit placesIconSizeChanged();
     }
+}
+
+void AppController::setSaveMode(bool save) {
+    if (m_saveMode != save) {
+        m_saveMode = save;
+        emit saveModeChanged();
+    }
+}
+
+void AppController::setSuggestedName(const QString& name) {
+    if (m_suggestedName != name) {
+        m_suggestedName = name;
+        emit suggestedNameChanged();
+    }
+}
+
+bool AppController::fileExists(const QString& path) {
+    return QFileInfo::exists(path);
 }
 
 void AppController::accept(const QString& path) {

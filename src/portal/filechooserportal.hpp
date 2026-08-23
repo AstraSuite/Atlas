@@ -77,7 +77,9 @@ private:
                            const QDBusObjectPath& handle,
                            const QDBusMessage& message,
                            bool isSaveFiles = false,
-                           const QStringList& fileList = {});
+                           const QStringList& fileList = {},
+                           bool saveMode = false,
+                           const QString& suggestedName = {});
 
     static QString findPrismBinary();
     static QString parseInitialDirectory(const QVariantMap& options);

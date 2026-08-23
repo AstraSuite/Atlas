@@ -142,7 +142,9 @@ MouseArea {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("Rename %n item(s)", "", root.targets.length)
+                    text: root.targets.length === 1
+                        ? qsTr("Rename 1 item")
+                        : qsTr("Rename %1 items").arg(root.targets.length)
                     color: Colours.palette.m3onSurface
                     font: Tokens.font.title.medium
                 }
@@ -381,7 +383,9 @@ MouseArea {
                     Layout.fillWidth: true
                     text: root.hasProblem
                         ? qsTr("Resolve the highlighted names to continue")
-                        : qsTr("%n name(s) will change", "", root.changedCount)
+                        : (root.changedCount === 1
+                            ? qsTr("1 name will change")
+                            : qsTr("%1 names will change").arg(root.changedCount))
                     color: root.hasProblem ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
                     font: Tokens.font.body.small
                     elide: Text.ElideRight
