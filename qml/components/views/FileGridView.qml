@@ -172,7 +172,7 @@ Item {
 
         // Exact uniform cell dimensions
         cellWidth: Math.max(144, root.zoomSize + 48)
-        cellHeight: root.iconPadding * 2 + root.zoomSize + root.labelHeight
+        cellHeight: root.iconPadding * 2 + root.zoomSize + root.labelHeight + 12
 
         clip: true
         focus: true
@@ -616,11 +616,13 @@ Item {
                     id: name
 
                     anchors.top: iconContainer.bottom
-                    anchors.topMargin: 4
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
-                    anchors.margins: 4
+                    anchors.topMargin: 4
+                    anchors.leftMargin: 4
+                    anchors.rightMargin: 4
+                    anchors.bottomMargin: root.iconPadding
 
                     text: delegateContainer.modelData ? delegateContainer.modelData.name : ""
                     color: delegateContainer.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
