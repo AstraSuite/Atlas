@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QElapsedTimer>
 #include <QStringList>
 #include <QFutureWatcher>
 #include <atomic>
@@ -174,6 +175,8 @@ private:
     QStringList m_clipboardFiles;
     QStringList m_activeDragFiles;
     QVariantList m_completedTasks;
+    QString m_lastCompletedTaskKey;
+    QElapsedTimer m_lastCompletedTaskTimer;
     QList<UndoAction> m_undoStack;
     QList<UndoAction> m_redoStack;
     bool m_isCut = false;

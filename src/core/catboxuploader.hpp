@@ -73,6 +73,7 @@ private slots:
 private:
     explicit CatboxUploader(QObject* parent = nullptr);
     void enqueue(const QStringList& filePaths, Service service, const QString& time);
+    void beginSharedProgress(const QString& statusText);
     void clearSharedProgress(const QString& finalStatusText = QString());
     static QString serviceDisplayName(Service service, const QString& time);
 
