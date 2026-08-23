@@ -939,8 +939,12 @@ Item {
         property real startY: 0
         property real currentX: 0
         property real currentY: 0
+        property real anchorContentY: 0
+        property real lastContentY: 0
         property bool isSelecting: false
         property bool wasSelecting: false
+
+        readonly property real anchorViewY: anchorContentY + listView.y - listView.contentY
 
         onPressed: mouse => {
             root.notifyFocus();
@@ -948,6 +952,8 @@ Item {
             startY = mouse.y;
             currentX = mouse.x;
             currentY = mouse.y;
+            anchorContentY = mouse.y - listView.y + listView.contentY;
+            lastContentY = listView.contentY;
             isSelecting = false;
             wasSelecting = false;
         }
@@ -998,8 +1004,9 @@ Item {
         }
 
         function updateRubberBandSelection() {
-            let ry = Math.min(startY, currentY) - listView.y + listView.contentY;
-            let rh = Math.abs(currentY - startY);
+            let cy = currentY - listView.y + listView.contentY;
+            let ry = Math.min(anchorContentY, cy);
+            let rh = Math.abs(cy - anchorContentY);
 
             let newlySelected = [];
             let total = root.model ? root.model.count : 0;
@@ -1015,6 +1022,33 @@ Item {
             }
             root.selectedPaths = newlySelected;
         }
+
+        Timer {
+            running: dragSelectArea.isSelecting
+            interval: 16
+            repeat: true
+
+            onTriggered: {
+                const edge = 32;
+                const top = listView.y;
+                const bottom = listView.y + listView.height;
+                let delta = 0;
+                if (dragSelectArea.currentY < top + edge)
+                    delta = -Math.min(28, (top + edge - dragSelectArea.currentY) / 2);
+                else if (dragSelectArea.currentY > bottom - edge)
+                    delta = Math.min(28, (dragSelectArea.currentY - (bottom - edge)) / 2);
+
+                if (delta !== 0) {
+                    const limit = Math.max(0, listView.contentHeight - listView.height);
+                    listView.contentY = Math.max(0, Math.min(limit, listView.contentY + delta));
+                }
+
+                if (listView.contentY !== dragSelectArea.lastContentY) {
+                    dragSelectArea.lastContentY = listView.contentY;
+                    dragSelectArea.updateRubberBandSelection();
+                }
+            }
+        }
     }
 
     // Rubber Band Visual Rectangle
@@ -1022,9 +1056,9 @@ Item {
         z: 999
         visible: dragSelectArea.isSelecting
         x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
-        y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
+        y: Math.min(dragSelectArea.anchorViewY, dragSelectArea.currentY)
         width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
-        height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
+        height: Math.abs(dragSelectArea.currentY - dragSelectArea.anchorViewY)
         color: Qt.alpha(Colours.palette.m3primary, 0.18)
         border.color: Colours.palette.m3primary
         border.width: 1.5

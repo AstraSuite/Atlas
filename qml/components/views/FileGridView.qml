@@ -666,8 +666,14 @@ Item {
         property real startY: 0
         property real currentX: 0
         property real currentY: 0
+        property real anchorContentX: 0
+        property real anchorContentY: 0
+        property real lastContentY: 0
         property bool isSelecting: false
         property bool wasSelecting: false
+
+        readonly property real anchorViewX: anchorContentX + view.x - view.contentX
+        readonly property real anchorViewY: anchorContentY + view.y - view.contentY
 
         onPressed: mouse => {
             root.notifyFocus();
@@ -675,6 +681,9 @@ Item {
             startY = mouse.y;
             currentX = mouse.x;
             currentY = mouse.y;
+            anchorContentX = mouse.x - view.x + view.contentX;
+            anchorContentY = mouse.y - view.y + view.contentY;
+            lastContentY = view.contentY;
             isSelecting = false;
             wasSelecting = false;
         }
@@ -725,10 +734,12 @@ Item {
         }
 
         function updateRubberBandSelection() {
-            let rx = Math.min(startX, currentX) - view.x + view.contentX;
-            let ry = Math.min(startY, currentY) - view.y + view.contentY;
-            let rw = Math.abs(currentX - startX);
-            let rh = Math.abs(currentY - startY);
+            let cx = currentX - view.x + view.contentX;
+            let cy = currentY - view.y + view.contentY;
+            let rx = Math.min(anchorContentX, cx);
+            let ry = Math.min(anchorContentY, cy);
+            let rw = Math.abs(cx - anchorContentX);
+            let rh = Math.abs(cy - anchorContentY);
 
             let cols = Math.max(1, Math.floor(view.width / view.cellWidth));
             let newlySelected = [];
@@ -750,16 +761,43 @@ Item {
             }
             root.selectedPaths = newlySelected;
         }
+
+        Timer {
+            running: dragSelectArea.isSelecting
+            interval: 16
+            repeat: true
+
+            onTriggered: {
+                const edge = 32;
+                const top = view.y;
+                const bottom = view.y + view.height;
+                let delta = 0;
+                if (dragSelectArea.currentY < top + edge)
+                    delta = -Math.min(28, (top + edge - dragSelectArea.currentY) / 2);
+                else if (dragSelectArea.currentY > bottom - edge)
+                    delta = Math.min(28, (dragSelectArea.currentY - (bottom - edge)) / 2);
+
+                if (delta !== 0) {
+                    const limit = Math.max(0, view.contentHeight - view.height);
+                    view.contentY = Math.max(0, Math.min(limit, view.contentY + delta));
+                }
+
+                if (view.contentY !== dragSelectArea.lastContentY) {
+                    dragSelectArea.lastContentY = view.contentY;
+                    dragSelectArea.updateRubberBandSelection();
+                }
+            }
+        }
     }
 
     // Rubber Band Visual Rectangle
     Rectangle {
         z: 999
         visible: dragSelectArea.isSelecting
-        x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
-        y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
-        width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
-        height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
+        x: Math.min(dragSelectArea.anchorViewX, dragSelectArea.currentX)
+        y: Math.min(dragSelectArea.anchorViewY, dragSelectArea.currentY)
+        width: Math.abs(dragSelectArea.currentX - dragSelectArea.anchorViewX)
+        height: Math.abs(dragSelectArea.currentY - dragSelectArea.anchorViewY)
         color: Qt.alpha(Colours.palette.m3primary, 0.18)
         border.color: Colours.palette.m3primary
         border.width: 1.5

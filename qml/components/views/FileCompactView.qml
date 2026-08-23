@@ -623,8 +623,12 @@ Item {
         property real startY: 0
         property real currentX: 0
         property real currentY: 0
+        property real anchorContentX: 0
+        property real lastContentX: 0
         property bool isSelecting: false
         property bool wasSelecting: false
+
+        readonly property real anchorViewX: anchorContentX + gridView.x - gridView.contentX
 
         onPressed: mouse => {
             root.notifyFocus();
@@ -632,6 +636,8 @@ Item {
             startY = mouse.y;
             currentX = mouse.x;
             currentY = mouse.y;
+            anchorContentX = mouse.x - gridView.x + gridView.contentX;
+            lastContentX = gridView.contentX;
             isSelecting = false;
             wasSelecting = false;
         }
@@ -682,9 +688,10 @@ Item {
         }
 
         function updateRubberBandSelection() {
-            let rx = Math.min(startX, currentX) - gridView.x + gridView.contentX;
+            let cx = currentX - gridView.x + gridView.contentX;
+            let rx = Math.min(anchorContentX, cx);
             let ry = Math.min(startY, currentY) - gridView.y;
-            let rw = Math.abs(currentX - startX);
+            let rw = Math.abs(cx - anchorContentX);
             let rh = Math.abs(currentY - startY);
 
             let rows = Math.max(1, Math.floor(gridView.height / gridView.cellHeight));
@@ -707,15 +714,42 @@ Item {
             }
             root.selectedPaths = newlySelected;
         }
+
+        Timer {
+            running: dragSelectArea.isSelecting
+            interval: 16
+            repeat: true
+
+            onTriggered: {
+                const edge = 32;
+                const left = gridView.x;
+                const right = gridView.x + gridView.width;
+                let delta = 0;
+                if (dragSelectArea.currentX < left + edge)
+                    delta = -Math.min(28, (left + edge - dragSelectArea.currentX) / 2);
+                else if (dragSelectArea.currentX > right - edge)
+                    delta = Math.min(28, (dragSelectArea.currentX - (right - edge)) / 2);
+
+                if (delta !== 0) {
+                    const limit = Math.max(0, gridView.contentWidth - gridView.width);
+                    gridView.contentX = Math.max(0, Math.min(limit, gridView.contentX + delta));
+                }
+
+                if (gridView.contentX !== dragSelectArea.lastContentX) {
+                    dragSelectArea.lastContentX = gridView.contentX;
+                    dragSelectArea.updateRubberBandSelection();
+                }
+            }
+        }
     }
 
     // Rubber Band Visual Rectangle
     Rectangle {
         z: 999
         visible: dragSelectArea.isSelecting
-        x: Math.min(dragSelectArea.startX, dragSelectArea.currentX)
+        x: Math.min(dragSelectArea.anchorViewX, dragSelectArea.currentX)
         y: Math.min(dragSelectArea.startY, dragSelectArea.currentY)
-        width: Math.abs(dragSelectArea.currentX - dragSelectArea.startX)
+        width: Math.abs(dragSelectArea.currentX - dragSelectArea.anchorViewX)
         height: Math.abs(dragSelectArea.currentY - dragSelectArea.startY)
         color: Qt.alpha(Colours.palette.m3primary, 0.18)
         border.color: Colours.palette.m3primary
