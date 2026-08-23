@@ -48,6 +48,8 @@ AppController::AppController(QObject* parent)
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
     m_dateFormat = settings.value("preferences/dateFormat", 1).toInt();
+    m_customDateFormat = settings.value("preferences/customDateFormat", "yyyy-MM-dd hh:mm").toString();
+    FileUtils::setCustomDateFormat(m_customDateFormat);
     FileUtils::setDateFormat(m_dateFormat);
     m_thumbnailsEnabled = settings.value("preferences/thumbnailsEnabled", true).toBool();
     m_thumbnailMaxMb = settings.value("preferences/thumbnailMaxMb", 0).toInt();
@@ -122,6 +124,18 @@ void AppController::setConfirmPermanentDelete(bool confirm) {
         settings.setValue("session/confirmPermanentDelete", confirm);
         emit confirmPermanentDeleteChanged();
     }
+}
+
+void AppController::setCustomDateFormat(const QString& pattern) {
+    if (m_customDateFormat == pattern)
+        return;
+
+    m_customDateFormat = pattern;
+    FileUtils::setCustomDateFormat(pattern);
+
+    QSettings settings("prism", "prism");
+    settings.setValue("preferences/customDateFormat", pattern);
+    emit customDateFormatChanged();
 }
 
 void AppController::setRestoreTabs(bool restore) {

@@ -73,10 +73,13 @@ MouseArea {
         },
         MenuItem {
             text: qsTr("Long (Date Time)")
+        },
+        MenuItem {
+            text: qsTr("Custom")
         }
     ]
     // Order matches dateFormatItems: ISO, Short, Long
-    readonly property var dateFormatValues: [1, 0, 2]
+    readonly property var dateFormatValues: [1, 0, 2, 3]
 
     readonly property list<MenuItem> iconSizeItems: [
         MenuItem {
@@ -550,12 +553,37 @@ MouseArea {
 
                             SplitButtonRow {
                                 first: true
-                                last: true
+                                last: AppController.dateFormat !== 3
                                 label: qsTr("Date Format")
                                 subtext: qsTr("Format: %1").arg(FileUtils.formatDateTime(new Date(), AppController.dateFormat))
                                 menuItems: root.dateFormatItems
                                 active: root.dateFormatItems[Math.max(0, root.dateFormatValues.indexOf(AppController.dateFormat))]
                                 onSelected: item => AppController.dateFormat = root.dateFormatValues[root.dateFormatItems.indexOf(item)]
+                            }
+
+                            StyledRect {
+                                visible: AppController.dateFormat === 3
+                                Layout.fillWidth: true
+                                implicitHeight: 42
+                                topLeftRadius: Tokens.rounding.extraSmall
+                                topRightRadius: Tokens.rounding.extraSmall
+                                bottomLeftRadius: Tokens.rounding.large
+                                bottomRightRadius: Tokens.rounding.large
+                                color: Colours.tPalette.m3surfaceContainer
+
+                                TextInput {
+                                    id: customDateInput
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.largeIncreased
+                                    anchors.rightMargin: Tokens.padding.largeIncreased
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    text: AppController.customDateFormat
+                                    color: Colours.palette.m3onSurface
+                                    font: Tokens.font.body.small
+                                    selectByMouse: true
+                                    clip: true
+                                    onEditingFinished: AppController.customDateFormat = text
+                                }
                             }
 
                             Item { implicitHeight: 4 }
