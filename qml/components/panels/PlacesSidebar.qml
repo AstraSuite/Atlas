@@ -236,10 +236,12 @@ StyledRect {
 
                 // Section 2: Network Header & Add Button
                 Item {
+                    id: netHeader
+                    visible: AppController.showNetworkSection
                     Layout.fillWidth: true
-                    implicitHeight: 26
-                    Layout.topMargin: Tokens.spacing.medium
-                    Layout.bottomMargin: Tokens.spacing.extraSmall
+                    implicitHeight: visible ? 26 : 0
+                    Layout.topMargin: visible ? Tokens.spacing.medium : 0
+                    Layout.bottomMargin: visible ? Tokens.spacing.extraSmall : 0
 
                     StyledText {
                         anchors.centerIn: parent
@@ -295,7 +297,7 @@ StyledRect {
                         required property bool isNetwork
                         required property string freeSpaceFormatted
 
-                        visible: netItem.isNetwork === true
+                        visible: AppController.showNetworkSection && (netItem.isNetwork === true)
 
                         readonly property bool selected: root.activeTab && (
                             (root.activeTab.isSplit && root.activeTab.activePane === 1)

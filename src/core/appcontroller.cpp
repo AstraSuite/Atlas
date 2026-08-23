@@ -42,6 +42,7 @@ AppController::AppController(QObject* parent)
     m_menuShowSymlink = settings.value("contextMenu/showSymlink", true).toBool();
     m_menuShowTerminal = settings.value("contextMenu/showTerminal", true).toBool();
     m_menuShowDelete = settings.value("contextMenu/showDelete", true).toBool();
+    m_showNetworkSection = settings.value("preferences/showNetworkSection", false).toBool();
 
     const QByteArray widthsJson = settings.value("preferences/detailsColumnWidths").toString().toUtf8();
     if (!widthsJson.isEmpty()) {
@@ -336,6 +337,15 @@ void AppController::setMenuShowDelete(bool val) {
         QSettings settings("prism", "prism");
         settings.setValue("contextMenu/showDelete", val);
         emit menuPreferencesChanged();
+    }
+}
+
+void AppController::setShowNetworkSection(bool show) {
+    if (m_showNetworkSection != show) {
+        m_showNetworkSection = show;
+        QSettings settings("prism", "prism");
+        settings.setValue("preferences/showNetworkSection", show);
+        emit showNetworkSectionChanged();
     }
 }
 

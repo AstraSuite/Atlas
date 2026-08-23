@@ -44,6 +44,7 @@ class AppController : public QObject {
     Q_PROPERTY(bool menuShowSymlink READ menuShowSymlink WRITE setMenuShowSymlink NOTIFY menuPreferencesChanged)
     Q_PROPERTY(bool menuShowTerminal READ menuShowTerminal WRITE setMenuShowTerminal NOTIFY menuPreferencesChanged)
     Q_PROPERTY(bool menuShowDelete READ menuShowDelete WRITE setMenuShowDelete NOTIFY menuPreferencesChanged)
+    Q_PROPERTY(bool showNetworkSection READ showNetworkSection WRITE setShowNetworkSection NOTIFY showNetworkSectionChanged)
 
 public:
     explicit AppController(QObject* parent = nullptr);
@@ -136,6 +137,9 @@ public:
     [[nodiscard]] bool menuShowDelete() const { return m_menuShowDelete; }
     void setMenuShowDelete(bool val);
 
+    [[nodiscard]] bool showNetworkSection() const { return m_showNetworkSection; }
+    void setShowNetworkSection(bool show);
+
     Q_INVOKABLE void accept(const QString& path);
     Q_INVOKABLE void reject();
 
@@ -165,6 +169,7 @@ signals:
     void selectedPathChanged();
     void iconThemeVersionChanged();
     void menuPreferencesChanged();
+    void showNetworkSectionChanged();
     void accepted(const QString& path);
     void rejected();
 
@@ -186,9 +191,9 @@ private:
     QVariantMap m_detailsColumnWidths;
     bool m_singleClick = false;
     QString m_defaultStartupDirectory = "home";
-    int m_defaultViewMode = 0; // Grid, Details, Compact
-    int m_defaultSortField = 0; // Name, Size, Date, Type
-    int m_defaultSortOrder = 0; // Ascending, Descending
+    int m_defaultViewMode = 0;
+    int m_defaultSortField = 0;
+    int m_defaultSortOrder = 0;
     bool m_showDirsFirst = true;
     int m_placesIconSize = 20;
     QString m_selectedPath;
@@ -200,6 +205,7 @@ private:
     bool m_menuShowSymlink = true;
     bool m_menuShowTerminal = true;
     bool m_menuShowDelete = true;
+    bool m_showNetworkSection = false;
 };
 
 } // namespace prism::core

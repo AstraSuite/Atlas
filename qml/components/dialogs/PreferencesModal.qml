@@ -995,6 +995,56 @@ MouseArea {
                                 }
                             }
 
+                            // Show Network Section in Sidebar Toggle
+                            StyledRect {
+                                Layout.fillWidth: true
+                                implicitHeight: 52
+                                radius: Tokens.rounding.medium
+                                color: Colours.tPalette.m3surfaceContainer
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.medium
+                                    spacing: Tokens.spacing.medium
+
+                                    MaterialIcon {
+                                        text: "cloud"
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        fontStyle: Tokens.font.icon.small
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        StyledText {
+                                            text: qsTr("Show Network Section")
+                                            color: Colours.palette.m3onSurface
+                                            font: Tokens.font.body.medium
+                                        }
+
+                                        StyledText {
+                                            text: qsTr("Display remote servers and network locations in sidebar")
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font: Tokens.font.label.small
+                                        }
+                                    }
+
+                                    StyledCheckBox {
+                                        checked: AppController.showNetworkSection
+                                        onToggled: AppController.showNetworkSection = checked
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: AppController.showNetworkSection = !AppController.showNetworkSection
+                                }
+                            }
+
                             Item { implicitHeight: 4 }
 
                             StyledText {
