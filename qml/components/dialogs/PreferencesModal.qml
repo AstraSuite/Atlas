@@ -375,7 +375,7 @@ MouseArea {
                                     }
                                 }
 
-
+                                ToggleRow {
                                     icon: "tab_duplicate"
                                     text: qsTr("Restore Tabs on Startup")
                                     subtext: qsTr("Reopen the tabs that were open when the window was last closed")
