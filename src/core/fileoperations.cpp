@@ -1,4 +1,5 @@
 #include "fileoperations.hpp"
+#include "trashlocations.hpp"
 
 #include "catboxuploader.hpp"
 #include <QDir>
@@ -429,13 +430,6 @@ void FileOperations::moveToTrash(const QStringList& paths) {
     m_progress->setStatusText(tr("Moving to trash..."));
 
     (void)QtConcurrent::run([this, paths]() {
-        QString trashDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/Trash";
-        QString filesDir = trashDir + "/files";
-        QString infoDir = trashDir + "/info";
-
-        QDir().mkpath(filesDir);
-        QDir().mkpath(infoDir);
-
         bool allSuccess = true;
 
         for (const QString& p : paths) {
@@ -443,23 +437,34 @@ void FileOperations::moveToTrash(const QStringList& paths) {
             if (!fi.exists())
                 continue;
 
+            const TrashLocation location = TrashLocations::forSourceFile(fi.absoluteFilePath(), true);
+            if (!location.isValid()) {
+                allSuccess = false;
+                continue;
+            }
+
             QString fileName = fi.fileName();
-            QString destFile = filesDir + "/" + fileName;
-            QString infoFile = infoDir + "/" + fileName + ".trashinfo";
+            QString destFile = location.filesDir + "/" + fileName;
+            QString infoFile = location.infoDir + "/" + fileName + ".trashinfo";
 
             int counter = 1;
             while (QFile::exists(destFile) || QFile::exists(infoFile)) {
                 QString uniqueName = QString("%1.%2").arg(fileName, QString::number(counter++));
-                destFile = filesDir + "/" + uniqueName;
-                infoFile = infoDir + "/" + uniqueName + ".trashinfo";
+                destFile = location.filesDir + "/" + uniqueName;
+                infoFile = location.infoDir + "/" + uniqueName + ".trashinfo";
             }
 
             // Write trashinfo
             QFile info(infoFile);
             if (info.open(QIODevice::WriteOnly | QIODevice::Text)) {
                 QString deletionDate = QDateTime::currentDateTime().toString(Qt::ISODate);
-                const QString encodedPath =
-                    QString::fromLatin1(QUrl::toPercentEncoding(fi.absoluteFilePath(), "/"));
+                QString originalPath = fi.absoluteFilePath();
+                if (!location.topDir.isEmpty()) {
+                    const QString prefix = QDir::cleanPath(location.topDir) + "/";
+                    if (originalPath.startsWith(prefix))
+                        originalPath = originalPath.mid(prefix.size());
+                }
+                const QString encodedPath = QString::fromLatin1(QUrl::toPercentEncoding(originalPath, "/"));
                 QString content = QString("[Trash Info]\nPath=%1\nDeletionDate=%2\n").arg(encodedPath, deletionDate);
                 info.write(content.toUtf8());
                 info.close();
@@ -488,21 +493,18 @@ void FileOperations::moveToTrash(const QStringList& paths) {
 }
 
 void FileOperations::restoreFromTrash(const QString& targetPath) {
-    QString trashDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/Trash";
-    QString infoPath = targetPath;
     QString trashedFile = targetPath;
-
-    if (targetPath.contains("/Trash/files/")) {
-        QString name = QFileInfo(targetPath).fileName();
-        infoPath = trashDir + "/info/" + name + ".trashinfo";
-        trashedFile = targetPath;
-    } else if (targetPath.endsWith(".trashinfo")) {
-        QString baseName = QFileInfo(targetPath).completeBaseName();
-        trashedFile = trashDir + "/files/" + baseName;
+    if (targetPath.endsWith(".trashinfo")) {
+        const QString baseDir = QFileInfo(QFileInfo(targetPath).absolutePath()).absolutePath();
+        trashedFile = baseDir + "/files/" + QFileInfo(targetPath).completeBaseName();
     }
 
-    QFileInfo fi(infoPath);
-    if (!fi.exists())
+    const TrashLocation location = TrashLocations::forTrashedFile(trashedFile);
+    if (!location.isValid())
+        return;
+
+    const QString infoPath = location.infoDir + "/" + QFileInfo(trashedFile).fileName() + ".trashinfo";
+    if (!QFileInfo::exists(infoPath))
         return;
 
     QFile file(infoPath);
@@ -513,7 +515,7 @@ void FileOperations::restoreFromTrash(const QString& targetPath) {
     while (!file.atEnd()) {
         QString line = QString::fromUtf8(file.readLine()).trimmed();
         if (line.startsWith("Path=")) {
-            origPath = QUrl::fromPercentEncoding(line.mid(5).toUtf8());
+            origPath = TrashLocations::resolveOriginalPath(location, line.mid(5));
             break;
         }
     }
@@ -537,10 +539,6 @@ void FileOperations::emptyTrash() {
     m_progress->setStatusText(tr("Emptying trash..."));
 
     (void)QtConcurrent::run([this]() {
-        QString trashDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/Trash";
-        QString filesDir = trashDir + "/files";
-        QString infoDir = trashDir + "/info";
-
         bool allSuccess = true;
 
         auto removeDirContents = [this, &allSuccess](const QString& dirPath) {
@@ -561,12 +559,14 @@ void FileOperations::emptyTrash() {
             }
         };
 
-        removeDirContents(filesDir);
-        removeDirContents(infoDir);
+        const auto locations = TrashLocations::all();
+        for (const auto& location : locations) {
+            removeDirContents(location.filesDir);
+            removeDirContents(location.infoDir);
+        }
 
-        // Ensure directories still exist
-        QDir().mkpath(filesDir);
-        QDir().mkpath(infoDir);
+        QDir().mkpath(TrashLocations::homeTrashFilesDir());
+        QDir().mkpath(TrashLocations::homeTrashDir() + "/info");
 
         QMetaObject::invokeMethod(this, [this, allSuccess]() {
             m_progress->setRunning(false);
