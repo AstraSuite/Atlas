@@ -423,6 +423,11 @@ ApplicationWindow {
                     for (let i = 0; i < targetPaths.length; ++i) {
                         FileOperations.restoreFromTrash(targetPaths[i]);
                     }
+                } else if (action === "removeFromRecent" && item) {
+                    FileOperations.removeFromRecent(targetPaths);
+                    if (splitContainer.activeModel) {
+                        splitContainer.activeModel.refresh();
+                    }
                 } else if (action === "emptyTrash") {
                     FileOperations.emptyTrash();
                 } else if (action === "bookmark") {

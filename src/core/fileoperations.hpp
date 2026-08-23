@@ -121,6 +121,7 @@ public:
     Q_INVOKABLE void deletePermanently(const QStringList& paths);
     Q_INVOKABLE void moveToTrash(const QStringList& paths);
     Q_INVOKABLE void restoreFromTrash(const QString& trashInfoPath);
+    Q_INVOKABLE void removeFromRecent(const QStringList& paths);
     Q_INVOKABLE void emptyTrash();
     Q_INVOKABLE void renameFile(const QString& oldPath, const QString& newName);
     Q_INVOKABLE void bulkRename(const QStringList& paths, const QStringList& newNames);
