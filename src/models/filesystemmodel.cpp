@@ -1,4 +1,5 @@
 #include "filesystemmodel.hpp"
+#include "../core/trashlocations.hpp"
 #include "../core/fileutils.hpp"
 
 #include <QCollator>
@@ -235,15 +236,16 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
 
     d.hasThumbnail = prism::core::FileUtils::shouldThumbnail(d.isImage, d.isVideo, d.size);
 
-    if (fi.absolutePath().contains("/.local/share/Trash/files") || fi.absolutePath().contains("/Trash/files")) {
+    const prism::core::TrashLocation trashLocation = prism::core::TrashLocations::forTrashedFile(fi.absoluteFilePath());
+    if (trashLocation.isValid()) {
         d.isTrashItem = true;
-        QString infoPath = QDir::homePath() + "/.local/share/Trash/info/" + fi.fileName() + ".trashinfo";
+        QString infoPath = trashLocation.infoDir + "/" + fi.fileName() + ".trashinfo";
         QFile infoFile(infoPath);
         if (infoFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
             while (!infoFile.atEnd()) {
                 QString line = QString::fromUtf8(infoFile.readLine()).trimmed();
                 if (line.startsWith("Path=")) {
-                    d.originalPath = QUrl::fromPercentEncoding(line.mid(5).toUtf8());
+                    d.originalPath = prism::core::TrashLocations::resolveOriginalPath(trashLocation, line.mid(5));
                 } else if (line.startsWith("DeletionDate=")) {
                     QString dStr = line.mid(13);
                     QDateTime dt = QDateTime::fromString(dStr, Qt::ISODate);
@@ -344,7 +346,16 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
         return;
     }
 
-    m_watcher.addPath(m_path);
+    if (prism::core::TrashLocations::isTrashRoot(m_path)) {
+        const auto locations = prism::core::TrashLocations::all();
+        for (const auto& location : locations) {
+            if (QDir(location.filesDir).exists())
+                m_watcher.addPath(location.filesDir);
+        }
+    } else {
+        m_watcher.addPath(m_path);
+    }
+
     QString scanPath = m_path;
 
     if (isPathReset && !m_isLoading) {
@@ -353,8 +364,16 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
     }
 
     (void)QtConcurrent::run([this, scanPath, isPathReset, generationToken, generation]() {
-        QDir dir(scanPath);
-        QFileInfoList list = dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
+        const auto filters = QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System;
+
+        QFileInfoList list;
+        if (prism::core::TrashLocations::isTrashRoot(scanPath)) {
+            const auto locations = prism::core::TrashLocations::all();
+            for (const auto& location : locations)
+                list += QDir(location.filesDir).entryInfoList(filters);
+        } else {
+            list = QDir(scanPath).entryInfoList(filters);
+        }
         QMimeDatabase mimeDb;
 
         QList<RawEntryData> rawData;
