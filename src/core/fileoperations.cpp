@@ -879,13 +879,13 @@ void FileOperations::addCompletedTask(bool success, const QString& message, cons
     task[QStringLiteral("url")] = url;
     task[QStringLiteral("time")] = QTime::currentTime().toString(QStringLiteral("hh:mm:ss"));
 
-    if (!m_completedTasks.isEmpty()) {
-        const auto first = m_completedTasks.first().toMap();
-        if (first.value(QStringLiteral("message")).toString() == message &&
-            first.value(QStringLiteral("url")).toString() == url) {
-            return;
-        }
+    const QString key = message + QLatin1Char('\n') + url;
+    if (key == m_lastCompletedTaskKey && m_lastCompletedTaskTimer.isValid()
+        && m_lastCompletedTaskTimer.elapsed() < 1000) {
+        return;
     }
+    m_lastCompletedTaskKey = key;
+    m_lastCompletedTaskTimer.restart();
 
     m_completedTasks.prepend(task);
     if (m_completedTasks.size() > 30) {
