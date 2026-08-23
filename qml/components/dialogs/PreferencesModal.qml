@@ -357,17 +357,19 @@ MouseArea {
                                 first: true
                                 last: true
                                 Layout.fillWidth: true
-                                implicitHeight: scrollRow.implicitHeight + scrollRow.anchors.margins * 2
+                                implicitHeight: Math.max(52, scrollRow.implicitHeight + Tokens.padding.medium * 2)
 
                                 RowLayout {
                                     id: scrollRow
-                                    anchors.fill: parent
-                                    anchors.margins: Tokens.padding.medium
-                                    anchors.leftMargin: Tokens.padding.largeIncreased
-                                    anchors.rightMargin: Tokens.padding.largeIncreased
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.leftMargin: Tokens.padding.large
+                                    anchors.rightMargin: Tokens.padding.large
                                     spacing: Tokens.spacing.medium
 
                                     MaterialIcon {
+                                        Layout.alignment: Qt.AlignVCenter
                                         text: "speed"
                                         color: Colours.palette.m3onSurfaceVariant
                                         fontStyle: Tokens.font.icon.medium
@@ -375,6 +377,7 @@ MouseArea {
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignVCenter
                                         spacing: 2
 
                                         StyledText {
@@ -398,6 +401,7 @@ MouseArea {
 
                                     StyledSlider {
                                         id: scrollSlider
+                                        Layout.alignment: Qt.AlignVCenter
                                         implicitWidth: 120
                                         implicitHeight: 8
                                         from: 0.5
@@ -409,6 +413,7 @@ MouseArea {
                                     }
 
                                     IconButton {
+                                        Layout.alignment: Qt.AlignVCenter
                                         type: ButtonBase.Text
                                         icon: "restart_alt"
                                         opacity: Math.abs(AppController.scrollSpeed - 1.0) >= 0.05 ? 1.0 : 0.0
