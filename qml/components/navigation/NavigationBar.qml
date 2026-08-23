@@ -250,28 +250,28 @@ StyledRect {
                         let home = FileUtils.home;
 
                         if (current.startsWith("recent:")) {
-                            return [{ name: qsTr("Recent"), path: current, isHome: false, isTrash: false }];
+                            return [{ name: qsTr("Recent"), path: current, icon: "history" }];
                         } else if (current.indexOf("/.local/share/Trash") !== -1 || current.indexOf("trash:") !== -1) {
-                            return [{ name: qsTr("Trash"), path: current, isHome: false, isTrash: true }];
+                            return [{ name: qsTr("Trash"), path: current, icon: "delete" }];
                         } else if (current === home) {
-                            return [{ name: qsTr("Home"), path: home, isHome: true, isTrash: false }];
+                            return [{ name: qsTr("Home"), path: home, icon: "home" }];
                         } else if (current.startsWith(home + "/")) {
                             let rel = current.substring(home.length + 1);
                             let parts = rel.split("/").filter(s => s.length > 0);
-                            let list = [{ name: qsTr("Home"), path: home, isHome: true, isTrash: false }];
+                            let list = [{ name: qsTr("Home"), path: home, icon: "home" }];
                             let accum = home;
                             for (let part of parts) {
                                 accum += "/" + part;
-                                list.push({ name: part, path: accum, isHome: false, isTrash: false });
+                                list.push({ name: part, path: accum, icon: "" });
                             }
                             return list;
                         } else {
                             let parts = current.split("/").filter(s => s.length > 0);
-                            let list = [{ name: "/", path: "/", isHome: false, isTrash: false }];
+                            let list = [{ name: "/", path: "/", icon: "" }];
                             let accum = "";
                             for (let part of parts) {
                                 accum += "/" + part;
-                                list.push({ name: part, path: accum, isHome: false, isTrash: false });
+                                list.push({ name: part, path: accum, icon: "" });
                             }
                             return list;
                         }
@@ -313,8 +313,8 @@ StyledRect {
                                 spacing: 4
 
                                 MaterialIcon {
-                                    visible: crumb.modelData.isHome || crumb.modelData.isTrash
-                                    text: crumb.modelData.isTrash ? "delete" : "home"
+                                    visible: crumb.modelData.icon.length > 0
+                                    text: crumb.modelData.icon
                                     fill: 1
                                     fontStyle: Tokens.font.icon.small
                                     color: crumb.isActiveSegment ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
