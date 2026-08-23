@@ -10,6 +10,26 @@
 
 namespace prism::core {
 
+static const QStringList& defaultDetailsColumnOrder() {
+    static const QStringList order = { "size", "type", "date", "perms", "origPath", "deleted" };
+    return order;
+}
+
+static QStringList sanitiseDetailsColumnOrder(const QStringList& order) {
+    const QStringList& known = defaultDetailsColumnOrder();
+    QStringList result;
+    result.reserve(known.size());
+    for (const QString& key : order) {
+        if (known.contains(key) && !result.contains(key))
+            result.append(key);
+    }
+    for (const QString& key : known) {
+        if (!result.contains(key))
+            result.append(key);
+    }
+    return result;
+}
+
 AppController::AppController(QObject* parent)
     : QObject(parent) {
     QSettings settings("prism", "prism");
@@ -48,6 +68,8 @@ AppController::AppController(QObject* parent)
     if (!widthsJson.isEmpty()) {
         m_detailsColumnWidths = QJsonDocument::fromJson(widthsJson).object().toVariantMap();
     }
+
+    m_detailsColumnOrder = sanitiseDetailsColumnOrder(settings.value("preferences/detailsColumnOrder").toStringList());
 }
 
 AppController* AppController::instance() {
@@ -191,6 +213,29 @@ void AppController::resetDetailsColumnWidths() {
     QSettings settings("prism", "prism");
     settings.remove("preferences/detailsColumnWidths");
     emit detailsColumnWidthsChanged();
+}
+
+void AppController::setDetailsColumnOrder(const QStringList& order) {
+    const QStringList sanitised = sanitiseDetailsColumnOrder(order);
+    if (m_detailsColumnOrder == sanitised)
+        return;
+
+    m_detailsColumnOrder = sanitised;
+
+    QSettings settings("prism", "prism");
+    settings.setValue("preferences/detailsColumnOrder", m_detailsColumnOrder);
+    emit detailsColumnOrderChanged();
+}
+
+void AppController::resetDetailsColumnOrder() {
+    if (m_detailsColumnOrder == defaultDetailsColumnOrder())
+        return;
+
+    m_detailsColumnOrder = defaultDetailsColumnOrder();
+
+    QSettings settings("prism", "prism");
+    settings.remove("preferences/detailsColumnOrder");
+    emit detailsColumnOrderChanged();
 }
 void AppController::setShowHidden(bool show) {
     if (m_showHidden != show) {
