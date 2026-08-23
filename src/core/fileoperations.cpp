@@ -593,6 +593,94 @@ void FileOperations::renameFile(const QString& oldPath, const QString& newName) 
     emit operationFinished(success, success ? tr("Renamed successfully") : tr("Rename failed"));
 }
 
+void FileOperations::bulkRename(const QStringList& paths, const QStringList& newNames) {
+    if (paths.isEmpty() || paths.size() != newNames.size()) {
+        emit operationFinished(false, tr("Rename failed"));
+        return;
+    }
+
+    QStringList sources;
+    QStringList targets;
+
+    for (int i = 0; i < paths.size(); ++i) {
+        const QFileInfo fi(paths.at(i));
+        const QString name = newNames.at(i).trimmed();
+
+        if (!fi.exists()) {
+            emit operationFinished(false, tr("Rename failed: %1 no longer exists").arg(fi.fileName()));
+            return;
+        }
+        if (name.isEmpty() || name.contains(QLatin1Char('/'))) {
+            emit operationFinished(false, tr("Rename failed: %1 is not a valid name").arg(name));
+            return;
+        }
+
+        const QString target = fi.absolutePath() + QLatin1Char('/') + name;
+        if (target == fi.absoluteFilePath())
+            continue;
+
+        if (targets.contains(target)) {
+            emit operationFinished(false, tr("Rename failed: %1 would be used twice").arg(name));
+            return;
+        }
+
+        sources.append(fi.absoluteFilePath());
+        targets.append(target);
+    }
+
+    if (sources.isEmpty()) {
+        emit operationFinished(true, tr("Nothing to rename"));
+        return;
+    }
+
+    for (const QString& target : std::as_const(targets)) {
+        if (QFileInfo::exists(target) && !sources.contains(target)) {
+            emit operationFinished(false, tr("Rename failed: %1 already exists").arg(QFileInfo(target).fileName()));
+            return;
+        }
+    }
+
+    QStringList staged;
+    staged.reserve(sources.size());
+
+    for (int i = 0; i < sources.size(); ++i) {
+        QString temp;
+        int suffix = 0;
+        do {
+            temp = QStringLiteral("%1.prism-rename-%2").arg(targets.at(i)).arg(suffix++);
+        } while (QFileInfo::exists(temp));
+
+        if (!QFile::rename(sources.at(i), temp)) {
+            for (int j = staged.size() - 1; j >= 0; --j)
+                QFile::rename(staged.at(j), sources.at(j));
+            emit operationFinished(false, tr("Rename failed: could not rename %1").arg(QFileInfo(sources.at(i)).fileName()));
+            return;
+        }
+        staged.append(temp);
+    }
+
+    for (int i = 0; i < staged.size(); ++i) {
+        if (!QFile::rename(staged.at(i), targets.at(i))) {
+            for (int j = i - 1; j >= 0; --j)
+                QFile::rename(targets.at(j), staged.at(j));
+            for (int j = staged.size() - 1; j >= 0; --j)
+                QFile::rename(staged.at(j), sources.at(j));
+            emit operationFinished(false, tr("Rename failed: could not rename %1").arg(QFileInfo(sources.at(i)).fileName()));
+            return;
+        }
+    }
+
+    UndoAction action;
+    action.type = UndoAction::BulkRename;
+    action.sourcePaths = sources;
+    action.destPaths = targets;
+    m_undoStack.push_back(action);
+    m_redoStack.clear();
+    emit undoStackChanged();
+
+    emit operationFinished(true, tr("Renamed %n item(s)", "", static_cast<int>(sources.size())));
+}
+
 void FileOperations::createDirectory(const QString& parentDir, const QString& name) {
     QDir dir(parentDir);
     bool success = dir.mkdir(name);
@@ -664,6 +752,14 @@ void FileOperations::undo() {
         m_redoStack.push_back(action);
         emit undoStackChanged();
         emit operationFinished(true, tr("Undid move"));
+    } else if (action.type == UndoAction::BulkRename) {
+        for (int i = action.destPaths.size() - 1; i >= 0; --i) {
+            if (i < action.sourcePaths.size())
+                QFile::rename(action.destPaths.at(i), action.sourcePaths.at(i));
+        }
+        m_redoStack.push_back(action);
+        emit undoStackChanged();
+        emit operationFinished(true, tr("Undid rename"));
     } else if (action.type == UndoAction::MoveToTrash) {
         for (const QString& info : action.trashInfoPaths) {
             restoreFromTrash(info);
@@ -685,6 +781,14 @@ void FileOperations::redo() {
             emit undoStackChanged();
             emit operationFinished(true, tr("Redid rename"));
         }
+    } else if (action.type == UndoAction::BulkRename) {
+        for (int i = 0; i < action.sourcePaths.size(); ++i) {
+            if (i < action.destPaths.size())
+                QFile::rename(action.sourcePaths.at(i), action.destPaths.at(i));
+        }
+        m_undoStack.push_back(action);
+        emit undoStackChanged();
+        emit operationFinished(true, tr("Redid rename"));
     } else if (action.type == UndoAction::CreateDirectory) {
         createDirectory(action.parentDir, action.name);
     } else if (action.type == UndoAction::CreateFile) {
