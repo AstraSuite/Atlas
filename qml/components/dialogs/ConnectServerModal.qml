@@ -11,6 +11,30 @@ Item {
     property bool expanded: false
     property var activeTab: null
 
+    readonly property var knownProtocols: [
+        { scheme: "sftp", label: qsTr("SFTP") },
+        { scheme: "smb", label: qsTr("SMB") },
+        { scheme: "ftp", label: qsTr("FTP") },
+        { scheme: "ftps", label: qsTr("FTPS") },
+        { scheme: "nfs", label: qsTr("NFS") },
+        { scheme: "afp", label: qsTr("AFP") },
+        { scheme: "dav", label: qsTr("WebDAV") },
+        { scheme: "davs", label: qsTr("WebDAV TLS") }
+    ]
+
+    readonly property var protocols: {
+        const available = NetworkManager.supportedSchemes;
+        if (available.length === 0)
+            return root.knownProtocols;
+        const usable = root.knownProtocols.filter(p => available.indexOf(p.scheme) >= 0);
+        return usable.length > 0 ? usable : root.knownProtocols;
+    }
+
+    property string scheme: "sftp"
+
+    readonly property bool usesShare: scheme === "smb"
+    readonly property bool usesCredentials: scheme !== "nfs"
+
     signal connected(string path)
 
     anchors.fill: parent
@@ -142,6 +166,59 @@ Item {
                 }
             }
 
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 4
+
+                StyledText {
+                    text: qsTr("Protocol")
+                    font: Tokens.font.label.medium
+                    color: Colours.palette.m3onSurfaceVariant
+                }
+
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: Tokens.spacing.extraSmall
+
+                    Repeater {
+                        model: root.protocols
+
+                        delegate: StyledRect {
+                            id: protoChip
+
+                            required property var modelData
+                            readonly property bool isSelected: root.scheme === modelData.scheme
+
+                            implicitWidth: protoLabel.implicitWidth + Tokens.padding.medium * 2
+                            implicitHeight: 32
+                            radius: Tokens.rounding.full
+                            color: isSelected
+                                ? Colours.palette.m3primaryContainer
+                                : (protoHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer)
+
+                            StyledText {
+                                id: protoLabel
+                                anchors.centerIn: parent
+                                text: protoChip.modelData.label
+                                font: Tokens.font.label.medium
+                                color: protoChip.isSelected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                            }
+
+                            MouseArea {
+                                id: protoHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.scheme = protoChip.modelData.scheme;
+                                    portInput.text = String(NetworkManager.defaultPort(root.scheme));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Server / Host & Port
             RowLayout {
                 Layout.fillWidth: true
@@ -218,6 +295,7 @@ Item {
             // Username
             ColumnLayout {
                 Layout.fillWidth: true
+                visible: root.usesCredentials
                 spacing: 4
 
                 StyledText {
@@ -259,7 +337,7 @@ Item {
                 spacing: 4
 
                 StyledText {
-                    text: qsTr("Remote Path")
+                    text: root.usesShare ? qsTr("Share / Path") : qsTr("Remote Path")
                     font: Tokens.font.label.medium
                     color: Colours.palette.m3onSurfaceVariant
                 }
@@ -287,6 +365,7 @@ Item {
             // Password
             ColumnLayout {
                 Layout.fillWidth: true
+                visible: root.usesCredentials
                 spacing: 4
 
                 StyledText {
@@ -423,13 +502,14 @@ Item {
                         cursorShape: hostInput.text.trim().length > 0 && !NetworkManager.isConnecting ? Qt.PointingHandCursor : undefined
                         onClicked: {
                             if (hostInput.text.trim().length > 0 && !NetworkManager.isConnecting) {
-                                let port = parseInt(portInput.text) || 22;
-                                NetworkManager.connectSftp(
+                                const port = parseInt(portInput.text) || NetworkManager.defaultPort(root.scheme);
+                                NetworkManager.connectServer(
+                                    root.scheme,
                                     hostInput.text.trim(),
                                     port,
-                                    userInput.text.trim(),
+                                    root.usesCredentials ? userInput.text.trim() : "",
                                     pathInput.text.trim(),
-                                    passInput.text,
+                                    root.usesCredentials ? passInput.text : "",
                                     bookmarkCheck.checked
                                 );
                             }

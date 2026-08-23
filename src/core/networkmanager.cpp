@@ -2,6 +2,8 @@
 #include "placesmodel.hpp"
 #include <QDir>
 #include <QFileInfo>
+#include <QHash>
+#include <QSettings>
 #include <QUrl>
 #include <QStandardPaths>
 #include <QDebug>
@@ -18,25 +20,74 @@ NetworkManager* NetworkManager::instance() {
     return s_instance;
 }
 
+QStringList NetworkManager::supportedSchemes() {
+    static const QStringList schemes = [] {
+        QStringList found;
+
+        QStringList dataDirs = QString::fromLocal8Bit(qgetenv("XDG_DATA_DIRS")).split(QLatin1Char(':'), Qt::SkipEmptyParts);
+        if (dataDirs.isEmpty())
+            dataDirs = { QStringLiteral("/usr/local/share"), QStringLiteral("/usr/share") };
+
+        for (const QString& dir : std::as_const(dataDirs)) {
+            const QDir mounts(dir + QStringLiteral("/gvfs/mounts"));
+            const QFileInfoList entries = mounts.entryInfoList({ QStringLiteral("*.mount") }, QDir::Files);
+            for (const QFileInfo& entry : entries) {
+                QSettings mount(entry.absoluteFilePath(), QSettings::IniFormat);
+                mount.beginGroup(QStringLiteral("Mount"));
+                const QString scheme = mount.value(QStringLiteral("Scheme")).toString();
+                if (!scheme.isEmpty() && !found.contains(scheme))
+                    found.append(scheme);
+                const QStringList aliases = mount.value(QStringLiteral("SchemeAliases")).toString().split(QLatin1Char(','), Qt::SkipEmptyParts);
+                for (const QString& alias : aliases) {
+                    if (!found.contains(alias))
+                        found.append(alias);
+                }
+            }
+        }
+
+        return found;
+    }();
+
+    return schemes;
+}
+
+int NetworkManager::defaultPort(const QString& scheme) {
+    static const QHash<QString, int> ports = {
+        { QStringLiteral("sftp"), 22 },  { QStringLiteral("ssh"), 22 },
+        { QStringLiteral("ftp"), 21 },   { QStringLiteral("ftps"), 990 },
+        { QStringLiteral("smb"), 445 },  { QStringLiteral("nfs"), 2049 },
+        { QStringLiteral("dav"), 80 },   { QStringLiteral("davs"), 443 },
+        { QStringLiteral("afp"), 548 }
+    };
+    return ports.value(scheme.toLower(), 0);
+}
+
 void NetworkManager::connectSftp(const QString& host, int port, const QString& user, const QString& path, const QString& password, bool saveBookmark) {
+    connectServer(QStringLiteral("sftp"), host, port, user, path, password, saveBookmark);
+}
+
+void NetworkManager::connectServer(const QString& scheme, const QString& host, int port, const QString& user, const QString& path, const QString& password, bool saveBookmark) {
     if (host.isEmpty()) {
         emit connectionFinished(false, QString(), tr("Host cannot be empty"));
         return;
     }
 
-    int validPort = (port > 0) ? port : 22;
+    const QString validScheme = scheme.isEmpty() ? QStringLiteral("sftp") : scheme.toLower();
+
     QString remotePath = path.isEmpty() ? QStringLiteral("/") : path;
     if (!remotePath.startsWith(QLatin1Char('/'))) {
         remotePath.prepend(QLatin1Char('/'));
     }
 
-    QString uri = QStringLiteral("sftp://");
+    QString uri = validScheme + QStringLiteral("://");
     if (!user.isEmpty()) {
-        uri += user + QLatin1Char('@');
+        uri += QString::fromLatin1(QUrl::toPercentEncoding(user)) + QLatin1Char('@');
     }
     uri += host;
-    if (validPort != 22) {
-        uri += QStringLiteral(":%1").arg(validPort);
+
+    const int standardPort = defaultPort(validScheme);
+    if (port > 0 && port != standardPort) {
+        uri += QStringLiteral(":%1").arg(port);
     }
     uri += remotePath;
 
