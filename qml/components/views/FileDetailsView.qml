@@ -30,6 +30,9 @@ Item {
     }
     property var selectedPaths: []
     property int anchorIndex: -1
+    readonly property bool isRecent: root.activeTab
+        && (root.activeTab.isSplit && root.paneIndex === 1 ? root.activeTab.splitPath : root.activeTab.currentPath).startsWith("recent:")
+
     readonly property bool isTrash: root.activeTab && (
         ((root.activeTab.isSplit && root.paneIndex === 1 ? root.activeTab.splitPath : root.activeTab.currentPath).indexOf("Trash") !== -1)
         || ((root.activeTab.isSplit && root.paneIndex === 1 ? root.activeTab.splitPath : root.activeTab.currentPath).indexOf("trash:") !== -1)
@@ -189,7 +192,7 @@ Item {
             muted: true
         },
         origPath: {
-            label: qsTr("Original Path"),
+            label: root.isRecent ? qsTr("Location") : qsTr("Original Path"),
             width: 320,
             sort: -1
         },
@@ -204,6 +207,16 @@ Item {
     readonly property var activeColumns: {
         if (root.isTrash)
             return AppController.detailsColumnOrder.filter(key => key === "origPath" || key === "deleted");
+
+        if (root.isRecent) {
+            const shownRecent = {
+                origPath: true,
+                size: AppController.showSizeColumn,
+                type: AppController.showTypeColumn,
+                date: AppController.showDateColumn
+            };
+            return AppController.detailsColumnOrder.filter(key => shownRecent[key] === true);
+        }
 
         const shown = {
             size: AppController.showSizeColumn,

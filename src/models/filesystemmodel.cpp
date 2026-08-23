@@ -1,4 +1,5 @@
 #include "filesystemmodel.hpp"
+#include "../core/recentfiles.hpp"
 #include "../core/trashlocations.hpp"
 #include "../core/fileutils.hpp"
 
@@ -236,6 +237,8 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
 
     d.hasThumbnail = prism::core::FileUtils::shouldThumbnail(d.isImage, d.isVideo, d.size);
 
+    d.originalPath = fi.absolutePath();
+
     const prism::core::TrashLocation trashLocation = prism::core::TrashLocations::forTrashedFile(fi.absoluteFilePath());
     if (trashLocation.isValid()) {
         d.isTrashItem = true;
@@ -334,7 +337,7 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
     if (!m_watcher.directories().isEmpty())
         m_watcher.removePaths(m_watcher.directories());
 
-    if (m_path.isEmpty() || !QDir(m_path).exists()) {
+    if (m_path.isEmpty() || (!prism::core::RecentFiles::isRecentPath(m_path) && !QDir(m_path).exists())) {
         if (m_isLoading) {
             m_isLoading = false;
             emit isLoadingChanged();
@@ -355,7 +358,7 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
             if (QDir(location.filesDir).exists())
                 m_watcher.addPath(location.filesDir);
         }
-    } else {
+    } else if (!prism::core::RecentFiles::isRecentPath(m_path)) {
         m_watcher.addPath(m_path);
     }
 
@@ -370,7 +373,11 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
         const auto filters = QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System;
 
         QFileInfoList list;
-        if (prism::core::TrashLocations::isTrashRoot(scanPath)) {
+        if (prism::core::RecentFiles::isRecentPath(scanPath)) {
+            const QStringList recent = prism::core::RecentFiles::paths();
+            for (const QString& entry : recent)
+                list.append(QFileInfo(entry));
+        } else if (prism::core::TrashLocations::isTrashRoot(scanPath)) {
             const auto locations = prism::core::TrashLocations::all();
             for (const auto& location : locations)
                 list += QDir(location.filesDir).entryInfoList(filters);
@@ -604,6 +611,9 @@ QList<FileSystemEntry*> FileSystemModel::calculateFilteredAndSorted(const QList<
 
         return (m_sortOrder == Qt::AscendingOrder) ? (res < 0) : (res > 0);
     };
+
+    if (prism::core::RecentFiles::isRecentPath(m_path))
+        return result;
 
     std::sort(result.begin(), result.end(), comparator);
     return result;
