@@ -153,6 +153,7 @@ private:
     bool m_isDucking = false;
     bool m_speedDrop = false;
     bool m_reachedMinHeight = false;
+    bool m_jumpPendingEnd = false;
     int m_playerFrame = 0;
     qreal m_legTimer = 0;
     qreal m_blinkTimer = 0;

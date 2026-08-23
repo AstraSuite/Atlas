@@ -68,6 +68,12 @@ Item {
         height: Math.min(parent.height - 48, 520)
         radius: Tokens.rounding.large
         color: RunnerGame.isNightMode ? "#202124" : "#f7f7f7"
+        border.width: 1
+        border.color: RunnerGame.isNightMode ? Qt.alpha("#8ab4f8", 0.35) : Qt.alpha("#000000", 0.12)
+
+        Behavior on border.color {
+            CAnim {}
+        }
 
         layer.enabled: true
         layer.effect: Mask {
@@ -131,6 +137,14 @@ Item {
                         }
                     }
                 }
+            }
+
+            // Header Divider
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: RunnerGame.isNightMode ? Qt.alpha("#ffffff", 0.08) : Qt.alpha("#000000", 0.06)
+                Behavior on color { CAnim {} }
             }
 
             // Game Playfield Area
@@ -366,6 +380,14 @@ Item {
                         }
                     }
                 }
+            }
+
+            // Footer Divider
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: RunnerGame.isNightMode ? Qt.alpha("#ffffff", 0.08) : Qt.alpha("#000000", 0.06)
+                Behavior on color { CAnim {} }
             }
 
             // Controls Hint Footer

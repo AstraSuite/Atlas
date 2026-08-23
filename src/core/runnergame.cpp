@@ -136,6 +136,7 @@ void RunnerGame::reset() {
     m_isDucking = false;
     m_speedDrop = false;
     m_reachedMinHeight = false;
+    m_jumpPendingEnd = false;
     m_playerFrame = 0;
     m_legTimer = 0;
     m_blinkTimer = 0;
@@ -174,6 +175,7 @@ void RunnerGame::jump() {
         m_jumpVelocity = INITIAL_JUMP_VELOCITY - (m_speed / 10.0);
         m_isJumping = true;
         m_reachedMinHeight = false;
+        m_jumpPendingEnd = false;
         m_speedDrop = false;
         emit jumpSoundTriggered();
         emit playerMoved();
@@ -185,6 +187,7 @@ void RunnerGame::jump() {
         m_jumpVelocity = INITIAL_JUMP_VELOCITY - (m_speed / 10.0);
         m_isJumping = true;
         m_reachedMinHeight = false;
+        m_jumpPendingEnd = false;
         m_speedDrop = false;
         emit jumpSoundTriggered();
         emit playerMoved();
@@ -195,6 +198,7 @@ void RunnerGame::jump() {
         m_jumpVelocity = INITIAL_JUMP_VELOCITY - (m_speed / 10.0);
         m_isJumping = true;
         m_reachedMinHeight = false;
+        m_jumpPendingEnd = false;
         m_speedDrop = false;
         emit jumpSoundTriggered();
         emit playerMoved();
@@ -202,6 +206,7 @@ void RunnerGame::jump() {
 }
 
 void RunnerGame::endJump() {
+    m_jumpPendingEnd = true;
     if (m_reachedMinHeight && m_jumpVelocity < DROP_VELOCITY) {
         m_jumpVelocity = DROP_VELOCITY;
     }
@@ -314,8 +319,11 @@ void RunnerGame::updatePhysics(qreal framesElapsed, qreal dt) {
 
         m_jumpVelocity += GRAVITY * framesElapsed;
 
-        if (m_playerY < GROUND_Y - 30.0 || m_speedDrop) {
+        if (m_playerY <= GROUND_Y - 30.0 || m_speedDrop) {
             m_reachedMinHeight = true;
+            if (m_jumpPendingEnd && m_jumpVelocity < DROP_VELOCITY) {
+                m_jumpVelocity = DROP_VELOCITY;
+            }
         }
 
         if (m_playerY >= GROUND_Y) {
@@ -324,6 +332,7 @@ void RunnerGame::updatePhysics(qreal framesElapsed, qreal dt) {
             m_isJumping = false;
             m_speedDrop = false;
             m_reachedMinHeight = false;
+            m_jumpPendingEnd = false;
         }
         m_playerFrame = 0;
     } else if (m_isDucking) {
