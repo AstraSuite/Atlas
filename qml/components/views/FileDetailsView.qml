@@ -230,7 +230,7 @@ Item {
             return "";
         switch (key) {
         case "size":
-            return file.isDir ? "" : file.formattedSize;
+            return file.formattedSize;
         case "type":
             return file.mimeDescription;
         case "date":

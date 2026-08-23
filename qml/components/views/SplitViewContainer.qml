@@ -41,6 +41,10 @@ StyledRect {
 
     Connections {
         target: AppController
+        function onFolderItemCountChanged() {
+            if (mainModel) mainModel.refresh();
+            if (splitModel) splitModel.refresh();
+        }
         function onDateFormatChanged() {
             if (mainModel) mainModel.refresh();
             if (splitModel) splitModel.refresh();

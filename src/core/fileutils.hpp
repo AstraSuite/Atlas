@@ -45,6 +45,17 @@ public:
     static int dateFormat();
     Q_INVOKABLE static bool shouldThumbnail(bool isImage, bool isVideo, qint64 size);
     static void setThumbnailsEnabled(bool enabled);
+
+    enum FolderCount {
+        FolderCountNever = 0,
+        FolderCountLocalOnly = 1,
+        FolderCountAlways = 2
+    };
+    Q_ENUM(FolderCount)
+
+    static void setFolderCountMode(int mode);
+    static int folderCountMode();
+    static QString countFolderItems(const QString& path);
     static void setThumbnailMaxBytes(qint64 bytes);
     Q_INVOKABLE static QString shortenHome(const QString& path);
     Q_INVOKABLE static QString toLocalFile(const QUrl& url);

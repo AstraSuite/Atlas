@@ -197,7 +197,8 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
     d.isSymLink = fi.isSymLink();
     d.symLinkTarget = fi.symLinkTarget();
     d.size = fi.isDir() ? 0 : fi.size();
-    d.formattedSize = fi.isDir() ? QString() : prism::core::FileUtils::formatSize(d.size);
+    d.formattedSize = fi.isDir() ? prism::core::FileUtils::countFolderItems(fi.absoluteFilePath())
+                                 : prism::core::FileUtils::formatSize(d.size);
     d.suffix = fi.suffix();
     d.isHidden = fi.isHidden() || d.name.startsWith('.');
     d.isWritable = fi.isWritable();

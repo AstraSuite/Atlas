@@ -36,6 +36,7 @@ class AppController : public QObject {
     Q_PROPERTY(int defaultSortOrder READ defaultSortOrder WRITE setDefaultSortOrder NOTIFY defaultSortOrderChanged)
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst NOTIFY showDirsFirstChanged)
     Q_PROPERTY(int placesIconSize READ placesIconSize WRITE setPlacesIconSize NOTIFY placesIconSizeChanged)
+    Q_PROPERTY(int folderItemCount READ folderItemCount WRITE setFolderItemCount NOTIFY folderItemCountChanged)
     Q_PROPERTY(QString selectedPath READ selectedPath NOTIFY selectedPathChanged)
     Q_PROPERTY(int iconThemeVersion READ iconThemeVersion NOTIFY iconThemeVersionChanged)
     Q_PROPERTY(bool menuShowSecondaryEditor READ menuShowSecondaryEditor WRITE setMenuShowSecondaryEditor NOTIFY menuPreferencesChanged)
@@ -118,6 +119,9 @@ public:
     [[nodiscard]] int placesIconSize() const { return m_placesIconSize; }
     void setPlacesIconSize(int size);
 
+    [[nodiscard]] int folderItemCount() const { return m_folderItemCount; }
+    void setFolderItemCount(int mode);
+
     [[nodiscard]] QString selectedPath() const { return m_selectedPath; }
     void setSelectedPath(const QString& path);
 
@@ -172,6 +176,7 @@ signals:
     void defaultSortOrderChanged();
     void showDirsFirstChanged();
     void placesIconSizeChanged();
+    void folderItemCountChanged();
     void selectedPathChanged();
     void iconThemeVersionChanged();
     void menuPreferencesChanged();
@@ -203,6 +208,7 @@ private:
     int m_defaultSortOrder = 0;
     bool m_showDirsFirst = true;
     int m_placesIconSize = 20;
+    int m_folderItemCount = 0;
     QString m_selectedPath;
     int m_iconThemeVersion = 0;
     bool m_menuShowSecondaryEditor = true;

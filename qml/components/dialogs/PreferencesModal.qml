@@ -64,6 +64,19 @@ MouseArea {
     ]
     readonly property var viewModeValues: [0, 1, 2]
 
+    readonly property list<MenuItem> folderCountItems: [
+        MenuItem {
+            text: qsTr("Never")
+        },
+        MenuItem {
+            text: qsTr("Local files only")
+        },
+        MenuItem {
+            text: qsTr("Always")
+        }
+    ]
+    readonly property var folderCountValues: [0, 1, 2]
+
     readonly property list<MenuItem> dateFormatItems: [
         MenuItem {
             text: qsTr("ISO (YYYY-MM-DD)")
@@ -524,6 +537,18 @@ MouseArea {
                                 color: Colours.palette.m3primary
                                 font: Tokens.font.label.large
                             }
+
+                            SplitButtonRow {
+                                first: true
+                                last: true
+                                label: qsTr("Show Item Count for Folders")
+                                subtext: qsTr("Counting reads every folder in the listing, which is slow over a network")
+                                menuItems: root.folderCountItems
+                                active: root.folderCountItems[Math.max(0, root.folderCountValues.indexOf(AppController.folderItemCount))]
+                                onSelected: item => AppController.folderItemCount = root.folderCountValues[root.folderCountItems.indexOf(item)]
+                            }
+
+                            Item { implicitHeight: 4 }
 
                             SplitButtonRow {
                                 first: true
