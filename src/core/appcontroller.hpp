@@ -21,6 +21,7 @@ class AppController : public QObject {
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
     Q_PROPERTY(bool confirmPermanentDelete READ confirmPermanentDelete WRITE setConfirmPermanentDelete NOTIFY confirmPermanentDeleteChanged)
     Q_PROPERTY(int dateFormat READ dateFormat WRITE setDateFormat NOTIFY dateFormatChanged)
+    Q_PROPERTY(QString customDateFormat READ customDateFormat WRITE setCustomDateFormat NOTIFY customDateFormatChanged)
     Q_PROPERTY(bool thumbnailsEnabled READ thumbnailsEnabled WRITE setThumbnailsEnabled NOTIFY thumbnailsEnabledChanged)
     Q_PROPERTY(int thumbnailMaxMb READ thumbnailMaxMb WRITE setThumbnailMaxMb NOTIFY thumbnailMaxMbChanged)
     Q_PROPERTY(bool showSizeColumn READ showSizeColumn WRITE setShowSizeColumn NOTIFY showSizeColumnChanged)
@@ -75,6 +76,9 @@ public:
     void setConfirmPermanentDelete(bool confirm);
     [[nodiscard]] int dateFormat() const { return m_dateFormat; }
     void setDateFormat(int format);
+
+    [[nodiscard]] QString customDateFormat() const { return m_customDateFormat; }
+    void setCustomDateFormat(const QString& pattern);
     Q_INVOKABLE static bool shiftPressed();
     [[nodiscard]] bool thumbnailsEnabled() const { return m_thumbnailsEnabled; }
     void setThumbnailsEnabled(bool enabled);
@@ -157,6 +161,7 @@ signals:
     void showHiddenChanged();
     void confirmPermanentDeleteChanged();
     void dateFormatChanged();
+    void customDateFormatChanged();
     void thumbnailsEnabledChanged();
     void thumbnailMaxMbChanged();
     void showSizeColumnChanged();
@@ -187,6 +192,7 @@ private:
     bool m_directoryOnly = false;
     bool m_showHidden = false;
     bool m_confirmPermanentDelete = true;
+    QString m_customDateFormat = QStringLiteral("yyyy-MM-dd hh:mm");
     int m_dateFormat = 1;
     bool m_thumbnailsEnabled = true;
     int m_thumbnailMaxMb = 0;
