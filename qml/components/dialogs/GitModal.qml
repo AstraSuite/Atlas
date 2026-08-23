@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import "../controls"
 import prism
 
 MouseArea {
@@ -83,51 +84,19 @@ MouseArea {
                 }
 
                 // Pull Button
-                StyledRect {
-                    implicitHeight: 38
-                    implicitWidth: pullContent.implicitWidth + 32
-                    radius: Tokens.rounding.full
-                    color: pullHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
-
-                    RowLayout {
-                        id: pullContent
-                        anchors.centerIn: parent
-                        spacing: 8
-                        MaterialIcon { text: "download"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3primary }
-                        StyledText { text: qsTr("Pull"); font: Tokens.font.label.large; color: Colours.palette.m3onSurface }
-                    }
-
-                    MouseArea {
-                        id: pullHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: GitManager.pull()
-                    }
+                IconTextButton {
+                    type: ButtonBase.Tonal
+                    icon: "download"
+                    text: qsTr("Pull")
+                    onClicked: GitManager.pull()
                 }
 
                 // Fetch Button
-                StyledRect {
-                    implicitHeight: 38
-                    implicitWidth: fetchContent.implicitWidth + 32
-                    radius: Tokens.rounding.full
-                    color: fetchHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
-
-                    RowLayout {
-                        id: fetchContent
-                        anchors.centerIn: parent
-                        spacing: 8
-                        MaterialIcon { text: "sync"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3primary }
-                        StyledText { text: qsTr("Fetch"); font: Tokens.font.label.large; color: Colours.palette.m3onSurface }
-                    }
-
-                    MouseArea {
-                        id: fetchHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: GitManager.fetch()
-                    }
+                IconTextButton {
+                    type: ButtonBase.Tonal
+                    icon: "sync"
+                    text: qsTr("Fetch")
+                    onClicked: GitManager.fetch()
                 }
             }
 
@@ -352,26 +321,10 @@ MouseArea {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignRight
 
-                StyledRect {
-                    implicitHeight: 36
-                    implicitWidth: 80
-                    radius: Tokens.rounding.full
-                    color: closeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Close")
-                        font: Tokens.font.label.large
-                        color: Colours.palette.m3onSurface
-                    }
-
-                    MouseArea {
-                        id: closeHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.expanded = false
-                    }
+                TextButton {
+                    type: ButtonBase.Text
+                    text: qsTr("Close")
+                    onClicked: root.expanded = false
                 }
             }
         }

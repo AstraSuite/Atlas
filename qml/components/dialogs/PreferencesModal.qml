@@ -80,6 +80,12 @@ MouseArea {
                     font: Tokens.font.body.builders.large.weight(Font.Bold).build()
                     Layout.fillWidth: true
                 }
+
+                IconButton {
+                    type: ButtonBase.Text
+                    icon: "close"
+                    onClicked: root.expanded = false
+                }
             }
 
             // Category Navigation Tabs
@@ -246,177 +252,42 @@ MouseArea {
                                 font: Tokens.font.label.large
                             }
 
-                            // Hidden files toggle card
-                            StyledRect {
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                implicitHeight: 56
-                                radius: Tokens.rounding.large
-                                color: hideHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
+                                spacing: 2
 
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        text: AppController.showHidden ? "visibility" : "visibility_off"
-                                        color: AppController.showHidden ? Colours.palette.m3primary : Colours.palette.m3outline
-                                        fontStyle: Tokens.font.icon.medium
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.alignment: Qt.AlignVCenter
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Show Hidden Files and Folders")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Display hidden dotfiles in views (Ctrl+H)")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        checked: AppController.showHidden
-                                        onToggled: val => AppController.showHidden = val
-                                    }
+                                ToggleRow {
+                                    first: true
+                                    icon: "visibility"
+                                    text: qsTr("Show Hidden Files and Folders")
+                                    subtext: qsTr("Display hidden dotfiles in views (Ctrl+H)")
+                                    checked: AppController.showHidden
+                                    onToggled: val => AppController.showHidden = val
                                 }
 
-                                MouseArea {
-                                    id: hideHover
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.showHidden = !AppController.showHidden
-                                }
-                            }
-
-                            // Confirm permanent delete toggle card
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 56
-                                radius: Tokens.rounding.large
-                                color: confirmDelHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        text: "delete_forever"
-                                        color: AppController.confirmPermanentDelete ? Colours.palette.m3primary : Colours.palette.m3outline
-                                        fontStyle: Tokens.font.icon.medium
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.alignment: Qt.AlignVCenter
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Confirm Permanent Deletion")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Ask before deleting files without using the trash (Shift+Delete)")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        checked: AppController.confirmPermanentDelete
-                                        onToggled: val => AppController.confirmPermanentDelete = val
-                                    }
+                                ToggleRow {
+                                    icon: "delete_forever"
+                                    text: qsTr("Confirm Permanent Deletion")
+                                    subtext: qsTr("Ask before deleting files without using the trash (Shift+Delete)")
+                                    checked: AppController.confirmPermanentDelete
+                                    onToggled: val => AppController.confirmPermanentDelete = val
                                 }
 
-                                MouseArea {
-                                    id: confirmDelHover
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.confirmPermanentDelete = !AppController.confirmPermanentDelete
-                                }
-                            }
-
-                            // Show thumbnails toggle card
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 56
-                                radius: Tokens.rounding.large
-                                color: thumbHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        text: AppController.thumbnailsEnabled ? "image" : "hide_image"
-                                        color: AppController.thumbnailsEnabled ? Colours.palette.m3primary : Colours.palette.m3outline
-                                        fontStyle: Tokens.font.icon.medium
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.alignment: Qt.AlignVCenter
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Show Thumbnails")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Preview images and videos instead of generic icons")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        checked: AppController.thumbnailsEnabled
-                                        onToggled: val => AppController.thumbnailsEnabled = val
-                                    }
+                                ToggleRow {
+                                    icon: "image"
+                                    text: qsTr("Show Thumbnails")
+                                    subtext: qsTr("Preview images and videos instead of generic icons")
+                                    checked: AppController.thumbnailsEnabled
+                                    onToggled: val => AppController.thumbnailsEnabled = val
                                 }
 
-                                MouseArea {
-                                    id: thumbHover
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.thumbnailsEnabled = !AppController.thumbnailsEnabled
+                                ToggleRow {
+                                    last: true
+                                    icon: "mouse"
+                                    text: qsTr("Single-Click Activation")
+                                    subtext: qsTr("Single click opens files; hover over items to select")
+                                    checked: AppController.singleClick
+                                    onToggled: val => AppController.singleClick = val
                                 }
                             }
 
@@ -473,64 +344,6 @@ MouseArea {
                                 }
                             }
 
-                            // Single-click toggle card
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 56
-                                radius: Tokens.rounding.large
-                                color: singleHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        text: "mouse"
-                                        color: AppController.singleClick ? Colours.palette.m3primary : Colours.palette.m3outline
-                                        fontStyle: Tokens.font.icon.medium
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.alignment: Qt.AlignVCenter
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Single-Click Activation")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Single click opens files; hover over items to select")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        checked: AppController.singleClick
-                                        onToggled: val => AppController.singleClick = val
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: singleHover
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.singleClick = !AppController.singleClick
-                                }
-                            }
-
                             Item { implicitHeight: 4 }
 
                             StyledText {
@@ -581,35 +394,12 @@ MouseArea {
                                         }
                                     }
 
-                                    StyledRect {
-                                        implicitWidth: 80
-                                        implicitHeight: 32
-                                        radius: Tokens.rounding.full
-                                        color: reloadBtnHover.containsMouse ? Colours.palette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHighest
+                                    IconTextButton {
+                                        type: ButtonBase.Tonal
+                                        icon: "refresh"
+                                        text: qsTr("Reload")
                                         Layout.alignment: Qt.AlignVCenter
-
-                                        RowLayout {
-                                            anchors.centerIn: parent
-                                            spacing: 4
-                                            MaterialIcon {
-                                                text: "refresh"
-                                                color: Colours.palette.m3primary
-                                                fontStyle: Tokens.font.icon.small
-                                            }
-                                            StyledText {
-                                                text: qsTr("Reload")
-                                                color: Colours.palette.m3primary
-                                                font: Tokens.font.label.small
-                                            }
-                                        }
-
-                                        MouseArea {
-                                            id: reloadBtnHover
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: PapirusWatcher.reload()
-                                        }
+                                        onClicked: PapirusWatcher.reload()
                                     }
                                 }
                             }
@@ -996,58 +786,14 @@ MouseArea {
                             }
 
                             // Show Network Section in Sidebar Toggle
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 52
-                                radius: Tokens.rounding.medium
-                                color: Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        text: "cloud"
-                                        color: Colours.palette.m3onSurfaceVariant
-                                        fontStyle: Tokens.font.icon.small
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 0
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Show Network Section")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.medium
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Display remote servers and network locations in sidebar")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        checked: AppController.showNetworkSection
-                                        onToggled: AppController.showNetworkSection = checked
-                                    }
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.showNetworkSection = !AppController.showNetworkSection
-                                }
+                            ToggleRow {
+                                first: true
+                                last: true
+                                icon: "cloud"
+                                text: qsTr("Show Network Section")
+                                subtext: qsTr("Display remote servers and network locations in sidebar")
+                                checked: AppController.showNetworkSection
+                                onToggled: val => AppController.showNetworkSection = val
                             }
 
                             Item { implicitHeight: 4 }
@@ -1215,388 +961,73 @@ MouseArea {
                                 wrapMode: Text.WordWrap
                             }
 
-                            // Secondary Code Editor Toggle
-                            StyledRect {
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                implicitHeight: 52
-                                radius: Tokens.rounding.medium
-                                color: Colours.tPalette.m3surfaceContainer
+                                spacing: 2
 
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        text: "code"
-                                        color: Colours.palette.m3onSurfaceVariant
-                                        fontStyle: Tokens.font.icon.small
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 0
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Secondary Code Editor")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.medium
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Show detected editor like VS Code or VSCodium under Open")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        checked: AppController.menuShowSecondaryEditor
-                                        onToggled: AppController.menuShowSecondaryEditor = checked
-                                    }
+                                // Secondary Code Editor Toggle
+                                ToggleRow {
+                                    first: true
+                                    icon: "code"
+                                    text: qsTr("Secondary Code Editor")
+                                    subtext: qsTr("Show detected editor like VS Code or VSCodium under Open")
+                                    checked: AppController.menuShowSecondaryEditor
+                                    onToggled: val => AppController.menuShowSecondaryEditor = val
                                 }
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.menuShowSecondaryEditor = !AppController.menuShowSecondaryEditor
-                                }
-                            }
-
-                            // Upload Online Toggle
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 52
-                                radius: Tokens.rounding.medium
-                                color: Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        text: "cloud_upload"
-                                        color: Colours.palette.m3onSurfaceVariant
-                                        fontStyle: Tokens.font.icon.small
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 0
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Upload Online")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.medium
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Upload directly to Catbox and Litterbox")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        checked: AppController.menuShowUploadOnline
-                                        onToggled: AppController.menuShowUploadOnline = checked
-                                    }
+                                // Upload Online Toggle
+                                ToggleRow {
+                                    icon: "cloud_upload"
+                                    text: qsTr("Upload Online")
+                                    subtext: qsTr("Upload directly to Catbox and Litterbox")
+                                    checked: AppController.menuShowUploadOnline
+                                    onToggled: val => AppController.menuShowUploadOnline = val
                                 }
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.menuShowUploadOnline = !AppController.menuShowUploadOnline
-                                }
-                            }
-
-                            // Send To Submenu Toggle
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 52
-                                radius: Tokens.rounding.medium
-                                color: Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        text: "send"
-                                        color: Colours.palette.m3onSurfaceVariant
-                                        fontStyle: Tokens.font.icon.small
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 0
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Send To Submenu")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.medium
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Include sharing destinations and external targets")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        checked: AppController.menuShowSendTo
-                                        onToggled: AppController.menuShowSendTo = checked
-                                    }
+                                // Send To Submenu Toggle
+                                ToggleRow {
+                                    icon: "send"
+                                    text: qsTr("Send To Submenu")
+                                    subtext: qsTr("Include sharing destinations and external targets")
+                                    checked: AppController.menuShowSendTo
+                                    onToggled: val => AppController.menuShowSendTo = val
                                 }
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.menuShowSendTo = !AppController.menuShowSendTo
-                                }
-                            }
-
-                            // Compress & Archive Toggle
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 52
-                                radius: Tokens.rounding.medium
-                                color: Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        text: "archive"
-                                        color: Colours.palette.m3onSurfaceVariant
-                                        fontStyle: Tokens.font.icon.small
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 0
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Compress & Archive")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.medium
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Archive presets and extraction tools")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        checked: AppController.menuShowCompress
-                                        onToggled: AppController.menuShowCompress = checked
-                                    }
+                                // Compress & Archive Toggle
+                                ToggleRow {
+                                    icon: "archive"
+                                    text: qsTr("Compress & Archive")
+                                    subtext: qsTr("Archive presets and extraction tools")
+                                    checked: AppController.menuShowCompress
+                                    onToggled: val => AppController.menuShowCompress = val
                                 }
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.menuShowCompress = !AppController.menuShowCompress
-                                }
-                            }
-
-                            // Create Symlink Toggle
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 52
-                                radius: Tokens.rounding.medium
-                                color: Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        text: "link"
-                                        color: Colours.palette.m3onSurfaceVariant
-                                        fontStyle: Tokens.font.icon.small
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 0
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Symlinks")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.medium
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Show Create Symlink and Paste as Symlink")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        checked: AppController.menuShowSymlink
-                                        onToggled: AppController.menuShowSymlink = checked
-                                    }
+                                // Create Symlink Toggle
+                                ToggleRow {
+                                    icon: "link"
+                                    text: qsTr("Symlinks")
+                                    subtext: qsTr("Show Create Symlink and Paste as Symlink")
+                                    checked: AppController.menuShowSymlink
+                                    onToggled: val => AppController.menuShowSymlink = val
                                 }
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.menuShowSymlink = !AppController.menuShowSymlink
-                                }
-                            }
-
-                            // Open in Terminal Toggle
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 52
-                                radius: Tokens.rounding.medium
-                                color: Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        text: "terminal"
-                                        color: Colours.palette.m3onSurfaceVariant
-                                        fontStyle: Tokens.font.icon.small
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 0
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Open in Terminal")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.medium
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Launch default terminal emulator in directory")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        checked: AppController.menuShowTerminal
-                                        onToggled: AppController.menuShowTerminal = checked
-                                    }
+                                // Open in Terminal Toggle
+                                ToggleRow {
+                                    icon: "terminal"
+                                    text: qsTr("Open in Terminal")
+                                    subtext: qsTr("Launch default terminal emulator in directory")
+                                    checked: AppController.menuShowTerminal
+                                    onToggled: val => AppController.menuShowTerminal = val
                                 }
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.menuShowTerminal = !AppController.menuShowTerminal
-                                }
-                            }
-
-                            // Permanent Delete Toggle
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 52
-                                radius: Tokens.rounding.medium
-                                color: Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        text: "delete"
-                                        color: Colours.palette.m3onSurfaceVariant
-                                        fontStyle: Tokens.font.icon.small
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        Layout.minimumWidth: 0
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Delete Actions")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.medium
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Show Move to Trash and Delete Permanently")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    StyledCheckBox {
-                                        checked: AppController.menuShowDelete
-                                        onToggled: AppController.menuShowDelete = checked
-                                    }
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: AppController.menuShowDelete = !AppController.menuShowDelete
+                                // Permanent Delete Toggle
+                                ToggleRow {
+                                    last: true
+                                    icon: "delete"
+                                    text: qsTr("Delete Actions")
+                                    subtext: qsTr("Show Move to Trash and Delete Permanently")
+                                    checked: AppController.menuShowDelete
+                                    onToggled: val => AppController.menuShowDelete = val
                                 }
                             }
 
@@ -1639,60 +1070,14 @@ MouseArea {
                             }
 
                             // Open Scripts Directory Card
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 70
-                                radius: Tokens.rounding.large
-                                color: scriptHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        text: "folder_special"
-                                        color: Colours.palette.m3primary
-                                        fontStyle: Tokens.font.icon.large
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        spacing: 2
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Open Scripts Folder")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.builders.medium.weight(Font.Bold).build()
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("~/.local/share/prism/scripts/ (Also supports Nautilus scripts)")
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
-                                        }
-                                    }
-
-                                    MaterialIcon {
-                                        text: "open_in_new"
-                                        color: Colours.palette.m3onSurfaceVariant
-                                        fontStyle: Tokens.font.icon.small
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: scriptHover
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        AppIntegration.openScriptsFolder();
-                                    }
-                                }
+                            RowButton {
+                                first: true
+                                last: true
+                                icon: "folder_special"
+                                text: qsTr("Open Scripts Folder")
+                                subtext: qsTr("~/.local/share/prism/scripts/ (Also supports Nautilus scripts)")
+                                trailingIcon: "open_in_new"
+                                onClicked: AppIntegration.openScriptsFolder()
                             }
 
                             Item { implicitHeight: Tokens.padding.small }
@@ -1709,59 +1094,17 @@ MouseArea {
                 Item { Layout.fillWidth: true }
 
                 // Cancel Button
-                StyledRect {
-                    implicitWidth: 90
-                    implicitHeight: 38
-                    radius: Tokens.rounding.full
-                    color: cancelHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Cancel")
-                        color: Colours.palette.m3primary
-                        font: Tokens.font.label.large
-                    }
-
-                    MouseArea {
-                        id: cancelHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.expanded = false
-                    }
-
-                    StyledToolTip {
-                        text: qsTr("Cancel")
-                        visible: cancelHover.containsMouse
-                    }
+                TextButton {
+                    type: ButtonBase.Text
+                    text: qsTr("Cancel")
+                    onClicked: root.expanded = false
                 }
 
                 // Done Button
-                StyledRect {
-                    implicitWidth: 96
-                    implicitHeight: 38
-                    radius: Tokens.rounding.full
-                    color: doneHover.containsMouse ? Colours.palette.m3primaryContainer : Colours.palette.m3primary
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Done")
-                        color: doneHover.containsMouse ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onPrimary
-                        font: Tokens.font.label.large
-                    }
-
-                    MouseArea {
-                        id: doneHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.expanded = false
-                    }
-
-                    StyledToolTip {
-                        text: qsTr("Done")
-                        visible: doneHover.containsMouse
-                    }
+                TextButton {
+                    type: ButtonBase.Filled
+                    text: qsTr("Done")
+                    onClicked: root.expanded = false
                 }
             }
         }

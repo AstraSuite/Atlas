@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import "../controls"
 import prism
 
 MouseArea {
@@ -307,91 +308,33 @@ MouseArea {
                 spacing: Tokens.spacing.small
 
                 // Remove Button
-                StyledRect {
+                IconTextButton {
                     visible: root.isCustom
-                    implicitWidth: removeRow.implicitWidth + Tokens.padding.medium * 2
-                    implicitHeight: 36
-                    radius: Tokens.rounding.full
-                    color: removeHover.containsMouse ? Qt.alpha(Colours.palette.m3error, 0.15) : "transparent"
-
-                    RowLayout {
-                        id: removeRow
-                        anchors.centerIn: parent
-                        spacing: 6
-
-                        MaterialIcon {
-                            text: "delete"
-                            color: Colours.palette.m3error
-                            fontStyle: Tokens.font.icon.small
-                        }
-
-                        StyledText {
-                            text: qsTr("Remove")
-                            color: Colours.palette.m3error
-                            font: Tokens.font.label.large
-                        }
-                    }
-
-                    MouseArea {
-                        id: removeHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.removeRequested(root.targetIndex);
-                            root.expanded = false;
-                        }
+                    type: ButtonBase.Text
+                    icon: "delete"
+                    text: qsTr("Remove")
+                    inactiveOnColour: Colours.palette.m3error
+                    activeOnColour: Colours.palette.m3error
+                    onClicked: {
+                        root.removeRequested(root.targetIndex);
+                        root.expanded = false;
                     }
                 }
 
                 Item { Layout.fillWidth: true }
 
                 // Cancel Button
-                StyledRect {
-                    implicitWidth: cancelText.implicitWidth + Tokens.padding.large * 2
-                    implicitHeight: 36
-                    radius: Tokens.rounding.full
-                    color: cancelHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
-
-                    StyledText {
-                        id: cancelText
-                        anchors.centerIn: parent
-                        text: qsTr("Cancel")
-                        color: Colours.palette.m3onSurface
-                        font: Tokens.font.label.large
-                    }
-
-                    MouseArea {
-                        id: cancelHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.expanded = false
-                    }
+                TextButton {
+                    type: ButtonBase.Text
+                    text: qsTr("Cancel")
+                    onClicked: root.expanded = false
                 }
 
                 // Save Button
-                StyledRect {
-                    implicitWidth: saveText.implicitWidth + Tokens.padding.large * 2
-                    implicitHeight: 36
-                    radius: Tokens.rounding.full
-                    color: saveHover.containsMouse ? Qt.lighter(Colours.palette.m3primary, 1.1) : Colours.palette.m3primary
-
-                    StyledText {
-                        id: saveText
-                        anchors.centerIn: parent
-                        text: qsTr("Save")
-                        color: Colours.palette.m3onPrimary
-                        font: Tokens.font.label.large
-                    }
-
-                    MouseArea {
-                        id: saveHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.save()
-                    }
+                TextButton {
+                    type: ButtonBase.Filled
+                    text: qsTr("Save")
+                    onClicked: root.save()
                 }
             }
         }

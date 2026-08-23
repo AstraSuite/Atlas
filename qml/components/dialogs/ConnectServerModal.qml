@@ -120,28 +120,12 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                StyledRect {
-                    implicitWidth: 32
-                    implicitHeight: 32
-                    radius: Tokens.rounding.full
-                    color: closeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
-
-                    MaterialIcon {
-                        anchors.centerIn: parent
-                        text: "close"
-                        color: Colours.palette.m3onSurfaceVariant
-                        fontStyle: Tokens.font.icon.small
-                    }
-
-                    MouseArea {
-                        id: closeHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (!NetworkManager.isConnecting) {
-                                root.expanded = false;
-                            }
+                IconButton {
+                    type: ButtonBase.Text
+                    icon: "close"
+                    onClicked: {
+                        if (!NetworkManager.isConnecting) {
+                            root.expanded = false;
                         }
                     }
                 }
@@ -444,28 +428,12 @@ Item {
 
                 Item { Layout.fillWidth: true }
 
-                StyledRect {
-                    implicitWidth: 90
-                    implicitHeight: 38
-                    radius: Tokens.rounding.full
-                    color: cancelHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Cancel")
-                        font: Tokens.font.label.large
-                        color: Colours.palette.m3primary
-                    }
-
-                    MouseArea {
-                        id: cancelHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (!NetworkManager.isConnecting) {
-                                root.expanded = false;
-                            }
+                TextButton {
+                    type: ButtonBase.Text
+                    text: qsTr("Cancel")
+                    onClicked: {
+                        if (!NetworkManager.isConnecting) {
+                            root.expanded = false;
                         }
                     }
                 }

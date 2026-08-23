@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../"
+import "../controls"
 import prism
 
 MouseArea {
@@ -157,48 +158,21 @@ MouseArea {
                     Layout.fillWidth: true
                 }
 
-                // Cancel Button
-                StyledRect {
-                    implicitWidth: 70
-                    implicitHeight: 36
-                    radius: Tokens.rounding.full
-                    color: "transparent"
-
-                    StateLayer {
-                        color: Colours.palette.m3onSurface
-                        onClicked: root.expanded = false
-                    }
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Cancel")
-                        color: Colours.palette.m3primary
-                        font: Tokens.font.label.large
-                    }
+                TextButton {
+                    type: ButtonBase.Text
+                    text: qsTr("Cancel")
+                    onClicked: root.expanded = false
                 }
 
-                // OK / Create Button
-                StyledRect {
-                    implicitWidth: 80
-                    implicitHeight: 36
-                    radius: Tokens.rounding.full
-                    color: Colours.palette.m3primary
-
-                    StateLayer {
-                        color: Colours.palette.m3onPrimary
-                        onClicked: {
-                            if (input.text.trim().length > 0) {
-                                root.accepted(input.text.trim());
-                                root.expanded = false;
-                            }
+                TextButton {
+                    type: ButtonBase.Filled
+                    text: qsTr("OK")
+                    disabled: input.text.trim().length === 0
+                    onClicked: {
+                        if (input.text.trim().length > 0) {
+                            root.accepted(input.text.trim());
+                            root.expanded = false;
                         }
-                    }
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("OK")
-                        color: Colours.palette.m3onPrimary
-                        font: Tokens.font.label.large
                     }
                 }
             }

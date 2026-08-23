@@ -148,6 +148,15 @@ qt_add_qml_module(prism_app
         qml/components/containers/VerticalFadeFlickable.qml
         qml/components/containers/VerticalFadeListView.qml
         qml/components/containers/VerticalFadeGridView.qml
+        qml/components/containers/ConnectedRect.qml
+        qml/components/controls/ButtonBase.qml
+        qml/components/controls/TextButton.qml
+        qml/components/controls/IconButton.qml
+        qml/components/controls/IconTextButton.qml
+        qml/components/controls/StyledSwitch.qml
+        qml/components/controls/RowButton.qml
+        qml/components/controls/ToggleRow.qml
+        qml/components/controls/SplitButton.qml
         qml/components/controls/StyledSlider.qml
         qml/components/controls/StyledCheckBox.qml
         qml/components/controls/CircularProgress.qml

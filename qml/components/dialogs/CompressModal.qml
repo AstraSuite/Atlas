@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import "../controls"
 import prism
 
 MouseArea {
@@ -177,58 +178,27 @@ MouseArea {
 
                 Item { Layout.fillWidth: true }
 
-                StyledRect {
-                    implicitWidth: 90
-                    implicitHeight: 36
-                    radius: Tokens.rounding.full
-                    color: cancelHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Cancel")
-                        color: Colours.palette.m3primary
-                        font: Tokens.font.label.large
-                    }
-
-                    MouseArea {
-                        id: cancelHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.expanded = false
-                    }
+                TextButton {
+                    type: ButtonBase.Text
+                    text: qsTr("Cancel")
+                    onClicked: root.expanded = false
                 }
 
-                StyledRect {
-                    implicitWidth: 110
-                    implicitHeight: 36
-                    radius: Tokens.rounding.full
-                    color: compressBtnHover.containsMouse ? Colours.palette.m3primaryContainer : Colours.palette.m3primary
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Compress")
-                        color: compressBtnHover.containsMouse ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onPrimary
-                        font: Tokens.font.label.large
-                    }
-
-                    MouseArea {
-                        id: compressBtnHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.expanded = false;
-                            let parentDir = "";
-                            if (root.sourcePaths.length > 0) {
-                                parentDir = FileUtils.shortenHome(root.sourcePaths[0]).replace(/\/[^\/]+$/, "");
-                            }
-                            let dest = nameInput.text.trim();
-                            if (!dest.endsWith("." + root.selectedFormat)) {
-                                dest += "." + root.selectedFormat;
-                            }
-                            root.accepted(root.sourcePaths, dest, root.selectedFormat);
+                IconTextButton {
+                    type: ButtonBase.Filled
+                    icon: "archive"
+                    text: qsTr("Compress")
+                    onClicked: {
+                        root.expanded = false;
+                        let parentDir = "";
+                        if (root.sourcePaths.length > 0) {
+                            parentDir = FileUtils.shortenHome(root.sourcePaths[0]).replace(/\/[^\/]+$/, "");
                         }
+                        let dest = nameInput.text.trim();
+                        if (!dest.endsWith("." + root.selectedFormat)) {
+                            dest += "." + root.selectedFormat;
+                        }
+                        root.accepted(root.sourcePaths, dest, root.selectedFormat);
                     }
                 }
             }

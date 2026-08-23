@@ -340,28 +340,11 @@ MouseArea {
                     StyledCheckBox { id: oX; checked: meta.permissions.length >= 9 && meta.permissions[8] === 'x' }
                 }
 
-                StyledRect {
+                TextButton {
                     Layout.alignment: Qt.AlignRight
-                    implicitHeight: 32
-                    implicitWidth: applyPermText.implicitWidth + 24
-                    radius: Tokens.rounding.full
-                    color: applyHover.containsMouse ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3primary, 0.2)
-
-                    StyledText {
-                        id: applyPermText
-                        anchors.centerIn: parent
-                        text: qsTr("Apply Permissions")
-                        font: Tokens.font.label.medium
-                        color: applyHover.containsMouse ? Colours.palette.m3onPrimary : Colours.palette.m3primary
-                    }
-
-                    MouseArea {
-                        id: applyHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: meta.applyPermissions(uR.checked, uW.checked, uX.checked, gR.checked, gW.checked, gX.checked, oR.checked, oW.checked, oX.checked)
-                    }
+                    type: ButtonBase.Tonal
+                    text: qsTr("Apply Permissions")
+                    onClicked: meta.applyPermissions(uR.checked, uW.checked, uX.checked, gR.checked, gW.checked, gX.checked, oR.checked, oW.checked, oX.checked)
                 }
 
                 Item { Layout.fillHeight: true }
@@ -383,27 +366,11 @@ MouseArea {
                         color: Colours.palette.m3onSurface
                     }
 
-                    StyledRect {
-                        implicitHeight: 28
-                        implicitWidth: calcText.implicitWidth + 20
-                        radius: Tokens.rounding.full
-                        color: calcHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
-
-                        StyledText {
-                            id: calcText
-                            anchors.centerIn: parent
-                            text: qsTr("Recalculate")
-                            font: Tokens.font.label.small
-                            color: Colours.palette.m3primary
-                        }
-
-                        MouseArea {
-                            id: calcHover
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: meta.calculateChecksums()
-                        }
+                    IconTextButton {
+                        type: ButtonBase.Tonal
+                        icon: "sync"
+                        text: qsTr("Recalculate")
+                        onClicked: meta.calculateChecksums()
                     }
                 }
 
@@ -548,31 +515,15 @@ MouseArea {
                 Item { Layout.fillHeight: true }
             }
 
-            // Bottom Close / Cancel Button
+            // Bottom Close Button
             RowLayout {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignRight
 
-                StyledRect {
-                    implicitHeight: 36
-                    implicitWidth: 80
-                    radius: Tokens.rounding.full
-                    color: cancelHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Cancel")
-                        font: Tokens.font.label.large
-                        color: Colours.palette.m3onSurface
-                    }
-
-                    MouseArea {
-                        id: cancelHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.expanded = false
-                    }
+                TextButton {
+                    type: ButtonBase.Text
+                    text: qsTr("Close")
+                    onClicked: root.expanded = false
                 }
             }
         }

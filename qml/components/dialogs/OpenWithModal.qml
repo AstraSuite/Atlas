@@ -258,34 +258,17 @@ MouseArea {
                 Layout.fillWidth: true
                 spacing: Tokens.spacing.small
 
-                StyledRect {
+                TextButton {
                     visible: root.selectedApp !== null
-                    implicitHeight: 38
-                    implicitWidth: setDefaultText.implicitWidth + 24
-                    radius: Tokens.rounding.full
-                    color: setDefHover.containsMouse ? Qt.alpha(Colours.palette.m3primary, 0.25) : Qt.alpha(Colours.palette.m3primary, 0.12)
-
-                    StyledText {
-                        id: setDefaultText
-                        anchors.centerIn: parent
-                        text: qsTr("Set as Default")
-                        font: Tokens.font.label.large
-                        color: Colours.palette.m3primary
-                    }
-
-                    MouseArea {
-                        id: setDefHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (root.selectedApp) {
-                                MimeService.setDefaultApp(FileUtils.mimeTypeForFile(root.targetPath), root.selectedApp.id);
-                                if (typeof propertiesModal !== "undefined" && propertiesModal && propertiesModal.expanded) {
-                                    propertiesModal.updateDefaultApp();
-                                }
-                                root.expanded = false;
+                    type: ButtonBase.Tonal
+                    text: qsTr("Set as Default")
+                    onClicked: {
+                        if (root.selectedApp) {
+                            MimeService.setDefaultApp(FileUtils.mimeTypeForFile(root.targetPath), root.selectedApp.id);
+                            if (typeof propertiesModal !== "undefined" && propertiesModal && propertiesModal.expanded) {
+                                propertiesModal.updateDefaultApp();
                             }
+                            root.expanded = false;
                         }
                     }
                 }
@@ -294,58 +277,26 @@ MouseArea {
                     Layout.fillWidth: true
                 }
 
-                StyledRect {
-                    implicitHeight: 38
-                    implicitWidth: 84
-                    radius: Tokens.rounding.full
-                    color: cancelHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Cancel")
-                        font: Tokens.font.label.large
-                        color: Colours.palette.m3onSurface
-                    }
-
-                    MouseArea {
-                        id: cancelHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.expanded = false
-                    }
+                TextButton {
+                    type: ButtonBase.Text
+                    text: qsTr("Cancel")
+                    onClicked: root.expanded = false
                 }
 
-                StyledRect {
-                    enabled: root.selectedApp !== null
-                    opacity: enabled ? 1.0 : 0.5
-                    implicitHeight: 38
-                    implicitWidth: 84
-                    radius: Tokens.rounding.full
-                    color: Colours.palette.m3primary
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Open")
-                        font: Tokens.font.label.large
-                        color: Colours.palette.m3onPrimary
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: root.selectedApp !== null
-                        cursorShape: root.selectedApp !== null ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: {
-                            if (root.selectedApp) {
-                                if (alwaysDefaultCheck.checked) {
-                                    MimeService.setDefaultApp(FileUtils.mimeTypeForFile(root.targetPath), root.selectedApp.id);
-                                    if (typeof propertiesModal !== "undefined" && propertiesModal && propertiesModal.expanded) {
-                                        propertiesModal.updateDefaultApp();
-                                    }
+                TextButton {
+                    disabled: root.selectedApp === null
+                    type: ButtonBase.Filled
+                    text: qsTr("Open")
+                    onClicked: {
+                        if (root.selectedApp) {
+                            if (alwaysDefaultCheck.checked) {
+                                MimeService.setDefaultApp(FileUtils.mimeTypeForFile(root.targetPath), root.selectedApp.id);
+                                if (typeof propertiesModal !== "undefined" && propertiesModal && propertiesModal.expanded) {
+                                    propertiesModal.updateDefaultApp();
                                 }
-                                MimeService.openWith(root.targetPath, root.selectedApp.path);
-                                root.expanded = false;
                             }
+                            MimeService.openWith(root.targetPath, root.selectedApp.path);
+                            root.expanded = false;
                         }
                     }
                 }

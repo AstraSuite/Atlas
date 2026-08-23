@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../"
+import "../controls"
 import prism
 
 MouseArea {
@@ -121,42 +122,20 @@ MouseArea {
                     Layout.fillWidth: true
                 }
 
-                StyledRect {
-                    implicitWidth: 70
-                    implicitHeight: 36
-                    radius: Tokens.rounding.full
-                    color: "transparent"
-
-                    StateLayer {
-                        color: Colours.palette.m3onSurface
-                        onClicked: root.expanded = false
-                    }
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Cancel")
-                        color: Colours.palette.m3primary
-                        font: Tokens.font.label.large
-                    }
+                TextButton {
+                    type: ButtonBase.Text
+                    text: qsTr("Cancel")
+                    onClicked: root.expanded = false
                 }
 
-                StyledRect {
-                    implicitWidth: 80
-                    implicitHeight: 36
-                    radius: Tokens.rounding.full
-                    color: Colours.palette.m3error
-
-                    StateLayer {
-                        color: Colours.palette.m3onError
-                        onClicked: root.accept()
-                    }
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Delete")
-                        color: Colours.palette.m3onError
-                        font: Tokens.font.label.large
-                    }
+                TextButton {
+                    type: ButtonBase.Filled
+                    activeColour: Colours.palette.m3error
+                    activeOnColour: Colours.palette.m3onError
+                    inactiveColour: Colours.palette.m3error
+                    inactiveOnColour: Colours.palette.m3onError
+                    text: qsTr("Delete")
+                    onClicked: root.accept()
                 }
             }
         }
