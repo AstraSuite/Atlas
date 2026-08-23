@@ -14,6 +14,10 @@ StyledRect {
     property string title: AppController.title || qsTr("Select a file")
     property bool showHidden: AppController.showHidden
     property bool directoryOnly: AppController.directoryOnly
+    readonly property bool saveMode: AppController.saveMode
+    property string saveName: AppController.suggestedName
+    readonly property string savePath: currentPath === "/" ? "/" + saveName : currentPath + "/" + saveName
+    readonly property bool saveWouldOverwrite: saveMode && saveName.length > 0 && AppController.fileExists(savePath)
     property real zoomLevel: 80
 
     signal accepted(string path)

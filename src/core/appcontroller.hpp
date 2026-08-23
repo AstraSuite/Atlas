@@ -22,6 +22,8 @@ class AppController : public QObject {
     Q_PROPERTY(QString filterLabel READ filterLabel WRITE setFilterLabel NOTIFY filterLabelChanged)
     Q_PROPERTY(QStringList filters READ filters WRITE setFilters NOTIFY filtersChanged)
     Q_PROPERTY(bool directoryOnly READ directoryOnly WRITE setDirectoryOnly NOTIFY directoryOnlyChanged)
+    Q_PROPERTY(bool saveMode READ saveMode NOTIFY saveModeChanged)
+    Q_PROPERTY(QString suggestedName READ suggestedName NOTIFY suggestedNameChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
     Q_PROPERTY(bool confirmPermanentDelete READ confirmPermanentDelete WRITE setConfirmPermanentDelete NOTIFY confirmPermanentDeleteChanged)
     Q_PROPERTY(int dateFormat READ dateFormat WRITE setDateFormat NOTIFY dateFormatChanged)
@@ -75,6 +77,12 @@ public:
 
     [[nodiscard]] bool directoryOnly() const { return m_directoryOnly; }
     void setDirectoryOnly(bool dirOnly);
+
+    [[nodiscard]] bool saveMode() const { return m_saveMode; }
+    void setSaveMode(bool save);
+    [[nodiscard]] QString suggestedName() const { return m_suggestedName; }
+    void setSuggestedName(const QString& name);
+    Q_INVOKABLE static bool fileExists(const QString& path);
 
     [[nodiscard]] bool showHidden() const { return m_showHidden; }
     [[nodiscard]] bool confirmPermanentDelete() const { return m_confirmPermanentDelete; }
@@ -160,6 +168,8 @@ signals:
     void filterLabelChanged();
     void filtersChanged();
     void directoryOnlyChanged();
+    void saveModeChanged();
+    void suggestedNameChanged();
     void showHiddenChanged();
     void confirmPermanentDeleteChanged();
     void dateFormatChanged();
@@ -192,6 +202,8 @@ private:
     QString m_filterLabel = "All files";
     QStringList m_filters = { "*" };
     bool m_directoryOnly = false;
+    bool m_saveMode = false;
+    QString m_suggestedName;
     bool m_showHidden = false;
     bool m_confirmPermanentDelete = true;
     int m_dateFormat = 1;
