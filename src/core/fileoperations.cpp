@@ -30,7 +30,11 @@ Q_LOGGING_CATEGORY(lcFileOps, "atlas.fileops", QtInfoMsg)
 
 FileOperations::FileOperations(QObject* parent)
     : QObject(parent)
-    , m_progress(new FileOperationProgress(this)) {}
+    , m_progress(new FileOperationProgress(this)) {
+    auto* clipboard = QGuiApplication::clipboard();
+    connect(clipboard, &QClipboard::dataChanged, this, &FileOperations::syncFromSystemClipboard);
+    syncFromSystemClipboard();
+}
 
 FileOperations* FileOperations::instance() {
     static auto* s_instance = new FileOperations();
@@ -51,15 +55,57 @@ void FileOperations::setCustomCommand(const QString& cmd) {
     }
 }
 
+void FileOperations::writeToSystemClipboard(const QStringList& paths, bool cut) {
+    QList<QUrl> urls;
+    urls.reserve(paths.size());
+    for (const QString& path : paths) {
+        urls.append(QUrl::fromLocalFile(path));
+    }
+
+    auto* mimeData = new QMimeData();
+    mimeData->setUrls(urls);
+    mimeData->setData(QStringLiteral("application/x-kde-cutselection"), cut ? QByteArrayLiteral("1") : QByteArrayLiteral("0"));
+
+    QGuiApplication::clipboard()->setMimeData(mimeData);
+}
+
+void FileOperations::syncFromSystemClipboard() {
+    const QMimeData* mimeData = QGuiApplication::clipboard()->mimeData();
+
+    QStringList files;
+    bool isCut = false;
+
+    if (mimeData && mimeData->hasFormat(QStringLiteral("text/uri-list"))) {
+        const QByteArray cutSelection = mimeData->data(QStringLiteral("application/x-kde-cutselection"));
+        isCut = (!cutSelection.isEmpty() && cutSelection.at(0) == '1');
+
+        const QList<QUrl> urls = mimeData->urls();
+        files.reserve(urls.size());
+        for (const QUrl& url : urls) {
+            if (url.isLocalFile()) {
+                files.append(url.toLocalFile());
+            }
+        }
+    }
+
+    if (files != m_clipboardFiles || isCut != m_isCut) {
+        m_clipboardFiles = files;
+        m_isCut = isCut;
+        emit clipboardChanged();
+    }
+}
+
 void FileOperations::copyToClipboard(const QStringList& paths) {
     m_clipboardFiles = paths;
     m_isCut = false;
+    writeToSystemClipboard(paths, false);
     emit clipboardChanged();
 }
 
 void FileOperations::cutToClipboard(const QStringList& paths) {
     m_clipboardFiles = paths;
     m_isCut = true;
+    writeToSystemClipboard(paths, true);
     emit clipboardChanged();
 }
 
@@ -70,10 +116,12 @@ void FileOperations::copyTextToClipboard(const QString& text) {
 void FileOperations::clearClipboard() {
     m_clipboardFiles.clear();
     m_isCut = false;
+    QGuiApplication::clipboard()->clear();
     emit clipboardChanged();
 }
 
 void FileOperations::paste(const QString& destinationDir) {
+    syncFromSystemClipboard();
     if (m_clipboardFiles.isEmpty() || destinationDir.isEmpty())
         return;
 

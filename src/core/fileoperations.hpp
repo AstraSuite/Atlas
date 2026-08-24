@@ -173,6 +173,9 @@ private:
     bool removeRecursively(const QString& path);
     qint64 calculateTotalSize(const QStringList& paths);
 
+    void writeToSystemClipboard(const QStringList& paths, bool cut);
+    void syncFromSystemClipboard();
+
     FileOperationProgress* m_progress = nullptr;
     QStringList m_clipboardFiles;
     QStringList m_activeDragFiles;
