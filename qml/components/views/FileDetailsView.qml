@@ -912,6 +912,7 @@ Item {
 
         orientation: Qt.Vertical
         flickable: listView
+        animatePosition: false
         size: listView.contentHeight > 0 ? Math.min(1, listView.height / listView.contentHeight) : 1
         position: listView.contentHeight > listView.height
             ? Math.max(0, Math.min(1 - size, listView.contentY / listView.contentHeight))

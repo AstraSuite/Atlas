@@ -10,6 +10,7 @@ T.ScrollBar {
     property bool animating: false
     property bool _updatingFromFlickable: false
     property bool _updatingFromUser: false
+    property bool animatePosition: true
 
     readonly property bool isVertical: root.orientation === Qt.Vertical
 
@@ -178,7 +179,7 @@ T.ScrollBar {
     }
 
     Behavior on position {
-        enabled: !fullMouse.pressed
+        enabled: root.animatePosition && !fullMouse.pressed
 
         Anim {}
     }
