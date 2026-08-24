@@ -116,6 +116,7 @@ MouseArea {
         anchors.fill: parent
         opacity: 0
         preferredRendererType: Shape.CurveRenderer
+        visible: opacity > 0.001
 
         ShapePath {
             strokeWidth: 0

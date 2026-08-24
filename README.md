@@ -42,6 +42,7 @@ Atlas is a fast, lightweight Material Design 3 file manager and file picker buil
 - `xdg-desktop-portal`: desktop portal integration for system-wide file chooser dialogs
 - `xdg-utils`: default application launching via `xdg-open`
 - `git`: inline repository status, branch tracking, and Git modal operations
+- `exiv2` (development package at build time): EXIF metadata display for photos in the preview panel and properties dialog; builds without it when absent
 - `caelestia-cli`: dynamic color palette and accent syncing with Caelestia
 - `papirus-icon-theme` and `papirus-folders`: dynamic folder color and system icon theme integration
 - Archive tools: `p7zip`, `tar`, `gzip`, `bzip2`, `xz`, `zip`, `unzip` for archive extraction and compression

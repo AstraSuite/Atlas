@@ -3,7 +3,10 @@
 #include <QObject>
 #include <QString>
 #include <QDateTime>
+#include <QVariantList>
 #include <qqmlintegration.h>
+
+class QMediaPlayer;
 
 namespace atlas::core {
 
@@ -43,6 +46,16 @@ class FileMetadata : public QObject {
     Q_PROPERTY(QString audioArtist READ audioArtist NOTIFY metadataChanged)
     Q_PROPERTY(QString audioAlbum READ audioAlbum NOTIFY metadataChanged)
     Q_PROPERTY(QString durationFormatted READ durationFormatted NOTIFY metadataChanged)
+    Q_PROPERTY(QDateTime lastModified READ lastModified NOTIFY metadataChanged)
+    Q_PROPERTY(qint64 lastModifiedMs READ lastModifiedMs NOTIFY metadataChanged)
+    Q_PROPERTY(bool hasMediaDetails READ hasMediaDetails NOTIFY mediaDetailsChanged)
+    Q_PROPERTY(QString videoDimensions READ videoDimensions NOTIFY mediaDetailsChanged)
+    Q_PROPERTY(QString videoCodecName READ videoCodecName NOTIFY mediaDetailsChanged)
+    Q_PROPERTY(QString audioCodecName READ audioCodecName NOTIFY mediaDetailsChanged)
+    Q_PROPERTY(QString frameRate READ frameRate NOTIFY mediaDetailsChanged)
+    Q_PROPERTY(QString bitRate READ bitRate NOTIFY mediaDetailsChanged)
+    Q_PROPERTY(QString copyright READ copyright NOTIFY mediaDetailsChanged)
+    Q_PROPERTY(QVariantList mediaDetails READ mediaDetails NOTIFY mediaDetailsChanged)
 
 public:
     explicit FileMetadata(QObject* parent = nullptr);
@@ -83,20 +96,36 @@ public:
     QString audioAlbum() const { return m_audioAlbum; }
     QString durationFormatted() const { return m_durationFormatted; }
 
+    QDateTime lastModified() const { return m_lastModified; }
+    qint64 lastModifiedMs() const { return m_lastModified.isValid() ? m_lastModified.toMSecsSinceEpoch() : 0; }
+    bool hasMediaDetails() const { return m_hasMediaDetails; }
+    QString videoDimensions() const { return m_videoDimensions; }
+    QString videoCodecName() const { return m_videoCodecName; }
+    QString audioCodecName() const { return m_audioCodecName; }
+    QString frameRate() const { return m_frameRate; }
+    QString bitRate() const { return m_bitRate; }
+    QString copyright() const { return m_copyright; }
+    QVariantList mediaDetails() const { return m_mediaDetails; }
+
     Q_INVOKABLE void reload();
     Q_INVOKABLE void calculateChecksums();
     Q_INVOKABLE bool applyPermissions(int userRead, int userWrite, int userExec,
                                      int groupRead, int groupWrite, int groupExec,
                                      int otherRead, int otherWrite, int otherExec,
                                      bool recursive = false);
+    Q_INVOKABLE bool setComment(const QString& comment);
 
 signals:
     void pathChanged();
     void metadataChanged();
     void checksumsChanged();
+    void mediaDetailsChanged();
 
 private:
     QString findThumbnail(const QString& filePath);
+    void resetMediaDetails();
+    void probeMediaMetadata();
+    void applyMediaMetaData();
 
     QString m_path;
     QString m_name;
@@ -130,6 +159,16 @@ private:
     QString m_audioArtist;
     QString m_audioAlbum;
     QString m_durationFormatted;
+    QDateTime m_lastModified;
+    bool m_hasMediaDetails = false;
+    QString m_videoDimensions;
+    QString m_videoCodecName;
+    QString m_audioCodecName;
+    QString m_frameRate;
+    QString m_bitRate;
+    QString m_copyright;
+    QVariantList m_mediaDetails;
+    QMediaPlayer* m_mediaProbe = nullptr;
 };
 
 } // namespace atlas::core

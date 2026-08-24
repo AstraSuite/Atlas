@@ -28,6 +28,35 @@ StyledRect {
         path: root.targetPath
     }
 
+    component InfoRow: ColumnLayout {
+        id: infoRow
+
+        required property var modelData
+        readonly property string rowLabel: (infoRow.modelData.label ?? "").toString()
+        readonly property string rowValue: {
+            const v = infoRow.modelData.value;
+            return v === undefined || v === null ? "" : String(v);
+        }
+
+        Layout.fillWidth: true
+        spacing: 2
+        visible: infoRow.modelData.visible !== false && infoRow.rowValue.length > 0
+
+        StyledText {
+            text: infoRow.rowLabel.endsWith(":") ? infoRow.rowLabel : infoRow.rowLabel + ":"
+            color: Colours.palette.m3onSurfaceVariant
+            font: Tokens.font.label.medium
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            text: infoRow.rowValue
+            color: Colours.palette.m3onSurface
+            font: Tokens.font.body.small
+            wrapMode: Text.Wrap
+        }
+    }
+
     Flickable {
         anchors.fill: parent
         anchors.margins: Tokens.padding.medium
@@ -67,28 +96,32 @@ StyledRect {
             // Image / Video / Icon Preview
             StyledRect {
                 Layout.fillWidth: true
-                implicitHeight: 180
+                implicitHeight: 200
                 radius: Tokens.rounding.medium
                 color: previewCardHover.containsMouse ? Colours.palette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
                 clip: true
 
-                // Image Preview
+                // Image & Video Preview (Full size)
                 Image {
                     anchors.fill: parent
                     anchors.margins: Tokens.padding.small
                     fillMode: Image.PreserveAspectFit
                     cache: false
-                    source: meta.isImage ? ("image://thumb/" + meta.path + "?t=" + (meta.lastModified ? meta.lastModified.getTime() : 0)) : ""
-                    visible: meta.isImage
+                    source: (meta.isImage || meta.isVideo) && meta.path.length > 0
+                        ? ("image://thumb/" + meta.path + "?t=" + meta.lastModifiedMs)
+                        : ""
+                    visible: meta.isImage || meta.isVideo
                     asynchronous: true
+                    mipmap: true
+                    smooth: true
                 }
 
-                // Video Thumbnail or Generic Icon Preview
+                // Generic File / Folder Icon Preview (when not media)
                 CachingIconImage {
                     anchors.centerIn: parent
                     implicitSize: 72
-                    visible: !meta.isImage
-                    source: meta.isVideo ? ("image://thumb/" + meta.path + "?t=" + (meta.lastModified ? meta.lastModified.getTime() : 0)) : FileUtils.iconForFile(meta.name, meta.isDir, meta.mimeType)
+                    visible: !meta.isImage && !meta.isVideo
+                    source: FileUtils.iconForFile(meta.name, meta.isDir, meta.mimeType)
                 }
 
                 // Video Badge Overlay
@@ -164,35 +197,26 @@ StyledRect {
             // Key-Value Metadata List
             Repeater {
                 model: [
-                    { label: qsTr("Size:"), value: meta.isDir ? `${meta.itemCount} items` : meta.formattedSize },
-                    { label: qsTr("Type:"), value: meta.mimeDescription.length > 0 ? meta.mimeDescription : (meta.isDir ? "Folder" : "File") },
-                    { label: qsTr("Dimensions:"), value: meta.imageDimensions, visible: meta.isImage && meta.imageDimensions.length > 0 },
-                    { label: qsTr("Modified:"), value: meta.formattedModified },
-                    { label: qsTr("Created:"), value: meta.formattedCreated },
-                    { label: qsTr("Accessed:"), value: meta.formattedAccessed },
-                    { label: qsTr("Permissions:"), value: meta.permissions },
-                    { label: qsTr("Owner:"), value: `${meta.owner} : ${meta.group}` }
+                    { label: qsTr("Size"), value: meta.isDir ? `${meta.itemCount} items` : meta.formattedSize },
+                    { label: qsTr("Type"), value: meta.mimeDescription.length > 0 ? meta.mimeDescription : (meta.isDir ? "Folder" : "File") },
+                    { label: qsTr("Dimensions"), value: meta.imageDimensions, visible: meta.isImage && meta.imageDimensions.length > 0 },
+                    { label: qsTr("Resolution"), value: meta.videoDimensions, visible: meta.isVideo && meta.videoDimensions.length > 0 },
+                    { label: qsTr("Duration"), value: meta.durationFormatted, visible: (meta.isVideo || meta.isAudio) && meta.durationFormatted.length > 0 },
+                    { label: qsTr("Modified"), value: meta.formattedModified },
+                    { label: qsTr("Created"), value: meta.formattedCreated },
+                    { label: qsTr("Accessed"), value: meta.formattedAccessed },
+                    { label: qsTr("Permissions"), value: meta.permissions },
+                    { label: qsTr("Owner"), value: `${meta.owner} : ${meta.group}` }
                 ]
 
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 2
-                    visible: modelData.visible !== false && modelData.value && String(modelData.value).length > 0
+                InfoRow {}
+            }
 
-                    StyledText {
-                        text: modelData.label || ""
-                        color: Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.label.medium
-                    }
+            // Rich media metadata (EXIF / container tags)
+            Repeater {
+                model: meta.mediaDetails
 
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: modelData.value ? String(modelData.value) : ""
-                        color: Colours.palette.m3onSurface
-                        font: Tokens.font.body.small
-                        wrapMode: Text.Wrap
-                    }
-                }
+                InfoRow {}
             }
         }
     }
