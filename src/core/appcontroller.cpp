@@ -56,6 +56,7 @@ AppController::AppController(QObject* parent)
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
     m_iconZoomLevel = qBound(48, settings.value("session/iconZoomLevel", 80).toInt(), 180);
     m_sidebarWidth = qBound(160, settings.value("session/sidebarWidth", 230).toInt(), 480);
+    m_expandableFolders = settings.value("preferences/expandableFolders", false).toBool();
     m_folderItemCount = settings.value("preferences/folderItemCount", 0).toInt();
     FileUtils::setFolderCountMode(m_folderItemCount);
     m_dateFormat = settings.value("preferences/dateFormat", 1).toInt();
@@ -151,6 +152,17 @@ void AppController::setIconZoomLevel(int level) {
     QSettings settings("astra-atlas", "atlas");
     settings.setValue("session/iconZoomLevel", clamped);
     emit iconZoomLevelChanged();
+}
+
+void AppController::setExpandableFolders(bool enabled) {
+    if (m_expandableFolders == enabled)
+        return;
+
+    m_expandableFolders = enabled;
+
+    QSettings settings("astra-atlas", "atlas");
+    settings.setValue("preferences/expandableFolders", enabled);
+    emit expandableFoldersChanged();
 }
 
 void AppController::setSidebarWidth(int width) {

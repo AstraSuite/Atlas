@@ -55,6 +55,8 @@ QVariant FileSystemModel::data(const QModelIndex& index, int role) const {
     case OwnerRole: return entry->owner();
     case IsImageRole: return entry->isImage();
     case IsHiddenRole: return entry->isHidden();
+    case DepthRole: return entry->depth();
+    case ExpandedRole: return entry->expanded();
     case Qt::DisplayRole: return entry->name();
     default:
         return {};
@@ -76,7 +78,9 @@ QHash<int, QByteArray> FileSystemModel::roleNames() const {
         { PermissionsRole, "permissions" },
         { OwnerRole, "owner" },
         { IsImageRole, "isImage" },
-        { IsHiddenRole, "isHidden" }
+        { IsHiddenRole, "isHidden" },
+        { DepthRole, "depth" },
+        { ExpandedRole, "expanded" }
     };
 }
 
@@ -433,6 +437,21 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
 }
 
 void FileSystemModel::updateDirectoryGranular(const QList<RawEntryData>& rawData) {
+    if (!m_expandedPaths.isEmpty()) {
+        QList<FileSystemEntry*> incoming;
+        incoming.reserve(rawData.size());
+        for (const RawEntryData& d : rawData)
+            incoming.append(createEntryFromRawData(d, this));
+
+        beginResetModel();
+        qDeleteAll(m_rawEntries);
+        m_rawEntries = incoming;
+        m_filteredEntries = calculateFilteredAndSorted(m_rawEntries);
+        endResetModel();
+        emit countChanged();
+        return;
+    }
+
     QList<QString> modifiedPaths;
     QHash<QString, FileSystemEntry*> existingMap;
     for (auto* e : m_rawEntries) {
@@ -557,7 +576,7 @@ void FileSystemModel::performSearch(const QString& rootPath, const QString& quer
     });
 }
 
-QList<FileSystemEntry*> FileSystemModel::calculateFilteredAndSorted(const QList<FileSystemEntry*>& source) {
+QList<FileSystemEntry*> FileSystemModel::filterAndSortOnly(const QList<FileSystemEntry*>& source) const {
     QList<FileSystemEntry*> result;
     QString lowerFilter = m_filterText.toLower();
 
@@ -633,6 +652,80 @@ QList<FileSystemEntry*> FileSystemModel::calculateFilteredAndSorted(const QList<
 
     std::sort(result.begin(), result.end(), comparator);
     return result;
+}
+
+QList<FileSystemEntry*> FileSystemModel::calculateFilteredAndSorted(const QList<FileSystemEntry*>& source) {
+    qDeleteAll(m_childEntries);
+    m_childEntries.clear();
+
+    QList<FileSystemEntry*> result = filterAndSortOnly(source);
+    if (m_expandedPaths.isEmpty())
+        return result;
+
+    QList<FileSystemEntry*> expandedResult;
+    expandedResult.reserve(result.size());
+    for (auto* e : result)
+        appendWithChildren(e, 0, expandedResult);
+    return expandedResult;
+}
+
+QList<FileSystemEntry*> FileSystemModel::childrenOf(const QString& path) {
+    QList<FileSystemEntry*> children;
+
+    QDir dir(path);
+    if (!dir.exists())
+        return children;
+
+    QDir::Filters filters = QDir::AllEntries | QDir::NoDotAndDotDot;
+    if (m_showHidden)
+        filters |= QDir::Hidden;
+
+    QMimeDatabase mimeDb;
+    const QFileInfoList infos = dir.entryInfoList(filters);
+    children.reserve(infos.size());
+    for (const QFileInfo& fi : infos) {
+        auto* entry = createEntryFromRawData(createRawDataFromInfo(fi, mimeDb), this);
+        m_childEntries.append(entry);
+        children.append(entry);
+    }
+
+    return filterAndSortOnly(children);
+}
+
+void FileSystemModel::appendWithChildren(FileSystemEntry* entry, int depth, QList<FileSystemEntry*>& out) {
+    const bool open = entry->isDir() && m_expandedPaths.contains(entry->path());
+    entry->setTreeState(depth, open);
+    out.append(entry);
+
+    if (!open)
+        return;
+
+    for (auto* child : childrenOf(entry->path()))
+        appendWithChildren(child, depth + 1, out);
+}
+
+void FileSystemModel::toggleExpanded(const QString& path) {
+    if (path.isEmpty())
+        return;
+
+    if (m_expandedPaths.contains(path)) {
+        for (const QString& open : QList<QString>(m_expandedPaths.begin(), m_expandedPaths.end())) {
+            if (open == path || open.startsWith(path + QLatin1Char('/')))
+                m_expandedPaths.remove(open);
+        }
+    } else {
+        m_expandedPaths.insert(path);
+    }
+
+    applyFilterAndSort();
+}
+
+void FileSystemModel::collapseAll() {
+    if (m_expandedPaths.isEmpty())
+        return;
+
+    m_expandedPaths.clear();
+    applyFilterAndSort();
 }
 
 void FileSystemModel::applyFilterAndSort() {

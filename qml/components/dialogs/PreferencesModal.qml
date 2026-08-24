@@ -355,6 +355,14 @@ MouseArea {
                                 }
 
                                 ToggleRow {
+                                    icon: "account_tree"
+                                    text: qsTr("Expandable Folders")
+                                    subtext: qsTr("Unfold a folder in place in the details view instead of opening it")
+                                    checked: AppController.expandableFolders
+                                    onToggled: checked => AppController.expandableFolders = checked
+                                }
+
+                                ToggleRow {
                                     icon: "folder_managed"
                                     text: qsTr("Remember View per Folder")
                                     subtext: qsTr("Keep the view mode and sort order each folder was last left in")

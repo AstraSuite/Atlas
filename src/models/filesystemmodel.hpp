@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QSet>
 #include <QDateTime>
 #include <QFileSystemWatcher>
 #include <QList>
@@ -63,6 +64,8 @@ class FileSystemEntry : public QObject {
     Q_PROPERTY(QString group READ group CONSTANT)
     Q_PROPERTY(QString suffix READ suffix CONSTANT)
     Q_PROPERTY(bool isHidden READ isHidden CONSTANT)
+    Q_PROPERTY(int depth READ depth NOTIFY treeChanged)
+    Q_PROPERTY(bool expanded READ expanded NOTIFY treeChanged)
     Q_PROPERTY(bool isReadOnly READ isReadOnly CONSTANT)
     Q_PROPERTY(bool isWritable READ isWritable CONSTANT)
     Q_PROPERTY(bool isImage READ isImage CONSTANT)
@@ -93,6 +96,16 @@ public:
     QString group() const { return m_group; }
     QString suffix() const { return m_suffix; }
     bool isHidden() const { return m_isHidden; }
+    int depth() const { return m_depth; }
+    bool expanded() const { return m_expanded; }
+    void setTreeState(int newDepth, bool isExpanded) {
+        if (m_depth == newDepth && m_expanded == isExpanded)
+            return;
+        m_depth = newDepth;
+        m_expanded = isExpanded;
+        emit treeChanged();
+    }
+
     bool isReadOnly() const { return m_isReadOnly; }
     bool isWritable() const { return m_isWritable; }
     bool isImage() const { return m_isImage; }
@@ -134,6 +147,11 @@ public:
     bool m_isVideo = false;
     bool m_hasThumbnail = false;
     bool m_isText = false;
+    int m_depth = 0;
+    bool m_expanded = false;
+
+signals:
+    void treeChanged();
 };
 
 class FileSystemModel : public QAbstractListModel {
@@ -177,7 +195,9 @@ public:
         PermissionsRole,
         OwnerRole,
         IsImageRole,
-        IsHiddenRole
+        IsHiddenRole,
+        DepthRole,
+        ExpandedRole
     };
     Q_ENUM(Roles)
 
@@ -223,6 +243,10 @@ public:
     Q_INVOKABLE int indexOfPath(const QString& path) const;
     Q_INVOKABLE int findFirstIndexByPrefix(const QString& prefix, int startIndex = 0) const;
     Q_INVOKABLE void refresh();
+    Q_INVOKABLE void toggleExpanded(const QString& path);
+    Q_INVOKABLE void collapseAll();
+    Q_INVOKABLE bool isExpanded(const QString& path) const { return m_expandedPaths.contains(path); }
+    [[nodiscard]] bool hasExpandedFolders() const { return !m_expandedPaths.isEmpty(); }
 
 signals:
     void pathChanged();
@@ -245,6 +269,9 @@ private:
     void applyFilterAndSort();
     void performSearch(const QString& rootPath, const QString& query);
     QList<FileSystemEntry*> calculateFilteredAndSorted(const QList<FileSystemEntry*>& source);
+    QList<FileSystemEntry*> filterAndSortOnly(const QList<FileSystemEntry*>& source) const;
+    void appendWithChildren(FileSystemEntry* entry, int depth, QList<FileSystemEntry*>& out);
+    QList<FileSystemEntry*> childrenOf(const QString& path);
 
     QString m_path;
     QString m_filterText;
@@ -262,6 +289,8 @@ private:
 
     QList<FileSystemEntry*> m_rawEntries;
     QList<FileSystemEntry*> m_filteredEntries;
+    QList<FileSystemEntry*> m_childEntries;
+    QSet<QString> m_expandedPaths;
     QFileSystemWatcher m_watcher;
 };
 
