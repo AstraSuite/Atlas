@@ -186,15 +186,14 @@ Item {
             target: view
             acceptedModifiers: Qt.NoModifier
             onWheel: event => {
-                let vy = 0;
-                let factor = AppController.scrollSpeed;
+                const factor = AppController.scrollSpeed;
                 if (event.pixelDelta.y !== 0) {
-                    vy = event.pixelDelta.y * 25 * factor;
+                    const limit = Math.max(0, view.contentHeight - view.height);
+                    view.cancelFlick();
+                    view.contentY = Math.max(0, Math.min(limit, view.contentY - event.pixelDelta.y * factor));
+                    event.accepted = true;
                 } else if (event.angleDelta.y !== 0) {
-                    vy = event.angleDelta.y * 14 * factor;
-                }
-                if (vy !== 0) {
-                    view.flick(0, vy);
+                    view.flick(0, event.angleDelta.y * 14 * factor);
                     event.accepted = true;
                 }
             }
@@ -653,15 +652,14 @@ Item {
                 }
                 wheel.accepted = true;
             } else {
-                let vy = 0;
-                let factor = AppController.scrollSpeed;
+                const factor = AppController.scrollSpeed;
                 if (wheel.pixelDelta.y !== 0) {
-                    vy = wheel.pixelDelta.y * 25 * factor;
+                    const limit = Math.max(0, view.contentHeight - view.height);
+                    view.cancelFlick();
+                    view.contentY = Math.max(0, Math.min(limit, view.contentY - wheel.pixelDelta.y * factor));
+                    wheel.accepted = true;
                 } else if (wheel.angleDelta.y !== 0) {
-                    vy = wheel.angleDelta.y * 14 * factor;
-                }
-                if (vy !== 0) {
-                    view.flick(0, vy);
+                    view.flick(0, wheel.angleDelta.y * 14 * factor);
                     wheel.accepted = true;
                 }
             }
