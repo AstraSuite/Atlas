@@ -78,6 +78,8 @@ StyledRect {
             id: flickable
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.rightMargin: -Tokens.padding.medium
+            rightMargin: Tokens.padding.medium
             contentHeight: contentCol.implicitHeight
             clip: true
             fadeAmount: 0.08
@@ -105,7 +107,7 @@ StyledRect {
 
             ColumnLayout {
                 id: contentCol
-                width: flickable.width
+                width: flickable.width - Tokens.padding.medium
                 spacing: Tokens.spacing.small
 
                 // Section 1: Local Places & Bookmarks
@@ -628,22 +630,6 @@ StyledRect {
                 return;
             const moved = mapToItem(null, event.x, 0).x - pressSceneX;
             AppController.sidebarWidth = pressWidth + moved;
-        }
-
-        StyledRect {
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            implicitWidth: 2
-
-            color: Colours.palette.m3primary
-            opacity: resizeHandle.pressed ? 1 : (resizeHandle.containsMouse ? 0.6 : 0)
-
-            Behavior on opacity {
-                Anim {
-                    type: Anim.DefaultEffects
-                }
-            }
         }
     }
 }
