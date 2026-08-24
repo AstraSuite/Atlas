@@ -9,6 +9,8 @@
 #include <QSurfaceFormat>
 
 #include <QSettings>
+
+#include "core/recentfiles.hpp"
 #include <QMouseEvent>
 
 #include "config/colours.hpp"
@@ -118,9 +120,13 @@ int main(int argc, char* argv[]) {
         if (p.startsWith(QLatin1String("file://"))) {
             p = QUrl(p).toLocalFile();
         }
-        QFileInfo fi(p);
-        if (fi.exists()) {
-            initialDir = fi.isDir() ? fi.absoluteFilePath() : fi.absolutePath();
+        if (atlas::core::RecentFiles::isRecentPath(p)) {
+            initialDir = p;
+        } else {
+            QFileInfo fi(p);
+            if (fi.exists()) {
+                initialDir = fi.isDir() ? fi.absoluteFilePath() : fi.absolutePath();
+            }
         }
     }
 
