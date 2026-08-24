@@ -198,6 +198,55 @@ Item {
                     Anim { type: Anim.FastEffects }
                 }
 
+                // Pop in animation on folder entry / reload
+                Component.onCompleted: popInAnim.start()
+
+                Behavior on scale {
+                    enabled: !popInAnim.running && !modifiedBounceAnim.running
+                    Anim { type: Anim.FastEffects }
+                }
+
+                ParallelAnimation {
+                    id: popInAnim
+                    NumberAnimation {
+                        target: itemCard
+                        property: "scale"
+                        from: 0.6
+                        to: 1.0
+                        duration: 250
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 1.3
+                    }
+                }
+
+                Connections {
+                    target: fsModel
+                    function onFileModified(modifiedPath) {
+                        if (delegateContainer.modelData && delegateContainer.modelData.path === modifiedPath) {
+                            modifiedBounceAnim.restart();
+                        }
+                    }
+                }
+
+                SequentialAnimation {
+                    id: modifiedBounceAnim
+                    NumberAnimation {
+                        target: itemCard
+                        property: "scale"
+                        to: 1.14
+                        duration: 130
+                        easing.type: Easing.OutQuad
+                    }
+                    NumberAnimation {
+                        target: itemCard
+                        property: "scale"
+                        to: 1.0
+                        duration: 220
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 1.4
+                    }
+                }
+
                 MouseArea {
                     id: itemHover
                     anchors.fill: parent
