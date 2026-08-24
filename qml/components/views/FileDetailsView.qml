@@ -825,8 +825,48 @@ Item {
                     // Name + Icon + Symlink / Lock
                     RowLayout {
                         Layout.fillWidth: true
-                        Layout.minimumWidth: 120
+                        Layout.minimumWidth: 120 + (AppController.expandableFolders ? 18 + Tokens.spacing.small : 0)
                         spacing: Tokens.spacing.small
+
+                        Item {
+                            visible: AppController.expandableFolders
+                            implicitWidth: visible ? (rowItem.modelData ? rowItem.modelData.depth : 0) * Tokens.padding.medium : 0
+                            implicitHeight: 1
+                        }
+
+                        Item {
+                            visible: AppController.expandableFolders
+                            implicitWidth: visible ? 18 : 0
+                            implicitHeight: 18
+
+                            MaterialIcon {
+                                anchors.centerIn: parent
+                                visible: rowItem.modelData ? rowItem.modelData.isDir : false
+                                text: "chevron_right"
+                                rotation: (rowItem.modelData && rowItem.modelData.expanded) ? 90 : 0
+                                fontStyle: Tokens.font.icon.small
+                                color: expandArea.containsMouse
+                                    ? Colours.palette.m3onSurface
+                                    : Colours.palette.m3onSurfaceVariant
+
+                                Behavior on rotation {
+                                    Anim {
+                                        type: Anim.DefaultSpatial
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                id: expandArea
+
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                enabled: rowItem.modelData ? rowItem.modelData.isDir : false
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.model.toggleExpanded(rowItem.modelData.path)
+                            }
+                        }
 
                         Item {
                             implicitWidth: root.iconSize

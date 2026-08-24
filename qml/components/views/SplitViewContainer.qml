@@ -68,7 +68,13 @@ StyledRect {
     Connections {
         target: root.activeTab
         function onCurrentPathChanged() { root.applyDirectoryView(); }
-        function onViewModeChanged() { root.rememberDirectoryView(); }
+        function onViewModeChanged() {
+            root.rememberDirectoryView();
+            if (root.activeTab && root.activeTab.viewMode !== 1) {
+                if (mainModel) mainModel.collapseAll();
+                if (splitModel) splitModel.collapseAll();
+            }
+        }
     }
 
     Connections {
@@ -79,6 +85,13 @@ StyledRect {
 
     Connections {
         target: AppController
+        function onExpandableFoldersChanged() {
+            if (AppController.expandableFolders)
+                return;
+            if (mainModel) mainModel.collapseAll();
+            if (splitModel) splitModel.collapseAll();
+        }
+
         function onFolderItemCountChanged() {
             if (mainModel) mainModel.refresh();
             if (splitModel) splitModel.refresh();
