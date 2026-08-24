@@ -176,20 +176,19 @@ Item {
             target: gridView
             acceptedModifiers: Qt.NoModifier
             onWheel: event => {
-                let vx = 0;
-                let factor = AppController.scrollSpeed;
-                if (event.pixelDelta.x !== 0) {
-                    vx = event.pixelDelta.x * 25 * factor;
-                } else if (event.pixelDelta.y !== 0) {
-                    vx = event.pixelDelta.y * 25 * factor;
-                } else if (event.angleDelta.y !== 0) {
-                    vx = event.angleDelta.y * 14 * factor;
-                } else if (event.angleDelta.x !== 0) {
-                    vx = event.angleDelta.x * 14 * factor;
-                }
-                if (vx !== 0) {
-                    gridView.flick(vx, 0);
+                const factor = AppController.scrollSpeed;
+                const pixels = event.pixelDelta.x !== 0 ? event.pixelDelta.x : event.pixelDelta.y;
+                if (pixels !== 0) {
+                    const limit = Math.max(0, gridView.contentWidth - gridView.width);
+                    gridView.cancelFlick();
+                    gridView.contentX = Math.max(0, Math.min(limit, gridView.contentX - pixels * factor));
                     event.accepted = true;
+                } else {
+                    const angle = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x;
+                    if (angle !== 0) {
+                        gridView.flick(angle * 14 * factor, 0);
+                        event.accepted = true;
+                    }
                 }
             }
         }
@@ -603,20 +602,19 @@ Item {
                 }
                 wheel.accepted = true;
             } else {
-                let vx = 0;
-                let factor = AppController.scrollSpeed;
-                if (wheel.pixelDelta.x !== 0) {
-                    vx = wheel.pixelDelta.x * 25 * factor;
-                } else if (wheel.pixelDelta.y !== 0) {
-                    vx = wheel.pixelDelta.y * 25 * factor;
-                } else if (wheel.angleDelta.y !== 0) {
-                    vx = wheel.angleDelta.y * 14 * factor;
-                } else if (wheel.angleDelta.x !== 0) {
-                    vx = wheel.angleDelta.x * 14 * factor;
-                }
-                if (vx !== 0) {
-                    gridView.flick(vx, 0);
+                const factor = AppController.scrollSpeed;
+                const pixels = wheel.pixelDelta.x !== 0 ? wheel.pixelDelta.x : wheel.pixelDelta.y;
+                if (pixels !== 0) {
+                    const limit = Math.max(0, gridView.contentWidth - gridView.width);
+                    gridView.cancelFlick();
+                    gridView.contentX = Math.max(0, Math.min(limit, gridView.contentX - pixels * factor));
                     wheel.accepted = true;
+                } else {
+                    const angle = wheel.angleDelta.y !== 0 ? wheel.angleDelta.y : wheel.angleDelta.x;
+                    if (angle !== 0) {
+                        gridView.flick(angle * 14 * factor, 0);
+                        wheel.accepted = true;
+                    }
                 }
             }
         }
