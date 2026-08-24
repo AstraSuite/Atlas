@@ -1,0 +1,69 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check you are on a current build first. More than one report has turned out to be
+        a fix that was already merged but not yet compiled locally.
+
+  - type: input
+    id: version
+    attributes:
+      label: Build
+      description: The package version, or the output of `git log -1 --format=%h` if you built it yourself.
+      placeholder: astra-atlas 1.0.0-1, or 8bb6db3
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      description: Which part of Atlas. Pick the closest one.
+      options:
+        - Grid view
+        - Details view
+        - Compact view
+        - Places sidebar
+        - Preferences
+        - Properties dialog
+        - File picker / portal
+        - Somewhere else
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The steps, in order. Include the detail that seems irrelevant — it is often the one that finds it.
+      placeholder: |
+        1. Open a folder with a long file name
+        2. Select it
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: result
+    attributes:
+      label: What happened, and what you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshot or recording
+      description: |
+        Drag files straight into this box. A screenshot beats a description, and for anything
+        that moves — scrolling, animation, drag and drop — a recording beats a screenshot.
+
+  - type: input
+    id: setup
+    attributes:
+      label: Anything specific about your setup
+      description: Only if it might matter — a touchpad, two monitors, HiDPI, an unusual icon theme, a compositor other than Hyprland.
+      placeholder: Touchpad, 150% scaling
