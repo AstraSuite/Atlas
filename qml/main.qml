@@ -123,10 +123,6 @@ ApplicationWindow {
                             }
                         }
 
-                        onGitRequested: {
-                            gitModal.expanded = true;
-                        }
-
                         onTogglePreview: {
                             previewPanel.expanded = !previewPanel.expanded;
                         }

@@ -98,7 +98,6 @@ StyledRect {
     signal reload()
     signal searchRequested(string query)
     signal filterRequested(string filter)
-    signal gitRequested()
     signal preferencesRequested()
     signal specialProtocolInvoked(int protocolId)
 
