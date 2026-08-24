@@ -169,6 +169,9 @@ Item {
 
         anchors.fill: parent
         anchors.margins: Tokens.padding.extraSmall + Tokens.padding.medium
+        anchors.rightMargin: 0
+
+        rightMargin: Tokens.padding.extraSmall + Tokens.padding.medium
 
         // Exact uniform cell dimensions
         cellWidth: Math.max(144, root.zoomSize + 48)

@@ -161,6 +161,10 @@ Item {
 
         anchors.fill: parent
         anchors.margins: Tokens.padding.small
+        anchors.bottomMargin: 0
+
+        bottomMargin: Tokens.padding.small
+
         cellWidth: Math.max(220, 200 + root.iconSize)
         cellHeight: root.iconSize + 18
         flow: GridView.FlowTopToBottom
