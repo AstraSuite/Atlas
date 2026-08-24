@@ -164,6 +164,7 @@ qt_add_qml_module(atlas_app
         qml/components/controls/ButtonRow.qml
         qml/components/controls/ButtonRowItem.qml
         qml/components/controls/ButtonGroup.qml
+        qml/components/controls/SlidingSelector.qml
         qml/components/controls/ButtonGroupItem.qml
         qml/components/controls/StyledSwitch.qml
         qml/components/controls/RowButton.qml
