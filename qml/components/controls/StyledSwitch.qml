@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import QtQuick.Templates as T
 import "../"
-import prism
+import atlas
 
 T.Switch {
     id: root

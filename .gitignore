@@ -1,4 +1,4 @@
-build/
+build*/
 .cache/
 *.user
 *.kdev4

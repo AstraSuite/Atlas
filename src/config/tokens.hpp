@@ -11,7 +11,7 @@
 #include <QJsonObject>
 #include <qqmlintegration.h>
 
-namespace prism::config {
+namespace atlas::config {
 
 class RoundingTokens : public QObject {
     Q_OBJECT
@@ -208,7 +208,7 @@ class AnimCurves : public QObject {
     Q_PROPERTY(QEasingCurve expressiveFastEffects READ expressiveFastEffects NOTIFY curvesChanged)
     Q_PROPERTY(QEasingCurve expressiveDefaultEffects READ expressiveDefaultEffects NOTIFY curvesChanged)
     Q_PROPERTY(QEasingCurve expressiveSlowEffects READ expressiveSlowEffects NOTIFY curvesChanged)
-    Q_PROPERTY(prism::config::AnimDurationTokens* durations READ durations CONSTANT)
+    Q_PROPERTY(atlas::config::AnimDurationTokens* durations READ durations CONSTANT)
 
 public:
     explicit AnimCurves(QObject* parent = nullptr);
@@ -273,7 +273,7 @@ class SizeTokens : public QObject {
     Q_OBJECT
     QML_ANONYMOUS
 
-    Q_PROPERTY(prism::config::SidebarSizeTokens* sidebar READ sidebar CONSTANT)
+    Q_PROPERTY(atlas::config::SidebarSizeTokens* sidebar READ sidebar CONSTANT)
 
 public:
     explicit SizeTokens(QObject* parent = nullptr)
@@ -292,12 +292,12 @@ class TokensSingleton : public QObject {
     QML_ELEMENT
     QML_SINGLETON
 
-    Q_PROPERTY(prism::config::RoundingTokens* rounding READ rounding CONSTANT)
-    Q_PROPERTY(prism::config::SpacingTokens* spacing READ spacing CONSTANT)
-    Q_PROPERTY(prism::config::PaddingTokens* padding READ padding CONSTANT)
-    Q_PROPERTY(prism::config::AnimCurves* anim READ anim CONSTANT)
-    Q_PROPERTY(prism::config::FontTokens* font READ font CONSTANT)
-    Q_PROPERTY(prism::config::SizeTokens* sizes READ sizes CONSTANT)
+    Q_PROPERTY(atlas::config::RoundingTokens* rounding READ rounding CONSTANT)
+    Q_PROPERTY(atlas::config::SpacingTokens* spacing READ spacing CONSTANT)
+    Q_PROPERTY(atlas::config::PaddingTokens* padding READ padding CONSTANT)
+    Q_PROPERTY(atlas::config::AnimCurves* anim READ anim CONSTANT)
+    Q_PROPERTY(atlas::config::FontTokens* font READ font CONSTANT)
+    Q_PROPERTY(atlas::config::SizeTokens* sizes READ sizes CONSTANT)
 
 public:
 
@@ -328,4 +328,4 @@ private:
     QFileSystemWatcher m_watcher;
 };
 
-} // namespace prism::config
+} // namespace atlas::config

@@ -8,7 +8,7 @@
 #include <QVector>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 struct DriveItem {
     QString name;
@@ -92,4 +92,4 @@ private:
     QFileSystemWatcher m_mountWatcher;
 };
 
-} // namespace prism::core
+} // namespace atlas::core

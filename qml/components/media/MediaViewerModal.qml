@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
 import "../controls"
-import prism
+import atlas
 
 MouseArea {
     id: root

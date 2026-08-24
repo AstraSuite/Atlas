@@ -8,7 +8,7 @@
 #include <QJSEngine>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 struct PlaceItem {
     QString name;
@@ -96,5 +96,5 @@ private:
     bool m_isSaving = false;
 };
 
-} // namespace prism::core
+} // namespace atlas::core
 

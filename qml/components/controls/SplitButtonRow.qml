@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import prism
+import atlas
 import "../"
 import "../containers"
 

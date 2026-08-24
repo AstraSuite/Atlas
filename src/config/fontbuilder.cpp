@@ -1,9 +1,9 @@
 #include "fontbuilder.hpp"
 #include <QLoggingCategory>
 
-namespace prism::config {
+namespace atlas::config {
 
-Q_LOGGING_CATEGORY(lcFontBuilder, "prism.fontbuilder", QtInfoMsg)
+Q_LOGGING_CATEGORY(lcFontBuilder, "atlas.fontbuilder", QtInfoMsg)
 
 FontBuilder::FontBuilder(QFont font)
     : m_font(std::move(font)) {}
@@ -89,4 +89,4 @@ FontBuilder FontBuilder::scale(qreal factor) {
     return size(static_cast<int>(m_font.pointSize() * factor));
 }
 
-} // namespace prism::config
+} // namespace atlas::config

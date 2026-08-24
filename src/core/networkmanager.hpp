@@ -8,7 +8,7 @@
 #include <QJSEngine>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class NetworkManager : public QObject {
     Q_OBJECT
@@ -59,4 +59,4 @@ private:
     QProcess* m_currentProcess = nullptr;
 };
 
-} // namespace prism::core
+} // namespace atlas::core

@@ -11,18 +11,18 @@ import "components/menus"
 import "components/dialogs"
 import "components/filedialog"
 import "components/media"
-import prism
+import atlas
 
 ApplicationWindow {
     id: window
 
     title: pickerActive
         ? (AppController.title && AppController.title.length > 0
-            ? (AppController.title + " — Prism File Picker")
-            : "Prism File Picker")
+            ? (AppController.title + " — Atlas File Picker")
+            : "Atlas File Picker")
         : (TabManager.currentTab && TabManager.currentTab.title
-            ? (TabManager.currentTab.title + " — Prism")
-            : "Prism")
+            ? (TabManager.currentTab.title + " — Atlas")
+            : "Atlas")
 
     visible: true
     width: 1060

@@ -24,9 +24,9 @@
 #include <QImage>
 #include "config/colours.hpp"
 
-namespace prism::core {
+namespace atlas::core {
 
-Q_LOGGING_CATEGORY(lcFileOps, "prism.fileops", QtInfoMsg)
+Q_LOGGING_CATEGORY(lcFileOps, "atlas.fileops", QtInfoMsg)
 
 FileOperations::FileOperations(QObject* parent)
     : QObject(parent)
@@ -158,7 +158,7 @@ bool FileOperations::copyRecursively(const QString& src, const QString& dest, st
         if (!in.open(QIODevice::ReadOnly))
             return false;
 
-        const QString partial = dest + QStringLiteral(".prism-partial");
+        const QString partial = dest + QStringLiteral(".atlas-partial");
         QFile::remove(partial);
 
         QFile out(partial);
@@ -558,7 +558,7 @@ void FileOperations::removeFromRecent(const QStringList& paths) {
         return;
 
     for (const QString& path : paths)
-        prism::core::RecentFiles::forget(path);
+        atlas::core::RecentFiles::forget(path);
 
     emit operationFinished(true, paths.size() == 1
         ? tr("Removed one item from Recent")
@@ -720,7 +720,7 @@ void FileOperations::bulkRename(const QStringList& paths, const QStringList& new
         QString temp;
         int suffix = 0;
         do {
-            temp = QStringLiteral("%1.prism-rename-%2").arg(targets.at(i)).arg(suffix++);
+            temp = QStringLiteral("%1.atlas-rename-%2").arg(targets.at(i)).arg(suffix++);
         } while (QFileInfo::exists(temp));
 
         if (!QFile::rename(sources.at(i), temp)) {
@@ -985,7 +985,7 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
     painter.setRenderHint(QPainter::TextAntialiasing);
 
-    prism::config::M3Palette pal(false);
+    atlas::config::M3Palette pal(false);
     QColor cardBg = pal.m3secondaryContainer();
     QColor onCard = pal.m3onSecondaryContainer();
     QColor primary = pal.m3primary();
@@ -1127,4 +1127,4 @@ void FileOperations::uploadToLitterbox(const QStringList& paths, const QString& 
     CatboxUploader::instance()->uploadFilesToLitterbox(paths, time);
 }
 
-} // namespace prism::core
+} // namespace atlas::core

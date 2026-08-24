@@ -5,7 +5,7 @@ import "../"
 import "../containers"
 import "../controls"
 import "../tabs"
-import prism
+import atlas
 
 MouseArea {
     id: root

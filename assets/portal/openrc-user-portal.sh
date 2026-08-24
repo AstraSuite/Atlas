@@ -6,7 +6,7 @@
 
 set -e
 
-echo "[Prism] Initializing XDG Desktop Portal environment for OpenRC/non-systemd..."
+echo "[Atlas] Initializing XDG Desktop Portal environment for OpenRC/non-systemd..."
 
 # Ensure environment variables are imported into D-Bus session
 if command -v dbus-update-activation-environment >/dev/null 2>&1; then
@@ -15,7 +15,7 @@ if command -v dbus-update-activation-environment >/dev/null 2>&1; then
 fi
 
 # Terminate existing portal instances
-killall -9 xdg-desktop-portal-prism 2>/dev/null || true
+killall -9 xdg-desktop-portal-astra-atlas 2>/dev/null || true
 killall -9 xdg-desktop-portal-termfilechooser 2>/dev/null || true
 killall -9 xdg-desktop-portal-hyprland 2>/dev/null || true
 killall -9 xdg-desktop-portal-wlr 2>/dev/null || true
@@ -43,22 +43,22 @@ find_bin() {
 }
 
 # Start backend portals if available
-if PORTAL_PRISM="$(find_bin xdg-desktop-portal-prism)"; then
-    echo "[Prism] Starting $PORTAL_PRISM..."
-    nohup "$PORTAL_PRISM" </dev/null >/dev/null 2>&1 &
+if PORTAL_ATLAS="$(find_bin xdg-desktop-portal-astra-atlas)"; then
+    echo "[Atlas] Starting $PORTAL_ATLAS..."
+    nohup "$PORTAL_ATLAS" </dev/null >/dev/null 2>&1 &
 elif PORTAL_TERM="$(find_bin xdg-desktop-portal-termfilechooser)"; then
-    echo "[Prism] Starting $PORTAL_TERM..."
+    echo "[Atlas] Starting $PORTAL_TERM..."
     nohup "$PORTAL_TERM" </dev/null >/dev/null 2>&1 &
 fi
 
 if PORTAL_HYPR="$(find_bin xdg-desktop-portal-hyprland)"; then
-    echo "[Prism] Starting $PORTAL_HYPR..."
+    echo "[Atlas] Starting $PORTAL_HYPR..."
     nohup "$PORTAL_HYPR" </dev/null >/dev/null 2>&1 &
 elif PORTAL_WLR="$(find_bin xdg-desktop-portal-wlr)"; then
-    echo "[Prism] Starting $PORTAL_WLR..."
+    echo "[Atlas] Starting $PORTAL_WLR..."
     nohup "$PORTAL_WLR" </dev/null >/dev/null 2>&1 &
 elif PORTAL_GTK="$(find_bin xdg-desktop-portal-gtk)"; then
-    echo "[Prism] Starting $PORTAL_GTK..."
+    echo "[Atlas] Starting $PORTAL_GTK..."
     nohup "$PORTAL_GTK" </dev/null >/dev/null 2>&1 &
 fi
 
@@ -66,10 +66,10 @@ sleep 0.5
 
 # Start main portal daemon
 if PORTAL_MAIN="$(find_bin xdg-desktop-portal)"; then
-    echo "[Prism] Starting main $PORTAL_MAIN daemon..."
+    echo "[Atlas] Starting main $PORTAL_MAIN daemon..."
     nohup "$PORTAL_MAIN" </dev/null >/dev/null 2>&1 &
     disown -a 2>/dev/null || true
-    echo "[Prism] Portal successfully started!"
+    echo "[Atlas] Portal successfully started!"
 else
-    echo "[Prism] Warning: xdg-desktop-portal binary not found in standard paths." >&2
+    echo "[Atlas] Warning: xdg-desktop-portal binary not found in standard paths." >&2
 fi

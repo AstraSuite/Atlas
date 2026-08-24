@@ -1,6 +1,6 @@
 import QtQuick
 import "../"
-import prism
+import atlas
 
 StyledRect {
     id: root

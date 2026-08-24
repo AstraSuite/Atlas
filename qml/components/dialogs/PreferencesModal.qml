@@ -5,7 +5,7 @@ import "../"
 import "../containers"
 import "../controls"
 import "../tabs"
-import prism
+import atlas
 
 MouseArea {
     id: root
@@ -942,7 +942,7 @@ MouseArea {
                             }
 
                             StyledText {
-                                text: qsTr("Prism supports custom scripts and action entries in your context menu. Place executable scripts in the scripts directory to run custom commands with selected files.")
+                                text: qsTr("Atlas supports custom scripts and action entries in your context menu. Place executable scripts in the scripts directory to run custom commands with selected files.")
                                 color: Colours.palette.m3onSurfaceVariant
                                 font: Tokens.font.body.small
                                 wrapMode: Text.WordWrap
@@ -955,7 +955,7 @@ MouseArea {
                                 last: true
                                 icon: "folder_special"
                                 text: qsTr("Open Scripts Folder")
-                                subtext: qsTr("~/.local/share/prism/scripts/ (Also supports Nautilus scripts)")
+                                subtext: qsTr("~/.local/share/atlas/scripts/ (Also supports Nautilus scripts)")
                                 trailingIcon: "open_in_new"
                                 onClicked: AppIntegration.openScriptsFolder()
                             }

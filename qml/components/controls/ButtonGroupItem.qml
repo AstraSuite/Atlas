@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../"
-import prism
+import atlas
 
 StyledRect {
     id: root

@@ -1,12 +1,12 @@
 [Unit]
-Description=Prism XDG Desktop Portal FileChooser
+Description=Atlas XDG Desktop Portal FileChooser
 PartOf=graphical-session.target
 After=graphical-session.target
 
 [Service]
 Type=dbus
-BusName=org.freedesktop.impl.portal.desktop.prism
-ExecStart=/usr/bin/xdg-desktop-portal-prism
+BusName=org.freedesktop.impl.portal.desktop.astra-atlas
+ExecStart=/usr/bin/xdg-desktop-portal-astra-atlas
 Restart=on-failure
 
 [Install]

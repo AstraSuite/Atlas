@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
 import "../"
-import prism
+import atlas
 
 Item {
     id: root

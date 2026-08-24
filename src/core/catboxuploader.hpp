@@ -11,7 +11,7 @@
 #include <QJSEngine>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class CatboxUploader : public QObject {
     Q_OBJECT
@@ -95,4 +95,4 @@ private:
     qreal m_uploadProgress = 0.0;
 };
 
-} // namespace prism::core
+} // namespace atlas::core

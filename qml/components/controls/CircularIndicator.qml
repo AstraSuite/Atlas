@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Templates
 import "../"
-import prism
+import atlas
 
 BusyIndicator {
     id: root

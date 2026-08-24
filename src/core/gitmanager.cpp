@@ -6,7 +6,7 @@
 #include <QProcess>
 #include <QtConcurrent>
 
-namespace prism::core {
+namespace atlas::core {
 
 GitManager::GitManager(QObject* parent) : QObject(parent) {}
 
@@ -199,4 +199,4 @@ void GitManager::fetch() {
     });
 }
 
-} // namespace prism::core
+} // namespace atlas::core

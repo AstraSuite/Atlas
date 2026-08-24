@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace prism::core {
+namespace atlas::core {
 
 namespace {
 constexpr qreal GROUND_Y = 93.0; // Stand position for T-Rex
@@ -21,7 +21,7 @@ constexpr qreal CLEAR_TIME = 2.0; // seconds before obstacles spawn
 
 RunnerGame::RunnerGame(QObject* parent)
     : QObject(parent) {
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     m_highScore = settings.value("runner/highScore", 0).toInt();
 
     m_groundSegments[0] = { 0.0, 2 };
@@ -473,7 +473,7 @@ void RunnerGame::crash() {
 
     if (m_score > m_highScore) {
         m_highScore = m_score;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("runner/highScore", m_highScore);
         emit highScoreChanged();
     }
@@ -483,4 +483,4 @@ void RunnerGame::crash() {
     emit playerMoved();
 }
 
-} // namespace prism::core
+} // namespace atlas::core

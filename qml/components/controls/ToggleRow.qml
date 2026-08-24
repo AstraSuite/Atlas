@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../"
 import "../containers"
-import prism
+import atlas
 
 ConnectedRect {
     id: root

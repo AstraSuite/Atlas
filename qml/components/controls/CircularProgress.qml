@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import "../"
-import prism
+import atlas
 
 Item {
     id: root

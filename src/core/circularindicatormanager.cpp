@@ -46,7 +46,7 @@ inline qreal getFractionInRange(qreal playtime, qreal start, qreal duration) {
 
 } // namespace
 
-namespace prism::core {
+namespace atlas::core {
 
 CircularIndicatorManager::CircularIndicatorManager(QObject* parent)
     : QObject(parent)
@@ -201,4 +201,4 @@ void CircularIndicatorManager::updateAdvance(qreal progress) {
         emit endFractionChanged();
 }
 
-} // namespace prism::core
+} // namespace atlas::core

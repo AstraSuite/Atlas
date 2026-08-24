@@ -4,7 +4,7 @@
 #include <QVariantMap>
 #include <qqmlintegration.h>
 
-namespace prism::config {
+namespace atlas::config {
 
 class FontBuilder {
     Q_GADGET
@@ -37,4 +37,4 @@ private:
     QFont m_font;
 };
 
-} // namespace prism::config
+} // namespace atlas::config

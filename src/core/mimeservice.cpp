@@ -10,7 +10,7 @@
 #include <QStandardPaths>
 #include <algorithm>
 
-namespace prism::core {
+namespace atlas::core {
 
 MimeService::MimeService(QObject* parent) : QObject(parent) {}
 
@@ -236,4 +236,4 @@ void MimeService::setDefaultApp(const QString& mimeType, const QString& desktopF
     QProcess::startDetached("xdg-mime", QStringList{ "default", cleanId, mimeType });
 }
 
-} // namespace prism::core
+} // namespace atlas::core

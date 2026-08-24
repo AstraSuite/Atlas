@@ -9,7 +9,7 @@
 #include <QVariantMap>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class AppIntegration : public QObject {
     Q_OBJECT
@@ -74,4 +74,4 @@ private:
     QList<CustomActionItem> m_customActions;
 };
 
-} // namespace prism::core
+} // namespace atlas::core

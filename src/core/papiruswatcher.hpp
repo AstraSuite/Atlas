@@ -9,7 +9,7 @@
 #include <QTimer>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class PapirusWatcher : public QObject {
     Q_OBJECT
@@ -57,4 +57,4 @@ private:
     QStringList m_watchedFiles;
 };
 
-} // namespace prism::core
+} // namespace atlas::core

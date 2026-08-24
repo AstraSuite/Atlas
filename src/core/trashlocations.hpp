@@ -3,7 +3,7 @@
 #include <QList>
 #include <QString>
 
-namespace prism::core {
+namespace atlas::core {
 
 struct TrashLocation {
     QString baseDir;
@@ -32,4 +32,4 @@ private:
     static QStringList mountPoints();
 };
 
-} // namespace prism::core
+} // namespace atlas::core

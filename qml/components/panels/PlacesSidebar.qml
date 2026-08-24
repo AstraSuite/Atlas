@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
 import "../containers"
-import prism
+import atlas
 
 StyledRect {
     id: root

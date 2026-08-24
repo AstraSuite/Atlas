@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 QString TrashLocations::homeTrashDir() {
     return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/Trash");
@@ -161,4 +161,4 @@ QString TrashLocations::resolveOriginalPath(const TrashLocation& location, const
     return QDir::cleanPath(location.topDir + QLatin1Char('/') + decoded);
 }
 
-} // namespace prism::core
+} // namespace atlas::core

@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Shapes
 import QtQuick.Effects
 import "../"
-import prism
+import atlas
 
 Item {
     id: root

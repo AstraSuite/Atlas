@@ -7,7 +7,7 @@
 #include <QDir>
 #include <QTimer>
 
-namespace prism::config {
+namespace atlas::config {
 
 M3Palette::M3Palette(bool light, QObject* parent)
     : QObject(parent) {
@@ -170,4 +170,4 @@ void ColoursSingleton::loadSchemeFile(const QString& filePath) {
     emit m_tPalette->paletteChanged();
 }
 
-} // namespace prism::config
+} // namespace atlas::config

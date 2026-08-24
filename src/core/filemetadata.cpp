@@ -10,7 +10,7 @@
 #include <QStandardPaths>
 #include <QUrl>
 
-namespace prism::core {
+namespace atlas::core {
 
 FileMetadata::FileMetadata(QObject* parent)
     : QObject(parent) {}
@@ -256,4 +256,4 @@ bool FileMetadata::applyPermissions(int userRead, int userWrite, int userExec,
     return true;
 }
 
-} // namespace prism::core
+} // namespace atlas::core

@@ -14,7 +14,7 @@
 #include <QSet>
 #include <QCoreApplication>
 
-namespace prism::core {
+namespace atlas::core {
 
 AppIntegration::AppIntegration(QObject* parent)
     : QObject(parent) {
@@ -296,7 +296,7 @@ void AppIntegration::openNewWindow(const QString& path) {
 }
 
 QString AppIntegration::scriptsFolderPath() const {
-    return QDir::homePath() + "/.local/share/prism/scripts";
+    return QDir::homePath() + "/.local/share/atlas/scripts";
 }
 
 void AppIntegration::openScriptsFolder() {
@@ -442,7 +442,7 @@ void AppIntegration::scanCustomActions() {
 
     // Scan Custom desktop Action Files
     QStringList actionDirs = {
-        QDir::homePath() + "/.local/share/prism/actions",
+        QDir::homePath() + "/.local/share/atlas/actions",
         QDir::homePath() + "/.local/share/file-manager/actions",
         QDir::homePath() + "/.local/share/kio/servicemenus",
         "/usr/share/kio/servicemenus"
@@ -581,6 +581,8 @@ void AppIntegration::executeCustomAction(const QString& actionId, const QString&
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", selectedPaths.join("\n"));
     env.insert("NAUTILUS_SCRIPT_CURRENT_URI", QUrl::fromLocalFile(currentDir).toString());
+    env.insert("ATLAS_SELECTED_PATHS", selectedPaths.join("\n"));
+    env.insert("ATLAS_CURRENT_DIR", currentDir);
     env.insert("PRISM_SELECTED_PATHS", selectedPaths.join("\n"));
     env.insert("PRISM_CURRENT_DIR", currentDir);
 
@@ -604,7 +606,7 @@ static const int kGeometry_5_len = 202;
 
 int AppIntegration::handleCustomProtocol(const QString& uri) {
     QString s = uri.trimmed().toLower();
-    if (!s.startsWith(QStringLiteral("prism://"))) {
+    if (!s.startsWith(QStringLiteral("atlas://"))) {
         return 0;
     }
     s = s.mid(8);
@@ -689,6 +691,6 @@ void AppIntegration::reloadIconTheme() {
     PapirusWatcher::instance()->reload();
 }
 
-} // namespace prism::core
+} // namespace atlas::core
 
 

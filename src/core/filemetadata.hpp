@@ -5,7 +5,7 @@
 #include <QDateTime>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class FileMetadata : public QObject {
     Q_OBJECT
@@ -132,4 +132,4 @@ private:
     QString m_durationFormatted;
 };
 
-} // namespace prism::core
+} // namespace atlas::core
