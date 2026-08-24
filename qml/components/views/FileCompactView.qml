@@ -161,6 +161,10 @@ Item {
 
         anchors.fill: parent
         anchors.margins: Tokens.padding.small
+        anchors.bottomMargin: 0
+
+        bottomMargin: Tokens.padding.small
+
         cellWidth: Math.max(220, 200 + root.iconSize)
         cellHeight: root.iconSize + 18
         flow: GridView.FlowTopToBottom
@@ -630,7 +634,16 @@ Item {
 
         readonly property real anchorViewX: anchorContentX + gridView.x - gridView.contentX
 
+        function insideContent(px, py) {
+            const p = mapToItem(gridView, px, py);
+            return p.x >= 0 && p.y >= 0 && p.x <= gridView.width && p.y <= gridView.height;
+        }
+
         onPressed: mouse => {
+            if (!insideContent(mouse.x, mouse.y)) {
+                mouse.accepted = false;
+                return;
+            }
             root.notifyFocus();
             startX = mouse.x;
             startY = mouse.y;

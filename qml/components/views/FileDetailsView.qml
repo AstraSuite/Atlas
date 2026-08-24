@@ -946,7 +946,16 @@ Item {
 
         readonly property real anchorViewY: anchorContentY + listView.y - listView.contentY
 
+        function insideContent(px, py) {
+            const p = mapToItem(listView, px, py);
+            return p.x >= 0 && p.y >= 0 && p.x <= listView.width && p.y <= listView.height;
+        }
+
         onPressed: mouse => {
+            if (!insideContent(mouse.x, mouse.y)) {
+                mouse.accepted = false;
+                return;
+            }
             root.notifyFocus();
             startX = mouse.x;
             startY = mouse.y;

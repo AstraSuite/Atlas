@@ -45,28 +45,13 @@ T.ScrollBar {
         }
     }
     
-    implicitWidth: isVertical ? Tokens.padding.extraSmall : 0
-    implicitHeight: isVertical ? 0 : Tokens.padding.extraSmall
+    readonly property int barThickness: Tokens.padding.extraSmall
+    readonly property int grabThickness: Tokens.padding.medium
 
-    contentItem: StyledRect {
-        anchors.left: isVertical ? parent.left : undefined
-        anchors.right: isVertical ? parent.right : undefined
-        anchors.top: isVertical ? undefined : parent.top
-        anchors.bottom: isVertical ? undefined : parent.bottom
-        
-        opacity: {
-            if (root.size === 1)
-                return 0;
-            if (fullMouse.pressed)
-                return 1;
-            if (mouse.containsMouse)
-                return 0.8;
-            if (root.policy === T.ScrollBar.AlwaysOn || root.shouldBeActive)
-                return 0.6;
-            return 0;
-        }
-        radius: Tokens.rounding.full
-        color: Colours.palette.m3secondary
+    implicitWidth: isVertical ? grabThickness : 0
+    implicitHeight: isVertical ? 0 : grabThickness
+
+    contentItem: Item {
 
         MouseArea {
             id: mouse
@@ -77,9 +62,34 @@ T.ScrollBar {
             acceptedButtons: Qt.NoButton
         }
 
-        Behavior on opacity {
-            Anim {
-                type: Anim.DefaultEffects
+        StyledRect {
+            id: bar
+
+            anchors.right: root.isVertical ? parent.right : undefined
+            anchors.left: root.isVertical ? undefined : parent.left
+            anchors.top: root.isVertical ? parent.top : undefined
+            anchors.bottom: parent.bottom
+            width: root.isVertical ? root.barThickness : parent.width
+            height: root.isVertical ? parent.height : root.barThickness
+            
+            opacity: {
+                if (root.size === 1)
+                    return 0;
+                if (fullMouse.pressed)
+                    return 1;
+                if (mouse.containsMouse)
+                    return 0.8;
+                if (root.policy === T.ScrollBar.AlwaysOn || root.shouldBeActive)
+                    return 0.6;
+                return 0;
+            }
+            radius: Tokens.rounding.full
+            color: Colours.palette.m3secondary
+
+            Behavior on opacity {
+                Anim {
+                    type: Anim.DefaultEffects
+                }
             }
         }
     }
