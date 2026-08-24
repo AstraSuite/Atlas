@@ -607,7 +607,7 @@ StyledRect {
     MouseArea {
         id: resizeHandle
 
-        anchors.right: parent.right
+        anchors.left: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: Tokens.padding.small
