@@ -107,10 +107,9 @@ MouseArea {
             }
 
             // Tab Bar Switcher
-            ButtonRow {
+            SlidingSelector {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 38
-                implicitHeight: 38
+                buttonHeight: 38
                 model: {
                     let tabs = [
                         { tab: 0, label: qsTr("General"), icon: "info" },

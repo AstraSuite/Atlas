@@ -453,15 +453,10 @@ MouseArea {
             }
 
             // Sliding Pill Mode Selector Track
-            StyledRect {
-                id: pillTrack
+            SlidingSelector {
                 Layout.fillWidth: true
-                implicitHeight: 40
-                radius: Tokens.rounding.full
-                color: Colours.palette.m3surfaceContainerHigh
-                clip: true
 
-                readonly property var modesList: [
+                model: [
                     { id: "replace", label: qsTr("Replace"), icon: "find_replace" },
                     { id: "number", label: qsTr("Number"), icon: "format_list_numbered" },
                     { id: "insert", label: qsTr("Insert"), icon: "edit" },
@@ -469,86 +464,9 @@ MouseArea {
                     { id: "case", label: qsTr("Case"), icon: "text_format" },
                     { id: "date", label: qsTr("Date/Time"), icon: "schedule" }
                 ]
-
-                // Sliding Pill Indicator
-                StyledRect {
-                    id: slidingPill
-                    readonly property var currentItem: modesRepeater.count > root.modeIndex ? modesRepeater.itemAt(root.modeIndex) : null
-
-                    x: currentItem ? currentItem.x + 2 : (root.modeIndex * (pillTrack.width / Math.max(1, pillTrack.modesList.length)) + 2)
-                    y: 2
-                    width: currentItem ? Math.max(0, currentItem.width - 4) : Math.max(0, (pillTrack.width / Math.max(1, pillTrack.modesList.length)) - 4)
-                    height: Math.max(0, pillTrack.height - 4)
-                    radius: Tokens.rounding.full
-                    color: Colours.palette.m3primaryContainer
-
-                    Behavior on x {
-                        Anim { type: Anim.DefaultSpatial }
-                    }
-                    Behavior on width {
-                        Anim { type: Anim.DefaultSpatial }
-                    }
-                }
-
-                RowLayout {
-                    id: modesRow
-                    anchors.fill: parent
-                    spacing: 0
-
-                    Repeater {
-                        id: modesRepeater
-                        model: pillTrack.modesList
-
-                        delegate: Item {
-                            id: modeBtn
-                            required property int index
-                            required property var modelData
-
-                            readonly property bool isCurrent: root.modeIndex === modeBtn.index
-
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-
-                            StateLayer {
-                                id: modeStateLayer
-                                anchors.fill: parent
-                                radius: Tokens.rounding.full
-                                color: modeBtn.isCurrent ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                                onClicked: root.mode = modeBtn.modelData.id
-                            }
-
-                            RowLayout {
-                                id: modeContentRow
-                                anchors.centerIn: parent
-                                spacing: 4
-
-                                MaterialIcon {
-                                    text: modeBtn.modelData.icon
-                                    color: modeBtn.isCurrent
-                                        ? Colours.palette.m3onPrimaryContainer
-                                        : (modeStateLayer.containsMouse ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant)
-                                    fontStyle: Tokens.font.icon.small
-                                    fill: modeBtn.isCurrent ? 1 : 0
-
-                                    Behavior on color { CAnim { duration: Tokens.anim.durations.expressiveFastEffects } }
-                                    Behavior on fill { Anim { type: Anim.DefaultEffects } }
-                                }
-
-                                StyledText {
-                                    text: modeBtn.modelData.label
-                                    color: modeBtn.isCurrent
-                                        ? Colours.palette.m3onPrimaryContainer
-                                        : (modeStateLayer.containsMouse ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant)
-                                    font: modeBtn.isCurrent
-                                        ? Tokens.font.body.builders.small.weight(Font.DemiBold).build()
-                                        : Tokens.font.body.small
-
-                                    Behavior on color { CAnim { duration: Tokens.anim.durations.expressiveFastEffects } }
-                                }
-                            }
-                        }
-                    }
-                }
+                valueKey: "id"
+                currentValue: root.mode
+                onSelected: value => root.mode = value
             }
 
             // Target Scope ("Apply to")

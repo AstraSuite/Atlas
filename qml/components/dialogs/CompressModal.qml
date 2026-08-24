@@ -122,7 +122,7 @@ MouseArea {
                 font: Tokens.font.label.medium
             }
 
-            ButtonRow {
+            SlidingSelector {
                 Layout.fillWidth: true
                 model: [
                     { label: ".zip", format: "zip" },
