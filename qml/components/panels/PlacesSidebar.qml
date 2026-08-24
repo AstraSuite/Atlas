@@ -9,7 +9,7 @@ StyledRect {
     id: root
 
     required property var activeTab
-    property int sidebarWidth: 230
+    readonly property int sidebarWidth: AppController.sidebarWidth
 
     signal editPlaceRequested(int index, string name, string path, string iconName, bool isCustom)
     signal placeContextMenuRequested(real globalX, real globalY, int index, string name, string path, string iconName, bool isCustom, bool isTrash)
@@ -78,6 +78,8 @@ StyledRect {
             id: flickable
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.rightMargin: -Tokens.padding.medium
+            rightMargin: Tokens.padding.medium
             contentHeight: contentCol.implicitHeight
             clip: true
             fadeAmount: 0.08
@@ -105,7 +107,7 @@ StyledRect {
 
             ColumnLayout {
                 id: contentCol
-                width: flickable.width
+                width: flickable.width - Tokens.padding.medium
                 spacing: Tokens.spacing.small
 
                 // Section 1: Local Places & Bookmarks
@@ -599,6 +601,35 @@ StyledRect {
                     }
                 }
             }
+        }
+    }
+
+    MouseArea {
+        id: resizeHandle
+
+        anchors.left: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: Tokens.padding.small
+        z: 100
+
+        property real pressSceneX: 0
+        property int pressWidth: 0
+
+        cursorShape: Qt.SizeHorCursor
+        hoverEnabled: true
+        preventStealing: true
+
+        onPressed: event => {
+            pressSceneX = mapToItem(null, event.x, 0).x;
+            pressWidth = AppController.sidebarWidth;
+        }
+
+        onPositionChanged: event => {
+            if (!pressed)
+                return;
+            const moved = mapToItem(null, event.x, 0).x - pressSceneX;
+            AppController.sidebarWidth = pressWidth + moved;
         }
     }
 }

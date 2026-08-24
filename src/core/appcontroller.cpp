@@ -55,6 +55,7 @@ AppController::AppController(QObject* parent)
     m_showFreeSpace = settings.value("preferences/showFreeSpace", true).toBool();
     m_placesIconSize = settings.value("preferences/placesIconSize", 20).toInt();
     m_iconZoomLevel = qBound(48, settings.value("session/iconZoomLevel", 80).toInt(), 180);
+    m_sidebarWidth = qBound(160, settings.value("session/sidebarWidth", 230).toInt(), 480);
     m_folderItemCount = settings.value("preferences/folderItemCount", 0).toInt();
     FileUtils::setFolderCountMode(m_folderItemCount);
     m_dateFormat = settings.value("preferences/dateFormat", 1).toInt();
@@ -150,6 +151,18 @@ void AppController::setIconZoomLevel(int level) {
     QSettings settings("astra-atlas", "atlas");
     settings.setValue("session/iconZoomLevel", clamped);
     emit iconZoomLevelChanged();
+}
+
+void AppController::setSidebarWidth(int width) {
+    const int clamped = qBound(160, width, 480);
+    if (m_sidebarWidth == clamped)
+        return;
+
+    m_sidebarWidth = clamped;
+
+    QSettings settings("astra-atlas", "atlas");
+    settings.setValue("session/sidebarWidth", clamped);
+    emit sidebarWidthChanged();
 }
 
 void AppController::setCaseSensitiveSort(bool sensitive) {

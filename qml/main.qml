@@ -177,6 +177,7 @@ ApplicationWindow {
                         // Places Sidebar
                         PlacesSidebar {
                             Layout.fillHeight: true
+                            z: 1
                             activeTab: TabManager.currentTab
 
                             onPlaceContextMenuRequested: (gx, gy, idx, name, path, iconName, custom, trash) => {
