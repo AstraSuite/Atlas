@@ -193,6 +193,7 @@ ApplicationWindow {
                                 editPlaceModal.placePath = path;
                                 editPlaceModal.selectedIcon = iconName;
                                 editPlaceModal.isCustom = isCustom;
+                                editPlaceModal.reopenManager = false;
                                 editPlaceModal.expanded = true;
                             }
 
@@ -495,6 +496,7 @@ ApplicationWindow {
                 editPlaceModal.placePath = path;
                 editPlaceModal.selectedIcon = iconName;
                 editPlaceModal.isCustom = custom;
+                editPlaceModal.reopenManager = true;
                 editPlaceModal.expanded = true;
             }
         }
@@ -502,6 +504,16 @@ ApplicationWindow {
         // Edit Place Modal
         EditPlaceModal {
             id: editPlaceModal
+
+            property bool reopenManager: false
+
+            onExpandedChanged: {
+                if (!expanded && reopenManager) {
+                    reopenManager = false;
+                    placesManageModal.expanded = true;
+                }
+            }
+
             onAccepted: (idx, name, iconName) => {
                 PlacesModel.updatePlace(idx, name, iconName);
             }
