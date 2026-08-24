@@ -635,10 +635,6 @@ Item {
 
             model: root.model
 
-            ScrollBar.vertical: StyledScrollBar {
-                flickable: listView
-            }
-
             delegate: StyledRect {
                 id: rowItem
 
@@ -905,6 +901,23 @@ Item {
         }
     }
     }
+
+    StyledScrollBar {
+        id: verticalBar
+
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        z: 2
+
+        orientation: Qt.Vertical
+        flickable: listView
+        size: listView.contentHeight > 0 ? Math.min(1, listView.height / listView.contentHeight) : 1
+        position: listView.contentHeight > listView.height
+            ? Math.max(0, Math.min(1 - size, listView.contentY / listView.contentHeight))
+            : 0
+    }
+
 
     // Background Mouse Area for Deselection, Context Menu on empty space, and Rubber Band Selection
     MouseArea {
