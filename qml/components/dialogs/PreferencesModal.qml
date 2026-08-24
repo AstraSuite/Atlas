@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import "../"
 import "../containers"
 import "../controls"
-import "../tabs"
 import atlas
 
 MouseArea {
@@ -202,16 +201,18 @@ MouseArea {
             }
 
             // Category Navigation Tabs
-            M3TopTabBar {
+            SlidingSelector {
                 Layout.fillWidth: true
-                currentIndex: root.currentCategory
+                inactiveColor: Colours.tPalette.m3surfaceContainerHighest
                 model: [
-                    { label: qsTr("General"), icon: "tune" },
-                    { label: qsTr("View & Sorting"), icon: "grid_view" },
-                    { label: qsTr("Context Menu"), icon: "menu" },
-                    { label: qsTr("Scripts & Tools"), icon: "terminal" }
+                    { tab: 0, label: qsTr("General"), icon: "tune" },
+                    { tab: 1, label: qsTr("View & Sorting"), icon: "grid_view" },
+                    { tab: 2, label: qsTr("Context Menu"), icon: "menu" },
+                    { tab: 3, label: qsTr("Scripts & Tools"), icon: "terminal" }
                 ]
-                onTabSelected: index => root.currentCategory = index
+                valueKey: "tab"
+                currentValue: root.currentCategory
+                onSelected: val => root.currentCategory = val
             }
 
             // Sliding Content Area

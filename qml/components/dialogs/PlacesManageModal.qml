@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import "../"
 import "../containers"
 import "../controls"
-import "../tabs"
 import atlas
 
 MouseArea {
@@ -105,16 +104,17 @@ MouseArea {
             }
 
             // Tab Bar Navigation
-            M3TopTabBar {
+            SlidingSelector {
                 Layout.fillWidth: true
-                currentIndex: root.currentTab
                 model: [
-                    { label: qsTr("Places & Bookmarks"), icon: "bookmarks" },
-                    { label: qsTr("Devices & Drives"), icon: "hard_drive" }
+                    { tab: 0, label: qsTr("Places & Bookmarks"), icon: "bookmarks" },
+                    { tab: 1, label: qsTr("Devices & Drives"), icon: "hard_drive" }
                 ]
-                onTabSelected: index => {
-                    root.currentTab = index;
-                    if (index === 1) {
+                valueKey: "tab"
+                currentValue: root.currentTab
+                onSelected: val => {
+                    root.currentTab = val;
+                    if (val === 1) {
                         root.refreshDevices();
                     }
                 }

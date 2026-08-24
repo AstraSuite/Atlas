@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../"
+import "../containers"
 import "../controls"
 import atlas
 
@@ -152,7 +153,7 @@ MouseArea {
             }
 
             // Tab 0: Branches List
-            ListView {
+            VerticalFadeListView {
                 id: branchesList
                 visible: root.currentTab === 0
                 Layout.fillWidth: true
@@ -160,6 +161,10 @@ MouseArea {
                 clip: true
                 spacing: 4
                 model: GitManager.branches
+
+                ScrollBar.vertical: StyledScrollBar {
+                    flickable: branchesList
+                }
 
                 delegate: StyledRect {
                     id: branchItem
@@ -169,7 +174,7 @@ MouseArea {
                     width: branchesList.width
                     implicitHeight: 40
                     radius: Tokens.rounding.small
-                    color: isCurrent ? Qt.alpha(Colours.palette.m3tertiary, 0.18) : (bHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
+                    color: branchItem.isCurrent ? Qt.alpha(Colours.palette.m3tertiary, 0.18) : Colours.tPalette.m3surfaceContainerHighest
 
                     RowLayout {
                         anchors.fill: parent
@@ -198,11 +203,9 @@ MouseArea {
                         }
                     }
 
-                    MouseArea {
-                        id: bHover
+                    StateLayer {
                         anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
+                        radius: Tokens.rounding.small
                         onClicked: {
                             if (!branchItem.isCurrent) {
                                 GitManager.switchBranch(branchItem.modelData);
@@ -225,7 +228,7 @@ MouseArea {
             }
 
             // Tab 1: Commits History Feed
-            ListView {
+            VerticalFadeListView {
                 id: commitsList
                 visible: root.currentTab === 1
                 Layout.fillWidth: true
@@ -234,6 +237,10 @@ MouseArea {
                 spacing: 6
                 model: GitManager.commits
 
+                ScrollBar.vertical: StyledScrollBar {
+                    flickable: commitsList
+                }
+
                 delegate: StyledRect {
                     id: commitItem
                     required property var modelData
@@ -241,7 +248,7 @@ MouseArea {
                     width: commitsList.width
                     implicitHeight: commitCol.implicitHeight + 12
                     radius: Tokens.rounding.small
-                    color: Colours.tPalette.m3surfaceContainerHigh
+                    color: Colours.tPalette.m3surfaceContainerHighest
 
                     ColumnLayout {
                         id: commitCol
