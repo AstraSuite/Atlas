@@ -9,7 +9,7 @@ StyledRect {
     id: root
 
     required property var activeTab
-    property int sidebarWidth: 230
+    readonly property int sidebarWidth: AppController.sidebarWidth
 
     signal editPlaceRequested(int index, string name, string path, string iconName, bool isCustom)
     signal placeContextMenuRequested(real globalX, real globalY, int index, string name, string path, string iconName, bool isCustom, bool isTrash)
@@ -597,6 +597,51 @@ StyledRect {
                         }
 
                     }
+                }
+            }
+        }
+    }
+
+    MouseArea {
+        id: resizeHandle
+
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: Tokens.padding.small
+        z: 100
+
+        property real pressSceneX: 0
+        property int pressWidth: 0
+
+        cursorShape: Qt.SizeHorCursor
+        hoverEnabled: true
+        preventStealing: true
+
+        onPressed: event => {
+            pressSceneX = mapToItem(null, event.x, 0).x;
+            pressWidth = AppController.sidebarWidth;
+        }
+
+        onPositionChanged: event => {
+            if (!pressed)
+                return;
+            const moved = mapToItem(null, event.x, 0).x - pressSceneX;
+            AppController.sidebarWidth = pressWidth + moved;
+        }
+
+        StyledRect {
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            implicitWidth: 2
+
+            color: Colours.palette.m3primary
+            opacity: resizeHandle.pressed ? 1 : (resizeHandle.containsMouse ? 0.6 : 0)
+
+            Behavior on opacity {
+                Anim {
+                    type: Anim.DefaultEffects
                 }
             }
         }
