@@ -6,7 +6,7 @@
 #include <QUrl>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class FileUtils : public QObject {
     Q_OBJECT
@@ -76,5 +76,5 @@ public:
     Q_INVOKABLE static QString getCompletedPath(const QString& input, const QString& currentDir = QString());
 };
 
-} // namespace prism::core
+} // namespace atlas::core
 

@@ -13,7 +13,7 @@
 #include <QtConcurrent>
 #include <algorithm>
 
-namespace prism::models {
+namespace atlas::models {
 
 FileSystemModel::FileSystemModel(QObject* parent)
     : QAbstractListModel(parent) {
@@ -81,7 +81,7 @@ QHash<int, QByteArray> FileSystemModel::roleNames() const {
 }
 
 void FileSystemModel::setPath(const QString& path) {
-    QString expanded = prism::core::FileUtils::expandPath(path);
+    QString expanded = atlas::core::FileUtils::expandPath(path);
     if (m_path != expanded) {
         m_path = expanded;
         emit pathChanged();
@@ -206,14 +206,14 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
     d.isSymLink = fi.isSymLink();
     d.symLinkTarget = fi.symLinkTarget();
     d.size = fi.isDir() ? 0 : fi.size();
-    d.formattedSize = fi.isDir() ? prism::core::FileUtils::countFolderItems(fi.absoluteFilePath())
-                                 : prism::core::FileUtils::formatSize(d.size);
+    d.formattedSize = fi.isDir() ? atlas::core::FileUtils::countFolderItems(fi.absoluteFilePath())
+                                 : atlas::core::FileUtils::formatSize(d.size);
     d.suffix = fi.suffix();
     d.isHidden = fi.isHidden() || d.name.startsWith('.');
     d.isWritable = fi.isWritable();
     d.isReadOnly = !d.isWritable;
     d.lastModified = fi.lastModified();
-    d.formattedDate = prism::core::FileUtils::formatDateTime(d.lastModified);
+    d.formattedDate = atlas::core::FileUtils::formatDateTime(d.lastModified);
     d.owner = fi.owner();
     d.group = fi.group();
 
@@ -244,11 +244,11 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
         d.isText = true;
     }
 
-    d.hasThumbnail = prism::core::FileUtils::shouldThumbnail(d.isImage, d.isVideo, d.size);
+    d.hasThumbnail = atlas::core::FileUtils::shouldThumbnail(d.isImage, d.isVideo, d.size);
 
     d.originalPath = fi.absolutePath();
 
-    const prism::core::TrashLocation trashLocation = prism::core::TrashLocations::forTrashedFile(fi.absoluteFilePath());
+    const atlas::core::TrashLocation trashLocation = atlas::core::TrashLocations::forTrashedFile(fi.absoluteFilePath());
     if (trashLocation.isValid()) {
         d.isTrashItem = true;
         QString infoPath = trashLocation.infoDir + "/" + fi.fileName() + ".trashinfo";
@@ -257,12 +257,12 @@ static RawEntryData createRawDataFromInfo(const QFileInfo& fi, const QMimeDataba
             while (!infoFile.atEnd()) {
                 QString line = QString::fromUtf8(infoFile.readLine()).trimmed();
                 if (line.startsWith("Path=")) {
-                    d.originalPath = prism::core::TrashLocations::resolveOriginalPath(trashLocation, line.mid(5));
+                    d.originalPath = atlas::core::TrashLocations::resolveOriginalPath(trashLocation, line.mid(5));
                 } else if (line.startsWith("DeletionDate=")) {
                     QString dStr = line.mid(13);
                     QDateTime dt = QDateTime::fromString(dStr, Qt::ISODate);
                     if (dt.isValid()) {
-                        d.deletionTime = prism::core::FileUtils::formatDateTime(dt);
+                        d.deletionTime = atlas::core::FileUtils::formatDateTime(dt);
                         d.deletionDateTime = dt;
                     } else {
                         d.deletionTime = dStr;
@@ -346,7 +346,7 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
     if (!m_watcher.directories().isEmpty())
         m_watcher.removePaths(m_watcher.directories());
 
-    if (m_path.isEmpty() || (!prism::core::RecentFiles::isRecentPath(m_path) && !QDir(m_path).exists())) {
+    if (m_path.isEmpty() || (!atlas::core::RecentFiles::isRecentPath(m_path) && !QDir(m_path).exists())) {
         if (m_isLoading) {
             m_isLoading = false;
             emit isLoadingChanged();
@@ -361,13 +361,13 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
         return;
     }
 
-    if (prism::core::TrashLocations::isTrashRoot(m_path)) {
-        const auto locations = prism::core::TrashLocations::all();
+    if (atlas::core::TrashLocations::isTrashRoot(m_path)) {
+        const auto locations = atlas::core::TrashLocations::all();
         for (const auto& location : locations) {
             if (QDir(location.filesDir).exists())
                 m_watcher.addPath(location.filesDir);
         }
-    } else if (!prism::core::RecentFiles::isRecentPath(m_path)) {
+    } else if (!atlas::core::RecentFiles::isRecentPath(m_path)) {
         m_watcher.addPath(m_path);
     }
 
@@ -382,12 +382,12 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
         const auto filters = QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System;
 
         QFileInfoList list;
-        if (prism::core::RecentFiles::isRecentPath(scanPath)) {
-            const QStringList recent = prism::core::RecentFiles::paths();
+        if (atlas::core::RecentFiles::isRecentPath(scanPath)) {
+            const QStringList recent = atlas::core::RecentFiles::paths();
             for (const QString& entry : recent)
                 list.append(QFileInfo(entry));
-        } else if (prism::core::TrashLocations::isTrashRoot(scanPath)) {
-            const auto locations = prism::core::TrashLocations::all();
+        } else if (atlas::core::TrashLocations::isTrashRoot(scanPath)) {
+            const auto locations = atlas::core::TrashLocations::all();
             for (const auto& location : locations)
                 list += QDir(location.filesDir).entryInfoList(filters);
         } else {
@@ -628,7 +628,7 @@ QList<FileSystemEntry*> FileSystemModel::calculateFilteredAndSorted(const QList<
         return (m_sortOrder == Qt::AscendingOrder) ? (res < 0) : (res > 0);
     };
 
-    if (prism::core::RecentFiles::isRecentPath(m_path))
+    if (atlas::core::RecentFiles::isRecentPath(m_path))
         return result;
 
     std::sort(result.begin(), result.end(), comparator);
@@ -642,5 +642,5 @@ void FileSystemModel::applyFilterAndSort() {
     emit countChanged();
 }
 
-} // namespace prism::models
+} // namespace atlas::models
 

@@ -4,7 +4,7 @@
 #include <QImage>
 #include <QIcon>
 
-namespace prism::core {
+namespace atlas::core {
 
 class IconImageProvider : public QQuickImageProvider {
 public:
@@ -15,4 +15,4 @@ public:
     QImage requestImage(const QString& id, QSize* size, const QSize& requestedSize) override;
 };
 
-} // namespace prism::core
+} // namespace atlas::core

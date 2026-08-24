@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import "../"
-import prism
+import atlas
 
 T.Slider {
     id: root

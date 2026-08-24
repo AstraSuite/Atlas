@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import "../"
 import "../containers"
 import "../controls"
-import prism
+import atlas
 
 Item {
     id: root

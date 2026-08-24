@@ -10,7 +10,7 @@
 #include <QJSEngine>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class FileOperationProgress : public QObject {
     Q_OBJECT
@@ -52,7 +52,7 @@ class FileOperations : public QObject {
     QML_ELEMENT
     QML_SINGLETON
 
-    Q_PROPERTY(prism::core::FileOperationProgress* progress READ progress CONSTANT)
+    Q_PROPERTY(atlas::core::FileOperationProgress* progress READ progress CONSTANT)
     Q_PROPERTY(QStringList clipboardFiles READ clipboardFiles NOTIFY clipboardChanged)
     Q_PROPERTY(bool isCutOperation READ isCutOperation NOTIFY clipboardChanged)
     Q_PROPERTY(bool canPaste READ canPaste NOTIFY clipboardChanged)
@@ -187,4 +187,4 @@ private:
     std::atomic<bool> m_cancelRequested{false};
 };
 
-} // namespace prism::core
+} // namespace atlas::core

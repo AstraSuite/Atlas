@@ -8,7 +8,7 @@
 #include <QStringList>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class IconCatalog : public QObject {
     Q_OBJECT
@@ -34,4 +34,4 @@ private:
     QStringList m_icons;
 };
 
-} // namespace prism::core
+} // namespace atlas::core

@@ -12,7 +12,7 @@
 #include <QRectF>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 struct GameObstacle {
     int type; // 0: CACTUS_SMALL, 1: CACTUS_LARGE, 2: PTERODACTYL
@@ -180,4 +180,4 @@ private:
     QElapsedTimer m_elapsed;
 };
 
-} // namespace prism::core
+} // namespace atlas::core

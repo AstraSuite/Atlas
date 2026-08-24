@@ -11,7 +11,7 @@
 #include <QStandardPaths>
 #include <QTextStream>
 
-namespace prism::core {
+namespace atlas::core {
 
 PapirusWatcher::PapirusWatcher(QObject* parent)
     : QObject(parent) {
@@ -254,4 +254,4 @@ bool PapirusWatcher::isAvailable() const {
     return !detectColorFromSymlink().isEmpty();
 }
 
-} // namespace prism::core
+} // namespace atlas::core

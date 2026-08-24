@@ -9,7 +9,7 @@
 #include <QSettings>
 #include <iostream>
 
-namespace prism::core {
+namespace atlas::core {
 
 static const QStringList& defaultDetailsColumnOrder() {
     static const QStringList order = { "size", "type", "date", "perms", "origPath", "deleted" };
@@ -33,7 +33,7 @@ static QStringList sanitiseDetailsColumnOrder(const QStringList& order) {
 
 AppController::AppController(QObject* parent)
     : QObject(parent) {
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     QSettings legacy1("caelestia", "prism");
     QSettings legacy2("Caelestia", "Prism");
     m_showHidden = settings.value("session/showHidden", legacy1.value("session/showHidden", legacy2.value("session/showHidden", false))).toBool();
@@ -134,7 +134,7 @@ void AppController::setDirectoryOnly(bool dirOnly) {
 void AppController::setConfirmPermanentDelete(bool confirm) {
     if (m_confirmPermanentDelete != confirm) {
         m_confirmPermanentDelete = confirm;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("session/confirmPermanentDelete", confirm);
         emit confirmPermanentDeleteChanged();
     }
@@ -147,7 +147,7 @@ void AppController::setIconZoomLevel(int level) {
 
     m_iconZoomLevel = clamped;
 
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.setValue("session/iconZoomLevel", clamped);
     emit iconZoomLevelChanged();
 }
@@ -155,7 +155,7 @@ void AppController::setIconZoomLevel(int level) {
 void AppController::setCaseSensitiveSort(bool sensitive) {
     if (m_caseSensitiveSort != sensitive) {
         m_caseSensitiveSort = sensitive;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/caseSensitiveSort", sensitive);
         emit caseSensitiveSortChanged();
     }
@@ -167,7 +167,7 @@ void AppController::setDirectorySpecificViews(bool enabled) {
 
     m_directorySpecificViews = enabled;
 
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.setValue("preferences/directorySpecificViews", enabled);
     emit directorySpecificViewsChanged();
 }
@@ -196,7 +196,7 @@ void AppController::rememberDirectoryView(const QString& path, int viewMode, int
     while (m_directoryViews.size() > 300)
         m_directoryViews.erase(m_directoryViews.begin());
 
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.setValue("preferences/directoryViews",
                       QString::fromUtf8(QJsonDocument(QJsonObject::fromVariantMap(m_directoryViews)).toJson(QJsonDocument::Compact)));
 }
@@ -207,7 +207,7 @@ void AppController::forgetDirectoryViews() {
 
     m_directoryViews.clear();
 
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.remove("preferences/directoryViews");
 }
 
@@ -215,7 +215,7 @@ void AppController::setFolderItemCount(int mode) {
     if (m_folderItemCount != mode) {
         m_folderItemCount = mode;
         FileUtils::setFolderCountMode(mode);
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/folderItemCount", mode);
         emit folderItemCountChanged();
     }
@@ -224,7 +224,7 @@ void AppController::setFolderItemCount(int mode) {
 void AppController::setShowFreeSpace(bool show) {
     if (m_showFreeSpace != show) {
         m_showFreeSpace = show;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/showFreeSpace", show);
         emit showFreeSpaceChanged();
     }
@@ -237,7 +237,7 @@ void AppController::setCustomDateFormat(const QString& pattern) {
     m_customDateFormat = pattern;
     FileUtils::setCustomDateFormat(pattern);
 
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.setValue("preferences/customDateFormat", pattern);
     emit customDateFormatChanged();
 }
@@ -245,7 +245,7 @@ void AppController::setCustomDateFormat(const QString& pattern) {
 void AppController::setRestoreTabs(bool restore) {
     if (m_restoreTabs != restore) {
         m_restoreTabs = restore;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/restoreTabs", restore);
         emit restoreTabsChanged();
     }
@@ -254,7 +254,7 @@ void AppController::setRestoreTabs(bool restore) {
 void AppController::setConfirmMoveToTrash(bool confirm) {
     if (m_confirmMoveToTrash != confirm) {
         m_confirmMoveToTrash = confirm;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("session/confirmMoveToTrash", confirm);
         emit confirmMoveToTrashChanged();
     }
@@ -264,7 +264,7 @@ void AppController::setDateFormat(int format) {
     if (m_dateFormat != format) {
         m_dateFormat = format;
         FileUtils::setDateFormat(format);
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/dateFormat", format);
         emit dateFormatChanged();
     }
@@ -278,7 +278,7 @@ void AppController::setThumbnailsEnabled(bool enabled) {
     if (m_thumbnailsEnabled != enabled) {
         m_thumbnailsEnabled = enabled;
         FileUtils::setThumbnailsEnabled(enabled);
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/thumbnailsEnabled", enabled);
         emit thumbnailsEnabledChanged();
     }
@@ -288,7 +288,7 @@ void AppController::setThumbnailMaxMb(int mb) {
     if (m_thumbnailMaxMb != mb) {
         m_thumbnailMaxMb = mb;
         FileUtils::setThumbnailMaxBytes(static_cast<qint64>(mb) * 1024 * 1024);
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/thumbnailMaxMb", mb);
         emit thumbnailMaxMbChanged();
     }
@@ -297,7 +297,7 @@ void AppController::setThumbnailMaxMb(int mb) {
 void AppController::setShowSizeColumn(bool show) {
     if (m_showSizeColumn != show) {
         m_showSizeColumn = show;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/showSizeColumn", show);
         emit showSizeColumnChanged();
     }
@@ -306,7 +306,7 @@ void AppController::setShowSizeColumn(bool show) {
 void AppController::setShowTypeColumn(bool show) {
     if (m_showTypeColumn != show) {
         m_showTypeColumn = show;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/showTypeColumn", show);
         emit showTypeColumnChanged();
     }
@@ -315,7 +315,7 @@ void AppController::setShowTypeColumn(bool show) {
 void AppController::setShowDateColumn(bool show) {
     if (m_showDateColumn != show) {
         m_showDateColumn = show;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/showDateColumn", show);
         emit showDateColumnChanged();
     }
@@ -324,7 +324,7 @@ void AppController::setShowDateColumn(bool show) {
 void AppController::setShowPermissionsColumn(bool show) {
     if (m_showPermissionsColumn != show) {
         m_showPermissionsColumn = show;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/showPermissionsColumn", show);
         emit showPermissionsColumnChanged();
     }
@@ -337,7 +337,7 @@ void AppController::setDetailsColumnWidth(const QString& key, int width) {
 
     m_detailsColumnWidths.insert(key, clamped);
 
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.setValue("preferences/detailsColumnWidths",
                       QString::fromUtf8(QJsonDocument(QJsonObject::fromVariantMap(m_detailsColumnWidths)).toJson(QJsonDocument::Compact)));
     emit detailsColumnWidthsChanged();
@@ -349,7 +349,7 @@ void AppController::resetDetailsColumnWidths() {
 
     m_detailsColumnWidths.clear();
 
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.remove("preferences/detailsColumnWidths");
     emit detailsColumnWidthsChanged();
 }
@@ -361,7 +361,7 @@ void AppController::setDetailsColumnOrder(const QStringList& order) {
 
     m_detailsColumnOrder = sanitised;
 
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.setValue("preferences/detailsColumnOrder", m_detailsColumnOrder);
     emit detailsColumnOrderChanged();
 }
@@ -372,14 +372,14 @@ void AppController::resetDetailsColumnOrder() {
 
     m_detailsColumnOrder = defaultDetailsColumnOrder();
 
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.remove("preferences/detailsColumnOrder");
     emit detailsColumnOrderChanged();
 }
 void AppController::setShowHidden(bool show) {
     if (m_showHidden != show) {
         m_showHidden = show;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("session/showHidden", show);
         emit showHiddenChanged();
     }
@@ -388,7 +388,7 @@ void AppController::setShowHidden(bool show) {
 void AppController::setSingleClick(bool single) {
     if (m_singleClick != single) {
         m_singleClick = single;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("session/singleClick", single);
         emit singleClickChanged();
     }
@@ -397,7 +397,7 @@ void AppController::setSingleClick(bool single) {
 void AppController::setDefaultStartupDirectory(const QString& dir) {
     if (m_defaultStartupDirectory != dir) {
         m_defaultStartupDirectory = dir;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/startupDirectory", dir);
         emit defaultStartupDirectoryChanged();
     }
@@ -406,7 +406,7 @@ void AppController::setDefaultStartupDirectory(const QString& dir) {
 void AppController::setDefaultViewMode(int mode) {
     if (m_defaultViewMode != mode) {
         m_defaultViewMode = mode;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/defaultViewMode", mode);
         emit defaultViewModeChanged();
     }
@@ -415,7 +415,7 @@ void AppController::setDefaultViewMode(int mode) {
 void AppController::setDefaultSortField(int field) {
     if (m_defaultSortField != field) {
         m_defaultSortField = field;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/defaultSortField", field);
         emit defaultSortFieldChanged();
     }
@@ -424,7 +424,7 @@ void AppController::setDefaultSortField(int field) {
 void AppController::setDefaultSortOrder(int order) {
     if (m_defaultSortOrder != order) {
         m_defaultSortOrder = order;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/defaultSortOrder", order);
         emit defaultSortOrderChanged();
     }
@@ -433,7 +433,7 @@ void AppController::setDefaultSortOrder(int order) {
 void AppController::setShowDirsFirst(bool dirsFirst) {
     if (m_showDirsFirst != dirsFirst) {
         m_showDirsFirst = dirsFirst;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/showDirsFirst", dirsFirst);
         emit showDirsFirstChanged();
     }
@@ -442,7 +442,7 @@ void AppController::setShowDirsFirst(bool dirsFirst) {
 void AppController::setPlacesIconSize(int size) {
     if (m_placesIconSize != size && size > 0) {
         m_placesIconSize = size;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/placesIconSize", size);
         emit placesIconSizeChanged();
     }
@@ -482,7 +482,7 @@ void AppController::reject() {
 void AppController::setMenuShowSecondaryEditor(bool val) {
     if (m_menuShowSecondaryEditor != val) {
         m_menuShowSecondaryEditor = val;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("contextMenu/showSecondaryEditor", val);
         emit menuPreferencesChanged();
     }
@@ -491,7 +491,7 @@ void AppController::setMenuShowSecondaryEditor(bool val) {
 void AppController::setMenuShowUploadOnline(bool val) {
     if (m_menuShowUploadOnline != val) {
         m_menuShowUploadOnline = val;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("contextMenu/showUploadOnline", val);
         emit menuPreferencesChanged();
     }
@@ -500,7 +500,7 @@ void AppController::setMenuShowUploadOnline(bool val) {
 void AppController::setMenuShowSendTo(bool val) {
     if (m_menuShowSendTo != val) {
         m_menuShowSendTo = val;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("contextMenu/showSendTo", val);
         emit menuPreferencesChanged();
     }
@@ -509,7 +509,7 @@ void AppController::setMenuShowSendTo(bool val) {
 void AppController::setMenuShowCompress(bool val) {
     if (m_menuShowCompress != val) {
         m_menuShowCompress = val;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("contextMenu/showCompress", val);
         emit menuPreferencesChanged();
     }
@@ -518,7 +518,7 @@ void AppController::setMenuShowCompress(bool val) {
 void AppController::setMenuShowSymlink(bool val) {
     if (m_menuShowSymlink != val) {
         m_menuShowSymlink = val;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("contextMenu/showSymlink", val);
         emit menuPreferencesChanged();
     }
@@ -527,7 +527,7 @@ void AppController::setMenuShowSymlink(bool val) {
 void AppController::setMenuShowTerminal(bool val) {
     if (m_menuShowTerminal != val) {
         m_menuShowTerminal = val;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("contextMenu/showTerminal", val);
         emit menuPreferencesChanged();
     }
@@ -536,7 +536,7 @@ void AppController::setMenuShowTerminal(bool val) {
 void AppController::setMenuShowDelete(bool val) {
     if (m_menuShowDelete != val) {
         m_menuShowDelete = val;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("contextMenu/showDelete", val);
         emit menuPreferencesChanged();
     }
@@ -545,7 +545,7 @@ void AppController::setMenuShowDelete(bool val) {
 void AppController::setShowNetworkSection(bool show) {
     if (m_showNetworkSection != show) {
         m_showNetworkSection = show;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/showNetworkSection", show);
         emit showNetworkSectionChanged();
     }
@@ -554,7 +554,7 @@ void AppController::setShowNetworkSection(bool show) {
 void AppController::setScrollSpeed(qreal speed) {
     if (!qFuzzyCompare(m_scrollSpeed + 1.0, speed + 1.0)) {
         m_scrollSpeed = speed;
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("preferences/scrollSpeed", speed);
         emit scrollSpeedChanged();
     }
@@ -570,4 +570,4 @@ void AppController::triggerIconReload() {
     emit iconThemeVersionChanged();
 }
 
-} // namespace prism::core
+} // namespace atlas::core

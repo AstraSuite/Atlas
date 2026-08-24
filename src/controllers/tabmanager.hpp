@@ -10,7 +10,7 @@
 #include <QVector>
 #include <qqmlintegration.h>
 
-namespace prism::controllers {
+namespace atlas::controllers {
 
 class TabItem : public QObject {
     Q_OBJECT
@@ -80,7 +80,7 @@ class TabManager : public QAbstractListModel {
     QML_SINGLETON
 
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
-    Q_PROPERTY(prism::controllers::TabItem* currentTab READ currentTab NOTIFY currentTabChanged)
+    Q_PROPERTY(atlas::controllers::TabItem* currentTab READ currentTab NOTIFY currentTabChanged)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
@@ -131,4 +131,4 @@ private:
     int m_currentIndex = 0;
 };
 
-} // namespace prism::controllers
+} // namespace atlas::controllers

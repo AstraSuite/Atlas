@@ -5,11 +5,11 @@
 #include <QFileInfo>
 #include <QSettings>
 
-namespace prism::controllers {
+namespace atlas::controllers {
 
 TabItem::TabItem(const QString& initialPath, QObject* parent)
     : QObject(parent)
-    , m_currentPath(initialPath.isEmpty() ? QDir::homePath() : prism::core::FileUtils::expandPath(initialPath))
+    , m_currentPath(initialPath.isEmpty() ? QDir::homePath() : atlas::core::FileUtils::expandPath(initialPath))
     , m_splitPath(m_currentPath) {
     m_history.append(m_currentPath);
     m_historyIndex = 0;
@@ -42,7 +42,7 @@ void TabItem::updateTitle() {
 }
 
 void TabItem::setCurrentPath(const QString& path) {
-    QString expanded = prism::core::FileUtils::expandPath(path);
+    QString expanded = atlas::core::FileUtils::expandPath(path);
     if (m_currentPath != expanded) {
         m_currentPath = expanded;
 
@@ -57,7 +57,7 @@ void TabItem::setCurrentPath(const QString& path) {
         emit historyChanged();
         if (m_activePane == 0) updateTitle();
 
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("session/lastPath", m_currentPath);
 
         if (auto* manager = qobject_cast<TabManager*>(parent()))
@@ -66,7 +66,7 @@ void TabItem::setCurrentPath(const QString& path) {
 }
 
 void TabItem::setSplitPath(const QString& path) {
-    QString expanded = prism::core::FileUtils::expandPath(path);
+    QString expanded = atlas::core::FileUtils::expandPath(path);
     if (m_splitPath != expanded) {
         m_splitPath = expanded;
         emit splitPathChanged();
@@ -97,7 +97,7 @@ void TabItem::setViewMode(int mode) {
         m_viewMode = mode;
         emit viewModeChanged();
 
-        QSettings settings("prism", "prism");
+        QSettings settings("astra-atlas", "atlas");
         settings.setValue("session/viewMode", m_viewMode);
     }
 }
@@ -136,7 +136,7 @@ void TabItem::goUp() {
 // TabManager
 TabManager::TabManager(QObject* parent)
     : QAbstractListModel(parent) {
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     QSettings legacy1("caelestia", "prism");
     QSettings legacy2("Caelestia", "Prism");
 
@@ -187,7 +187,7 @@ void TabManager::saveSession() {
     for (const TabItem* tab : std::as_const(m_tabs))
         paths.append(tab->currentPath());
 
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.setValue("session/tabPaths", paths);
     settings.setValue("session/currentTab", m_currentIndex);
 }
@@ -400,4 +400,4 @@ void TabManager::closeSplitPane(int tabIndex, int paneIndex) {
     }
 }
 
-} // namespace prism::controllers
+} // namespace atlas::controllers

@@ -29,6 +29,21 @@
 #include "core/runnergame.hpp"
 #include "models/filesystemmodel.hpp"
 
+static void adoptPreviousSettings() {
+    QSettings target("astra-atlas", "atlas");
+    if (!target.allKeys().isEmpty())
+        return;
+
+    QSettings source("prism", "prism");
+    const QStringList keys = source.allKeys();
+    if (keys.isEmpty())
+        return;
+
+    for (const QString& key : keys)
+        target.setValue(key, source.value(key));
+    target.sync();
+}
+
 int main(int argc, char* argv[]) {
     // Explicitly configure 32-bit RGBA8888 surface format to avoid RGB565 color quantization
     QSurfaceFormat format;
@@ -41,19 +56,21 @@ int main(int argc, char* argv[]) {
     QSurfaceFormat::setDefaultFormat(format);
 
     QGuiApplication app(argc, argv);
-    app.setApplicationName("prism");
-    app.setApplicationDisplayName("Prism");
-    app.setOrganizationName("prism");
+    app.setApplicationName("atlas");
+    app.setApplicationDisplayName("Atlas");
+    app.setOrganizationName("astra-atlas");
     app.setApplicationVersion("1.0.0");
 
+    adoptPreviousSettings();
+
     // Load fonts, window icon, and initialize icon theme engine on main thread
-    QFontDatabase::addApplicationFont(":/qt/qml/prism/assets/fonts/GoogleSansFlex.ttf");
-    QFontDatabase::addApplicationFont(":/qt/qml/prism/assets/fonts/MaterialSymbolsRounded.ttf");
-    app.setWindowIcon(QIcon(":/qt/qml/prism/assets/prism.svg"));
+    QFontDatabase::addApplicationFont(":/qt/qml/atlas/assets/fonts/GoogleSansFlex.ttf");
+    QFontDatabase::addApplicationFont(":/qt/qml/atlas/assets/fonts/MaterialSymbolsRounded.ttf");
+    app.setWindowIcon(QIcon(":/qt/qml/atlas/assets/atlas.svg"));
     (void)QIcon::fromTheme("folder");
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("Prism: Modern Material 3 File Manager & File Picker");
+    parser.setApplicationDescription("Atlas: Modern Material 3 File Manager & File Picker");
     parser.addHelpOption();
     parser.addVersionOption();
 
@@ -109,7 +126,7 @@ int main(int argc, char* argv[]) {
 
     bool isPickerMode = parser.isSet(pickerOption) || parser.isSet(filterOption) || parser.isSet(dirOnlyOption) || parser.isSet(saveOption);
 
-    auto* controller = prism::core::AppController::instance();
+    auto* controller = atlas::core::AppController::instance();
     controller->setTitle(parser.isSet(titleOption) ? parser.value(titleOption) : QStringLiteral("Select a file"));
     if (!initialDir.isEmpty()) {
         controller->setInitialDirectory(initialDir);
@@ -140,33 +157,33 @@ int main(int argc, char* argv[]) {
         controller->setShowHidden(true);
     }
 
-    auto* colours = new prism::config::ColoursSingleton(&app);
+    auto* colours = new atlas::config::ColoursSingleton(&app);
     if (parser.isSet(lightOption)) {
         colours->setLight(true);
     } else if (parser.isSet(darkOption)) {
         colours->setLight(false);
     }
 
-    auto* tokens = prism::config::TokensSingleton::instance();
-    auto* fileUtils = new prism::core::FileUtils(&app);
-    auto* fileOps = prism::core::FileOperations::instance();
-    auto* catboxUploader = prism::core::CatboxUploader::instance();
-    auto* tabManager = prism::controllers::TabManager::instance();
+    auto* tokens = atlas::config::TokensSingleton::instance();
+    auto* fileUtils = new atlas::core::FileUtils(&app);
+    auto* fileOps = atlas::core::FileOperations::instance();
+    auto* catboxUploader = atlas::core::CatboxUploader::instance();
+    auto* tabManager = atlas::controllers::TabManager::instance();
 
     // If explicit path was provided on command line, navigate there
     if (!initialDir.isEmpty() && tabManager->currentTab()) {
         tabManager->currentTab()->setCurrentPath(initialDir);
     }
 
-    auto* appIntegration = prism::core::AppIntegration::instance();
-    auto* papirusWatcher = prism::core::PapirusWatcher::instance();
-    auto* placesModel = prism::core::PlacesModel::instance();
-    auto* driveManager = new prism::core::DriveManager(&app);
-    auto* networkManager = prism::core::NetworkManager::instance();
+    auto* appIntegration = atlas::core::AppIntegration::instance();
+    auto* papirusWatcher = atlas::core::PapirusWatcher::instance();
+    auto* placesModel = atlas::core::PlacesModel::instance();
+    auto* driveManager = new atlas::core::DriveManager(&app);
+    auto* networkManager = atlas::core::NetworkManager::instance();
 
     QQmlApplicationEngine engine;
-    engine.addImageProvider("icon", new prism::core::IconImageProvider());
-    engine.addImageProvider("thumb", new prism::core::ThumbnailImageProvider());
+    engine.addImageProvider("icon", new atlas::core::IconImageProvider());
+    engine.addImageProvider("thumb", new atlas::core::ThumbnailImageProvider());
 
     // Register singletons and types into QML context
     engine.rootContext()->setContextProperty("Colours", colours);
@@ -181,10 +198,10 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("PlacesModel", placesModel);
     engine.rootContext()->setContextProperty("DriveManager", driveManager);
     engine.rootContext()->setContextProperty("NetworkManager", networkManager);
-    engine.rootContext()->setContextProperty("RunnerGame", prism::core::RunnerGame::instance());
+    engine.rootContext()->setContextProperty("RunnerGame", atlas::core::RunnerGame::instance());
     engine.rootContext()->setContextProperty("isPickerMode", isPickerMode);
 
-    const QUrl url(QStringLiteral("qrc:/qt/qml/prism/qml/main.qml"));
+    const QUrl url(QStringLiteral("qrc:/qt/qml/atlas/qml/main.qml"));
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreated,

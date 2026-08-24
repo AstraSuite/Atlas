@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(prism VERSION 1.0.0 LANGUAGES CXX)
+project(atlas VERSION 1.0.0 LANGUAGES CXX)
 
 # Must be set before GNUInstallDirs / qt_standard_project_setup runs
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -27,7 +27,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
 
 qt_standard_project_setup(REQUIRES 6.5)
 
-qt_add_executable(prism_app
+qt_add_executable(atlas_app
     src/main.cpp
     src/config/fontbuilder.hpp
     src/config/fontbuilder.cpp
@@ -81,12 +81,12 @@ qt_add_executable(prism_app
     src/core/appcontroller.cpp
 )
 
-set_target_properties(prism_app PROPERTIES
-    OUTPUT_NAME "prism"
+set_target_properties(atlas_app PROPERTIES
+    OUTPUT_NAME "atlas"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
-target_include_directories(prism_app PRIVATE
+target_include_directories(atlas_app PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config
     ${CMAKE_CURRENT_SOURCE_DIR}/src/models
@@ -94,8 +94,8 @@ target_include_directories(prism_app PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
 )
 
-qt_add_qml_module(prism_app
-    URI "prism"
+qt_add_qml_module(atlas_app
+    URI "atlas"
     VERSION 1.0
     QML_FILES
         qml/main.qml
@@ -179,8 +179,8 @@ qt_add_qml_module(prism_app
         assets/fonts/GoogleSansFlex.ttf
         assets/fonts/MaterialSymbolsRounded.ttf
         assets/material_icons.txt
-        assets/prism.png
-        assets/prism.svg
+        assets/atlas.png
+        assets/atlas.svg
         assets/runner/assets/default_200_percent/200-offline-sprite.png
         assets/runner/assets/default_200_percent/200-offline-sprite-inverted.png
         assets/runner/sounds/press.wav
@@ -188,7 +188,7 @@ qt_add_qml_module(prism_app
         assets/runner/sounds/reached.wav
 )
 
-target_link_libraries(prism_app PRIVATE
+target_link_libraries(atlas_app PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Qml
@@ -201,65 +201,65 @@ target_link_libraries(prism_app PRIVATE
     Qt6::Network
 )
 
-# Native XDG Desktop Portal FileChooser daemon for Prism
-qt_add_executable(xdg_desktop_portal_prism
+# Native XDG Desktop Portal FileChooser daemon for Atlas
+qt_add_executable(xdg_desktop_portal_astra_atlas
     src/portal/main.cpp
     src/portal/filechooserportal.hpp
     src/portal/filechooserportal.cpp
 )
 
-set_target_properties(xdg_desktop_portal_prism PROPERTIES
-    OUTPUT_NAME "xdg-desktop-portal-prism"
+set_target_properties(xdg_desktop_portal_astra_atlas PROPERTIES
+    OUTPUT_NAME "xdg-desktop-portal-astra-atlas"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
-target_include_directories(xdg_desktop_portal_prism PRIVATE
+target_include_directories(xdg_desktop_portal_astra_atlas PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/portal
 )
 
-target_link_libraries(xdg_desktop_portal_prism PRIVATE
+target_link_libraries(xdg_desktop_portal_astra_atlas PRIVATE
     Qt6::Core
     Qt6::DBus
 )
 
-install(TARGETS prism_app xdg_desktop_portal_prism
+install(TARGETS atlas_app xdg_desktop_portal_astra_atlas
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(FILES assets/prism.desktop
+install(FILES assets/atlas.desktop
     DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
 )
 
-install(FILES assets/prism.svg
+install(FILES assets/atlas.svg
     DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
-    RENAME prism.svg
+    RENAME atlas.svg
 )
 
-install(FILES assets/prism.svg
+install(FILES assets/atlas.svg
     DESTINATION ${CMAKE_INSTALL_DATADIR}/pixmaps
-    RENAME prism.svg
+    RENAME atlas.svg
 )
 
 # Native XDG Desktop Portal definition & D-Bus service
-install(FILES assets/portal/prism.portal
+install(FILES assets/portal/astra-atlas.portal
     DESTINATION ${CMAKE_INSTALL_DATADIR}/xdg-desktop-portal/portals
 )
 
-install(FILES assets/portal/org.freedesktop.impl.portal.desktop.prism.service
+install(FILES assets/portal/org.freedesktop.impl.portal.desktop.astra-atlas.service
     DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/services
 )
 
 # OpenRC / non-systemd user portal lifecycle helper
 install(PROGRAMS assets/portal/openrc-user-portal.sh
     DESTINATION ${CMAKE_INSTALL_BINDIR}
-    RENAME prism-portal-openrc
+    RENAME atlas-portal-openrc
 )
 
 # Portal configuration templates
 install(FILES
     assets/portal/portals.conf
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/prism/portal
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/atlas/portal
 )
 
 # Detect init system to decide service files to install
@@ -280,12 +280,12 @@ endif()
 message(STATUS "Configuring service files for init system: ${DETECTED_INIT}")
 
 if(DETECTED_INIT STREQUAL "openrc")
-    install(PROGRAMS assets/init/xdg-desktop-portal-prism.initd
+    install(PROGRAMS assets/init/xdg-desktop-portal-astra-atlas.initd
         DESTINATION /etc/init.d
-        RENAME xdg-desktop-portal-prism
+        RENAME xdg-desktop-portal-astra-atlas
     )
 elseif(DETECTED_INIT STREQUAL "systemd")
-    install(FILES assets/init/xdg-desktop-portal-prism.service
+    install(FILES assets/init/xdg-desktop-portal-astra-atlas.service
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/systemd/user
     )
 endif()

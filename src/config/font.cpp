@@ -1,6 +1,6 @@
 #include "font.hpp"
 
-namespace prism::config {
+namespace atlas::config {
 
 // FontBuilders
 FontBuilders::FontBuilders(const FontStyleBase* style, QObject* parent)
@@ -116,4 +116,4 @@ void FontTokens::setIconFamily(const QString& family) {
     m_icon->setFamily(family);
 }
 
-} // namespace prism::config
+} // namespace atlas::config

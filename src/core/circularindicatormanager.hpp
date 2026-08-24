@@ -4,7 +4,7 @@
 #include <QObject>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class CircularIndicatorManager : public QObject {
     Q_OBJECT
@@ -67,4 +67,4 @@ private:
     void updateRetreat(qreal progress);
 };
 
-} // namespace prism::core
+} // namespace atlas::core

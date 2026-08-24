@@ -6,7 +6,7 @@
 #include <QJsonArray>
 #include <QDir>
 
-namespace prism::config {
+namespace atlas::config {
 
 void RoundingTokens::loadJson(const QJsonObject& json) {
     if (json.contains("extraSmall")) m_extraSmall = json["extraSmall"].toInt(m_extraSmall);
@@ -212,4 +212,4 @@ TokensSingleton* TokensSingleton::instance() {
     return s_instance;
 }
 
-} // namespace prism::config
+} // namespace atlas::config

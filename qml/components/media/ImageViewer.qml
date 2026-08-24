@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../"
-import prism
+import atlas
 
 Item {
     id: root

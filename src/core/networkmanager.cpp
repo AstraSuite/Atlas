@@ -9,7 +9,7 @@
 #include <QDebug>
 #include <unistd.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 NetworkManager::NetworkManager(QObject* parent)
     : QObject(parent) {
@@ -243,4 +243,4 @@ QStringList NetworkManager::getActiveRemoteMounts() const {
     return list;
 }
 
-} // namespace prism::core
+} // namespace atlas::core

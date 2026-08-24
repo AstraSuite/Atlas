@@ -12,7 +12,7 @@
 #include <QSettings>
 #include <QtConcurrent>
 
-namespace prism::core {
+namespace atlas::core {
 
 DriveManager::DriveManager(QObject* parent)
     : QAbstractListModel(parent) {
@@ -75,12 +75,12 @@ QHash<int, QByteArray> DriveManager::roleNames() const {
 }
 
 void DriveManager::loadHiddenDevices() {
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     m_hiddenDevices = settings.value("devices/hiddenDevices").toStringList();
 }
 
 void DriveManager::saveHiddenDevices() {
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.setValue("devices/hiddenDevices", m_hiddenDevices);
 }
 
@@ -343,4 +343,4 @@ void DriveManager::ejectDevice(const QString& devicePath) {
     });
 }
 
-} // namespace prism::core
+} // namespace atlas::core

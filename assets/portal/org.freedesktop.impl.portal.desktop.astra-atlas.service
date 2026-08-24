@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=org.freedesktop.impl.portal.desktop.astra-atlas
+Exec=/usr/bin/xdg-desktop-portal-astra-atlas

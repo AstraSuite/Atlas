@@ -1,9 +1,9 @@
 [Desktop Entry]
-Name=Prism
+Name=Atlas
 GenericName=File Manager
 Comment=Modern, fast, expressive file manager for Linux
-Exec=prism %U
-Icon=prism
+Exec=atlas %U
+Icon=atlas
 Terminal=false
 Type=Application
 Categories=System;FileTools;FileManager;Utility;

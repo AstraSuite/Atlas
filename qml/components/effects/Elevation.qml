@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import "../"
-import prism
+import atlas
 
 RectangularShadow {
     property int level

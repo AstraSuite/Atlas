@@ -9,7 +9,7 @@
 #include <QVariantMap>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class MimeService : public QObject {
     Q_OBJECT
@@ -34,4 +34,4 @@ private:
 
 };
 
-} // namespace prism::core
+} // namespace atlas::core

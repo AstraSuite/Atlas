@@ -1,7 +1,7 @@
 #!/usr/bin/openrc-run
-description="Prism XDG Desktop Portal FileChooser daemon"
+description="Atlas XDG Desktop Portal FileChooser daemon"
 supervisor=supervise-daemon
-command="/usr/bin/xdg-desktop-portal-prism"
+command="/usr/bin/xdg-desktop-portal-astra-atlas"
 command_args=""
 
 depend() {

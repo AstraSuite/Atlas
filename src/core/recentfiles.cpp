@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-namespace prism::core {
+namespace atlas::core {
 
 static QString storePath() {
     return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)
@@ -124,4 +124,4 @@ void RecentFiles::forget(const QString& filePath) {
         out.write(output);
 }
 
-} // namespace prism::core
+} // namespace atlas::core

@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import QtMultimedia
 import "../"
-import prism
+import atlas
 
 Item {
     id: root
@@ -36,17 +36,17 @@ Item {
     // Sound Effects
     SoundEffect {
         id: soundPress
-        source: "qrc:/qt/qml/prism/assets/runner/sounds/press.wav"
+        source: "qrc:/qt/qml/atlas/assets/runner/sounds/press.wav"
     }
 
     SoundEffect {
         id: soundHit
-        source: "qrc:/qt/qml/prism/assets/runner/sounds/hit.wav"
+        source: "qrc:/qt/qml/atlas/assets/runner/sounds/hit.wav"
     }
 
     SoundEffect {
         id: soundScore
-        source: "qrc:/qt/qml/prism/assets/runner/sounds/reached.wav"
+        source: "qrc:/qt/qml/atlas/assets/runner/sounds/reached.wav"
     }
 
     // Modal Scrim
@@ -151,8 +151,8 @@ Item {
                     anchors.fill: parent
                     focus: true
 
-                    readonly property string normalSprite: "qrc:/qt/qml/prism/assets/runner/assets/default_200_percent/200-offline-sprite.png"
-                    readonly property string invertedSprite: "qrc:/qt/qml/prism/assets/runner/assets/default_200_percent/200-offline-sprite-inverted.png"
+                    readonly property string normalSprite: "qrc:/qt/qml/atlas/assets/runner/assets/default_200_percent/200-offline-sprite.png"
+                    readonly property string invertedSprite: "qrc:/qt/qml/atlas/assets/runner/assets/default_200_percent/200-offline-sprite-inverted.png"
                     readonly property string currentSprite: RunnerGame.isNightMode ? invertedSprite : normalSprite
 
                     onPaint: {

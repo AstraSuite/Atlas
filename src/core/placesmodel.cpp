@@ -14,7 +14,7 @@
 #include <QTimer>
 #include <unistd.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 static QString mapXbelIconToMaterial(const QString& iconName, const QString& path, bool isDir) {
     if (iconName.isEmpty()) return isDir ? "folder" : "bookmark";
@@ -81,13 +81,13 @@ PlacesModel::PlacesModel(QObject* parent)
 }
 
 void PlacesModel::loadHiddenPlaces() {
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     QStringList hidden = settings.value("places/hiddenPlaces").toStringList();
     m_hiddenPlaces = QSet<QString>(hidden.begin(), hidden.end());
 }
 
 void PlacesModel::saveHiddenPlaces() {
-    QSettings settings("prism", "prism");
+    QSettings settings("astra-atlas", "atlas");
     settings.setValue("places/hiddenPlaces", QStringList(m_hiddenPlaces.begin(), m_hiddenPlaces.end()));
 }
 
@@ -603,5 +603,5 @@ QVariantList PlacesModel::allPlaces() const {
     return list;
 }
 
-} // namespace prism::core
+} // namespace atlas::core
 

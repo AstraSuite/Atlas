@@ -3,7 +3,7 @@
 #include <QString>
 #include <QStringList>
 
-namespace prism::core {
+namespace atlas::core {
 
 class RecentFiles {
 public:
@@ -14,4 +14,4 @@ public:
     static void forget(const QString& filePath);
 };
 
-} // namespace prism::core
+} // namespace atlas::core

@@ -9,7 +9,7 @@
 #include <QVariantList>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class GitManager : public QObject {
     Q_OBJECT
@@ -64,4 +64,4 @@ private:
     QString m_lastStatusMessage;
 };
 
-} // namespace prism::core
+} // namespace atlas::core

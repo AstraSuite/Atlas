@@ -10,7 +10,7 @@
 #include <QString>
 #include <QVariantMap>
 
-namespace prism::portal {
+namespace atlas::portal {
 
 class PortalRequest : public QObject {
     Q_OBJECT
@@ -69,7 +69,7 @@ private:
         QStringList fileListToSave;
     };
 
-    void launchPrismPicker(const QString& title,
+    void launchAtlasPicker(const QString& title,
                            const QString& initialDir,
                            bool directoryOnly,
                            const QStringList& filters,
@@ -81,11 +81,11 @@ private:
                            bool saveMode = false,
                            const QString& suggestedName = {});
 
-    static QString findPrismBinary();
+    static QString findAtlasBinary();
     static QString parseInitialDirectory(const QVariantMap& options);
     static void parseFilters(const QVariantMap& options, QStringList& outFilters, QString& outLabel);
 
     QMap<QString, PendingRequest> m_requests;
 };
 
-} // namespace prism::portal
+} // namespace atlas::portal

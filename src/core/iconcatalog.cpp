@@ -3,7 +3,7 @@
 #include <QFile>
 #include <QTextStream>
 
-namespace prism::core {
+namespace atlas::core {
 
 IconCatalog::IconCatalog(QObject* parent)
     : QObject(parent) {
@@ -16,7 +16,7 @@ IconCatalog* IconCatalog::instance() {
 }
 
 void IconCatalog::loadIcons() {
-    QFile file(":/qt/qml/prism/assets/material_icons.txt");
+    QFile file(":/qt/qml/atlas/assets/material_icons.txt");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         // Fallback to direct file path if running from build
         file.setFileName("assets/material_icons.txt");
@@ -68,4 +68,4 @@ QStringList IconCatalog::search(const QString& query, int limit) const {
     return result;
 }
 
-} // namespace prism::core
+} // namespace atlas::core

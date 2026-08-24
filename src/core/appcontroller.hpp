@@ -10,7 +10,7 @@
 #include <QGuiApplication>
 #include <qqmlintegration.h>
 
-namespace prism::core {
+namespace atlas::core {
 
 class AppController : public QObject {
     Q_OBJECT
@@ -289,4 +289,4 @@ private:
     qreal m_scrollSpeed = 1.0;
 };
 
-} // namespace prism::core
+} // namespace atlas::core

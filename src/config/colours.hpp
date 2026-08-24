@@ -5,7 +5,7 @@
 #include <QFileSystemWatcher>
 #include <qqmlintegration.h>
 
-namespace prism::config {
+namespace atlas::config {
 
 class M3Palette : public QObject {
     Q_OBJECT
@@ -72,8 +72,8 @@ class ColoursSingleton : public QObject {
     QML_SINGLETON
 
     Q_PROPERTY(bool light READ light WRITE setLight NOTIFY lightChanged)
-    Q_PROPERTY(prism::config::M3Palette* palette READ palette CONSTANT)
-    Q_PROPERTY(prism::config::M3Palette* tPalette READ tPalette CONSTANT)
+    Q_PROPERTY(atlas::config::M3Palette* palette READ palette CONSTANT)
+    Q_PROPERTY(atlas::config::M3Palette* tPalette READ tPalette CONSTANT)
 
 public:
     explicit ColoursSingleton(QObject* parent = nullptr);
@@ -98,4 +98,4 @@ private:
     QString m_schemeFilePath;
 };
 
-} // namespace prism::config
+} // namespace atlas::config

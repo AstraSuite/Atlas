@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import prism
+import atlas
 
 ToolTip {
     id: root

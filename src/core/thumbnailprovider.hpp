@@ -7,7 +7,7 @@
 #include <QImage>
 #include <QString>
 
-namespace prism::core {
+namespace atlas::core {
 
 class ThumbnailResponse : public QQuickImageResponse, public QRunnable {
     Q_OBJECT
@@ -32,4 +32,4 @@ public:
     static QThreadPool* threadPool();
 };
 
-} // namespace prism::core
+} // namespace atlas::core

@@ -5,7 +5,7 @@
 #include <QMutex>
 #include <QThread>
 
-namespace prism::core {
+namespace atlas::core {
 
 static QCache<QString, QImage> s_iconCache(500);
 static QMutex s_iconMutex;
@@ -83,4 +83,4 @@ QImage IconImageProvider::requestImage(const QString& id, QSize* size, const QSi
     return img;
 }
 
-} // namespace prism::core
+} // namespace atlas::core

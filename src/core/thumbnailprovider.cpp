@@ -10,7 +10,7 @@
 #include <QProcess>
 #include <QStandardPaths>
 
-namespace prism::core {
+namespace atlas::core {
 
 static QCache<QString, QImage> s_memoryCache(200); // In-memory LRU cache
 static QMutex s_cacheMutex;
@@ -141,4 +141,4 @@ QQuickImageResponse* ThumbnailImageProvider::requestImageResponse(const QString&
     return resp;
 }
 
-} // namespace prism::core
+} // namespace atlas::core

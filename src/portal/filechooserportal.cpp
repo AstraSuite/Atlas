@@ -8,7 +8,7 @@
 #include <QMimeType>
 #include <QUrl>
 
-namespace prism::portal {
+namespace atlas::portal {
 
 PortalRequest::PortalRequest(const QString& path, QObject* parent)
     : QObject(parent), m_path(path) {
@@ -27,22 +27,22 @@ FileChooserPortal::FileChooserPortal(QObject* parent)
     : QObject(parent) {
 }
 
-QString FileChooserPortal::findPrismBinary() {
+QString FileChooserPortal::findAtlasBinary() {
     // Check same directory as portal binary
     QString appDir = QCoreApplication::applicationDirPath();
-    if (QFile::exists(appDir + "/prism")) {
-        return appDir + "/prism";
+    if (QFile::exists(appDir + "/atlas")) {
+        return appDir + "/atlas";
     }
-    // Check /usr/bin/prism
-    if (QFile::exists("/usr/bin/prism")) {
-        return "/usr/bin/prism";
+    // Check /usr/bin/atlas
+    if (QFile::exists("/usr/bin/atlas")) {
+        return "/usr/bin/atlas";
     }
-    // Check /usr/local/bin/prism
-    if (QFile::exists("/usr/local/bin/prism")) {
-        return "/usr/local/bin/prism";
+    // Check /usr/local/bin/atlas
+    if (QFile::exists("/usr/local/bin/atlas")) {
+        return "/usr/local/bin/atlas";
     }
     // Default to searching in PATH
-    return "prism";
+    return "atlas";
 }
 
 QString FileChooserPortal::parseInitialDirectory(const QVariantMap& options) {
@@ -184,7 +184,7 @@ void FileChooserPortal::OpenFile(const QDBusObjectPath& handle,
         filterLabel = options.value("accept_label").toString();
     }
 
-    launchPrismPicker(dialogTitle, initialDir, directoryOnly, filters, filterLabel, handle, message);
+    launchAtlasPicker(dialogTitle, initialDir, directoryOnly, filters, filterLabel, handle, message);
 }
 
 void FileChooserPortal::SaveFile(const QDBusObjectPath& handle,
@@ -224,7 +224,7 @@ void FileChooserPortal::SaveFile(const QDBusObjectPath& handle,
         }
     }
 
-    launchPrismPicker(dialogTitle, initialDir, false, filters, filterLabel, handle, message, false, {}, true, suggestedName);
+    launchAtlasPicker(dialogTitle, initialDir, false, filters, filterLabel, handle, message, false, {}, true, suggestedName);
 }
 
 void FileChooserPortal::SaveFiles(const QDBusObjectPath& handle,
@@ -259,10 +259,10 @@ void FileChooserPortal::SaveFiles(const QDBusObjectPath& handle,
         }
     }
 
-    launchPrismPicker(dialogTitle, initialDir, true, {}, {}, handle, message, true, fileList);
+    launchAtlasPicker(dialogTitle, initialDir, true, {}, {}, handle, message, true, fileList);
 }
 
-void FileChooserPortal::launchPrismPicker(const QString& title,
+void FileChooserPortal::launchAtlasPicker(const QString& title,
                                          const QString& initialDir,
                                          bool directoryOnly,
                                          const QStringList& filters,
@@ -355,7 +355,7 @@ void FileChooserPortal::launchPrismPicker(const QString& title,
                 proc->deleteLater();
             });
 
-    process->start(findPrismBinary(), args);
+    process->start(findAtlasBinary(), args);
 }
 
-} // namespace prism::portal
+} // namespace atlas::portal

@@ -10,7 +10,7 @@
 #include <atomic>
 #include <qqmlintegration.h>
 
-namespace prism::models {
+namespace atlas::models {
 
 struct RawEntryData {
     QString name;
@@ -219,7 +219,7 @@ public:
 
     int count() const { return static_cast<int>(m_filteredEntries.size()); }
 
-    Q_INVOKABLE prism::models::FileSystemEntry* get(int index) const;
+    Q_INVOKABLE atlas::models::FileSystemEntry* get(int index) const;
     Q_INVOKABLE int indexOfPath(const QString& path) const;
     Q_INVOKABLE int findFirstIndexByPrefix(const QString& prefix, int startIndex = 0) const;
     Q_INVOKABLE void refresh();
@@ -265,5 +265,5 @@ private:
     QFileSystemWatcher m_watcher;
 };
 
-} // namespace prism::models
+} // namespace atlas::models
 

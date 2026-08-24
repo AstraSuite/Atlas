@@ -13,7 +13,7 @@
 #include <QDebug>
 #include <algorithm>
 
-namespace prism::core {
+namespace atlas::core {
 namespace {
 
 class MultipartFileDevice : public QIODevice {
@@ -275,7 +275,7 @@ void CatboxUploader::processNextInQueue() {
         foProgress->setStatusText(tr("Uploading %1 to %2...").arg(m_currentFileName, serviceName));
     }
 
-    QString boundary = QStringLiteral("----PrismBoundary%1%2")
+    QString boundary = QStringLiteral("----AtlasBoundary%1%2")
         .arg(QDateTime::currentMSecsSinceEpoch())
         .arg(QRandomGenerator::global()->generate());
 
@@ -316,7 +316,7 @@ void CatboxUploader::processNextInQueue() {
         : QUrl(QStringLiteral("https://litterbox.catbox.moe/resources/internals/api.php"));
 
     QNetworkRequest request(apiUrl);
-    request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("Mozilla/5.0 Prism/1.0"));
+    request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("Mozilla/5.0 Atlas/1.0"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, QString("multipart/form-data; boundary=%1").arg(boundary).toUtf8());
     request.setHeader(QNetworkRequest::ContentLengthHeader, body->size());
     request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
@@ -414,4 +414,4 @@ void CatboxUploader::onReplyFinished() {
     processNextInQueue();
 }
 
-} // namespace prism::core
+} // namespace atlas::core

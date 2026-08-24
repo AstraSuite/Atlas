@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import prism
+import atlas
 import "../"
 import "../effects"
 

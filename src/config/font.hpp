@@ -5,7 +5,7 @@
 #include <QFont>
 #include <qqmlintegration.h>
 
-namespace prism::config {
+namespace atlas::config {
 
 class FontStyleBase;
 class IconFontStyle;
@@ -14,10 +14,10 @@ class FontBuilders : public QObject {
     Q_OBJECT
     QML_ANONYMOUS
 
-    Q_PROPERTY(prism::config::FontBuilder extraLarge READ extraLarge NOTIFY buildersChanged FINAL)
-    Q_PROPERTY(prism::config::FontBuilder large READ large NOTIFY buildersChanged FINAL)
-    Q_PROPERTY(prism::config::FontBuilder medium READ medium NOTIFY buildersChanged FINAL)
-    Q_PROPERTY(prism::config::FontBuilder small READ small NOTIFY buildersChanged FINAL)
+    Q_PROPERTY(atlas::config::FontBuilder extraLarge READ extraLarge NOTIFY buildersChanged FINAL)
+    Q_PROPERTY(atlas::config::FontBuilder large READ large NOTIFY buildersChanged FINAL)
+    Q_PROPERTY(atlas::config::FontBuilder medium READ medium NOTIFY buildersChanged FINAL)
+    Q_PROPERTY(atlas::config::FontBuilder small READ small NOTIFY buildersChanged FINAL)
 
 public:
     explicit FontBuilders(const FontStyleBase* style, QObject* parent = nullptr);
@@ -41,7 +41,7 @@ class FontStyleBase : public QObject {
     Q_PROPERTY(QFont large READ large NOTIFY fontsChanged FINAL)
     Q_PROPERTY(QFont medium READ medium NOTIFY fontsChanged FINAL)
     Q_PROPERTY(QFont small READ small NOTIFY fontsChanged FINAL)
-    Q_PROPERTY(prism::config::FontBuilders* builders READ builders CONSTANT FINAL)
+    Q_PROPERTY(atlas::config::FontBuilders* builders READ builders CONSTANT FINAL)
 
 public:
     explicit FontStyleBase(const QString& family, int smallSize, int mediumSize, int largeSize, int extraLargeSize,
@@ -100,19 +100,19 @@ class IconFontStyle : public FontStyleBase {
 public:
     explicit IconFontStyle(const QString& family, QObject* parent = nullptr);
 
-    Q_INVOKABLE prism::config::FontBuilder size(int pointSize);
+    Q_INVOKABLE atlas::config::FontBuilder size(int pointSize);
 };
 
 class FontTokens : public QObject {
     Q_OBJECT
     QML_ANONYMOUS
 
-    Q_PROPERTY(prism::config::FontStyle* headline READ headline CONSTANT FINAL)
-    Q_PROPERTY(prism::config::FontStyle* title READ title CONSTANT FINAL)
-    Q_PROPERTY(prism::config::FontStyle* body READ body CONSTANT FINAL)
-    Q_PROPERTY(prism::config::FontStyle* label READ label CONSTANT FINAL)
-    Q_PROPERTY(prism::config::FontStyle* mono READ mono CONSTANT FINAL)
-    Q_PROPERTY(prism::config::IconFontStyle* icon READ icon CONSTANT FINAL)
+    Q_PROPERTY(atlas::config::FontStyle* headline READ headline CONSTANT FINAL)
+    Q_PROPERTY(atlas::config::FontStyle* title READ title CONSTANT FINAL)
+    Q_PROPERTY(atlas::config::FontStyle* body READ body CONSTANT FINAL)
+    Q_PROPERTY(atlas::config::FontStyle* label READ label CONSTANT FINAL)
+    Q_PROPERTY(atlas::config::FontStyle* mono READ mono CONSTANT FINAL)
+    Q_PROPERTY(atlas::config::IconFontStyle* icon READ icon CONSTANT FINAL)
 
 public:
     explicit FontTokens(QObject* parent = nullptr);
@@ -136,4 +136,4 @@ private:
     IconFontStyle* m_icon = nullptr;
 };
 
-} // namespace prism::config
+} // namespace atlas::config

@@ -14,7 +14,7 @@
 #include <QIcon>
 #include <QRegularExpression>
 
-namespace prism::core {
+namespace atlas::core {
 
 FileUtils::FileUtils(QObject* parent) : QObject(parent) {}
 
@@ -484,5 +484,5 @@ QString FileUtils::getCompletedPath(const QString& input, const QString& current
     return suggestions.first().toMap()["displayPath"].toString();
 }
 
-} // namespace prism::core
+} // namespace atlas::core
 
