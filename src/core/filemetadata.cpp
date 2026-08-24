@@ -1,4 +1,5 @@
 #include "filemetadata.hpp"
+#include "exifreader.hpp"
 #include "fileutils.hpp"
 
 #include <QCryptographicHash>
@@ -6,11 +7,49 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QImageReader>
+#include <QMediaMetaData>
+#include <QMediaPlayer>
 #include <QMimeDatabase>
 #include <QStandardPaths>
 #include <QUrl>
 
 namespace atlas::core {
+namespace {
+
+void appendDetailRow(QVariantList& rows, const QString& label, const QString& value) {
+    if (!value.simplified().isEmpty()) {
+        rows.append(QVariantMap{{"label", label}, {"value", value}});
+    }
+}
+
+QString formatDuration(qint64 milliseconds) {
+    if (milliseconds <= 0) return QString();
+    const qint64 totalSeconds = milliseconds / 1000;
+    const qint64 hours = totalSeconds / 3600;
+    const qint64 minutes = (totalSeconds % 3600) / 60;
+    const qint64 seconds = totalSeconds % 60;
+    if (hours > 0)
+        return QStringLiteral("%1:%2:%3").arg(hours).arg(minutes, 2, 10, QLatin1Char('0')).arg(seconds, 2, 10, QLatin1Char('0'));
+    return QStringLiteral("%1:%2").arg(minutes).arg(seconds, 2, 10, QLatin1Char('0'));
+}
+
+QString formatBitRate(qint64 bitsPerSecond) {
+    if (bitsPerSecond <= 0) return QString();
+    if (bitsPerSecond >= 1000000)
+        return QStringLiteral("%1 Mbps").arg(QString::number(bitsPerSecond / 1000000.0, 'f', 1));
+    if (bitsPerSecond >= 1000)
+        return QStringLiteral("%1 kbps").arg(QString::number(bitsPerSecond / 1000.0, 'f', 0));
+    return QStringLiteral("%1 bps").arg(bitsPerSecond);
+}
+
+QString formatFrameRate(qreal framesPerSecond) {
+    if (framesPerSecond <= 0.0) return QString();
+    if (framesPerSecond == static_cast<double>(static_cast<int>(framesPerSecond)))
+        return QStringLiteral("%1 fps").arg(static_cast<int>(framesPerSecond));
+    return QStringLiteral("%1 fps").arg(QString::number(framesPerSecond, 'f', 2));
+}
+
+} // namespace
 
 FileMetadata::FileMetadata(QObject* parent)
     : QObject(parent) {}
@@ -70,7 +109,10 @@ void FileMetadata::reload() {
         m_imageWidth = 0;
         m_imageHeight = 0;
         m_imageDimensions.clear();
+        m_lastModified = QDateTime();
+        resetMediaDetails();
         emit metadataChanged();
+        emit mediaDetailsChanged();
         return;
     }
 
@@ -132,6 +174,10 @@ void FileMetadata::reload() {
     m_formattedCreated = FileUtils::formatDateTime(fi.birthTime());
     m_formattedModified = FileUtils::formatDateTime(fi.lastModified());
     m_formattedAccessed = FileUtils::formatDateTime(fi.lastRead());
+    m_lastModified = fi.lastModified();
+
+    // Drop details from the previously selected file before re-populating
+    resetMediaDetails();
 
     if (m_isImage) {
         QImageReader reader(m_path);
@@ -145,13 +191,117 @@ void FileMetadata::reload() {
             m_imageHeight = 0;
             m_imageDimensions.clear();
         }
+
+        const QVariantList exifRows = ExifReader::read(m_path);
+        if (!exifRows.isEmpty()) {
+            m_mediaDetails = exifRows;
+            m_hasMediaDetails = true;
+        }
     } else {
         m_imageWidth = 0;
         m_imageHeight = 0;
         m_imageDimensions.clear();
     }
 
+    probeMediaMetadata();
+
     emit metadataChanged();
+    emit mediaDetailsChanged();
+}
+
+void FileMetadata::resetMediaDetails() {
+    m_hasMediaDetails = false;
+    m_videoDimensions.clear();
+    m_videoCodecName.clear();
+    m_audioCodecName.clear();
+    m_frameRate.clear();
+    m_bitRate.clear();
+    m_copyright.clear();
+    m_durationFormatted.clear();
+    m_audioTitle.clear();
+    m_audioArtist.clear();
+    m_audioAlbum.clear();
+    m_mediaDetails.clear();
+
+    if (m_mediaProbe && m_mediaProbe->source().isValid())
+        m_mediaProbe->setSource(QUrl());
+}
+
+void FileMetadata::probeMediaMetadata() {
+    if (!m_isVideo && !m_isAudio) return;
+
+    if (!m_mediaProbe) {
+        m_mediaProbe = new QMediaPlayer(this);
+        connect(m_mediaProbe, &QMediaPlayer::metaDataChanged, this, &FileMetadata::applyMediaMetaData);
+        connect(m_mediaProbe, &QMediaPlayer::errorOccurred, this,
+                [this](QMediaPlayer::Error, const QString&) {
+                    // Demux failed; leave details empty rather than retrying
+                });
+    }
+    m_mediaProbe->setSource(QUrl::fromLocalFile(m_path));
+}
+
+void FileMetadata::applyMediaMetaData() {
+    if (!m_mediaProbe) return;
+
+    const QUrl source = m_mediaProbe->source();
+    if (source.isValid() && source.toLocalFile() != m_path) return; // stale signal
+
+    const QMediaMetaData md = m_mediaProbe->metaData();
+    if (md.isEmpty()) return;
+
+    const QSize resolution = md.value(QMediaMetaData::Resolution).toSize();
+    m_videoDimensions = resolution.isValid()
+                           ? QStringLiteral("%1 × %2").arg(resolution.width()).arg(resolution.height())
+                           : QString();
+
+    m_durationFormatted = formatDuration(md.value(QMediaMetaData::Duration).toLongLong());
+    m_videoCodecName = md.stringValue(QMediaMetaData::VideoCodec);
+    m_audioCodecName = md.stringValue(QMediaMetaData::AudioCodec);
+    m_frameRate = formatFrameRate(md.value(QMediaMetaData::VideoFrameRate).toReal());
+
+    const qint64 videoRate = md.value(QMediaMetaData::VideoBitRate).toLongLong();
+    const qint64 audioRate = md.value(QMediaMetaData::AudioBitRate).toLongLong();
+    m_bitRate = formatBitRate(videoRate > 0 ? videoRate : audioRate);
+
+    m_copyright = md.stringValue(QMediaMetaData::Copyright);
+    m_audioTitle = md.stringValue(QMediaMetaData::Title);
+    m_audioAlbum = md.stringValue(QMediaMetaData::AlbumTitle);
+    for (const auto key : {QMediaMetaData::AlbumArtist, QMediaMetaData::ContributingArtist, QMediaMetaData::LeadPerformer}) {
+        const QString artist = md.stringValue(key);
+        if (!artist.isEmpty()) {
+            m_audioArtist = artist;
+            break;
+        }
+    }
+
+    QVariantList rows;
+    appendDetailRow(rows, "Title", m_audioTitle);
+    appendDetailRow(rows, "Artist", m_audioArtist);
+    appendDetailRow(rows, "Album", m_audioAlbum);
+    appendDetailRow(rows, "Track", md.value(QMediaMetaData::TrackNumber).toString());
+    appendDetailRow(rows, "Genre", md.stringValue(QMediaMetaData::Genre));
+    appendDetailRow(rows, "Resolution", m_videoDimensions);
+    appendDetailRow(rows, "Duration", m_durationFormatted);
+    appendDetailRow(rows, "Container", md.stringValue(QMediaMetaData::FileFormat));
+    appendDetailRow(rows, "Video Codec", m_videoCodecName);
+    appendDetailRow(rows, "Frame Rate", m_frameRate);
+    if (videoRate > 0) appendDetailRow(rows, "Video Bit Rate", formatBitRate(videoRate));
+    appendDetailRow(rows, "Audio Codec", m_audioCodecName);
+    if (audioRate > 0) appendDetailRow(rows, "Audio Bit Rate", formatBitRate(audioRate));
+
+    const QDateTime recorded = md.value(QMediaMetaData::Date).toDateTime();
+    if (recorded.isValid()) appendDetailRow(rows, "Recorded", FileUtils::formatDateTime(recorded));
+
+    QString comment = md.stringValue(QMediaMetaData::Comment);
+    if (comment.isEmpty()) comment = md.stringValue(QMediaMetaData::Description);
+    appendDetailRow(rows, "Comment", comment);
+    appendDetailRow(rows, "Copyright", m_copyright);
+
+    m_hasMediaDetails = !rows.isEmpty();
+    m_mediaDetails = rows;
+    emit metadataChanged();
+    emit mediaDetailsChanged();
 }
 
 void FileMetadata::calculateChecksums() {
@@ -254,6 +404,15 @@ bool FileMetadata::applyPermissions(int userRead, int userWrite, int userExec,
     });
 
     return true;
+}
+
+bool FileMetadata::setComment(const QString& comment) {
+    if (m_path.isEmpty() || !m_isImage) return false;
+    const bool ok = ExifReader::writeComment(m_path, comment);
+    if (ok) {
+        reload();
+    }
+    return ok;
 }
 
 } // namespace atlas::core

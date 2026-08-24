@@ -57,6 +57,8 @@ qt_add_executable(atlas_app
     src/core/drivemanager.cpp
     src/core/filemetadata.hpp
     src/core/filemetadata.cpp
+    src/core/exifreader.hpp
+    src/core/exifreader.cpp
     src/core/mimeservice.hpp
     src/core/mimeservice.cpp
     src/core/gitmanager.hpp
@@ -200,6 +202,16 @@ target_link_libraries(atlas_app PRIVATE
     Qt6::Multimedia
     Qt6::Network
 )
+
+# Optional EXIF metadata support via Exiv2; degrades gracefully when absent
+find_package(exiv2 QUIET)
+if(exiv2_FOUND)
+    message(STATUS "Exiv2 found - EXIF metadata support enabled")
+    target_link_libraries(atlas_app PRIVATE exiv2lib)
+    target_compile_definitions(atlas_app PRIVATE ATLAS_HAVE_EXIV2 PRISM_HAVE_EXIV2)
+else()
+    message(STATUS "Exiv2 not found - building without EXIF metadata support")
+endif()
 
 # Native XDG Desktop Portal FileChooser daemon for Atlas
 qt_add_executable(xdg_desktop_portal_astra_atlas

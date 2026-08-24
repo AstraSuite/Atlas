@@ -80,7 +80,7 @@ StyledRect {
 
     color: root.checked
         ? root.activeColor
-        : (itemHover.containsMouse ? root.hoverColor : root.inactiveColor)
+        : (stateLayer.containsMouse ? root.hoverColor : root.inactiveColor)
 
     Behavior on color {
         CAnim {
@@ -90,6 +90,7 @@ StyledRect {
     }
 
     StateLayer {
+        id: stateLayer
         anchors.fill: parent
         topLeftRadius: parent.topLeftRadius
         topRightRadius: parent.topRightRadius
@@ -101,14 +102,19 @@ StyledRect {
     }
 
     RowLayout {
-        anchors.centerIn: parent
+        anchors.fill: parent
+        anchors.leftMargin: Tokens.padding.small
+        anchors.rightMargin: Tokens.padding.small
         spacing: 6
+
+        Item { Layout.fillWidth: true }
 
         MaterialIcon {
             visible: root.activeIcon.length > 0
             text: root.activeIcon
             fontStyle: Tokens.font.icon.small
             color: root.checked ? root.activeIconColor : root.inactiveIconColor
+            Layout.alignment: Qt.AlignVCenter
 
             Behavior on color {
                 CAnim {
@@ -124,6 +130,8 @@ StyledRect {
             font: Tokens.font.body.small
             color: root.checked ? root.activeOnColor : root.inactiveOnColor
             elide: Text.ElideRight
+            Layout.maximumWidth: root.width - (root.icon.length > 0 ? 36 : 16)
+            Layout.alignment: Qt.AlignVCenter
 
             Behavior on color {
                 CAnim {
@@ -132,13 +140,7 @@ StyledRect {
                 }
             }
         }
-    }
 
-    MouseArea {
-        id: itemHover
-        anchors.fill: parent
-        hoverEnabled: !root.disabled
-        cursorShape: root.disabled ? Qt.ArrowCursor : Qt.PointingHandCursor
-        onClicked: if (!root.disabled) root.clicked()
+        Item { Layout.fillWidth: true }
     }
 }

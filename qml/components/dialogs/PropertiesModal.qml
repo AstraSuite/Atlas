@@ -109,13 +109,17 @@ MouseArea {
             // Tab Bar Switcher
             ButtonRow {
                 Layout.fillWidth: true
+                Layout.preferredHeight: 38
+                implicitHeight: 38
                 model: {
                     let tabs = [
                         { tab: 0, label: qsTr("General"), icon: "info" },
                         { tab: 1, label: qsTr("Permissions"), icon: "lock" }
                     ];
                     if (!meta.isDir) {
-                        tabs.push({ tab: 2, label: qsTr("Checksums"), icon: "tag" });
+                        tabs.push({ tab: 2, label: qsTr("Checksums"), icon: "fingerprint" });
+                        if (meta.hasMediaDetails)
+                            tabs.push({ tab: 3, label: qsTr("Details"), icon: "perm_media" });
                     }
                     return tabs;
                 }
@@ -129,6 +133,14 @@ MouseArea {
                 }
             }
 
+            Connections {
+                target: meta
+                function onMediaDetailsChanged() {
+                    if (root.currentTab === 3 && !meta.hasMediaDetails)
+                        root.currentTab = 0;
+                }
+            }
+
             // Tab 0: General
             ColumnLayout {
                 visible: root.currentTab === 0
@@ -138,23 +150,27 @@ MouseArea {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    StyledText { Layout.preferredWidth: 110; text: qsTr("Type:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                    spacing: 12
+                    StyledText { Layout.preferredWidth: 120; text: qsTr("Type:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
                     StyledText { Layout.fillWidth: true; text: meta.mimeDescription || (meta.isDir ? qsTr("Folder") : meta.mimeType); font: Tokens.font.body.medium; color: Colours.palette.m3onSurface; elide: Text.ElideRight }
                 }
                 RowLayout {
                     Layout.fillWidth: true
-                    StyledText { Layout.preferredWidth: 110; text: qsTr("Location:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                    spacing: 12
+                    StyledText { Layout.preferredWidth: 120; text: qsTr("Location:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
                     StyledText { Layout.fillWidth: true; text: meta.path; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; elide: Text.ElideMiddle }
                 }
                 RowLayout {
                     Layout.fillWidth: true
-                    StyledText { Layout.preferredWidth: 110; text: meta.isDir ? qsTr("Contents:") : qsTr("Size:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                    spacing: 12
+                    StyledText { Layout.preferredWidth: 120; text: meta.isDir ? qsTr("Contents:") : qsTr("Size:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
                     StyledText { Layout.fillWidth: true; text: meta.isDir ? qsTr("%1 items").arg(meta.itemCount) : meta.formattedSize; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface; elide: Text.ElideRight }
                 }
                 RowLayout {
                     visible: meta.imageDimensions.length > 0
                     Layout.fillWidth: true
-                    StyledText { Layout.preferredWidth: 110; text: qsTr("Dimensions:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                    spacing: 12
+                    StyledText { Layout.preferredWidth: 120; text: qsTr("Dimensions:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
                     StyledText { Layout.fillWidth: true; text: meta.imageDimensions; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface; elide: Text.ElideRight }
                 }
 
@@ -162,30 +178,33 @@ MouseArea {
 
                 RowLayout {
                     Layout.fillWidth: true
+                    spacing: 12
                     Layout.alignment: Qt.AlignTop
-                    StyledText { Layout.preferredWidth: 110; Layout.alignment: Qt.AlignTop; text: qsTr("Created:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                    StyledText { Layout.preferredWidth: 120; Layout.alignment: Qt.AlignTop; text: qsTr("Created:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
                     StyledText { Layout.fillWidth: true; text: meta.formattedCreated; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
                 }
                 RowLayout {
                     Layout.fillWidth: true
+                    spacing: 12
                     Layout.alignment: Qt.AlignTop
-                    StyledText { Layout.preferredWidth: 110; Layout.alignment: Qt.AlignTop; text: qsTr("Modified:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                    StyledText { Layout.preferredWidth: 120; Layout.alignment: Qt.AlignTop; text: qsTr("Modified:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
                     StyledText { Layout.fillWidth: true; text: meta.formattedModified; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
                 }
                 RowLayout {
                     Layout.fillWidth: true
+                    spacing: 12
                     Layout.alignment: Qt.AlignTop
-                    StyledText { Layout.preferredWidth: 110; Layout.alignment: Qt.AlignTop; text: qsTr("Accessed:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                    StyledText { Layout.preferredWidth: 120; Layout.alignment: Qt.AlignTop; text: qsTr("Accessed:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
                     StyledText { Layout.fillWidth: true; text: meta.formattedAccessed; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
                 }
 
                 RowLayout {
                     visible: !meta.isDir
                     Layout.fillWidth: true
-                    spacing: Tokens.spacing.small
+                    spacing: 12
 
                     StyledText {
-                        Layout.preferredWidth: 110
+                        Layout.preferredWidth: 120
                         text: qsTr("Open With:")
                         font: Tokens.font.label.medium
                         color: Colours.palette.m3onSurfaceVariant
@@ -479,6 +498,158 @@ MouseArea {
                 }
 
                 Item { Layout.fillHeight: true }
+            }
+
+            // Tab 3: Media Metadata (EXIF / container tags)
+            ColumnLayout {
+                visible: root.currentTab === 3 && meta.hasMediaDetails
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: 8
+
+                StyledText {
+                    text: meta.isVideo ? qsTr("Container Metadata") : (meta.isAudio ? qsTr("Audio Tags") : qsTr("EXIF Metadata"))
+                    font: Tokens.font.title.small
+                    color: Colours.palette.m3onSurface
+                }
+
+                Flickable {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentHeight: detailsCol.implicitHeight
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    ScrollBar.vertical: StyledScrollBar {
+                        flickable: parent
+                    }
+
+                    ColumnLayout {
+                        id: detailsCol
+                        width: parent.width
+                        spacing: 8
+
+                        Repeater {
+                            model: meta.mediaDetails
+
+                            RowLayout {
+                                id: detailRow
+                                required property var modelData
+                                readonly property bool isCommentRow: detailRow.modelData.label === "Comment" && meta.isImage
+                                property bool isEditing: false
+
+                                Layout.fillWidth: true
+                                spacing: 12
+
+                                StyledText {
+                                    Layout.preferredWidth: 130
+                                    text: detailRow.modelData.label + ":"
+                                    font: Tokens.font.label.medium
+                                    color: Colours.palette.m3onSurfaceVariant
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                // Standard view
+                                RowLayout {
+                                    visible: !detailRow.isEditing
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 28
+                                    Layout.alignment: Qt.AlignVCenter
+                                    spacing: 8
+
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignVCenter
+                                        text: {
+                                            if (detailRow.modelData.value && detailRow.modelData.value.length > 0)
+                                                return detailRow.modelData.value;
+                                            return detailRow.isCommentRow ? qsTr("(No comment)") : "";
+                                        }
+                                        font: Tokens.font.body.medium
+                                        color: (detailRow.isCommentRow && (!detailRow.modelData.value || detailRow.modelData.value.length === 0))
+                                            ? Colours.palette.m3outline
+                                            : Colours.palette.m3onSurface
+                                        wrapMode: Text.Wrap
+                                    }
+
+                                    IconButton {
+                                        visible: detailRow.isCommentRow
+                                        icon: "edit"
+                                        type: ButtonBase.Standard
+                                        implicitWidth: 26
+                                        implicitHeight: 26
+                                        Layout.alignment: Qt.AlignVCenter
+                                        onClicked: {
+                                            commentInput.text = detailRow.modelData.value || "";
+                                            detailRow.isEditing = true;
+                                            commentInput.forceActiveFocus();
+                                        }
+                                    }
+                                }
+
+                                // Editable view
+                                RowLayout {
+                                    visible: detailRow.isEditing
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 28
+                                    Layout.alignment: Qt.AlignVCenter
+                                    spacing: 6
+
+                                    StyledRect {
+                                        Layout.fillWidth: true
+                                        implicitHeight: 28
+                                        radius: Tokens.rounding.extraSmall
+                                        color: Colours.palette.m3surfaceContainerHighest
+                                        border.color: commentInput.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outlineVariant, 0.5)
+                                        border.width: commentInput.activeFocus ? 2 : 1
+                                        clip: true
+
+                                        TextInput {
+                                            id: commentInput
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 8
+                                            anchors.rightMargin: 8
+                                            color: Colours.palette.m3onSurface
+                                            selectionColor: Colours.palette.m3primaryContainer
+                                            selectedTextColor: Colours.palette.m3onPrimaryContainer
+                                            font: Tokens.font.body.medium
+                                            selectByMouse: true
+                                            verticalAlignment: TextInput.AlignVCenter
+                                            onAccepted: {
+                                                meta.setComment(commentInput.text.trim());
+                                                detailRow.isEditing = false;
+                                            }
+                                            Keys.onEscapePressed: detailRow.isEditing = false
+                                        }
+                                    }
+
+                                    IconButton {
+                                        icon: "check"
+                                        type: ButtonBase.Filled
+                                        implicitWidth: 26
+                                        implicitHeight: 26
+                                        Layout.alignment: Qt.AlignVCenter
+                                        onClicked: {
+                                            meta.setComment(commentInput.text.trim());
+                                            detailRow.isEditing = false;
+                                        }
+                                    }
+
+                                    IconButton {
+                                        icon: "close"
+                                        type: ButtonBase.Standard
+                                        implicitWidth: 26
+                                        implicitHeight: 26
+                                        Layout.alignment: Qt.AlignVCenter
+                                        onClicked: {
+                                            detailRow.isEditing = false;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // Bottom Close Button
