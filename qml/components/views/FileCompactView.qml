@@ -632,7 +632,16 @@ Item {
 
         readonly property real anchorViewX: anchorContentX + gridView.x - gridView.contentX
 
+        function insideContent(px, py) {
+            const p = mapToItem(gridView, px, py);
+            return p.x >= 0 && p.y >= 0 && p.x <= gridView.width && p.y <= gridView.height;
+        }
+
         onPressed: mouse => {
+            if (!insideContent(mouse.x, mouse.y)) {
+                mouse.accepted = false;
+                return;
+            }
             root.notifyFocus();
             startX = mouse.x;
             startY = mouse.y;

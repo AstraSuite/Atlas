@@ -680,7 +680,16 @@ Item {
         readonly property real anchorViewX: anchorContentX + view.x - view.contentX
         readonly property real anchorViewY: anchorContentY + view.y - view.contentY
 
+        function insideContent(px, py) {
+            const p = mapToItem(view, px, py);
+            return p.x >= 0 && p.y >= 0 && p.x <= view.width && p.y <= view.height;
+        }
+
         onPressed: mouse => {
+            if (!insideContent(mouse.x, mouse.y)) {
+                mouse.accepted = false;
+                return;
+            }
             root.notifyFocus();
             startX = mouse.x;
             startY = mouse.y;
