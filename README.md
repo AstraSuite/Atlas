@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/astra-atlas.svg" width="140" alt="Atlas Logo">
+  <img src="assets/atlas.svg" width="140" alt="Atlas Logo">
 </p>
 
 <h1 align="center">Atlas</h1>
