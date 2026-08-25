@@ -36,6 +36,14 @@ StyledRect {
             font: Tokens.font.label.medium
         }
 
+        // Directory Size
+        StyledText {
+            visible: root.activeModel && root.activeModel.directorySizeFormatted.length > 0
+            text: root.activeModel ? qsTr("•  %1 total").arg(root.activeModel.directorySizeFormatted) : ""
+            color: Colours.palette.m3onSurfaceVariant
+            font: Tokens.font.label.medium
+        }
+
         // Selected summary
         StyledText {
             Layout.maximumWidth: root.width * 0.6
@@ -193,26 +201,30 @@ StyledRect {
 
         // Operations / Background Activity Button
         StyledRect {
+            id: opsButton
+
+            readonly property bool activityRunning: FileOperations.progress.running || CatboxUploader.isUploading || MediaTools.busy
+
             implicitWidth: 28
             implicitHeight: 28
             radius: Tokens.rounding.full
             color: opsHover.containsMouse
                 ? Colours.tPalette.m3surfaceContainerHighest
-                : ((FileOperations.progress.running || CatboxUploader.isUploading) ? Qt.alpha(Colours.palette.m3primary, 0.2) : "transparent")
+                : (opsButton.activityRunning ? Qt.alpha(Colours.palette.m3primary, 0.2) : "transparent")
 
             CircularIndicator {
                 anchors.centerIn: parent
                 size: 16
                 strokeWidth: 2
                 color: Colours.palette.m3primary
-                running: FileOperations.progress.running || CatboxUploader.isUploading
+                running: opsButton.activityRunning
                 visible: running
             }
 
             MaterialIcon {
                 id: opsIcon
                 anchors.centerIn: parent
-                visible: !FileOperations.progress.running && !CatboxUploader.isUploading
+                visible: !opsButton.activityRunning
                 text: "pending_actions"
                 color: Colours.palette.m3onSurfaceVariant
                 fontStyle: Tokens.font.icon.small
@@ -227,7 +239,7 @@ StyledRect {
             }
 
             StyledToolTip {
-                text: FileOperations.progress.running ? qsTr("Operations in progress") : qsTr("Operations history")
+                text: opsButton.activityRunning ? qsTr("Operations in progress") : qsTr("Operations history")
                 visible: opsHover.containsMouse
                 y: -height - Tokens.padding.extraSmall
             }

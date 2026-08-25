@@ -170,6 +170,7 @@ class FileSystemModel : public QAbstractListModel {
     Q_PROPERTY(SortField sortField READ sortField WRITE setSortField NOTIFY sortFieldChanged)
     Q_PROPERTY(Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder NOTIFY sortOrderChanged)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(QString directorySizeFormatted READ directorySizeFormatted NOTIFY directorySizeChanged)
 
 public:
     enum SortField {
@@ -239,6 +240,8 @@ public:
 
     int count() const { return static_cast<int>(m_filteredEntries.size()); }
 
+    QString directorySizeFormatted() const { return m_directorySizeFormatted; }
+
     Q_INVOKABLE atlas::models::FileSystemEntry* get(int index) const;
     Q_INVOKABLE int indexOfPath(const QString& path) const;
     Q_INVOKABLE int findFirstIndexByPrefix(const QString& prefix, int startIndex = 0) const;
@@ -261,10 +264,12 @@ signals:
     void sortFieldChanged();
     void sortOrderChanged();
     void countChanged();
+    void directorySizeChanged();
     void fileModified(const QString& path);
 
 private:
     void scanDirectory(bool isPathReset = false);
+    void startDirectorySizeScan(const QString& path);
     void updateDirectoryGranular(const QList<RawEntryData>& rawData);
     void applyFilterAndSort();
     void performSearch(const QString& rootPath, const QString& query);
@@ -292,6 +297,8 @@ private:
     QList<FileSystemEntry*> m_childEntries;
     QSet<QString> m_expandedPaths;
     QFileSystemWatcher m_watcher;
+    QString m_directorySizeFormatted;
+    quint64 m_sizeGeneration = 0;
 };
 
 } // namespace atlas::models

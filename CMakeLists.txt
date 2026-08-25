@@ -63,6 +63,8 @@ qt_add_executable(atlas_app
     src/core/mimeservice.cpp
     src/core/gitmanager.hpp
     src/core/gitmanager.cpp
+    src/core/mediatools.hpp
+    src/core/mediatools.cpp
     src/core/appintegration.hpp
     src/core/appintegration.cpp
     src/core/thumbnailprovider.hpp
@@ -143,6 +145,7 @@ qt_add_qml_module(atlas_app
         qml/components/dialogs/OpenWithModal.qml
         qml/components/dialogs/GitModal.qml
         qml/components/dialogs/CompressModal.qml
+        qml/components/dialogs/MediaToolsModal.qml
         qml/components/dialogs/OperationsModal.qml
         qml/components/dialogs/BulkRenameModal.qml
         qml/components/dialogs/ConfirmDeleteModal.qml

@@ -32,6 +32,7 @@ MouseArea {
         targetItem.name.endsWith(".tar.xz") || targetItem.name.endsWith(".tar.zst") ||
         targetItem.name.endsWith(".tgz") || targetItem.name.endsWith(".7z") || targetItem.name.endsWith(".rar")
     )
+    property var convertFormats: []
 
     signal actionTriggered(string action, var item)
 
@@ -45,6 +46,9 @@ MouseArea {
             let isDir = targetItem ? targetItem.isDir : true;
             let mime = targetItem ? (targetItem.mimeType || "") : "inode/directory";
             customActions = AppIntegration.getCustomActions(currentDir, selPaths, isDir, mime);
+            convertFormats = (targetItem && !targetItem.isDir && !targetItem.isTrashItem)
+                ? MediaTools.formatsFor(targetItem.path)
+                : [];
         }
     }
 
@@ -233,6 +237,56 @@ MouseArea {
                                 hasSubmenu: true,
                                 submenuItems: compressSubmenu
                             });
+                        }
+
+                        // Media Tools Flyout
+                        // Trim is video-only; parameterless ops run immediately;
+                        // conversion is offered for any file with a target format.
+                        if (!root.targetItem.isDir && !root.targetItem.isTrashItem) {
+                            let mt = [];
+                            const isAudioFile = root.targetItem.isAudio || FileUtils.isAudio(root.targetItem.path);
+                            const isVideoFile = root.targetItem.isVideo || FileUtils.isVideo(root.targetItem.path);
+                            const isImageFile = root.targetItem.isImage || FileUtils.isImage(root.targetItem.path);
+
+                            if (isVideoFile)
+                                mt.push({ text: qsTr("Trim / Clip..."), icon: "content_cut", action: "mediaClip" });
+                            if (!isAudioFile)
+                                mt.push({ text: qsTr("Aspect Ratio..."), icon: "aspect_ratio", action: "mediaAspect" });
+
+                            if (!isAudioFile) {
+                                mt.push({ isSeparator: true });
+                                mt.push({ text: qsTr("Rotate Right"), icon: "rotate_right", action: "mediaRotate:90" });
+                                mt.push({ text: qsTr("Rotate Left"), icon: "rotate_left", action: "mediaRotate:270" });
+                                mt.push({ text: qsTr("Flip Horizontal"), icon: "flip", action: "mediaFlip:h" });
+                                mt.push({ text: qsTr("Flip Vertical"), icon: "flip", action: "mediaFlip:v" });
+
+                                if (isImageFile) {
+                                    mt.push({ isSeparator: true });
+                                    mt.push({ text: qsTr("Circle Crop"), icon: "circle", action: "mediaCircle" });
+                                }
+                            }
+
+                            const srcExt = (root.targetItem.suffix || "").toLowerCase();
+                            const formats = root.convertFormats.filter(f => f !== srcExt);
+                            if (formats.length > 0) {
+                                mt.push({ isSeparator: true });
+                                for (let fi = 0; fi < formats.length; ++fi) {
+                                    mt.push({
+                                        text: qsTr("Convert to .%1").arg(formats[fi]),
+                                        icon: "sync_alt",
+                                        action: "mediaConvert:" + formats[fi]
+                                    });
+                                }
+                            }
+
+                            if (mt.some(e => !e.isSeparator)) {
+                                list.push({
+                                    text: qsTr("Media Tools"),
+                                    icon: "movie_edit",
+                                    hasSubmenu: true,
+                                    submenuItems: mt
+                                });
+                            }
                         }
 
                         list.push({ isSeparator: true });

@@ -356,6 +356,8 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
             emit isLoadingChanged();
         }
 
+        startDirectorySizeScan(QString());
+
         beginResetModel();
         qDeleteAll(m_rawEntries);
         m_rawEntries.clear();
@@ -376,6 +378,7 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
     }
 
     QString scanPath = m_path;
+    startDirectorySizeScan(scanPath);
 
     if (isPathReset && !m_isLoading) {
         m_isLoading = true;
@@ -431,6 +434,41 @@ void FileSystemModel::scanDirectory(bool isPathReset) {
                 emit countChanged();
             } else {
                 updateDirectoryGranular(rawData);
+            }
+        });
+    });
+}
+
+void FileSystemModel::startDirectorySizeScan(const QString& path) {
+    const quint64 generation = ++m_sizeGeneration;
+
+    if (path.isEmpty() || path.contains(QLatin1String("://")) || path.startsWith(QLatin1String("recent:")) ||
+        atlas::core::TrashLocations::isTrashRoot(path) || atlas::core::RecentFiles::isRecentPath(path)) {
+        if (!m_directorySizeFormatted.isEmpty()) {
+            m_directorySizeFormatted.clear();
+            emit directorySizeChanged();
+        }
+        return;
+    }
+
+    (void)QtConcurrent::run([this, path, generation]() {
+        qint64 total = 0;
+        QDirIterator it(path, QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System,
+                        QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            it.next();
+            const QFileInfo fi = it.fileInfo();
+            if (!fi.isSymLink())
+                total += fi.size();
+        }
+
+        const QString formatted = atlas::core::FileUtils::formatSize(total);
+        QMetaObject::invokeMethod(this, [this, formatted, generation]() {
+            if (generation != m_sizeGeneration)
+                return;
+            if (m_directorySizeFormatted != formatted) {
+                m_directorySizeFormatted = formatted;
+                emit directorySizeChanged();
             }
         });
     });

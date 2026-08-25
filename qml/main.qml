@@ -396,6 +396,20 @@ ApplicationWindow {
                     compressModal.sourcePaths = targetPaths;
                     compressModal.defaultName = targetPaths.length === 1 ? item.name : FileUtils.baseName(targetPaths[0]);
                     compressModal.expanded = true;
+                } else if (action === "mediaClip" && item) {
+                    mediaToolsModal.openFor(item.path, "clip");
+                } else if (action === "mediaAspect" && item) {
+                    mediaToolsModal.openFor(item.path, "aspect");
+                } else if (action.startsWith("mediaConvert:") && item) {
+                    MediaTools.convertMedia(item.path, action.substring(13));
+                } else if (action.startsWith("mediaRotate:") && item) {
+                    MediaTools.rotateMedia(item.path, Number(action.substring(12)));
+                } else if (action === "mediaFlip:h" && item) {
+                    MediaTools.flipMedia(item.path, true);
+                } else if (action === "mediaFlip:v" && item) {
+                    MediaTools.flipMedia(item.path, false);
+                } else if (action === "mediaCircle" && item) {
+                    MediaTools.circleCrop(item.path);
                 } else if (action === "uploadCatbox") {
                     let pathsToUpload = (targetPaths && targetPaths.length > 0) ? targetPaths : (item && item.path ? [item.path] : []);
                     if (pathsToUpload.length > 0) {
@@ -466,6 +480,11 @@ ApplicationWindow {
                 let curDir = window.getActiveDirectory();
                 FileOperations.createArchive(sources, curDir + "/" + dest, fmt);
             }
+        }
+
+        // Media Tools Modal (trim, convert, rotate, circle crop, aspect ratio)
+        MediaToolsModal {
+            id: mediaToolsModal
         }
 
         // Operations & Background Activity Modal
@@ -665,7 +684,7 @@ ApplicationWindow {
         Shortcut {
             sequence: "Space"
             context: Qt.ApplicationShortcut
-            enabled: !mediaViewerModal.expanded && !newItemModal.expanded && !editPlaceModal.expanded && !placesManageModal.expanded && !compressModal.expanded && !openWithModal.expanded && !preferencesModal.expanded && !runnerGameModal.isOpen && !vectorBloomOverlay.isOpen
+            enabled: !mediaViewerModal.expanded && !newItemModal.expanded && !editPlaceModal.expanded && !placesManageModal.expanded && !compressModal.expanded && !openWithModal.expanded && !preferencesModal.expanded && !mediaToolsModal.expanded && !runnerGameModal.isOpen && !vectorBloomOverlay.isOpen
             onActivated: {
                 if (splitContainer.currentSelectedPath) {
                     let path = splitContainer.currentSelectedPath;

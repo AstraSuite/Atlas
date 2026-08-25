@@ -22,6 +22,7 @@
 #include "core/fileoperations.hpp"
 #include "core/catboxuploader.hpp"
 #include "core/fileutils.hpp"
+#include "core/mediatools.hpp"
 #include "core/iconprovider.hpp"
 #include "core/papiruswatcher.hpp"
 #include "core/thumbnailprovider.hpp"
@@ -197,6 +198,7 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("AppController", controller);
     engine.rootContext()->setContextProperty("FileUtils", fileUtils);
     engine.rootContext()->setContextProperty("FileOperations", fileOps);
+    engine.rootContext()->setContextProperty("MediaTools", atlas::core::MediaTools::instance());
     engine.rootContext()->setContextProperty("CatboxUploader", catboxUploader);
     engine.rootContext()->setContextProperty("TabManager", tabManager);
     engine.rootContext()->setContextProperty("AppIntegration", appIntegration);
