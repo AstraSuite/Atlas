@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm --needed \
+            base-devel \
+            git \
+            cmake \
+            ninja \
+            qt6-base \
+            qt6-declarative \
+            qt6-multimedia \
+            qt6-shadertools \
+            qt6-svg \
+            exiv2
+
+      - name: Mark git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Start without QML errors
+        run: |
+          set -o pipefail
+          QT_QPA_PLATFORM=offscreen QT_LOGGING_TO_CONSOLE=1 \
+            timeout 20 ./build/bin/atlas "$HOME" > run.log 2>&1 || true
+
+          if grep -aiE '\.qml:[0-9]+.*(error|is not a type|Cannot |Unable to assign|TypeError)|binding loop' run.log; then
+            echo "::error::QML errors on startup, see the matches above"
+            exit 1
+          fi
+          echo "Started clean."
+
+      - name: Stage release artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+
+          cp -v build/bin/atlas "atlas-${tag}-linux-x86_64"
+          git archive --format=tar.gz --prefix="atlas-${version}/" -o "atlas-${version}.tar.gz" "${tag}"
+
+          echo "ARTIFACTS<<EOF" >> "$GITHUB_ENV"
+          echo "atlas-${tag}-linux-x86_64" >> "$GITHUB_ENV"
+          echo "atlas-${version}.tar.gz" >> "$GITHUB_ENV"
+          echo "EOF" >> "$GITHUB_ENV"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Atlas ${{ github.ref_name }}
+          files: ${{ env.ARTIFACTS }}
+          generate_release_notes: true
