@@ -24,6 +24,9 @@ MouseArea {
     readonly property bool isImage: currentMediaItem ? (currentMediaItem.isImage || FileUtils.isImage(currentFilePath)) : false
     readonly property bool isVideo: currentMediaItem ? (currentMediaItem.isVideo || FileUtils.isVideo(currentFilePath)) : false
 
+    // Null-safe handle to the lazily created video player
+    readonly property alias videoPlayer: videoPlayerLoader.item
+
     function openFile(filePath, directoryModel) {
         currentFilePath = filePath;
         let list = [];
@@ -109,7 +112,7 @@ MouseArea {
         interval: 3000
         running: root.expanded && root.showControls && !controlHover.containsMouse
         onTriggered: {
-            if (root.isVideo && videoPlayer.isPlaying) {
+            if (root.isVideo && videoPlayer && videoPlayer.isPlaying) {
                 root.showControls = false;
             }
         }
@@ -135,14 +138,19 @@ MouseArea {
             onToggleControlsRequested: root.showControls = !root.showControls
         }
 
-        // Video Player Canvas
-        VideoPlayer {
-            id: videoPlayer
+        // Video Player Canvas - Created lazily so Qt Multimedia only initializes when opened
+        Loader {
+            id: videoPlayerLoader
             anchors.fill: parent
-            source: root.isVideo ? Qt.resolvedUrl("file://" + root.currentFilePath) : ""
-            filePath: root.currentFilePath
-            visible: root.isVideo
-            onToggleControlsRequested: root.showControls = !root.showControls
+            active: root.expanded
+
+            sourceComponent: VideoPlayer {
+                anchors.fill: parent
+                source: root.isVideo ? Qt.resolvedUrl("file://" + root.currentFilePath) : ""
+                filePath: root.currentFilePath
+                visible: root.isVideo
+                onToggleControlsRequested: root.showControls = !root.showControls
+            }
         }
     }
 
@@ -442,7 +450,7 @@ MouseArea {
 
                 MaterialIcon {
                     anchors.centerIn: parent
-                    text: videoPlayer.isPlaying ? "pause" : "play_arrow"
+                    text: videoPlayer && videoPlayer.isPlaying ? "pause" : "play_arrow"
                     fontStyle: Tokens.font.icon.medium
                     color: playBtnHover.containsMouse ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onPrimary
                 }
@@ -451,7 +459,7 @@ MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: videoPlayer.togglePlay()
+                    onClicked: if (videoPlayer) videoPlayer.togglePlay()
                 }
             }
 
@@ -461,7 +469,7 @@ MouseArea {
                 spacing: Tokens.spacing.small
 
                 StyledText {
-                    text: root.formatTime(videoPlayer.position)
+                    text: root.formatTime(videoPlayer ? videoPlayer.position : 0)
                     font: Tokens.font.mono.small
                     color: Colours.palette.m3onSurface
                     Layout.preferredWidth: 44
@@ -473,16 +481,16 @@ MouseArea {
                     Layout.fillWidth: true
                     implicitHeight: 8
                     from: 0
-                    to: Math.max(1, videoPlayer.duration)
-                    value: videoPlayer.position
+                    to: videoPlayer ? Math.max(1, videoPlayer.duration) : 1
+                    value: videoPlayer ? videoPlayer.position : 0
 
                     onInteraction: v => {
-                        videoPlayer.seek(v);
+                        if (videoPlayer) videoPlayer.seek(v);
                     }
                 }
 
                 StyledText {
-                    text: root.formatTime(videoPlayer.duration)
+                    text: root.formatTime(videoPlayer ? videoPlayer.duration : 0)
                     font: Tokens.font.mono.small
                     color: Colours.palette.m3onSurfaceVariant
                     Layout.preferredWidth: 44
@@ -495,14 +503,14 @@ MouseArea {
                 spacing: 4
 
                 MaterialIcon {
-                    text: videoPlayer.muted || videoPlayer.volume === 0 ? "volume_off" : (videoPlayer.volume > 0.5 ? "volume_up" : "volume_down")
+                    text: videoPlayer ? (videoPlayer.muted || videoPlayer.volume === 0 ? "volume_off" : (videoPlayer.volume > 0.5 ? "volume_up" : "volume_down")) : "volume_up"
                     fontStyle: Tokens.font.icon.small
                     color: Colours.palette.m3onSurface
 
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: videoPlayer.muted = !videoPlayer.muted
+                        onClicked: if (videoPlayer) videoPlayer.muted = !videoPlayer.muted
                     }
                 }
 
@@ -511,10 +519,12 @@ MouseArea {
                     implicitHeight: 6
                     from: 0.0
                     to: 1.0
-                    value: videoPlayer.volume
+                    value: videoPlayer ? videoPlayer.volume : 1.0
                     onInteraction: v => {
-                        videoPlayer.volume = v;
-                        videoPlayer.muted = false;
+                        if (videoPlayer) {
+                            videoPlayer.volume = v;
+                            videoPlayer.muted = false;
+                        }
                     }
                 }
             }
@@ -524,20 +534,20 @@ MouseArea {
                 implicitWidth: 32
                 implicitHeight: 32
                 radius: Tokens.rounding.full
-                color: videoPlayer.loop ? Colours.palette.m3primaryContainer : (loopHover.containsMouse ? Colours.palette.m3surfaceContainerHigh : "transparent")
+                color: videoPlayer && videoPlayer.loop ? Colours.palette.m3primaryContainer : (loopHover.containsMouse ? Colours.palette.m3surfaceContainerHigh : "transparent")
 
                 MaterialIcon {
                     anchors.centerIn: parent
                     text: "repeat"
                     fontStyle: Tokens.font.icon.small
-                    color: videoPlayer.loop ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                    color: videoPlayer && videoPlayer.loop ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
                 }
                 MouseArea {
                     id: loopHover
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: videoPlayer.loop = !videoPlayer.loop
+                    onClicked: if (videoPlayer) videoPlayer.loop = !videoPlayer.loop
                 }
             }
 
@@ -614,7 +624,7 @@ MouseArea {
         sequence: "Space"
         onActivated: {
             if (root.isVideo) {
-                videoPlayer.togglePlay();
+                if (videoPlayer) videoPlayer.togglePlay();
             } else {
                 root.expanded = false;
             }

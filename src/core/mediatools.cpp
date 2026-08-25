@@ -87,6 +87,9 @@ bool MediaTools::imageMagickAvailable() const {
 
 bool MediaTools::imageMagickHandles(const QString& source) {
     const QFileInfo fi(source);
+    if (source.isEmpty() || !fi.isFile())
+        return false;
+
     const QString key = fi.suffix().isEmpty()
         ? fi.absoluteFilePath()
         : QStringLiteral(".") + fi.suffix().toLower();
@@ -171,6 +174,9 @@ int MediaTools::kindFor(const QString& source) {
 }
 
 QStringList MediaTools::formatsFor(const QString& source) {
+    if (source.isEmpty() || !QFile::exists(source))
+        return {};
+
     const Kind kind = static_cast<Kind>(kindFor(source));
 
     // Don't offer targets whose converting backend is missing
@@ -194,7 +200,7 @@ QStringList MediaTools::formatsFor(const QString& source) {
 
 QString MediaTools::durationFor(const QString& source) {
     const QString ffprobe = QStandardPaths::findExecutable(QStringLiteral("ffprobe"));
-    if (ffprobe.isEmpty() || source.isEmpty())
+    if (ffprobe.isEmpty() || source.isEmpty() || !QFile::exists(source))
         return {};
 
     QProcess proc;
@@ -398,7 +404,7 @@ void MediaTools::circleCrop(const QString& source) {
 
 QStringList MediaTools::videoDimensions(const QString& path) {
     const QString ffprobe = QStandardPaths::findExecutable(QStringLiteral("ffprobe"));
-    if (ffprobe.isEmpty())
+    if (ffprobe.isEmpty() || path.isEmpty() || !QFile::exists(path))
         return {};
 
     QProcess proc;

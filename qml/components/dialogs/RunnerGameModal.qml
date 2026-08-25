@@ -33,20 +33,31 @@ Item {
         }
     }
 
-    // Sound Effects
-    SoundEffect {
-        id: soundPress
-        source: "qrc:/qt/qml/atlas/assets/runner/sounds/press.wav"
-    }
+    // Sound Effects - Created lazily so Qt Multimedia only initializes when the game opens
+    Loader {
+        id: soundsLoader
+        active: root.isOpen
 
-    SoundEffect {
-        id: soundHit
-        source: "qrc:/qt/qml/atlas/assets/runner/sounds/hit.wav"
-    }
+        sourceComponent: Item {
+            property alias press: soundPress
+            property alias hit: soundHit
+            property alias score: soundScore
 
-    SoundEffect {
-        id: soundScore
-        source: "qrc:/qt/qml/atlas/assets/runner/sounds/reached.wav"
+            SoundEffect {
+                id: soundPress
+                source: "qrc:/qt/qml/atlas/assets/runner/sounds/press.wav"
+            }
+
+            SoundEffect {
+                id: soundHit
+                source: "qrc:/qt/qml/atlas/assets/runner/sounds/hit.wav"
+            }
+
+            SoundEffect {
+                id: soundScore
+                source: "qrc:/qt/qml/atlas/assets/runner/sounds/reached.wav"
+            }
+        }
     }
 
     // Modal Scrim
@@ -328,9 +339,9 @@ Item {
 
                     Connections {
                         target: RunnerGame
-                        function onJumpSoundTriggered() { soundPress.play(); }
-                        function onHitSoundTriggered() { soundHit.play(); }
-                        function onScoreSoundTriggered() { soundScore.play(); }
+                        function onJumpSoundTriggered() { if (soundsLoader.item) soundsLoader.item.press.play(); }
+                        function onHitSoundTriggered() { if (soundsLoader.item) soundsLoader.item.hit.play(); }
+                        function onScoreSoundTriggered() { if (soundsLoader.item) soundsLoader.item.score.play(); }
                         function onFrameUpdated() { gameCanvas.requestPaint(); }
                     }
 

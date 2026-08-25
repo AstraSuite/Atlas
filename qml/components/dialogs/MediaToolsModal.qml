@@ -371,7 +371,7 @@ MouseArea {
                                 Layout.fillWidth: true
                                 buttonHeight: 38
                                 inactiveColor: Colours.tPalette.m3surfaceContainerHighest
-                                model: MediaTools.formatsFor(root.sourcePath).map(f => ({ label: "." + f, key: f }))
+                                model: root.expanded ? MediaTools.formatsFor(root.sourcePath).map(f => ({ label: "." + f, key: f })) : []
                                 valueKey: "key"
                                 currentValue: root.selectedFormat
                                 onSelected: val => root.selectedFormat = val
