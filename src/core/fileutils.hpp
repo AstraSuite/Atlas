@@ -74,6 +74,7 @@ public:
     Q_INVOKABLE static QString expandPath(const QString& input, const QString& currentDir = QString());
     Q_INVOKABLE static QVariantList getPathSuggestions(const QString& input, const QString& currentDir = QString());
     Q_INVOKABLE static QString getCompletedPath(const QString& input, const QString& currentDir = QString());
+    Q_INVOKABLE static int queryKeyboardModifiers();
 };
 
 } // namespace atlas::core

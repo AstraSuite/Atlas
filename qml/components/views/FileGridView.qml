@@ -110,9 +110,15 @@ Item {
                 let filtered = urls.filter(u => u !== destDir);
                 if (filtered.length > 0 && destDir) {
                     let globalPos = mapToItem(null, drop.x, drop.y);
-                    if (drop.modifiers & Qt.ShiftModifier) {
+                    let mods = FileUtils.queryKeyboardModifiers();
+                    if (mods & Qt.ShiftModifier && mods & Qt.ControlModifier) {
+                        for (let i = 0; i < filtered.length; ++i) {
+                            let linkName = filtered[i].substring(filtered[i].lastIndexOf('/') + 1);
+                            FileOperations.createSymlink(filtered[i], destDir + "/" + linkName);
+                        }
+                    } else if (mods & Qt.ShiftModifier) {
                         FileOperations.moveFiles(filtered, destDir);
-                    } else if (drop.modifiers & Qt.ControlModifier) {
+                    } else if (mods & Qt.ControlModifier) {
                         FileOperations.copyFiles(filtered, destDir);
                     } else {
                         root.filesDropped(filtered, destDir, globalPos.x, globalPos.y);
@@ -377,9 +383,15 @@ Item {
                         let filtered = urls.filter(u => u !== destDir);
                         if (filtered.length > 0) {
                             let globalPos = mapToItem(null, drop.x, drop.y);
-                            if (drop.modifiers & Qt.ShiftModifier) {
+                            let mods = FileUtils.queryKeyboardModifiers();
+                            if (mods & Qt.ShiftModifier && mods & Qt.ControlModifier) {
+                                for (let i = 0; i < filtered.length; ++i) {
+                                    let linkName = filtered[i].substring(filtered[i].lastIndexOf('/') + 1);
+                                    FileOperations.createSymlink(filtered[i], destDir + "/" + linkName);
+                                }
+                            } else if (mods & Qt.ShiftModifier) {
                                 FileOperations.moveFiles(filtered, destDir);
-                            } else if (drop.modifiers & Qt.ControlModifier) {
+                            } else if (mods & Qt.ControlModifier) {
                                 FileOperations.copyFiles(filtered, destDir);
                             } else {
                                 root.filesDropped(filtered, destDir, globalPos.x, globalPos.y);

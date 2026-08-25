@@ -8,6 +8,7 @@
 #include <QMimeDatabase>
 #include <QDirIterator>
 #include <QStorageInfo>
+#include <QGuiApplication>
 #include <QReadWriteLock>
 #include <QStandardPaths>
 #include <QStorageInfo>
@@ -485,6 +486,11 @@ QString FileUtils::getCompletedPath(const QString& input, const QString& current
     }
 
     return suggestions.first().toMap()["displayPath"].toString();
+}
+
+// QML DropEvent does not expose keyboard modifiers, query them from the window system instead
+int FileUtils::queryKeyboardModifiers() {
+    return static_cast<int>(QGuiApplication::queryKeyboardModifiers());
 }
 
 } // namespace atlas::core

@@ -175,9 +175,15 @@ StyledRect {
                                     let filtered = urls.filter(u => u !== placeItem.path);
                                     if (filtered.length > 0) {
                                         let globalPos = mapToItem(null, drop.x, drop.y);
-                                        if (drop.modifiers & Qt.ShiftModifier) {
+                                        let mods = FileUtils.queryKeyboardModifiers();
+                                        if (mods & Qt.ShiftModifier && mods & Qt.ControlModifier) {
+                                            for (let i = 0; i < filtered.length; ++i) {
+                                                let linkName = filtered[i].substring(filtered[i].lastIndexOf('/') + 1);
+                                                FileOperations.createSymlink(filtered[i], placeItem.path + "/" + linkName);
+                                            }
+                                        } else if (mods & Qt.ShiftModifier) {
                                             FileOperations.moveFiles(filtered, placeItem.path);
-                                        } else if (drop.modifiers & Qt.ControlModifier) {
+                                        } else if (mods & Qt.ControlModifier) {
                                             FileOperations.copyFiles(filtered, placeItem.path);
                                         } else {
                                             root.filesDropped(filtered, placeItem.path, globalPos.x, globalPos.y);
@@ -466,9 +472,15 @@ StyledRect {
                                     let filtered = urls.filter(u => u !== driveItem.mountPoint);
                                     if (filtered.length > 0) {
                                         let globalPos = mapToItem(null, drop.x, drop.y);
-                                        if (drop.modifiers & Qt.ShiftModifier) {
+                                        let mods = FileUtils.queryKeyboardModifiers();
+                                        if (mods & Qt.ShiftModifier && mods & Qt.ControlModifier) {
+                                            for (let i = 0; i < filtered.length; ++i) {
+                                                let linkName = filtered[i].substring(filtered[i].lastIndexOf('/') + 1);
+                                                FileOperations.createSymlink(filtered[i], driveItem.mountPoint + "/" + linkName);
+                                            }
+                                        } else if (mods & Qt.ShiftModifier) {
                                             FileOperations.moveFiles(filtered, driveItem.mountPoint);
-                                        } else if (drop.modifiers & Qt.ControlModifier) {
+                                        } else if (mods & Qt.ControlModifier) {
                                             FileOperations.copyFiles(filtered, driveItem.mountPoint);
                                         } else {
                                             root.filesDropped(filtered, driveItem.mountPoint, globalPos.x, globalPos.y);

@@ -7,6 +7,7 @@ StyledRect {
     id: root
 
     signal tabContextMenuRequested(int tabIndex, real globalX, real globalY)
+    signal filesDropped(var sourceFiles, string targetDir, real globalX, real globalY)
 
     readonly property bool hasSplit: TabManager.currentTab ? TabManager.currentTab.isSplit : false
     readonly property bool shouldShow: TabManager.count > 1 || hasSplit
@@ -118,9 +119,13 @@ StyledRect {
                         anchors.leftMargin: 10
                         anchors.rightMargin: 10
                         anchors.bottomMargin: 4
-                        visible: !tabItem.selected && tabDragArea.containsMouse
+                        visible: !tabItem.selected && (tabDragArea.containsMouse || tabDropArea.containsDrag)
                         radius: Tokens.rounding.small
-                        color: Colours.tPalette.m3surfaceContainerHigh
+                        color: tabDropArea.containsDrag ? Colours.palette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHigh
+
+                        Behavior on color {
+                            CAnim {}
+                        }
                     }
 
                     // Drag & Click MouseArea for Tab selection & reordering
@@ -178,6 +183,56 @@ StyledRect {
                                 dragging = false;
                             }
                         }
+                    }
+
+                    // Drag & Drop Target: Drops Files into the Tab's Directory, Opens Tab After Hover Delay
+                    DropArea {
+                        id: tabDropArea
+                        anchors.fill: parent
+                        z: 2
+
+                        onEntered: tabOpenTimer.restart()
+                        onExited: tabOpenTimer.stop()
+
+                        onDropped: drop => {
+                            tabOpenTimer.stop();
+                            if (!drop.hasUrls) return;
+                            let urls = [];
+                            for (let i = 0; i < drop.urls.length; ++i) {
+                                urls.push(FileUtils.toLocalFile(drop.urls[i]));
+                            }
+                            // Left half of a joined split tab targets primary pane, right half secondary
+                            let destDir = (tabItem.isSplit && drop.x > tabItem.width / 2) ? tabItem.splitPath : tabItem.path;
+                            let filtered = urls.filter(u => u !== destDir);
+                            if (filtered.length === 0 || !destDir) return;
+
+                            // QML DropEvent does not expose modifiers, query them from the window system
+                            let mods = FileUtils.queryKeyboardModifiers();
+                            if (mods & Qt.ShiftModifier && mods & Qt.ControlModifier) {
+                                for (let i = 0; i < filtered.length; ++i) {
+                                    let name = filtered[i].substring(filtered[i].lastIndexOf('/') + 1);
+                                    FileOperations.createSymlink(filtered[i], destDir + "/" + name);
+                                }
+                            } else if (mods & Qt.ShiftModifier) {
+                                FileOperations.moveFiles(filtered, destDir);
+                            } else if (mods & Qt.ControlModifier) {
+                                FileOperations.copyFiles(filtered, destDir);
+                            } else {
+                                let globalPos = mapToItem(null, drop.x, drop.y);
+                                root.filesDropped(filtered, destDir, globalPos.x, globalPos.y);
+                            }
+                            drop.accept();
+
+                            // Jump to the tab so the result of the drop is visible
+                            TabManager.currentIndex = tabItem.index;
+                        }
+                    }
+
+                    // Hover-to-Open: Switches to the Tab When a Drag Hovers Over It
+                    Timer {
+                        id: tabOpenTimer
+                        interval: 1000
+                        onTriggered: TabManager.currentIndex = tabItem.index
                     }
 
                     // Single vs Joined Split Tab Content

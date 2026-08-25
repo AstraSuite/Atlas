@@ -91,6 +91,13 @@ ApplicationWindow {
                 onTabContextMenuRequested: (idx, gx, gy) => {
                     tabContextMenu.open(gx, gy, idx);
                 }
+                onFilesDropped: (sources, destDir, x, y) => {
+                    dropActionMenu.sourceFiles = sources;
+                    dropActionMenu.targetDir = destDir;
+                    dropActionMenu.menuX = x;
+                    dropActionMenu.menuY = y;
+                    dropActionMenu.expanded = true;
+                }
             }
 
             // Main Content Area
