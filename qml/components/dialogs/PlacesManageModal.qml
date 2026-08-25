@@ -106,6 +106,7 @@ MouseArea {
             // Tab Bar Navigation
             SlidingSelector {
                 Layout.fillWidth: true
+                inactiveColor: Colours.tPalette.m3surfaceContainerHighest
                 model: [
                     { tab: 0, label: qsTr("Places & Bookmarks"), icon: "bookmarks" },
                     { tab: 1, label: qsTr("Devices & Drives"), icon: "hard_drive" }

@@ -171,7 +171,15 @@ int MediaTools::kindFor(const QString& source) {
 }
 
 QStringList MediaTools::formatsFor(const QString& source) {
-    switch (kindFor(source)) {
+    const Kind kind = static_cast<Kind>(kindFor(source));
+
+    // Don't offer targets whose converting backend is missing
+    if ((kind == Video || kind == Audio) && !ffmpegAvailable())
+        return {};
+    if ((kind == Image || kind == Unknown) && !imageMagickAvailable())
+        return {};
+
+    switch (kind) {
     case static_cast<int>(Image):
         return imageTargetFormats();
     case static_cast<int>(Video):
@@ -215,6 +223,11 @@ QString MediaTools::durationFor(const QString& source) {
 void MediaTools::runProcess(const QString& tool, const QString& description, const QStringList& args, const QString& output) {
     if (m_busy)
         return;
+
+    if (tool.isEmpty()) {
+        FileOperations::instance()->addCompletedTask(false, tr("%1 failed - required tool not found").arg(description));
+        return;
+    }
 
     setBusy(true);
     setStatusText(description);

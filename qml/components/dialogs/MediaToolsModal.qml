@@ -32,6 +32,19 @@ MouseArea {
         return list;
     }
 
+    // Fixed page slot per tool key
+    readonly property int toolSlot: ({ clip: 0, convert: 1, rotate: 2, circle: 3, aspect: 4 })[tool] ?? 0
+
+    // Whether the backend needed by the current tool is installed
+    readonly property bool toolAvailable: {
+        if (tool === "convert") {
+            if (isVideo || isAudio)
+                return MediaTools.ffmpegAvailable;
+            return MediaTools.imageMagickAvailable;
+        }
+        return MediaTools.ffmpegAvailable;
+    }
+
     signal accepted(string path)
 
     function parseTime(str) {
@@ -150,13 +163,13 @@ MouseArea {
                 }
             }
 
-            // ffmpeg missing warning
+            // Missing backend warning
             StyledRect {
                 Layout.fillWidth: true
                 implicitHeight: warnRow.implicitHeight + Tokens.padding.small * 2
                 radius: Tokens.rounding.small
                 color: Qt.alpha(Colours.palette.m3errorContainer, 0.5)
-                visible: !MediaTools.ffmpegAvailable
+                visible: !root.toolAvailable
 
                 RowLayout {
                     id: warnRow
@@ -171,7 +184,13 @@ MouseArea {
                     }
 
                     StyledText {
-                        text: qsTr("ffmpeg was not found on this system. Install ffmpeg to use media tools.")
+                        text: {
+                            if (!MediaTools.ffmpegAvailable && !MediaTools.imageMagickAvailable)
+                                return qsTr("Neither ffmpeg nor ImageMagick was found on this system. Install them to use media tools.");
+                            if (!MediaTools.ffmpegAvailable)
+                                return qsTr("ffmpeg was not found - video and audio tools are unavailable.");
+                            return qsTr("ImageMagick was not found - image conversion is unavailable.");
+                        }
                         color: Colours.palette.m3onSurface
                         font: Tokens.font.label.medium
                         wrapMode: Text.WordWrap
@@ -185,217 +204,286 @@ MouseArea {
                 id: toolSelector
                 Layout.fillWidth: true
                 buttonHeight: 38
+                inactiveColor: Colours.tPalette.m3surfaceContainerHighest
                 model: root.tools.map(t => ({ label: t.label, icon: t.icon, key: t.key }))
                 valueKey: "key"
                 currentValue: root.tool
                 onSelected: val => root.tool = val
             }
 
-            // Clip Section
-            ColumnLayout {
-                visible: root.tool === "clip"
-                spacing: Tokens.spacing.small
-                Layout.fillWidth: true
-
-                RowLayout {
-                    Layout.fillWidth: true
-
-                    StyledText {
-                        text: qsTr("Trim range")
-                        color: Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.label.medium
-                        Layout.fillWidth: true
-                    }
-
-                    StyledText {
-                        text: {
-                            const dur = MediaTools.durationFor(root.sourcePath);
-                            return dur.length > 0 ? qsTr("Duration: %1").arg(dur) : "";
-                        }
-                        visible: text.length > 0
-                        color: Colours.palette.m3onSurfaceVariant
-                        font: Tokens.font.label.medium
-                    }
-                }
-
-                RowLayout {
-                    spacing: Tokens.spacing.small
-
-                    StyledRect {
-                        Layout.fillWidth: true
-                        implicitHeight: 40
-                        radius: Tokens.rounding.small
-                        color: Colours.tPalette.m3surfaceContainer
-                        clip: true
-
-                        TextInput {
-                            id: startTimeInput
-                            anchors.fill: parent
-                            anchors.margins: Tokens.padding.small
-                            anchors.leftMargin: 12
-                            color: Colours.palette.m3onSurface
-                            selectionColor: Colours.palette.m3primaryContainer
-                            selectedTextColor: Colours.palette.m3onPrimaryContainer
-                            font: Tokens.font.body.medium
-                            selectByMouse: true
-                            cursorVisible: activeFocus
-                            clip: true
-                            verticalAlignment: TextInput.AlignVCenter
-                        }
-
-                        StyledText {
-                            visible: startTimeInput.text.length === 0 && !startTimeInput.activeFocus
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            verticalAlignment: Text.AlignVCenter
-                            text: qsTr("Start (e.g. 0:05)")
-                            color: Colours.palette.m3outline
-                            font: Tokens.font.body.medium
-                        }
-                    }
-
-                    StyledRect {
-                        Layout.fillWidth: true
-                        implicitHeight: 40
-                        radius: Tokens.rounding.small
-                        color: Colours.tPalette.m3surfaceContainer
-                        clip: true
-
-                        TextInput {
-                            id: endTimeInput
-                            anchors.fill: parent
-                            anchors.margins: Tokens.padding.small
-                            anchors.leftMargin: 12
-                            color: Colours.palette.m3onSurface
-                            selectionColor: Colours.palette.m3primaryContainer
-                            selectedTextColor: Colours.palette.m3onPrimaryContainer
-                            font: Tokens.font.body.medium
-                            selectByMouse: true
-                            cursorVisible: activeFocus
-                            clip: true
-                            verticalAlignment: TextInput.AlignVCenter
-                        }
-
-                        StyledText {
-                            visible: endTimeInput.text.length === 0 && !endTimeInput.activeFocus
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            verticalAlignment: Text.AlignVCenter
-                            text: qsTr("End (e.g. 1:30)")
-                            color: Colours.palette.m3outline
-                            font: Tokens.font.body.medium
-                        }
-                    }
-                }
-            }
-
-            // Convert Section
-            ColumnLayout {
-                visible: root.tool === "convert"
-                spacing: Tokens.spacing.small
-                Layout.fillWidth: true
-
-                StyledText {
-                    text: qsTr("Target format")
-                    color: Colours.palette.m3onSurfaceVariant
-                    font: Tokens.font.label.medium
-                }
-
-                SlidingSelector {
-                    Layout.fillWidth: true
-                    buttonHeight: 38
-                    model: MediaTools.formatsFor(root.sourcePath).map(f => ({ label: "." + f, key: f }))
-                    valueKey: "key"
-                    currentValue: root.selectedFormat
-                    onSelected: val => root.selectedFormat = val
-                }
-            }
-
-            // Rotate Section
-            ColumnLayout {
-                visible: root.tool === "rotate"
-                spacing: Tokens.spacing.small
-                Layout.fillWidth: true
-
-                StyledText {
-                    text: qsTr("Transform")
-                    color: Colours.palette.m3onSurfaceVariant
-                    font: Tokens.font.label.medium
-                }
-
-                SlidingSelector {
-                    id: rotateSelector
-                    Layout.fillWidth: true
-                    buttonHeight: 38
-                    model: [
-                        { label: "90° CW", icon: "rotate_right", key: "cw" },
-                        { label: "90° CCW", icon: "rotate_left", key: "ccw" },
-                        { label: "180°", icon: "restart_alt", key: "half" },
-                        { label: qsTr("Flip H"), icon: "flip", key: "hflip" },
-                        { label: qsTr("Flip V"), icon: "flip", key: "vflip" }
-                    ]
-                    valueKey: "key"
-                    currentValue: "cw"
-                    onSelected: val => currentValue = val
-                }
-            }
-
-            // Circle Crop Section
-            StyledText {
-                visible: root.tool === "circle"
-                text: qsTr("Crops the image to an inscribed circle with transparent corners. The result is saved as a PNG next to the original.")
-                color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.medium
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-            }
-
-            // Aspect Ratio Section
-            ColumnLayout {
-                visible: root.tool === "aspect"
-                spacing: Tokens.spacing.small
-                Layout.fillWidth: true
-
-                StyledText {
-                    text: qsTr("Aspect ratio")
-                    color: Colours.palette.m3onSurfaceVariant
-                    font: Tokens.font.label.medium
-                }
-
-                SlidingSelector {
-                    id: ratioSelector
-                    Layout.fillWidth: true
-                    buttonHeight: 38
-                    model: [
-                        { label: "16:9", key: "16x9" },
-                        { label: "9:16", key: "9x16" },
-                        { label: "4:3", key: "4x3" },
-                        { label: "1:1", key: "1x1" },
-                        { label: "3:2", key: "3x2" },
-                        { label: "21:9", key: "21x9" }
-                    ]
-                    valueKey: "key"
-                    currentValue: "16x9"
-                    onSelected: val => currentValue = val
-                }
-
-                SlidingSelector {
-                    id: aspectModeSelector
-                    Layout.fillWidth: true
-                    buttonHeight: 38
-                    model: [
-                        { label: qsTr("Crop to fit"), icon: "crop", key: "crop" },
-                        { label: qsTr("Pad to fit"), icon: "padding", key: "pad" }
-                    ]
-                    valueKey: "key"
-                    currentValue: "crop"
-                    onSelected: val => currentValue = val
-                }
-            }
-
+            // Sliding Content Area
             Item {
-                Layout.fillHeight: true
-                visible: modalCol.height < modalCol.implicitHeight
+                id: contentArea
+                Layout.fillWidth: true
+                clip: true
+
+                implicitHeight: {
+                    if (root.tool === "clip")
+                        return clipCol.implicitHeight;
+                    if (root.tool === "convert")
+                        return convertCol.implicitHeight;
+                    if (root.tool === "rotate")
+                        return rotateCol.implicitHeight;
+                    if (root.tool === "circle")
+                        return circleCol.implicitHeight;
+                    return aspectCol.implicitHeight;
+                }
+
+                Behavior on implicitHeight {
+                    Anim {
+                        type: Anim.DefaultSpatial
+                    }
+                }
+
+                Row {
+                    id: pagesRow
+                    width: contentArea.width * 5
+                    height: contentArea.height
+                    x: -root.toolSlot * contentArea.width
+
+                    Behavior on x {
+                        Anim {
+                            type: Anim.DefaultSpatial
+                        }
+                    }
+
+                    // Page 0: Clip
+                    Item {
+                        width: contentArea.width
+                        height: contentArea.height
+
+                        ColumnLayout {
+                            id: clipCol
+                            anchors.fill: parent
+                            spacing: Tokens.spacing.small
+
+                            RowLayout {
+                                Layout.fillWidth: true
+
+                                StyledText {
+                                    text: qsTr("Trim range")
+                                    color: Colours.palette.m3onSurfaceVariant
+                                    font: Tokens.font.label.medium
+                                    Layout.fillWidth: true
+                                }
+
+                                StyledText {
+                                    text: {
+                                        const dur = MediaTools.durationFor(root.sourcePath);
+                                        return dur.length > 0 ? qsTr("Duration: %1").arg(dur) : "";
+                                    }
+                                    visible: text.length > 0
+                                    color: Colours.palette.m3onSurfaceVariant
+                                    font: Tokens.font.label.medium
+                                }
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Tokens.spacing.small
+
+                                StyledRect {
+                                    Layout.fillWidth: true
+                                    implicitHeight: 40
+                                    radius: Tokens.rounding.small
+                                    color: Colours.tPalette.m3surfaceContainer
+                                    clip: true
+
+                                    TextInput {
+                                        id: startTimeInput
+                                        anchors.fill: parent
+                                        anchors.margins: Tokens.padding.small
+                                        anchors.leftMargin: 12
+                                        color: Colours.palette.m3onSurface
+                                        selectionColor: Colours.palette.m3primaryContainer
+                                        selectedTextColor: Colours.palette.m3onPrimaryContainer
+                                        font: Tokens.font.body.medium
+                                        selectByMouse: true
+                                        cursorVisible: activeFocus
+                                        clip: true
+                                        verticalAlignment: TextInput.AlignVCenter
+                                    }
+
+                                    StyledText {
+                                        visible: startTimeInput.text.length === 0 && !startTimeInput.activeFocus
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 12
+                                        verticalAlignment: Text.AlignVCenter
+                                        text: qsTr("Start (e.g. 0:05)")
+                                        color: Colours.palette.m3outline
+                                        font: Tokens.font.body.medium
+                                    }
+                                }
+
+                                StyledRect {
+                                    Layout.fillWidth: true
+                                    implicitHeight: 40
+                                    radius: Tokens.rounding.small
+                                    color: Colours.tPalette.m3surfaceContainer
+                                    clip: true
+
+                                    TextInput {
+                                        id: endTimeInput
+                                        anchors.fill: parent
+                                        anchors.margins: Tokens.padding.small
+                                        anchors.leftMargin: 12
+                                        color: Colours.palette.m3onSurface
+                                        selectionColor: Colours.palette.m3primaryContainer
+                                        selectedTextColor: Colours.palette.m3onPrimaryContainer
+                                        font: Tokens.font.body.medium
+                                        selectByMouse: true
+                                        cursorVisible: activeFocus
+                                        clip: true
+                                        verticalAlignment: TextInput.AlignVCenter
+                                    }
+
+                                    StyledText {
+                                        visible: endTimeInput.text.length === 0 && !endTimeInput.activeFocus
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 12
+                                        verticalAlignment: Text.AlignVCenter
+                                        text: qsTr("End (e.g. 1:30)")
+                                        color: Colours.palette.m3outline
+                                        font: Tokens.font.body.medium
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Page 1: Convert
+                    Item {
+                        width: contentArea.width
+                        height: contentArea.height
+
+                        ColumnLayout {
+                            id: convertCol
+                            anchors.fill: parent
+                            spacing: Tokens.spacing.small
+
+                            StyledText {
+                                text: qsTr("Target format")
+                                color: Colours.palette.m3onSurfaceVariant
+                                font: Tokens.font.label.medium
+                            }
+
+                            SlidingSelector {
+                                Layout.fillWidth: true
+                                buttonHeight: 38
+                                inactiveColor: Colours.tPalette.m3surfaceContainerHighest
+                                model: MediaTools.formatsFor(root.sourcePath).map(f => ({ label: "." + f, key: f }))
+                                valueKey: "key"
+                                currentValue: root.selectedFormat
+                                onSelected: val => root.selectedFormat = val
+                            }
+                        }
+                    }
+
+                    // Page 2: Rotate
+                    Item {
+                        width: contentArea.width
+                        height: contentArea.height
+
+                        ColumnLayout {
+                            id: rotateCol
+                            anchors.fill: parent
+                            spacing: Tokens.spacing.small
+
+                            StyledText {
+                                text: qsTr("Transform")
+                                color: Colours.palette.m3onSurfaceVariant
+                                font: Tokens.font.label.medium
+                            }
+
+                            SlidingSelector {
+                                id: rotateSelector
+                                Layout.fillWidth: true
+                                buttonHeight: 38
+                                inactiveColor: Colours.tPalette.m3surfaceContainerHighest
+                                model: [
+                                    { label: "90° CW", icon: "rotate_right", key: "cw" },
+                                    { label: "90° CCW", icon: "rotate_left", key: "ccw" },
+                                    { label: "180°", icon: "restart_alt", key: "half" },
+                                    { label: qsTr("Flip H"), icon: "flip", key: "hflip" },
+                                    { label: qsTr("Flip V"), icon: "flip", key: "vflip" }
+                                ]
+                                valueKey: "key"
+                                currentValue: "cw"
+                                onSelected: val => currentValue = val
+                            }
+                        }
+                    }
+
+                    // Page 3: Circle Crop
+                    Item {
+                        width: contentArea.width
+                        height: contentArea.height
+
+                        ColumnLayout {
+                            id: circleCol
+                            anchors.fill: parent
+                            spacing: Tokens.spacing.small
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: qsTr("Crops the image to an inscribed circle with transparent corners. The result is saved as a PNG next to the original.")
+                                color: Colours.palette.m3onSurfaceVariant
+                                font: Tokens.font.body.medium
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+                    }
+
+                    // Page 4: Aspect Ratio
+                    Item {
+                        width: contentArea.width
+                        height: contentArea.height
+
+                        ColumnLayout {
+                            id: aspectCol
+                            anchors.fill: parent
+                            spacing: Tokens.spacing.small
+
+                            StyledText {
+                                text: qsTr("Aspect ratio")
+                                color: Colours.palette.m3onSurfaceVariant
+                                font: Tokens.font.label.medium
+                            }
+
+                            SlidingSelector {
+                                id: ratioSelector
+                                Layout.fillWidth: true
+                                buttonHeight: 38
+                                inactiveColor: Colours.tPalette.m3surfaceContainerHighest
+                                model: [
+                                    { label: "16:9", key: "16x9" },
+                                    { label: "9:16", key: "9x16" },
+                                    { label: "4:3", key: "4x3" },
+                                    { label: "1:1", key: "1x1" },
+                                    { label: "3:2", key: "3x2" },
+                                    { label: "21:9", key: "21x9" }
+                                ]
+                                valueKey: "key"
+                                currentValue: "16x9"
+                                onSelected: val => currentValue = val
+                            }
+
+                            SlidingSelector {
+                                id: aspectModeSelector
+                                Layout.fillWidth: true
+                                buttonHeight: 38
+                                inactiveColor: Colours.tPalette.m3surfaceContainerHighest
+                                model: [
+                                    { label: qsTr("Crop to fit"), icon: "crop", key: "crop" },
+                                    { label: qsTr("Pad to fit"), icon: "padding", key: "pad" }
+                                ]
+                                valueKey: "key"
+                                currentValue: "crop"
+                                onSelected: val => currentValue = val
+                            }
+                        }
+                    }
+                }
             }
 
             // Buttons
@@ -417,7 +505,7 @@ MouseArea {
                     type: ButtonBase.Filled
                     icon: MediaTools.busy ? "" : "check"
                     text: qsTr("Apply")
-                    enabled: !MediaTools.busy && MediaTools.ffmpegAvailable && root.kind !== 3
+                    enabled: !MediaTools.busy && root.toolAvailable && root.kind !== 3
                     onClicked: {
                         const src = root.sourcePath;
                         if (!src)

@@ -248,21 +248,24 @@ MouseArea {
                             const isVideoFile = root.targetItem.isVideo || FileUtils.isVideo(root.targetItem.path);
                             const isImageFile = root.targetItem.isImage || FileUtils.isImage(root.targetItem.path);
 
-                            if (isVideoFile)
-                                mt.push({ text: qsTr("Trim / Clip..."), icon: "content_cut", action: "mediaClip" });
-                            if (!isAudioFile)
-                                mt.push({ text: qsTr("Aspect Ratio..."), icon: "aspect_ratio", action: "mediaAspect" });
+                            // Everything except conversion goes through ffmpeg
+                            if (MediaTools.ffmpegAvailable) {
+                                if (isVideoFile)
+                                    mt.push({ text: qsTr("Trim / Clip..."), icon: "content_cut", action: "mediaClip" });
+                                if (!isAudioFile)
+                                    mt.push({ text: qsTr("Aspect Ratio..."), icon: "aspect_ratio", action: "mediaAspect" });
 
-                            if (!isAudioFile) {
-                                mt.push({ isSeparator: true });
-                                mt.push({ text: qsTr("Rotate Right"), icon: "rotate_right", action: "mediaRotate:90" });
-                                mt.push({ text: qsTr("Rotate Left"), icon: "rotate_left", action: "mediaRotate:270" });
-                                mt.push({ text: qsTr("Flip Horizontal"), icon: "flip", action: "mediaFlip:h" });
-                                mt.push({ text: qsTr("Flip Vertical"), icon: "flip", action: "mediaFlip:v" });
-
-                                if (isImageFile) {
+                                if (!isAudioFile) {
                                     mt.push({ isSeparator: true });
-                                    mt.push({ text: qsTr("Circle Crop"), icon: "circle", action: "mediaCircle" });
+                                    mt.push({ text: qsTr("Rotate Right"), icon: "rotate_right", action: "mediaRotate:90" });
+                                    mt.push({ text: qsTr("Rotate Left"), icon: "rotate_left", action: "mediaRotate:270" });
+                                    mt.push({ text: qsTr("Flip Horizontal"), icon: "flip", action: "mediaFlip:h" });
+                                    mt.push({ text: qsTr("Flip Vertical"), icon: "flip", action: "mediaFlip:v" });
+
+                                    if (isImageFile) {
+                                        mt.push({ isSeparator: true });
+                                        mt.push({ text: qsTr("Circle Crop"), icon: "circle", action: "mediaCircle" });
+                                    }
                                 }
                             }
 
