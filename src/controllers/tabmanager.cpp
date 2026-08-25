@@ -247,7 +247,7 @@ void TabManager::setCurrentIndex(int index) {
     }
 }
 
-void TabManager::newTab(const QString& path) {
+void TabManager::newTab(const QString& path, bool activate) {
     QString p = path.isEmpty() ? (currentTab() ? currentTab()->currentPath() : QDir::homePath()) : path;
     int idx = m_tabs.size();
     beginInsertRows(QModelIndex(), idx, idx);
@@ -283,7 +283,8 @@ void TabManager::newTab(const QString& path) {
     m_tabs.append(tab);
     endInsertRows();
     emit countChanged();
-    setCurrentIndex(idx);
+    if (activate)
+        setCurrentIndex(idx);
     saveSession();
 }
 

@@ -222,9 +222,6 @@ StyledRect {
                                 root.filesDropped(filtered, destDir, globalPos.x, globalPos.y);
                             }
                             drop.accept();
-
-                            // Jump to the tab so the result of the drop is visible
-                            TabManager.currentIndex = tabItem.index;
                         }
                     }
 

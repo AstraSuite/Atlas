@@ -264,7 +264,7 @@ ApplicationWindow {
 
                             onItemOpenedInNewTab: item => {
                                 if (item && item.isDir)
-                                    TabManager.newTab(item.path);
+                                    TabManager.newTab(item.path, false);
                             }
 
                             onItemOpened: (item, pane) => {
@@ -330,7 +330,7 @@ ApplicationWindow {
                         AppIntegration.openWithDefault(item.path);
                     }
                 } else if (action === "openNewTab" && item) {
-                    TabManager.newTab(item.path);
+                    TabManager.newTab(item.path, false);
                 } else if (action === "openNewWindow" && item) {
                     AppIntegration.openNewWindow(item.path);
                 } else if (action === "openSplit" && item) {

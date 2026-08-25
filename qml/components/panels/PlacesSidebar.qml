@@ -231,7 +231,7 @@ StyledRect {
 
                             onClicked: mouse => {
                                 if (mouse.button === Qt.MiddleButton) {
-                                    TabManager.newTab(placeItem.path);
+                                    TabManager.newTab(placeItem.path, false);
                                 } else if (mouse.button === Qt.RightButton) {
                                     let globalPos = mapToItem(null, mouse.x, mouse.y);
                                     root.placeContextMenuRequested(globalPos.x, globalPos.y, placeItem.index, placeItem.name, placeItem.path, placeItem.iconName, placeItem.isCustom, placeItem.isTrash);
@@ -377,7 +377,7 @@ StyledRect {
 
                             onClicked: mouse => {
                                 if (mouse.button === Qt.MiddleButton) {
-                                    TabManager.newTab(netItem.path);
+                                    TabManager.newTab(netItem.path, false);
                                 } else if (mouse.button === Qt.RightButton) {
                                     let globalPos = mapToItem(null, mouse.x, mouse.y);
                                     root.placeContextMenuRequested(globalPos.x, globalPos.y, netItem.index, netItem.name, netItem.path, netItem.iconName, netItem.isCustom, netItem.isTrash);
@@ -568,7 +568,7 @@ StyledRect {
                             onClicked: mouse => {
                                 if (mouse.button === Qt.MiddleButton) {
                                     if (driveItem.isMounted && driveItem.mountPoint && driveItem.mountPoint.length > 0) {
-                                        TabManager.newTab(driveItem.mountPoint);
+                                        TabManager.newTab(driveItem.mountPoint, false);
                                     } else {
                                         DriveManager.mountDevice(driveItem.devicePath, -1);
                                     }

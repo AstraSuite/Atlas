@@ -111,7 +111,7 @@ public:
     TabItem* currentTab() const;
     int count() const { return static_cast<int>(m_tabs.size()); }
 
-    Q_INVOKABLE void newTab(const QString& path = "");
+    Q_INVOKABLE void newTab(const QString& path = "", bool activate = true);
     Q_INVOKABLE void closeTab(int index);
     void saveSession();
     Q_INVOKABLE void duplicateTab(int index);

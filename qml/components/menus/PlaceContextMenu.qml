@@ -217,7 +217,7 @@ MouseArea {
                                     TabManager.currentTab.currentPath = root.targetPath;
                                 }
                             } else if (act === "openTab") {
-                                TabManager.newTab(root.targetPath);
+                                TabManager.newTab(root.targetPath, false);
                             } else if (act === "openWindow") {
                                 AppIntegration.openNewWindow(root.targetPath);
                             } else if (act === "openSplit") {
