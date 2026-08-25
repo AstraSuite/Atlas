@@ -14,6 +14,7 @@ StyledRect {
     property string title: AppController.title || qsTr("Select a file")
     property bool showHidden: AppController.showHidden
     property bool directoryOnly: AppController.directoryOnly
+    readonly property bool multiple: AppController.multiple
     readonly property bool saveMode: AppController.saveMode
     property string saveName: AppController.suggestedName
     readonly property string savePath: currentPath === "/" ? "/" + saveName : currentPath + "/" + saveName
@@ -21,6 +22,7 @@ StyledRect {
     property real zoomLevel: 80
 
     signal accepted(string path)
+    signal acceptedMultiple(var paths)
     signal rejected()
 
     function pathToCwd(fullPath) {

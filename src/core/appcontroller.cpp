@@ -133,6 +133,13 @@ void AppController::setDirectoryOnly(bool dirOnly) {
     }
 }
 
+void AppController::setMultiple(bool multiple) {
+    if (m_multiple != multiple) {
+        m_multiple = multiple;
+        emit multipleChanged();
+    }
+}
+
 void AppController::setConfirmPermanentDelete(bool confirm) {
     if (m_confirmPermanentDelete != confirm) {
         m_confirmPermanentDelete = confirm;
@@ -496,6 +503,14 @@ void AppController::accept(const QString& path) {
     emit selectedPathChanged();
     emit accepted(path);
     std::cout << path.toStdString() << std::endl;
+    QGuiApplication::exit(0);
+}
+
+void AppController::acceptPaths(const QStringList& paths) {
+    if (paths.isEmpty()) return;
+    for (const QString& path : paths) {
+        std::cout << path.toStdString() << std::endl;
+    }
     QGuiApplication::exit(0);
 }
 

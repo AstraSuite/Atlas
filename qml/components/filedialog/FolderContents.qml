@@ -11,6 +11,7 @@ Item {
     required property var dialog
     readonly property var currentItem: view.currentItem
     readonly property real zoomSize: root.dialog.zoomLevel
+    property var selectedPaths: []
 
     FileSystemModel {
         id: fsModel
@@ -18,7 +19,10 @@ Item {
         showHidden: root.dialog.showHidden
         caseSensitiveSort: AppController.caseSensitiveSort
         showDirsFirst: AppController.showDirsFirst
-        onPathChanged: view.currentIndex = -1
+        onPathChanged: {
+            view.currentIndex = -1;
+            root.selectedPaths = [];
+        }
     }
 
     StyledRect {
@@ -176,7 +180,7 @@ Item {
             width: view.cellWidth
             height: view.cellHeight
 
-            readonly property bool isSelected: view.currentIndex === index
+            readonly property bool isSelected: view.currentIndex === index || root.selectedPaths.indexOf(delegateContainer.modelData ? delegateContainer.modelData.path : "") !== -1
             readonly property bool isHidden: delegateContainer.modelData ? (delegateContainer.modelData.isHidden || delegateContainer.modelData.name.startsWith('.')) : false
 
             // Uniform Card Highlight matching FileGridView
@@ -255,6 +259,19 @@ Item {
 
                     onClicked: mouse => {
                         view.currentIndex = delegateContainer.index;
+                        if (root.dialog.multiple && (mouse.modifiers & Qt.ControlModifier) && !delegateContainer.modelData.isDir) {
+                            let path = delegateContainer.modelData.path;
+                            let idx = root.selectedPaths.indexOf(path);
+                            let arr = root.selectedPaths.slice();
+                            if (idx === -1)
+                                arr.push(path);
+                            else
+                                arr.splice(idx, 1);
+                            root.selectedPaths = arr;
+                            return;
+                        }
+                        if (root.selectedPaths.length > 0 && !AppController.singleClick)
+                            root.selectedPaths = [];
                         if (AppController.singleClick && mouse.button === Qt.LeftButton) {
                             root.handleItemClick(delegateContainer.modelData);
                         }
@@ -368,6 +385,11 @@ Item {
     }
 
     function triggerAcceptOrOpen() {
+        if (root.dialog.multiple && root.selectedPaths.length > 0) {
+            root.dialog.acceptedMultiple(root.selectedPaths);
+            return;
+        }
+
         if (currentItem && currentItem.modelData) {
             if (currentItem.modelData.isDir) {
                 if (root.dialog.directoryOnly) {

@@ -22,6 +22,7 @@ class AppController : public QObject {
     Q_PROPERTY(QString filterLabel READ filterLabel WRITE setFilterLabel NOTIFY filterLabelChanged)
     Q_PROPERTY(QStringList filters READ filters WRITE setFilters NOTIFY filtersChanged)
     Q_PROPERTY(bool directoryOnly READ directoryOnly WRITE setDirectoryOnly NOTIFY directoryOnlyChanged)
+    Q_PROPERTY(bool multiple READ multiple WRITE setMultiple NOTIFY multipleChanged)
     Q_PROPERTY(bool saveMode READ saveMode NOTIFY saveModeChanged)
     Q_PROPERTY(QString suggestedName READ suggestedName NOTIFY suggestedNameChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
@@ -87,7 +88,9 @@ public:
     void setFilters(const QStringList& filters);
 
     [[nodiscard]] bool directoryOnly() const { return m_directoryOnly; }
+    [[nodiscard]] bool multiple() const { return m_multiple; }
     void setDirectoryOnly(bool dirOnly);
+    void setMultiple(bool multiple);
 
     [[nodiscard]] bool saveMode() const { return m_saveMode; }
     void setSaveMode(bool save);
@@ -202,6 +205,7 @@ public:
     Q_INVOKABLE void resetScrollSpeed();
 
     Q_INVOKABLE void accept(const QString& path);
+    Q_INVOKABLE void acceptPaths(const QStringList& paths);
     Q_INVOKABLE void reject();
 
 signals:
@@ -210,6 +214,7 @@ signals:
     void filterLabelChanged();
     void filtersChanged();
     void directoryOnlyChanged();
+    void multipleChanged();
     void saveModeChanged();
     void suggestedNameChanged();
     void showHiddenChanged();
@@ -255,6 +260,7 @@ private:
     QString m_filterLabel = "All files";
     QStringList m_filters = { "*" };
     bool m_directoryOnly = false;
+    bool m_multiple = false;
     bool m_saveMode = false;
     QString m_suggestedName;
     bool m_showHidden = false;

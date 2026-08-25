@@ -85,6 +85,7 @@ int main(int argc, char* argv[]) {
     QCommandLineOption dirOnlyOption(QStringList{ "directory-only" }, "Select directories only");
     QCommandLineOption saveOption(QStringList{ "save" }, "Pick a destination for saving rather than an existing file");
     QCommandLineOption nameOption(QStringList{ "name" }, "Suggested file name when saving", "name");
+    QCommandLineOption multipleOption(QStringList{ "multiple" }, "Allow selecting multiple files");
     QCommandLineOption hiddenOption(QStringList{ "hidden" }, "Show hidden files by default");
     QCommandLineOption lightOption(QStringList{ "light" }, "Force light theme");
     QCommandLineOption darkOption(QStringList{ "dark" }, "Force dark theme");
@@ -97,6 +98,7 @@ int main(int argc, char* argv[]) {
     parser.addOption(dirOnlyOption);
     parser.addOption(saveOption);
     parser.addOption(nameOption);
+    parser.addOption(multipleOption);
     parser.addOption(hiddenOption);
     parser.addOption(lightOption);
     parser.addOption(darkOption);
@@ -157,6 +159,7 @@ int main(int argc, char* argv[]) {
         controller->setFilters(filters);
     }
     controller->setDirectoryOnly(parser.isSet(dirOnlyOption));
+    controller->setMultiple(parser.isSet(multipleOption));
     controller->setSaveMode(parser.isSet(saveOption));
     if (parser.isSet(nameOption))
         controller->setSuggestedName(parser.value(nameOption));

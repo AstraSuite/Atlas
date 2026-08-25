@@ -192,10 +192,14 @@ StyledRect {
             StateLayer {
                 disabled: root.dialog.saveMode
                     ? root.dialog.saveName.trim().length === 0
-                    : !root.dialog.selectionValid
+                    : (root.dialog.multiple && root.folder && root.folder.selectedPaths.length > 0)
+                        ? false
+                        : !root.dialog.selectionValid
                 onClicked: {
                     if (root.dialog.saveMode) {
                         root.commitSave();
+                    } else if (root.dialog.multiple && root.folder && root.folder.selectedPaths.length > 0) {
+                        root.dialog.acceptedMultiple(root.folder.selectedPaths);
                     } else if (root.dialog.selectionValid) {
                         if (root.dialog.directoryOnly) {
                             if (root.folder && root.folder.currentItem && root.folder.currentItem.modelData && root.folder.currentItem.modelData.isDir) {
@@ -218,14 +222,16 @@ StyledRect {
 
                 text: root.dialog.saveMode
                     ? (root.dialog.saveWouldOverwrite ? qsTr("Overwrite") : qsTr("Save"))
-                    : (root.dialog.directoryOnly ? qsTr("Select Folder") : qsTr("Select"))
+                    : (root.dialog.directoryOnly ? qsTr("Select Folder")
+                        : (root.dialog.multiple && root.folder && root.folder.selectedPaths.length > 0
+                            ? qsTr("Select %1").arg(root.folder.selectedPaths.length) : qsTr("Select")))
                 color: {
                     if (root.dialog.saveMode) {
                         if (root.dialog.saveName.trim().length === 0)
                             return Colours.palette.m3outline;
                         return root.dialog.saveWouldOverwrite ? Colours.palette.m3error : Colours.palette.m3onSurface;
                     }
-                return root.dialog.selectionValid
+                return (root.dialog.selectionValid || (root.dialog.multiple && root.folder && root.folder.selectedPaths.length > 0))
                     ? Colours.palette.m3onSurface
                     : Colours.palette.m3outline;
                 }

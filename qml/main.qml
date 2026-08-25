@@ -1065,6 +1065,7 @@ ApplicationWindow {
         anchors.fill: parent
         visible: pickerActive
         onAccepted: path => AppController.accept(path)
+        onAcceptedMultiple: paths => AppController.acceptPaths(paths)
         onRejected: AppController.reject()
     }
 }
