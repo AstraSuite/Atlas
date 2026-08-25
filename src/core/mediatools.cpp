@@ -58,8 +58,8 @@ QStringList MediaTools::videoCodecArgs(const QString& ext) {
 }
 
 MediaTools* MediaTools::instance() {
-    static MediaTools inst;
-    return &inst;
+    static auto* s_instance = new MediaTools();
+    return s_instance;
 }
 
 MediaTools::MediaTools(QObject* parent)
