@@ -47,6 +47,7 @@ class AppController : public QObject {
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst NOTIFY showDirsFirstChanged)
     Q_PROPERTY(bool caseSensitiveSort READ caseSensitiveSort WRITE setCaseSensitiveSort NOTIFY caseSensitiveSortChanged)
     Q_PROPERTY(bool directorySpecificViews READ directorySpecificViews WRITE setDirectorySpecificViews NOTIFY directorySpecificViewsChanged)
+    Q_PROPERTY(bool vimMotions READ vimMotions WRITE setVimMotions NOTIFY vimMotionsChanged)
     Q_PROPERTY(bool showFreeSpace READ showFreeSpace WRITE setShowFreeSpace NOTIFY showFreeSpaceChanged)
     Q_PROPERTY(int placesIconSize READ placesIconSize WRITE setPlacesIconSize NOTIFY placesIconSizeChanged)
     Q_PROPERTY(int iconZoomLevel READ iconZoomLevel WRITE setIconZoomLevel NOTIFY iconZoomLevelChanged)
@@ -154,7 +155,9 @@ public:
     [[nodiscard]] bool caseSensitiveSort() const { return m_caseSensitiveSort; }
     void setCaseSensitiveSort(bool sensitive);
     [[nodiscard]] bool directorySpecificViews() const { return m_directorySpecificViews; }
+    [[nodiscard]] bool vimMotions() const { return m_vimMotions; }
     void setDirectorySpecificViews(bool enabled);
+    void setVimMotions(bool enabled);
     Q_INVOKABLE QVariantMap directoryView(const QString& path) const;
     Q_INVOKABLE void rememberDirectoryView(const QString& path, int viewMode, int sortField, int sortOrder);
     Q_INVOKABLE void forgetDirectoryViews();
@@ -239,6 +242,7 @@ signals:
     void showDirsFirstChanged();
     void caseSensitiveSortChanged();
     void directorySpecificViewsChanged();
+    void vimMotionsChanged();
     void showFreeSpaceChanged();
     void placesIconSizeChanged();
     void iconZoomLevelChanged();
@@ -285,6 +289,7 @@ private:
     bool m_showDirsFirst = true;
     bool m_caseSensitiveSort = false;
     bool m_directorySpecificViews = false;
+    bool m_vimMotions = true;
     QVariantMap m_directoryViews;
     bool m_showFreeSpace = true;
     int m_placesIconSize = 20;

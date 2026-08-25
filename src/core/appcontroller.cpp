@@ -48,6 +48,7 @@ AppController::AppController(QObject* parent)
     m_showDirsFirst = settings.value("preferences/showDirsFirst", true).toBool();
     m_caseSensitiveSort = settings.value("preferences/caseSensitiveSort", false).toBool();
     m_directorySpecificViews = settings.value("preferences/directorySpecificViews", false).toBool();
+    m_vimMotions = settings.value("preferences/vimMotions", true).toBool();
 
     const QByteArray viewsJson = settings.value("preferences/directoryViews").toString().toUtf8();
     if (!viewsJson.isEmpty())
@@ -191,6 +192,17 @@ void AppController::setCaseSensitiveSort(bool sensitive) {
         settings.setValue("preferences/caseSensitiveSort", sensitive);
         emit caseSensitiveSortChanged();
     }
+}
+
+void AppController::setVimMotions(bool enabled) {
+    if (m_vimMotions == enabled)
+        return;
+
+    m_vimMotions = enabled;
+
+    QSettings settings("astra-atlas", "atlas");
+    settings.setValue("preferences/vimMotions", enabled);
+    emit vimMotionsChanged();
 }
 
 void AppController::setDirectorySpecificViews(bool enabled) {

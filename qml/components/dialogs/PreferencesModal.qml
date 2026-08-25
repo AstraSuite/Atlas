@@ -363,6 +363,14 @@ MouseArea {
                                 }
 
                                 ToggleRow {
+                                    icon: "keyboard"
+                                    text: qsTr("Vim Motions")
+                                    subtext: qsTr("Move with H, J, K and L instead of jumping to those letters")
+                                    checked: AppController.vimMotions
+                                    onToggled: checked => AppController.vimMotions = checked
+                                }
+
+                                ToggleRow {
                                     icon: "folder_managed"
                                     text: qsTr("Remember View per Folder")
                                     subtext: qsTr("Keep the view mode and sort order each folder was last left in")

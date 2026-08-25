@@ -292,7 +292,7 @@ Item {
                         event.accepted = true;
                         return;
                     }
-                } else if (event.key === Qt.Key_H || event.key === Qt.Key_Left) {
+                } else if (event.key === Qt.Key_Left || (AppController.vimMotions && event.key === Qt.Key_H)) {
                     if (view.currentIndex === -1 && root.model && root.model.count > 0) {
                         view.currentIndex = 0;
                     } else {
@@ -300,7 +300,7 @@ Item {
                     }
                     event.accepted = true;
                     return;
-                } else if (event.key === Qt.Key_J || event.key === Qt.Key_Down) {
+                } else if (event.key === Qt.Key_Down || (AppController.vimMotions && event.key === Qt.Key_J)) {
                     if (view.currentIndex === -1 && root.model && root.model.count > 0) {
                         view.currentIndex = 0;
                     } else {
@@ -308,7 +308,7 @@ Item {
                     }
                     event.accepted = true;
                     return;
-                } else if (event.key === Qt.Key_K || event.key === Qt.Key_Up) {
+                } else if (event.key === Qt.Key_Up || (AppController.vimMotions && event.key === Qt.Key_K)) {
                     if (view.currentIndex === -1 && root.model && root.model.count > 0) {
                         view.currentIndex = 0;
                     } else {
@@ -316,7 +316,7 @@ Item {
                     }
                     event.accepted = true;
                     return;
-                } else if (event.key === Qt.Key_L || event.key === Qt.Key_Right) {
+                } else if (event.key === Qt.Key_Right || (AppController.vimMotions && event.key === Qt.Key_L)) {
                     if (view.currentIndex === -1 && root.model && root.model.count > 0) {
                         view.currentIndex = 0;
                     } else {
