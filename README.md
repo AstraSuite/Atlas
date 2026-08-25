@@ -1,4 +1,8 @@
-# Atlas
+<p align="center">
+  <img src="assets/astra-atlas.svg" width="140" alt="Atlas Logo">
+</p>
+
+<h1 align="center">Atlas</h1>
 
 Atlas is a fast, lightweight Material Design 3 file manager and file picker built with Qt 6 and QML.
 
