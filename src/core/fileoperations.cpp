@@ -17,6 +17,8 @@
 #include <QDrag>
 #include <QMimeData>
 #include <QMimeDatabase>
+#include <QTimer>
+#include <QPointer>
 #include <QUrl>
 #include <QPixmap>
 #include <QPainter>
@@ -1003,7 +1005,7 @@ void FileOperations::cancelOperation() {
 }
 
 void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth, int cardHeight, int iconSize) {
-    if (filePaths.isEmpty()) return;
+    if (filePaths.isEmpty() || m_dragInFlight) return;
 
     m_activeDragFiles = filePaths;
     emit activeDragFilesChanged();
@@ -1130,10 +1132,22 @@ void FileOperations::startNativeDrag(const QStringList& filePaths, int cardWidth
     drag->setPixmap(pixmap);
     drag->setHotSpot(QPoint(cardW / 2, cardH / 2));
 
-    drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::CopyAction);
-
-    m_activeDragFiles.clear();
-    emit activeDragFilesChanged();
+    // Defer exec() out of the caller's QML signal handler: exec() runs a
+    // nested event loop, and if the dragged item gets destroyed mid-drag
+    // (e.g. switching tabs via hover-to-open resets the view), returning
+    // into the destroyed handler frame would abort. QDrag is parented to
+    // this long-lived object and cleaned up after the drop.
+    m_dragInFlight = true;
+    QPointer<QDrag> dragGuard(drag);
+    QTimer::singleShot(0, this, [this, dragGuard]() {
+        if (dragGuard)
+            dragGuard->exec(Qt::CopyAction | Qt::MoveAction, Qt::CopyAction);
+        if (dragGuard)
+            dragGuard->deleteLater();
+        m_dragInFlight = false;
+        m_activeDragFiles.clear();
+        emit activeDragFilesChanged();
+    });
 }
 
 void FileOperations::addCompletedTask(bool success, const QString& message, const QString& url) {

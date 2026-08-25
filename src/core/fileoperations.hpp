@@ -179,6 +179,7 @@ private:
     FileOperationProgress* m_progress = nullptr;
     QStringList m_clipboardFiles;
     QStringList m_activeDragFiles;
+    bool m_dragInFlight = false;
     QVariantList m_completedTasks;
     QString m_lastCompletedTaskKey;
     QElapsedTimer m_lastCompletedTaskTimer;
