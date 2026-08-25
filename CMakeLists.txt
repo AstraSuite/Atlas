@@ -21,7 +21,6 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     Concurrent
     Svg
     Multimedia
-    DBus
     Network
 )
 
@@ -216,28 +215,7 @@ else()
     message(STATUS "Exiv2 not found - building without EXIF metadata support")
 endif()
 
-# Native XDG Desktop Portal FileChooser daemon for Atlas
-qt_add_executable(xdg_desktop_portal_astra_atlas
-    src/portal/main.cpp
-    src/portal/filechooserportal.hpp
-    src/portal/filechooserportal.cpp
-)
-
-set_target_properties(xdg_desktop_portal_astra_atlas PROPERTIES
-    OUTPUT_NAME "xdg-desktop-portal-astra-atlas"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-target_include_directories(xdg_desktop_portal_astra_atlas PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/portal
-)
-
-target_link_libraries(xdg_desktop_portal_astra_atlas PRIVATE
-    Qt6::Core
-    Qt6::DBus
-)
-
-install(TARGETS atlas_app xdg_desktop_portal_astra_atlas
+install(TARGETS atlas_app
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
@@ -255,52 +233,3 @@ install(FILES assets/atlas.svg
     DESTINATION ${CMAKE_INSTALL_DATADIR}/pixmaps
     RENAME atlas.svg
 )
-
-# Native XDG Desktop Portal definition & D-Bus service
-install(FILES assets/portal/astra-atlas.portal
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/xdg-desktop-portal/portals
-)
-
-install(FILES assets/portal/org.freedesktop.impl.portal.desktop.astra-atlas.service
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/services
-)
-
-# OpenRC / non-systemd user portal lifecycle helper
-install(PROGRAMS assets/portal/openrc-user-portal.sh
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-    RENAME atlas-portal-openrc
-)
-
-# Portal configuration templates
-install(FILES
-    assets/portal/portals.conf
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/atlas/portal
-)
-
-# Detect init system to decide service files to install
-set(INIT_SYSTEM "auto" CACHE STRING "Init system to install service files for (auto, openrc, systemd, none)")
-
-if(INIT_SYSTEM STREQUAL "auto")
-    if(EXISTS "/etc/init.d" OR EXISTS "/sbin/openrc" OR EXISTS "/usr/bin/openrc" OR EXISTS "/run/openrc")
-        set(DETECTED_INIT "openrc")
-    elseif(EXISTS "/usr/lib/systemd" OR EXISTS "/etc/systemd")
-        set(DETECTED_INIT "systemd")
-    else()
-        set(DETECTED_INIT "none")
-    endif()
-else()
-    set(DETECTED_INIT "${INIT_SYSTEM}")
-endif()
-
-message(STATUS "Configuring service files for init system: ${DETECTED_INIT}")
-
-if(DETECTED_INIT STREQUAL "openrc")
-    install(PROGRAMS assets/init/xdg-desktop-portal-astra-atlas.initd
-        DESTINATION /etc/init.d
-        RENAME xdg-desktop-portal-astra-atlas
-    )
-elseif(DETECTED_INIT STREQUAL "systemd")
-    install(FILES assets/init/xdg-desktop-portal-astra-atlas.service
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/systemd/user
-    )
-endif()

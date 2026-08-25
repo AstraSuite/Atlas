@@ -39,7 +39,6 @@ Atlas is a fast, lightweight Material Design 3 file manager and file picker buil
 - `udisks2`: external drive and partition detection, mounting, and unmounting
 - `gvfs` and `gvfs-backends`: remote network filesystem mounting for SFTP, SMB, FTP, NFS, WebDAV
 - `gio`: command-line URI mounting and volume management
-- `xdg-desktop-portal`: desktop portal integration for system-wide file chooser dialogs
 - `xdg-utils`: default application launching via `xdg-open`
 - `git`: inline repository status, branch tracking, and Git modal operations
 - `ffmpeg`: media tools for video and audio (trim/clip, format conversion, rotate/flip)
@@ -68,7 +67,7 @@ cmake --build build
 ## Installation
 
 ```bash
-# Install system-wide: installs atlas, xdg-desktop-portal-astra-atlas, and services
+# Install system-wide: installs atlas and its desktop entry
 sudo cmake --install build
 
 # Or install to a custom prefix
@@ -82,46 +81,11 @@ cmake --install build --prefix ~/.local
 sudo xargs rm -fv < build/install_manifest.txt
 ```
 
-## XDG Desktop File Picker Setup
+## XDG Desktop File Picker
 
-Atlas provides a native XDG Desktop Portal backend `xdg-desktop-portal-astra-atlas` implementing `org.freedesktop.impl.portal.FileChooser`. This allows browsers, editors such as VS Code and VSCodium, and desktop applications to use Atlas as their default file open and save dialog.
+For desktop-wide portal integration (system file chooser dialogs in browsers, editors, and other applications), use [Wormhole](https://github.com/AstraSuite/Wormhole), which can drive Atlas in picker mode.
 
-### 1. Configure Portal Routing
-
-Ensure your portal configuration specifies Atlas for the `FileChooser` interface.
-
-Create or edit `~/.config/xdg-desktop-portal/portals.conf`:
-
-```ini
-[preferred]
-default=hyprland;gtk
-org.freedesktop.impl.portal.FileChooser=astra-atlas
-```
-
-### 2. Service Management
-
-Atlas automatically installs D-Bus activation files so `xdg-desktop-portal` can launch the backend on demand.
-
-#### OpenRC and Non-Systemd Desktops
-
-Run the user session portal helper:
-
-```bash
-atlas-portal-openrc
-```
-
-You can also add `atlas-portal-openrc &` to your compositor startup configuration such as `hyprland.conf`.
-
-#### Systemd Desktops
-
-Enable and start the user service:
-
-```bash
-systemctl --user daemon-reload
-systemctl --user enable --now xdg-desktop-portal-astra-atlas.service
-```
-
-### 3. Window Rules on Wayland Compositors
+### Window Rules on Wayland Compositors
 
 To ensure the picker opens centered as a floating modal, add a window rule for the picker title.
 
@@ -151,7 +115,7 @@ local rules = {
 }
 ```
 
-### 4. Direct CLI Picker Mode
+### Direct CLI Picker Mode
 
 Atlas can also be invoked directly in picker mode by scripts or external tools:
 

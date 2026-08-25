@@ -1,4 +1,0 @@
-[portal]
-DBusName=org.freedesktop.impl.portal.desktop.astra-atlas
-Interfaces=org.freedesktop.impl.portal.FileChooser;
-UseIn=wlroots;Hyprland;sway;Wayfire;river;generic;
