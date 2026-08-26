@@ -10,6 +10,13 @@ StyledRect {
     required property var dialog
     required property var folder
 
+    function focusSaveName(): void {
+        saveNameInput.forceActiveFocus();
+        const name = root.dialog.saveName;
+        const dot = name.lastIndexOf(".");
+        saveNameInput.select(0, dot > 0 ? dot : name.length);
+    }
+
     function commitSave() {
         if (!root.dialog.saveMode)
             return;
