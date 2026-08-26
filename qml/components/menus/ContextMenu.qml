@@ -143,7 +143,7 @@ MouseArea {
                         if (AppController.menuShowSecondaryEditor && root.customActions && root.customActions.length > 0) {
                             for (let i = 0; i < root.customActions.length; ++i) {
                                 let ca = root.customActions[i];
-                                list.push({ text: ca.name, icon: ca.icon || "code", action: "custom:" + ca.id });
+                                list.push({ text: ca.name, icon: ca.icon || "code", themeIcon: ca.themeIcon === true, action: "custom:" + ca.id });
                             }
                         }
 
@@ -442,9 +442,16 @@ MouseArea {
                 spacing: Tokens.spacing.small
 
                 MaterialIcon {
+                    visible: modelData.themeIcon !== true
                     text: modelData.icon || ""
                     color: modelData.action === "delete" || modelData.action === "emptyTrash" ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
                     fontStyle: Tokens.font.icon.small
+                }
+
+                CachingIconImage {
+                    visible: modelData.themeIcon === true
+                    implicitSize: 18
+                    source: visible ? FileUtils.iconForName(modelData.icon, "application-x-executable") : ""
                 }
 
                 StyledText {

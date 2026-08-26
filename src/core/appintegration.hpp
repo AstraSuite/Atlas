@@ -70,6 +70,7 @@ private:
         QStringList mimeTypes;
         bool isScript = false;
         QString scriptPath;
+        bool themeIcon = false;
     };
 
     QList<DesktopApp> m_apps;
