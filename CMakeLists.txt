@@ -148,6 +148,7 @@ qt_add_qml_module(atlas_app
         qml/components/dialogs/OperationsModal.qml
         qml/components/dialogs/BulkRenameModal.qml
         qml/components/dialogs/ConfirmDeleteModal.qml
+        qml/components/dialogs/RunFileModal.qml
         qml/components/dialogs/VectorBloomOverlay.qml
         qml/components/dialogs/RunnerGameModal.qml
         qml/components/media/ImageViewer.qml
