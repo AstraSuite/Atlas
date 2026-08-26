@@ -9,6 +9,7 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QMimeDatabase>
+#include <QMimeType>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QSet>
@@ -270,7 +271,7 @@ void AppIntegration::openWithApp(const QString& execLine, const QString& filePat
     QProcess::startDetached("/bin/sh", QStringList{ "-c", cmd });
 }
 
-void AppIntegration::openInTerminal(const QString& directoryPath) {
+static QString resolveTerminal() {
     QString term = qEnvironmentVariable("TERMINAL");
     if (term.isEmpty()) {
         static const QStringList candidates = { "foot", "kitty", "alacritty", "ghostty", "wezterm", "konsole", "gnome-terminal", "xterm" };
@@ -281,9 +282,54 @@ void AppIntegration::openInTerminal(const QString& directoryPath) {
             }
         }
     }
-    if (term.isEmpty()) term = "xterm";
+    if (term.isEmpty()) term = QStringLiteral("xterm");
+    return term;
+}
 
-    QProcess::startDetached(term, QStringList(), directoryPath);
+void AppIntegration::openInTerminal(const QString& directoryPath) {
+    QProcess::startDetached(resolveTerminal(), QStringList(), directoryPath);
+}
+
+bool AppIntegration::isRunnable(const QString& filePath) const {
+    const QFileInfo info(filePath);
+    if (!info.isFile() || !info.isExecutable())
+        return false;
+
+    QMimeDatabase db;
+    const QMimeType type = db.mimeTypeForFile(info);
+
+    static const QStringList runnable = {
+        QStringLiteral("application/x-executable"),
+        QStringLiteral("application/x-pie-executable"),
+        QStringLiteral("application/x-sharedlib"),
+        QStringLiteral("application/x-shellscript")
+    };
+    for (const QString& candidate : runnable) {
+        if (type.inherits(candidate))
+            return true;
+    }
+
+    if (!type.inherits(QStringLiteral("text/plain")))
+        return false;
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly))
+        return false;
+    return file.read(2) == QByteArrayLiteral("#!");
+}
+
+void AppIntegration::runExecutable(const QString& filePath, bool inTerminal) {
+    const QFileInfo info(filePath);
+    const QString target = info.absoluteFilePath();
+    const QString workingDir = info.absolutePath();
+
+    if (!inTerminal) {
+        QProcess::startDetached(target, QStringList(), workingDir);
+        return;
+    }
+
+    const QString term = resolveTerminal();
+    QProcess::startDetached(term, QStringList{ QStringLiteral("-e"), target }, workingDir);
 }
 
 void AppIntegration::openNewWindow(const QString& path) {

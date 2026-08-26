@@ -268,7 +268,10 @@ ApplicationWindow {
                             }
 
                             onItemOpened: (item, pane) => {
-                                AppIntegration.openWithDefault(item.path);
+                                if (AppIntegration.isRunnable(item.path))
+                                    runFileModal.open(item.path);
+                                else
+                                    AppIntegration.openWithDefault(item.path);
                             }
                         }
 
@@ -508,6 +511,11 @@ ApplicationWindow {
                 else
                     FileOperations.moveToTrash(paths);
             }
+        }
+
+        // Executable File Run Prompt
+        RunFileModal {
+            id: runFileModal
         }
 
         // Places & Devices Management Modal

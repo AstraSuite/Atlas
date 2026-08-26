@@ -29,6 +29,8 @@ public:
     Q_INVOKABLE void openWithDefault(const QString& filePath);
     Q_INVOKABLE void openWithApp(const QString& execLine, const QString& filePath);
     Q_INVOKABLE void openInTerminal(const QString& directoryPath);
+    Q_INVOKABLE bool isRunnable(const QString& filePath) const;
+    Q_INVOKABLE void runExecutable(const QString& filePath, bool inTerminal);
     Q_INVOKABLE void openNewWindow(const QString& path = QString());
 
     Q_INVOKABLE QVariantList getCustomActions(const QString& currentDir, const QStringList& selectedPaths, bool isDir, const QString& mimeType);
