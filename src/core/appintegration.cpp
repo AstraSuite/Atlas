@@ -481,7 +481,8 @@ void AppIntegration::scanCustomActions() {
                             "all",
                             mainMime.split(';', Qt::SkipEmptyParts),
                             false,
-                            {}
+                            {},
+                            !aIcon.isEmpty()
                         });
                     }
                 }
@@ -494,7 +495,8 @@ void AppIntegration::scanCustomActions() {
                     "all",
                     mainMime.split(';', Qt::SkipEmptyParts),
                     false,
-                    {}
+                    {},
+                    !mainIcon.isEmpty()
                 });
             }
         }
@@ -527,6 +529,7 @@ QVariantList AppIntegration::getCustomActions(const QString& currentDir, const Q
         map["id"] = act.id;
         map["name"] = act.name;
         map["icon"] = act.icon;
+        map["themeIcon"] = act.themeIcon;
         map["isScript"] = act.isScript;
         list.append(map);
     }
