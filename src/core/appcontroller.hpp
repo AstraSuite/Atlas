@@ -17,14 +17,6 @@ class AppController : public QObject {
     QML_ELEMENT
     QML_SINGLETON
 
-    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
-    Q_PROPERTY(QString initialDirectory READ initialDirectory WRITE setInitialDirectory NOTIFY initialDirectoryChanged)
-    Q_PROPERTY(QString filterLabel READ filterLabel WRITE setFilterLabel NOTIFY filterLabelChanged)
-    Q_PROPERTY(QStringList filters READ filters WRITE setFilters NOTIFY filtersChanged)
-    Q_PROPERTY(bool directoryOnly READ directoryOnly WRITE setDirectoryOnly NOTIFY directoryOnlyChanged)
-    Q_PROPERTY(bool multiple READ multiple WRITE setMultiple NOTIFY multipleChanged)
-    Q_PROPERTY(bool saveMode READ saveMode NOTIFY saveModeChanged)
-    Q_PROPERTY(QString suggestedName READ suggestedName NOTIFY suggestedNameChanged)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
     Q_PROPERTY(bool confirmPermanentDelete READ confirmPermanentDelete WRITE setConfirmPermanentDelete NOTIFY confirmPermanentDeleteChanged)
     Q_PROPERTY(bool restoreTabs READ restoreTabs WRITE setRestoreTabs NOTIFY restoreTabsChanged)
@@ -54,7 +46,6 @@ class AppController : public QObject {
     Q_PROPERTY(int sidebarWidth READ sidebarWidth WRITE setSidebarWidth NOTIFY sidebarWidthChanged)
     Q_PROPERTY(bool expandableFolders READ expandableFolders WRITE setExpandableFolders NOTIFY expandableFoldersChanged)
     Q_PROPERTY(int folderItemCount READ folderItemCount WRITE setFolderItemCount NOTIFY folderItemCountChanged)
-    Q_PROPERTY(QString selectedPath READ selectedPath NOTIFY selectedPathChanged)
     Q_PROPERTY(int iconThemeVersion READ iconThemeVersion NOTIFY iconThemeVersionChanged)
     Q_PROPERTY(bool menuShowSecondaryEditor READ menuShowSecondaryEditor WRITE setMenuShowSecondaryEditor NOTIFY menuPreferencesChanged)
     Q_PROPERTY(bool menuShowUploadOnline READ menuShowUploadOnline WRITE setMenuShowUploadOnline NOTIFY menuPreferencesChanged)
@@ -76,28 +67,8 @@ public:
     [[nodiscard]] int iconThemeVersion() const { return m_iconThemeVersion; }
     Q_INVOKABLE void triggerIconReload();
 
-    [[nodiscard]] QString title() const { return m_title; }
-    void setTitle(const QString& title);
-
     [[nodiscard]] QString initialDirectory() const { return m_initialDirectory; }
     void setInitialDirectory(const QString& dir);
-
-    [[nodiscard]] QString filterLabel() const { return m_filterLabel; }
-    void setFilterLabel(const QString& label);
-
-    [[nodiscard]] QStringList filters() const { return m_filters; }
-    void setFilters(const QStringList& filters);
-
-    [[nodiscard]] bool directoryOnly() const { return m_directoryOnly; }
-    [[nodiscard]] bool multiple() const { return m_multiple; }
-    void setDirectoryOnly(bool dirOnly);
-    void setMultiple(bool multiple);
-
-    [[nodiscard]] bool saveMode() const { return m_saveMode; }
-    void setSaveMode(bool save);
-    [[nodiscard]] QString suggestedName() const { return m_suggestedName; }
-    void setSuggestedName(const QString& name);
-    Q_INVOKABLE static bool fileExists(const QString& path);
 
     [[nodiscard]] bool showHidden() const { return m_showHidden; }
     [[nodiscard]] bool confirmPermanentDelete() const { return m_confirmPermanentDelete; }
@@ -176,29 +147,20 @@ public:
     [[nodiscard]] int folderItemCount() const { return m_folderItemCount; }
     void setFolderItemCount(int mode);
 
-    [[nodiscard]] QString selectedPath() const { return m_selectedPath; }
-    void setSelectedPath(const QString& path);
-
     [[nodiscard]] bool menuShowSecondaryEditor() const { return m_menuShowSecondaryEditor; }
-    void setMenuShowSecondaryEditor(bool val);
-
+    void setMenuShowSecondaryEditor(bool show);
     [[nodiscard]] bool menuShowUploadOnline() const { return m_menuShowUploadOnline; }
-    void setMenuShowUploadOnline(bool val);
-
+    void setMenuShowUploadOnline(bool show);
     [[nodiscard]] bool menuShowSendTo() const { return m_menuShowSendTo; }
-    void setMenuShowSendTo(bool val);
-
+    void setMenuShowSendTo(bool show);
     [[nodiscard]] bool menuShowCompress() const { return m_menuShowCompress; }
-    void setMenuShowCompress(bool val);
-
+    void setMenuShowCompress(bool show);
     [[nodiscard]] bool menuShowSymlink() const { return m_menuShowSymlink; }
-    void setMenuShowSymlink(bool val);
-
+    void setMenuShowSymlink(bool show);
     [[nodiscard]] bool menuShowTerminal() const { return m_menuShowTerminal; }
-    void setMenuShowTerminal(bool val);
-
+    void setMenuShowTerminal(bool show);
     [[nodiscard]] bool menuShowDelete() const { return m_menuShowDelete; }
-    void setMenuShowDelete(bool val);
+    void setMenuShowDelete(bool show);
 
     [[nodiscard]] bool showNetworkSection() const { return m_showNetworkSection; }
     void setShowNetworkSection(bool show);
@@ -207,19 +169,7 @@ public:
     void setScrollSpeed(qreal speed);
     Q_INVOKABLE void resetScrollSpeed();
 
-    Q_INVOKABLE void accept(const QString& path);
-    Q_INVOKABLE void acceptPaths(const QStringList& paths);
-    Q_INVOKABLE void reject();
-
 signals:
-    void titleChanged();
-    void initialDirectoryChanged();
-    void filterLabelChanged();
-    void filtersChanged();
-    void directoryOnlyChanged();
-    void multipleChanged();
-    void saveModeChanged();
-    void suggestedNameChanged();
     void showHiddenChanged();
     void confirmPermanentDeleteChanged();
     void restoreTabsChanged();
@@ -249,24 +199,14 @@ signals:
     void sidebarWidthChanged();
     void expandableFoldersChanged();
     void folderItemCountChanged();
-    void selectedPathChanged();
     void iconThemeVersionChanged();
     void menuPreferencesChanged();
     void showNetworkSectionChanged();
     void scrollSpeedChanged();
-    void accepted(const QString& path);
-    void rejected();
 
 private:
     explicit AppController(QObject* parent = nullptr);
-    QString m_title = "Select a file";
     QString m_initialDirectory;
-    QString m_filterLabel = "All files";
-    QStringList m_filters = { "*" };
-    bool m_directoryOnly = false;
-    bool m_multiple = false;
-    bool m_saveMode = false;
-    QString m_suggestedName;
     bool m_showHidden = false;
     bool m_confirmPermanentDelete = true;
     QString m_customDateFormat = QStringLiteral("yyyy-MM-dd hh:mm");
@@ -297,7 +237,6 @@ private:
     int m_sidebarWidth = 230;
     bool m_expandableFolders = false;
     int m_folderItemCount = 0;
-    QString m_selectedPath;
     int m_iconThemeVersion = 0;
     bool m_menuShowSecondaryEditor = true;
     bool m_menuShowUploadOnline = true;

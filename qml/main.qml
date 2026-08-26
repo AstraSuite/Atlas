@@ -9,20 +9,15 @@ import "components/views"
 import "components/statusbar"
 import "components/menus"
 import "components/dialogs"
-import "components/filedialog"
 import "components/media"
 import atlas
 
 ApplicationWindow {
     id: window
 
-    title: pickerActive
-        ? (AppController.title && AppController.title.length > 0
-            ? (AppController.title + " — Atlas File Picker")
-            : "Atlas File Picker")
-        : (TabManager.currentTab && TabManager.currentTab.title
-            ? (TabManager.currentTab.title + " — Atlas")
-            : "Atlas")
+    title: TabManager.currentTab && TabManager.currentTab.title
+        ? (TabManager.currentTab.title + " — Atlas")
+        : "Atlas"
 
     visible: true
     width: 1060
@@ -31,7 +26,6 @@ ApplicationWindow {
     minimumHeight: 400
     color: Colours.tPalette.m3surfaceContainerLowest
 
-    property bool pickerActive: typeof isPickerMode !== "undefined" ? isPickerMode : false
     property real zoomLevel: 80
 
     Component.onCompleted: zoomLevel = AppController.iconZoomLevel
@@ -79,7 +73,6 @@ ApplicationWindow {
     // Full File Manager Mode
     Item {
         anchors.fill: parent
-        visible: !pickerActive
 
         ColumnLayout {
             anchors.fill: parent
@@ -1065,15 +1058,5 @@ ApplicationWindow {
                 }
             }
         }
-    }
-
-    // Modal File Dialog Picker Mode
-    FileDialog {
-        id: fileDialogComponent
-        anchors.fill: parent
-        visible: pickerActive
-        onAccepted: path => AppController.accept(path)
-        onAcceptedMultiple: paths => AppController.acceptPaths(paths)
-        onRejected: AppController.reject()
     }
 }

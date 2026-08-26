@@ -7,7 +7,6 @@
 #include "iconprovider.hpp"
 #include <QFileInfo>
 #include <QSettings>
-#include <iostream>
 
 namespace atlas::core {
 
@@ -99,45 +98,9 @@ AppController* AppController::instance() {
     return s_instance;
 }
 
-void AppController::setTitle(const QString& title) {
-    if (m_title != title) {
-        m_title = title;
-        emit titleChanged();
-    }
-}
-
 void AppController::setInitialDirectory(const QString& dir) {
     if (m_initialDirectory != dir) {
         m_initialDirectory = dir;
-        emit initialDirectoryChanged();
-    }
-}
-
-void AppController::setFilterLabel(const QString& label) {
-    if (m_filterLabel != label) {
-        m_filterLabel = label;
-        emit filterLabelChanged();
-    }
-}
-
-void AppController::setFilters(const QStringList& filters) {
-    if (m_filters != filters) {
-        m_filters = filters;
-        emit filtersChanged();
-    }
-}
-
-void AppController::setDirectoryOnly(bool dirOnly) {
-    if (m_directoryOnly != dirOnly) {
-        m_directoryOnly = dirOnly;
-        emit directoryOnlyChanged();
-    }
-}
-
-void AppController::setMultiple(bool multiple) {
-    if (m_multiple != multiple) {
-        m_multiple = multiple;
-        emit multipleChanged();
     }
 }
 
@@ -490,45 +453,6 @@ void AppController::setPlacesIconSize(int size) {
         settings.setValue("preferences/placesIconSize", size);
         emit placesIconSizeChanged();
     }
-}
-
-void AppController::setSaveMode(bool save) {
-    if (m_saveMode != save) {
-        m_saveMode = save;
-        emit saveModeChanged();
-    }
-}
-
-void AppController::setSuggestedName(const QString& name) {
-    if (m_suggestedName != name) {
-        m_suggestedName = name;
-        emit suggestedNameChanged();
-    }
-}
-
-bool AppController::fileExists(const QString& path) {
-    return QFileInfo::exists(path);
-}
-
-void AppController::accept(const QString& path) {
-    m_selectedPath = path;
-    emit selectedPathChanged();
-    emit accepted(path);
-    std::cout << path.toStdString() << std::endl;
-    QGuiApplication::exit(0);
-}
-
-void AppController::acceptPaths(const QStringList& paths) {
-    if (paths.isEmpty()) return;
-    for (const QString& path : paths) {
-        std::cout << path.toStdString() << std::endl;
-    }
-    QGuiApplication::exit(0);
-}
-
-void AppController::reject() {
-    emit rejected();
-    QGuiApplication::exit(1);
 }
 
 void AppController::setMenuShowSecondaryEditor(bool val) {

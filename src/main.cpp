@@ -73,32 +73,16 @@ int main(int argc, char* argv[]) {
     (void)QIcon::fromTheme("folder");
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("Atlas: Modern Material 3 File Manager & File Picker");
+    parser.setApplicationDescription("Atlas: Modern Material 3 File Manager");
     parser.addHelpOption();
     parser.addVersionOption();
 
-    QCommandLineOption pickerOption(QStringList{ "p", "picker" }, "Launch in file picker mode");
-    QCommandLineOption titleOption(QStringList{ "t", "title" }, "Dialog title", "title");
     QCommandLineOption dirOption(QStringList{ "d", "directory" }, "Initial directory", "dir");
-    QCommandLineOption filterOption(QStringList{ "f", "filter" }, "File extensions filter, e.g. 'png,jpg' or '*.png,*.jpg'", "filter");
-    QCommandLineOption filterLabelOption(QStringList{ "l", "filter-label" }, "Filter label, e.g. 'Images'", "label");
-    QCommandLineOption dirOnlyOption(QStringList{ "directory-only" }, "Select directories only");
-    QCommandLineOption saveOption(QStringList{ "save" }, "Pick a destination for saving rather than an existing file");
-    QCommandLineOption nameOption(QStringList{ "name" }, "Suggested file name when saving", "name");
-    QCommandLineOption multipleOption(QStringList{ "multiple" }, "Allow selecting multiple files");
     QCommandLineOption hiddenOption(QStringList{ "hidden" }, "Show hidden files by default");
     QCommandLineOption lightOption(QStringList{ "light" }, "Force light theme");
     QCommandLineOption darkOption(QStringList{ "dark" }, "Force dark theme");
 
-    parser.addOption(pickerOption);
-    parser.addOption(titleOption);
     parser.addOption(dirOption);
-    parser.addOption(filterOption);
-    parser.addOption(filterLabelOption);
-    parser.addOption(dirOnlyOption);
-    parser.addOption(saveOption);
-    parser.addOption(nameOption);
-    parser.addOption(multipleOption);
     parser.addOption(hiddenOption);
     parser.addOption(lightOption);
     parser.addOption(darkOption);
@@ -133,36 +117,10 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    bool isPickerMode = parser.isSet(pickerOption) || parser.isSet(filterOption) || parser.isSet(dirOnlyOption) || parser.isSet(saveOption);
-
     auto* controller = atlas::core::AppController::instance();
-    controller->setTitle(parser.isSet(titleOption) ? parser.value(titleOption) : QStringLiteral("Select a file"));
     if (!initialDir.isEmpty()) {
         controller->setInitialDirectory(initialDir);
     }
-    controller->setFilterLabel(parser.isSet(filterLabelOption) ? parser.value(filterLabelOption) : QStringLiteral("All files"));
-
-    if (parser.isSet(filterOption)) {
-        QString filterStr = parser.value(filterOption);
-        QStringList filters;
-        for (QString f : filterStr.split(QChar(','), Qt::SkipEmptyParts)) {
-            f = f.trimmed();
-            if (f.startsWith("*."))
-                f = f.mid(2);
-            else if (f.startsWith('.'))
-                f = f.mid(1);
-            if (!f.isEmpty())
-                filters << f;
-        }
-        if (filters.isEmpty())
-            filters << "*";
-        controller->setFilters(filters);
-    }
-    controller->setDirectoryOnly(parser.isSet(dirOnlyOption));
-    controller->setMultiple(parser.isSet(multipleOption));
-    controller->setSaveMode(parser.isSet(saveOption));
-    if (parser.isSet(nameOption))
-        controller->setSuggestedName(parser.value(nameOption));
     if (parser.isSet(hiddenOption)) {
         controller->setShowHidden(true);
     }
@@ -210,7 +168,6 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("DriveManager", driveManager);
     engine.rootContext()->setContextProperty("NetworkManager", networkManager);
     engine.rootContext()->setContextProperty("RunnerGame", atlas::core::RunnerGame::instance());
-    engine.rootContext()->setContextProperty("isPickerMode", isPickerMode);
 
     const QUrl url(QStringLiteral("qrc:/qt/qml/atlas/qml/main.qml"));
     QObject::connect(
