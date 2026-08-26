@@ -25,6 +25,15 @@ StyledRect {
     signal acceptedMultiple(var paths)
     signal rejected()
 
+    function claimFocus(): void {
+        if (saveMode)
+            dialogButtons.focusSaveName();
+        else
+            folderContents.focusView();
+    }
+
+    onVisibleChanged: if (visible) Qt.callLater(claimFocus)
+
     function pathToCwd(fullPath) {
         if (!fullPath || fullPath === "") return ["Home"];
         let home = FileUtils.home;
@@ -67,6 +76,8 @@ StyledRect {
         if (AppController.initialDirectory && AppController.initialDirectory.length > 0) {
             cwd = pathToCwd(AppController.initialDirectory);
         }
+        if (visible)
+            Qt.callLater(claimFocus);
     }
 
     Connections {
@@ -179,6 +190,8 @@ StyledRect {
             }
 
             DialogButtons {
+                id: dialogButtons
+
                 Layout.fillWidth: true
                 dialog: root
                 folder: folderContents

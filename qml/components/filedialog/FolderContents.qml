@@ -371,6 +371,12 @@ Item {
         }
     }
 
+    function focusView() {
+        view.forceActiveFocus();
+        if (view.currentIndex === -1 && fsModel.count > 0)
+            view.currentIndex = 0;
+    }
+
     function handleItemClick(file) {
         if (!file) return;
         if (file.isDir) {
