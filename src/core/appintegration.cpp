@@ -256,13 +256,19 @@ void AppIntegration::openWithDefault(const QString& filePath) {
     QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
 }
 
+static QString shellQuote(const QString& value) {
+    QString escaped = value;
+    escaped.replace(QLatin1Char('\''), QLatin1String("'\\''"));
+    return QLatin1Char('\'') + escaped + QLatin1Char('\'');
+}
+
 void AppIntegration::openWithApp(const QString& execLine, const QString& filePath) {
     QString cmd = execLine;
     // Replace %f, %F, %u, %U with file path
-    cmd.replace("%f", QString("\"%1\"").arg(filePath));
-    cmd.replace("%F", QString("\"%1\"").arg(filePath));
-    cmd.replace("%u", QString("\"%1\"").arg(QUrl::fromLocalFile(filePath).toString()));
-    cmd.replace("%U", QString("\"%1\"").arg(QUrl::fromLocalFile(filePath).toString()));
+    cmd.replace("%f", shellQuote(filePath));
+    cmd.replace("%F", shellQuote(filePath));
+    cmd.replace("%u", shellQuote(QUrl::fromLocalFile(filePath).toString()));
+    cmd.replace("%U", shellQuote(QUrl::fromLocalFile(filePath).toString()));
     cmd.remove("%i");
     cmd.remove("%c");
     cmd.remove("%k");
@@ -477,7 +483,7 @@ void AppIntegration::scanCustomActions() {
                 "script:" + fi.absoluteFilePath(),
                 displayName,
                 "terminal",
-                QString("\"%1\" %F").arg(fi.absoluteFilePath()),
+                shellQuote(fi.absoluteFilePath()) + QStringLiteral(" %F"),
                 "all",
                 {},
                 true,
@@ -604,24 +610,24 @@ void AppIntegration::executeCustomAction(const QString& actionId, const QString&
     QString quotedUrls;
     for (const QString& p : selectedPaths) {
         if (!quotedPaths.isEmpty()) quotedPaths += " ";
-        quotedPaths += QString("\"%1\"").arg(p);
+        quotedPaths += shellQuote(p);
 
         if (!quotedUrls.isEmpty()) quotedUrls += " ";
-        quotedUrls += QString("\"%1\"").arg(QUrl::fromLocalFile(p).toString());
+        quotedUrls += shellQuote(QUrl::fromLocalFile(p).toString());
     }
     if (quotedPaths.isEmpty()) {
-        quotedPaths = QString("\"%1\"").arg(currentDir);
-        quotedUrls = QString("\"%1\"").arg(QUrl::fromLocalFile(currentDir).toString());
+        quotedPaths = shellQuote(currentDir);
+        quotedUrls = shellQuote(QUrl::fromLocalFile(currentDir).toString());
     }
 
     QString cmd = targetAct->exec;
-    cmd.replace("%f", QString("\"%1\"").arg(primaryPath));
+    cmd.replace("%f", shellQuote(primaryPath));
     cmd.replace("%F", quotedPaths);
-    cmd.replace("%u", QString("\"%1\"").arg(QUrl::fromLocalFile(primaryPath).toString()));
+    cmd.replace("%u", shellQuote(QUrl::fromLocalFile(primaryPath).toString()));
     cmd.replace("%U", quotedUrls);
-    cmd.replace("%d", QString("\"%1\"").arg(dirPath));
-    cmd.replace("%D", QString("\"%1\"").arg(dirPath));
-    cmd.replace("%n", QString("\"%1\"").arg(QFileInfo(primaryPath).fileName()));
+    cmd.replace("%d", shellQuote(dirPath));
+    cmd.replace("%D", shellQuote(dirPath));
+    cmd.replace("%n", shellQuote(QFileInfo(primaryPath).fileName()));
     cmd.remove("%i");
     cmd.remove("%c");
     cmd.remove("%k");
