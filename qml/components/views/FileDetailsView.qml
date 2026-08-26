@@ -592,7 +592,7 @@ Item {
                             event.accepted = true;
                             return;
                         }
-                    } else if (event.key === Qt.Key_J || event.key === Qt.Key_Down) {
+                    } else if (event.key === Qt.Key_Down || (AppController.vimMotions && event.key === Qt.Key_J)) {
                         if (listView.currentIndex === -1 && root.model && root.model.count > 0) {
                             listView.currentIndex = 0;
                         } else if (listView.currentIndex < (root.model ? root.model.count - 1 : 0)) {
@@ -600,7 +600,7 @@ Item {
                         }
                         event.accepted = true;
                         return;
-                    } else if (event.key === Qt.Key_K || event.key === Qt.Key_Up) {
+                    } else if (event.key === Qt.Key_Up || (AppController.vimMotions && event.key === Qt.Key_K)) {
                         if (listView.currentIndex > 0) {
                             listView.currentIndex--;
                         } else if (listView.currentIndex === -1 && root.model && root.model.count > 0) {
@@ -608,13 +608,13 @@ Item {
                         }
                         event.accepted = true;
                         return;
-                    } else if (event.key === Qt.Key_H || event.key === Qt.Key_Left) {
-                        if (root.activeTab && root.activeTab.canGoUp) {
+                    } else if (event.key === Qt.Key_Left || (AppController.vimMotions && event.key === Qt.Key_H)) {
+                        if (root.activeTab) {
                             root.activeTab.goUp();
                         }
                         event.accepted = true;
                         return;
-                    } else if (event.key === Qt.Key_L || event.key === Qt.Key_Right) {
+                    } else if (event.key === Qt.Key_Right || (AppController.vimMotions && event.key === Qt.Key_L)) {
                         if (root.currentItem) {
                             root.openItem(root.currentItem);
                         }
