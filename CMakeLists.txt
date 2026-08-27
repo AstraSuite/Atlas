@@ -23,7 +23,7 @@ if(NOT ATLAS_VERSION)
 endif()
 
 if(NOT ATLAS_VERSION)
-    # Dev version: 0.YYYYMMDD.HASH
+    # Dev version: 0.YYYYMMDD (CMake requires numeric-only version components)
     find_package(Git REQUIRED)
     execute_process(
         COMMAND "${GIT_EXECUTABLE}" log -1 --format=%cd --date=format:%Y%m%d
@@ -31,13 +31,7 @@ if(NOT ATLAS_VERSION)
         OUTPUT_VARIABLE git_date
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    execute_process(
-        COMMAND "${GIT_EXECUTABLE}" rev-parse --short HEAD
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        OUTPUT_VARIABLE git_hash
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    set(ATLAS_VERSION "0.${git_date}.${git_hash}")
+    set(ATLAS_VERSION "0.${git_date}")
 endif()
 
 project(atlas VERSION ${ATLAS_VERSION} LANGUAGES CXX)
