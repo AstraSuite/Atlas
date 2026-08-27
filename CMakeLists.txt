@@ -23,10 +23,10 @@ if(NOT ATLAS_VERSION)
 endif()
 
 if(NOT ATLAS_VERSION)
-    # Dev version: YYYY.MM.DD.git.HASH
+    # Dev version: 0.YYYYMMDD.HASH
     find_package(Git REQUIRED)
     execute_process(
-        COMMAND "${GIT_EXECUTABLE}" log -1 --format=%cd --date=format:%Y.%m.%d
+        COMMAND "${GIT_EXECUTABLE}" log -1 --format=%cd --date=format:%Y%m%d
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         OUTPUT_VARIABLE git_date
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -37,7 +37,7 @@ if(NOT ATLAS_VERSION)
         OUTPUT_VARIABLE git_hash
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    set(ATLAS_VERSION "${git_date}.git.${git_hash}")
+    set(ATLAS_VERSION "0.${git_date}.${git_hash}")
 endif()
 
 project(atlas VERSION ${ATLAS_VERSION} LANGUAGES CXX)
