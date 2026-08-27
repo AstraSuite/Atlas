@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import "../"
 import "../containers"
 import atlas
+import "../../utils/FileNameHelper.js" as FileNameHelper
 
 Item {
     id: root
@@ -592,7 +593,11 @@ Item {
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: compDelegate.modelData ? compDelegate.modelData.name : ""
+                        text: {
+                            if (!compDelegate.modelData) return ""
+                            var name = compDelegate.modelData.name
+                            return FileNameHelper.elideFileName(name, this, width, font)
+                        }
                         color: compDelegate.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                         font: Tokens.font.body.small
                         elide: Text.ElideRight

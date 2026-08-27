@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import "../"
 import "../containers"
 import atlas
+import "../../utils/FileNameHelper.js" as FileNameHelper
 
 Item {
     id: root
@@ -928,7 +929,12 @@ Item {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: rowItem.modelData ? (rowItem.modelData.isSymLink ? `${rowItem.modelData.name} ↳` : rowItem.modelData.name) : ""
+                            text: {
+                                if (!rowItem.modelData) return ""
+                                var name = rowItem.modelData.name
+                                if (rowItem.modelData.isSymLink) name += " ↳"
+                                return FileNameHelper.elideFileName(name, this, width, font)
+                            }
                             color: rowItem.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                             font: Tokens.font.body.small
                             elide: Text.ElideRight

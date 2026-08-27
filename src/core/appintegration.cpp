@@ -62,6 +62,7 @@ void AppIntegration::scanDesktopFiles() {
             QString icon = desktop.value("Icon").toString();
             QString exec = desktop.value("Exec").toString();
             QString mimes = desktop.value("MimeType").toString();
+            QString cats = desktop.value("Categories").toString();
 
             desktop.endGroup();
 
@@ -70,7 +71,10 @@ void AppIntegration::scanDesktopFiles() {
             QStringList mimeList = mimes.split(';', Qt::SkipEmptyParts);
             for (QString& m : mimeList) m = m.trimmed();
 
-            m_apps.append({ name, icon, exec, fi.absoluteFilePath(), mimeList });
+            QStringList catList = cats.split(';', Qt::SkipEmptyParts);
+            for (QString& c : catList) c = c.trimmed();
+
+            m_apps.append({ name, icon, exec, fi.absoluteFilePath(), mimeList, catList });
         }
     }
 }
@@ -357,16 +361,64 @@ void AppIntegration::openScriptsFolder() {
     openNewWindow(path);
 }
 
+QStringList AppIntegration::categoriesForExecutable(const QString& exec) const {
+    QString baseExec = QFileInfo(exec).fileName();
+    for (const auto& app : m_apps) {
+        QString appExec = QFileInfo(app.exec).fileName();
+        if (appExec == baseExec || app.exec.startsWith(baseExec + " ")) {
+            return app.categories;
+        }
+    }
+    return {};
+}
+
+QString AppIntegration::materialIconForCategories(const QStringList& categories) const {
+    for (const QString& cat : categories) {
+        QString lower = cat.toLower();
+
+        if (lower == "development" || lower == "ide")
+            return "code";
+        if (lower == "audiovideo" || lower == "audio" || lower == "video")
+            return "music_note";
+        if (lower == "graphics" || lower == "2dgraphics")
+            return "palette";
+        if (lower == "office" || lower == "wordprocessor" || lower == "spreadsheet" || lower == "presentation")
+            return "description";
+        if (lower == "education")
+            return "school";
+        if (lower == "game")
+            return "sports_esports";
+        if (lower == "network" || lower == "internet")
+            return "language";
+        if (lower == "settings" || lower == "system")
+            return "settings";
+        if (lower == "utility" || lower == "filetools")
+            return "build";
+        if (lower == "accessibility")
+            return "accessibility_new";
+        if (lower == "security")
+            return "security";
+        if (lower == "science")
+            return "science";
+        if (lower == "finance")
+            return "account_balance";
+        if (lower == "hal" || lower == "coreutils")
+            return "terminal";
+    }
+    return "extension";
+}
+
 void AppIntegration::scanCustomActions() {
     m_customActions.clear();
 
     // Auto-detect common tools
     // Disk Usage Analyzers
     if (!QStandardPaths::findExecutable("baobab").isEmpty()) {
+        QStringList cats = categoriesForExecutable("baobab");
         m_customActions.append({
             "tool_baobab",
             "Analyze Disk Usage",
-            "pie_chart",
+            materialIconForCategories(cats.isEmpty() ? QStringList{"Utility"} : cats),
             "baobab %f",
             "dir",
             {},
@@ -374,10 +426,11 @@ void AppIntegration::scanCustomActions() {
             {}
         });
     } else if (!QStandardPaths::findExecutable("filelight").isEmpty()) {
+        QStringList cats = categoriesForExecutable("filelight");
         m_customActions.append({
             "tool_filelight",
             "Analyze Disk Usage",
-            "pie_chart",
+            materialIconForCategories(cats.isEmpty() ? QStringList{"Utility"} : cats),
             "filelight %f",
             "dir",
             {},
@@ -385,10 +438,11 @@ void AppIntegration::scanCustomActions() {
             {}
         });
     } else if (!QStandardPaths::findExecutable("k4dirstat").isEmpty()) {
+        QStringList cats = categoriesForExecutable("k4dirstat");
         m_customActions.append({
             "tool_k4dirstat",
             "Analyze Disk Usage",
-            "pie_chart",
+            materialIconForCategories(cats.isEmpty() ? QStringList{"Utility"} : cats),
             "k4dirstat %f",
             "dir",
             {},
@@ -399,10 +453,11 @@ void AppIntegration::scanCustomActions() {
 
     // Code Editors (adaptive detection)
     if (!QStandardPaths::findExecutable("code").isEmpty()) {
+        QStringList cats = categoriesForExecutable("code");
         m_customActions.append({
             "tool_vscode",
             "Open with VS Code",
-            "code",
+            materialIconForCategories(cats.isEmpty() ? QStringList{"Development"} : cats),
             "code %F",
             "all",
             {},
@@ -411,10 +466,11 @@ void AppIntegration::scanCustomActions() {
         });
     } else if (!QStandardPaths::findExecutable("codium").isEmpty() || !QStandardPaths::findExecutable("vscodium").isEmpty()) {
         QString codiumCmd = !QStandardPaths::findExecutable("codium").isEmpty() ? QStringLiteral("codium") : QStringLiteral("vscodium");
+        QStringList cats = categoriesForExecutable(codiumCmd);
         m_customActions.append({
             "tool_vscodium",
             "Open with VSCodium",
-            "code",
+            materialIconForCategories(cats.isEmpty() ? QStringList{"Development"} : cats),
             codiumCmd + QStringLiteral(" %F"),
             "all",
             {},
@@ -422,10 +478,11 @@ void AppIntegration::scanCustomActions() {
             {}
         });
     } else if (!QStandardPaths::findExecutable("code-insiders").isEmpty()) {
+        QStringList cats = categoriesForExecutable("code-insiders");
         m_customActions.append({
             "tool_vscode_insiders",
             "Open with VS Code Insiders",
-            "code",
+            materialIconForCategories(cats.isEmpty() ? QStringList{"Development"} : cats),
             "code-insiders %F",
             "all",
             {},
@@ -433,10 +490,11 @@ void AppIntegration::scanCustomActions() {
             {}
         });
     } else if (!QStandardPaths::findExecutable("cursor").isEmpty()) {
+        QStringList cats = categoriesForExecutable("cursor");
         m_customActions.append({
             "tool_cursor",
             "Open with Cursor",
-            "code",
+            materialIconForCategories(cats.isEmpty() ? QStringList{"Development"} : cats),
             "cursor %F",
             "all",
             {},
@@ -444,10 +502,11 @@ void AppIntegration::scanCustomActions() {
             {}
         });
     } else if (!QStandardPaths::findExecutable("subl").isEmpty()) {
+        QStringList cats = categoriesForExecutable("subl");
         m_customActions.append({
             "tool_sublime",
             "Open with Sublime Text",
-            "edit_note",
+            materialIconForCategories(cats.isEmpty() ? QStringList{"Development"} : cats),
             "subl %F",
             "all",
             {},

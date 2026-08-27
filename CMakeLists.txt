@@ -221,6 +221,7 @@ qt_add_qml_module(atlas_app
         qml/components/controls/CircularProgress.qml
         qml/components/controls/CircularIndicator.qml
         qml/components/statusbar/StatusBar.qml
+        qml/utils/FileNameHelper.js
     RESOURCES
         assets/fonts/GoogleSansFlex.ttf
         assets/fonts/MaterialSymbolsRounded.ttf

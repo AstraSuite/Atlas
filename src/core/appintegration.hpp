@@ -52,6 +52,8 @@ private:
     explicit AppIntegration(QObject* parent = nullptr);
     void scanDesktopFiles();
     void scanCustomActions();
+    QStringList categoriesForExecutable(const QString& exec) const;
+    QString materialIconForCategories(const QStringList& categories) const;
 
     struct DesktopApp {
         QString name;
@@ -59,6 +61,7 @@ private:
         QString exec;
         QString desktopFile;
         QStringList mimeTypes;
+        QStringList categories;
     };
 
     struct CustomActionItem {
