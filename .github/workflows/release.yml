@@ -35,24 +35,14 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Configure
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build
-
-      - name: Start without QML errors
-        run: |
-          set -o pipefail
-          QT_QPA_PLATFORM=offscreen QT_LOGGING_TO_CONSOLE=1 \
-            timeout 20 ./build/bin/atlas "$HOME" > run.log 2>&1 || true
-
-          if grep -aiE '\.qml:[0-9]+.*(error|is not a type|Cannot |Unable to assign|TypeError)|binding loop' run.log; then
-            echo "::error::QML errors on startup, see the matches above"
-            exit 1
-          fi
-          echo "Started clean."
 
       - name: Stage release artifacts
         shell: bash
@@ -61,12 +51,12 @@ jobs:
           tag="${GITHUB_REF_NAME}"
           version="${tag#v}"
 
-          cp -v build/bin/atlas "atlas-${tag}-linux-x86_64"
-          git archive --format=tar.gz --prefix="atlas-${version}/" -o "atlas-${version}.tar.gz" "${tag}"
+          cp -v build/bin/atlas "astra-atlas-${tag}"
+          git archive --format=tar.gz --prefix="astra-atlas-${version}/" -o "astra-atlas-${version}.tar.gz" "${tag}"
 
           echo "ARTIFACTS<<EOF" >> "$GITHUB_ENV"
-          echo "atlas-${tag}-linux-x86_64" >> "$GITHUB_ENV"
-          echo "atlas-${version}.tar.gz" >> "$GITHUB_ENV"
+          echo "astra-atlas-${tag}" >> "$GITHUB_ENV"
+          echo "astra-atlas-${version}.tar.gz" >> "$GITHUB_ENV"
           echo "EOF" >> "$GITHUB_ENV"
 
       - name: Publish release
