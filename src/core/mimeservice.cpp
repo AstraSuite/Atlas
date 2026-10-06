@@ -71,6 +71,10 @@ static QVariantMap parseDesktopFile(const QString& desktopPath, bool includeNoDi
         return {};
     }
 
+    // Terminal apps (e.g. micro) must be launched inside a terminal emulator.
+    bool terminal = desktopEntryValue(desktopPath, QStringLiteral("Terminal"))
+                        .compare(QStringLiteral("true"), Qt::CaseInsensitive) == 0;
+
     // Type defaults to "Application" when absent.
     QString type = desktopEntryValue(desktopPath, QStringLiteral("Type"));
     if (!type.isEmpty() && type.compare(QStringLiteral("Application"), Qt::CaseInsensitive) != 0) {
@@ -95,7 +99,24 @@ static QVariantMap parseDesktopFile(const QString& desktopPath, bool includeNoDi
     map["comment"] = comment;
     map["mimeTypes"] = mimeTypes;
     map["noDisplay"] = noDisplay;
+    map["terminal"] = terminal;
     return map;
+}
+
+// Pick the user's terminal emulator, mirroring AppIntegration::resolveTerminal.
+static QString resolveTerminal() {
+    QString term = qEnvironmentVariable("TERMINAL");
+    if (term.isEmpty()) {
+        static const QStringList candidates = { "foot", "kitty", "alacritty", "ghostty", "wezterm", "konsole", "gnome-terminal", "xterm" };
+        for (const auto& c : candidates) {
+            if (!QStandardPaths::findExecutable(c).isEmpty()) {
+                term = c;
+                break;
+            }
+        }
+    }
+    if (term.isEmpty()) term = QStringLiteral("xterm");
+    return term;
 }
 
 static QVariantList scanApplications(bool includeNoDisplay) {
@@ -387,6 +408,15 @@ void MimeService::openWith(const QString& filePath, const QString& desktopFilePa
 
     QString program = args.takeFirst();
     args.append(filePath);
+
+    if (map["terminal"].toBool()) {
+        // Terminal apps (e.g. micro) can't run without a terminal attached, so
+        // launch them inside the user's terminal emulator.
+        QStringList launchArgs = QStringList{ QStringLiteral("-e"), program };
+        launchArgs.append(args);
+        QProcess::startDetached(resolveTerminal(), launchArgs);
+        return;
+    }
 
     QProcess::startDetached(program, args);
 }
