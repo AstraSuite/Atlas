@@ -326,6 +326,12 @@ Item {
                     }
                     event.accepted = true;
                     return;
+                } else if (event.key === Qt.Key_Backspace) {
+                    if (root.activeTab) {
+                        root.activeTab.goUp();
+                        event.accepted = true;
+                        return;
+                    }
                 }
             }
             if ((event.modifiers === Qt.NoModifier || event.modifiers === Qt.ShiftModifier) && event.text.length > 0) {
