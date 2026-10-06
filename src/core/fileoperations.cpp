@@ -24,6 +24,7 @@
 #include <QPainter>
 #include <QIcon>
 #include <QImage>
+#include <QBuffer>
 #include "config/colours.hpp"
 
 namespace atlas::core {
@@ -76,6 +77,7 @@ void FileOperations::syncFromSystemClipboard() {
 
     QStringList files;
     bool isCut = false;
+    QString imageData;
 
     if (mimeData && mimeData->hasFormat(QStringLiteral("text/uri-list"))) {
         const QByteArray cutSelection = mimeData->data(QStringLiteral("application/x-kde-cutselection"));
@@ -89,8 +91,34 @@ void FileOperations::syncFromSystemClipboard() {
             }
         }
     }
+    // Check for image data in clipboard (screenshots, copied images, etc.)
+    QImage image;
+    if (mimeData && mimeData->hasImage()) {
+        image = qvariant_cast<QImage>(mimeData->imageData());
+    }
+    if (image.isNull() && mimeData) {
+        static const char* kImageFormats[] = { "image/png", "image/jpeg", "image/bmp", "image/gif", "image/webp" };
+        for (const char* fmt : kImageFormats) {
+            if (mimeData->hasFormat(fmt)) {
+                image = QImage::fromData(mimeData->data(fmt));
+                if (!image.isNull())
+                    break;
+            }
+        }
+    }
+    if (!image.isNull()) {
+        QByteArray pngData;
+        QBuffer buffer(&pngData);
+        buffer.open(QIODevice::WriteOnly);
+        image.save(&buffer, "PNG");
+        imageData = QString::fromLatin1(pngData.toBase64());
+    }
 
-    if (files != m_clipboardFiles || isCut != m_isCut) {
+    const bool imageChanged = (m_clipboardImageData != imageData);
+    const bool filesChanged = (files != m_clipboardFiles) || (isCut != m_isCut);
+    m_clipboardImageData = imageData;
+
+    if (filesChanged || imageChanged) {
         m_clipboardFiles = files;
         m_isCut = isCut;
         emit clipboardChanged();
@@ -113,6 +141,36 @@ void FileOperations::cutToClipboard(const QStringList& paths) {
 
 void FileOperations::copyTextToClipboard(const QString& text) {
     QGuiApplication::clipboard()->setText(text);
+}
+
+QString FileOperations::pasteImage(const QString& destinationDir) {
+    syncFromSystemClipboard();
+    if (m_clipboardImageData.isEmpty() || destinationDir.isEmpty())
+        return {};
+
+    // Decode base64 image data
+    const QByteArray decodedData = QByteArray::fromBase64(m_clipboardImageData.toLatin1());
+    if (decodedData.isEmpty())
+        return {};
+
+    // Write to a default name, avoiding clobbering an existing file.
+    const QString baseName = tr("image");
+    QString filePath = destinationDir + "/" + baseName + ".png";
+    int suffix = 1;
+    while (QFileInfo::exists(filePath)) {
+        filePath = destinationDir + "/" + baseName + " (" + QString::number(suffix) + ").png";
+        ++suffix;
+    }
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        emit operationFinished(false, tr("Failed to create image file: %1").arg(filePath));
+        return {};
+    }
+    file.write(decodedData);
+    file.close();
+
+    return filePath;
 }
 
 void FileOperations::clearClipboard() {

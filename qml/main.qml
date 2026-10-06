@@ -70,6 +70,25 @@ ApplicationWindow {
         }
     }
 
+    // Paste files from the clipboard, or write a clipboard image to disk
+    // as a .png and prompt the user to name it.
+    function pasteFromClipboard() {
+        let dir = getActiveDirectory();
+        if (!dir) return;
+        if (FileOperations.clipboardFiles.length > 0) {
+            FileOperations.paste(dir);
+        } else if (FileOperations.clipboardImageData && FileOperations.clipboardImageData.length > 0) {
+            let created = FileOperations.pasteImage(dir);
+            if (created && created.length > 0) {
+                newItemModal.title = qsTr("Rename");
+                newItemModal.icon = "drive_file_rename_outline";
+                newItemModal.targetRenamePath = created;
+                newItemModal.initialText = FileUtils.baseName(created);
+                newItemModal.expanded = true;
+            }
+        }
+    }
+
     // Full File Manager Mode
     Item {
         anchors.fill: parent
@@ -345,7 +364,7 @@ ApplicationWindow {
                 } else if (action === "copyCurrentDirPath") {
                     FileOperations.copyTextToClipboard(currentDir);
                 } else if (action === "paste") {
-                    FileOperations.paste(currentDir);
+                    window.pasteFromClipboard();
                 } else if (action === "pasteSymlink") {
                     FileOperations.pasteAsSymlink(currentDir);
                 } else if (action === "symlink" && item) {
@@ -780,9 +799,7 @@ ApplicationWindow {
         Shortcut {
             sequence: "Ctrl+V"
             context: Qt.ApplicationShortcut
-            onActivated: {
-                if (TabManager.currentTab) FileOperations.paste(window.getActiveDirectory());
-            }
+            onActivated: window.pasteFromClipboard()
         }
 
         Shortcut {
