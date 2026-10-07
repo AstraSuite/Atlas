@@ -70,6 +70,25 @@ ApplicationWindow {
         }
     }
 
+    // Paste files from the clipboard, or write a clipboard image to disk
+    // as a .png and prompt the user to name it.
+    function pasteFromClipboard() {
+        let dir = getActiveDirectory();
+        if (!dir) return;
+        if (FileOperations.clipboardFiles.length > 0) {
+            FileOperations.paste(dir);
+        } else if (FileOperations.clipboardImageData && FileOperations.clipboardImageData.length > 0) {
+            let created = FileOperations.pasteImage(dir);
+            if (created && created.length > 0) {
+                newItemModal.title = qsTr("Rename");
+                newItemModal.icon = "drive_file_rename_outline";
+                newItemModal.targetRenamePath = created;
+                newItemModal.initialText = FileUtils.baseName(created);
+                newItemModal.expanded = true;
+            }
+        }
+    }
+
     // Full File Manager Mode
     Item {
         anchors.fill: parent
@@ -345,7 +364,7 @@ ApplicationWindow {
                 } else if (action === "copyCurrentDirPath") {
                     FileOperations.copyTextToClipboard(currentDir);
                 } else if (action === "paste") {
-                    FileOperations.paste(currentDir);
+                    window.pasteFromClipboard();
                 } else if (action === "pasteSymlink") {
                     FileOperations.pasteAsSymlink(currentDir);
                 } else if (action === "symlink" && item) {
@@ -694,9 +713,12 @@ ApplicationWindow {
             context: Qt.ApplicationShortcut
             enabled: !mediaViewerModal.expanded && !newItemModal.expanded && !editPlaceModal.expanded && !placesManageModal.expanded && !compressModal.expanded && !openWithModal.expanded && !preferencesModal.expanded && !mediaToolsModal.expanded && !runnerGameModal.isOpen && !vectorBloomOverlay.isOpen
             onActivated: {
-                if (splitContainer.currentSelectedPath) {
-                    let path = splitContainer.currentSelectedPath;
-                    mediaViewerModal.openFile(path, splitContainer.activeModel);
+                let paths = splitContainer.selectedPaths;
+                if (paths && paths.length > 0) {
+                    let path = paths[0];
+                    if (FileUtils.isImage(path) || FileUtils.isVideo(path)) {
+                        mediaViewerModal.openFile(path, splitContainer.activeModel);
+                    }
                 }
             }
         }
@@ -752,9 +774,9 @@ ApplicationWindow {
             sequence: "Ctrl+Shift+N"
             context: Qt.ApplicationShortcut
             onActivated: {
-                newItemModal.title = qsTr("Create New File");
-                newItemModal.icon = "note_add";
-                newItemModal.initialText = "untitled.txt";
+                newItemModal.title = qsTr("Create New Folder");
+                newItemModal.icon = "create_new_folder";
+                newItemModal.initialText = qsTr("New Folder");
                 newItemModal.expanded = true;
             }
         }
@@ -780,9 +802,7 @@ ApplicationWindow {
         Shortcut {
             sequence: "Ctrl+V"
             context: Qt.ApplicationShortcut
-            onActivated: {
-                if (TabManager.currentTab) FileOperations.paste(window.getActiveDirectory());
-            }
+            onActivated: window.pasteFromClipboard()
         }
 
         Shortcut {

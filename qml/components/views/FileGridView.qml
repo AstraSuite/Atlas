@@ -241,7 +241,7 @@ Item {
         }
         Keys.onReturnPressed: if (root.currentItem) root.openItem(root.currentItem)
         Keys.onEnterPressed: if (root.currentItem) root.openItem(root.currentItem)
-        Keys.onSpacePressed: if (root.currentItem && typeof mediaViewerModal !== "undefined" && mediaViewerModal) mediaViewerModal.openFile(root.currentItem.path, root.model)
+        Keys.onSpacePressed: if (root.currentItem && root.selectedPaths.length > 0 && (FileUtils.isImage(root.currentItem.path) || FileUtils.isVideo(root.currentItem.path)) && typeof mediaViewerModal !== "undefined" && mediaViewerModal) mediaViewerModal.openFile(root.currentItem.path, root.model)
 
         Keys.onPressed: event => {
             // F-Key Accelerators
@@ -330,6 +330,12 @@ Item {
                     }
                     event.accepted = true;
                     return;
+                } else if (event.key === Qt.Key_Backspace) {
+                    if (root.activeTab) {
+                        root.activeTab.goUp();
+                        event.accepted = true;
+                        return;
+                    }
                 }
             }
             if ((event.modifiers === Qt.NoModifier || event.modifiers === Qt.ShiftModifier) && event.text.length > 0) {

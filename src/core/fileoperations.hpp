@@ -60,6 +60,7 @@ class FileOperations : public QObject {
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY undoStackChanged)
     Q_PROPERTY(QStringList activeDragFiles READ activeDragFiles NOTIFY activeDragFilesChanged)
     Q_PROPERTY(QVariantList completedTasks READ completedTasks NOTIFY completedTasksChanged)
+    Q_PROPERTY(QString clipboardImageData READ clipboardImageData NOTIFY clipboardChanged)
 
 public:
 
@@ -73,9 +74,10 @@ public:
     QStringList activeDragFiles() const { return m_activeDragFiles; }
     QVariantList completedTasks() const { return m_completedTasks; }
     bool isCutOperation() const { return m_isCut; }
-    bool canPaste() const { return !m_clipboardFiles.isEmpty(); }
+    bool canPaste() const { return !m_clipboardFiles.isEmpty() || !m_clipboardImageData.isEmpty(); }
     bool canUndo() const { return !m_undoStack.isEmpty(); }
     bool canRedo() const { return !m_redoStack.isEmpty(); }
+    QString clipboardImageData() const { return m_clipboardImageData; }
 
     Q_INVOKABLE void addCompletedTask(bool success, const QString& message, const QString& url = QString());
     Q_INVOKABLE void clearCompletedTasks();
@@ -93,6 +95,7 @@ public:
     Q_INVOKABLE void cutPaths(const QStringList& paths) { cutToClipboard(paths); }
     Q_INVOKABLE void clearClipboard();
     Q_INVOKABLE void paste(const QString& destinationDir);
+    Q_INVOKABLE QString pasteImage(const QString& destinationDir);
     Q_INVOKABLE void copyTextToClipboard(const QString& text);
 
     enum TransferEngine {
@@ -179,6 +182,7 @@ private:
     FileOperationProgress* m_progress = nullptr;
     QStringList m_clipboardFiles;
     QStringList m_activeDragFiles;
+    QString m_clipboardImageData;
     bool m_dragInFlight = false;
     QVariantList m_completedTasks;
     QString m_lastCompletedTaskKey;
