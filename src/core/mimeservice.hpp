@@ -27,7 +27,7 @@ public:
     Q_INVOKABLE QVariantMap getDefaultApp(const QString& mimeType);
     Q_INVOKABLE QVariantMap getDefaultAppForFile(const QString& filePath);
     Q_INVOKABLE void openWith(const QString& filePath, const QString& desktopFilePath);
-    Q_INVOKABLE void setDefaultApp(const QString& mimeType, const QString& desktopFileName);
+    Q_INVOKABLE bool setDefaultApp(const QString& mimeType, const QString& desktopFileName);
 
 private:
     explicit MimeService(QObject* parent = nullptr);
