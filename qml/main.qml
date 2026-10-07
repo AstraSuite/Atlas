@@ -713,9 +713,12 @@ ApplicationWindow {
             context: Qt.ApplicationShortcut
             enabled: !mediaViewerModal.expanded && !newItemModal.expanded && !editPlaceModal.expanded && !placesManageModal.expanded && !compressModal.expanded && !openWithModal.expanded && !preferencesModal.expanded && !mediaToolsModal.expanded && !runnerGameModal.isOpen && !vectorBloomOverlay.isOpen
             onActivated: {
-                if (splitContainer.currentSelectedPath) {
-                    let path = splitContainer.currentSelectedPath;
-                    mediaViewerModal.openFile(path, splitContainer.activeModel);
+                let paths = splitContainer.selectedPaths;
+                if (paths && paths.length > 0) {
+                    let path = paths[0];
+                    if (FileUtils.isImage(path) || FileUtils.isVideo(path)) {
+                        mediaViewerModal.openFile(path, splitContainer.activeModel);
+                    }
                 }
             }
         }
@@ -771,9 +774,9 @@ ApplicationWindow {
             sequence: "Ctrl+Shift+N"
             context: Qt.ApplicationShortcut
             onActivated: {
-                newItemModal.title = qsTr("Create New File");
-                newItemModal.icon = "note_add";
-                newItemModal.initialText = "untitled.txt";
+                newItemModal.title = qsTr("Create New Folder");
+                newItemModal.icon = "create_new_folder";
+                newItemModal.initialText = qsTr("New Folder");
                 newItemModal.expanded = true;
             }
         }
