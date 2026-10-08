@@ -564,6 +564,41 @@ StyledRect {
         }
     }
 
+    // Select the first entry of the active view and give it keyboard focus.
+    // Used when search hands control back to the results list.
+    function selectFirstResult() {
+        let loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
+        if (!activeModel || !loader || !loader.item)
+            return;
+        let view = loader.item;
+        view.forceActiveFocus();
+        if (activeModel.count === 0 || !view.selectSingle)
+            return;
+        let entry = activeModel.get(0);
+        if (entry)
+            view.selectSingle(entry.path, 0);
+    }
+
+    // Step the active view's selection by delta, staying within bounds.
+    function stepSelection(delta) {
+        let loader = (isSplit && activePane === 1) ? splitViewLoader : mainViewLoader;
+        if (!activeModel || !loader || !loader.item)
+            return;
+        let view = loader.item;
+        view.forceActiveFocus();
+        if (activeModel.count === 0 || !view.selectSingle)
+            return;
+        let current = view.currentIndex;
+        let next = current < 0
+                 ? (delta > 0 ? 0 : activeModel.count - 1)
+                 : Math.max(0, Math.min(activeModel.count - 1, current + delta));
+        if (next === current)
+            return;
+        let entry = activeModel.get(next);
+        if (entry)
+            view.selectSingle(entry.path, next);
+    }
+
     Component.onCompleted: {
         focusActiveView();
     }

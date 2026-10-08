@@ -578,19 +578,38 @@ void FileSystemModel::updateDirectoryGranular(const QList<RawEntryData>& rawData
 }
 
 void FileSystemModel::performSearch(const QString& rootPath, const QString& query) {
-    (void)QtConcurrent::run([this, rootPath, query]() {
-        QDirIterator it(rootPath, QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden, QDirIterator::Subdirectories);
+    const bool showHidden = m_showHidden;
+    (void)QtConcurrent::run([this, rootPath, query, showHidden]() {
         QMimeDatabase mimeDb;
         QList<RawEntryData> foundRawData;
 
         QString lowerQuery = query.toLower();
         int maxResults = 500;
 
-        while (it.hasNext() && foundRawData.size() < maxResults) {
-            it.next();
-            QFileInfo fi = it.fileInfo();
-            if (fi.fileName().toLower().contains(lowerQuery)) {
-                foundRawData.append(createRawDataFromInfo(fi, mimeDb));
+        // Traverse the tree manually so hidden directories can be pruned
+        // entirely when hidden files are not shown. QDirIterator with
+        // QDir::Hidden | Subdirectories would still descend into them and
+        // return matches from inside ~/.config etc.
+        QDir::Filters filters = QDir::AllEntries | QDir::NoDotAndDotDot;
+        if (showHidden)
+            filters |= QDir::Hidden;
+
+        QList<QString> pendingDirs;
+        pendingDirs.append(rootPath);
+        while (!pendingDirs.isEmpty() && foundRawData.size() < maxResults) {
+            const QFileInfoList infos = QDir(pendingDirs.takeLast()).entryInfoList(filters);
+            for (const QFileInfo& fi : infos) {
+                if (foundRawData.size() >= maxResults)
+                    break;
+
+                if (fi.fileName().toLower().contains(lowerQuery))
+                    foundRawData.append(createRawDataFromInfo(fi, mimeDb));
+
+                // Descend only into real directories. Following directory
+                // symlinks lets cycles (e.g. Wine prefixes / dosdevices)
+                // re-emit the same files and flood the results.
+                if (fi.isDir() && !fi.isSymLink())
+                    pendingDirs.append(fi.absoluteFilePath());
             }
         }
 

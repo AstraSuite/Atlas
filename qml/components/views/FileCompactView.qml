@@ -327,6 +327,11 @@ Item {
                     event.accepted = true;
                     return;
                 } else if (event.key === Qt.Key_Backspace) {
+                    if (root.model && root.model.isSearching && typeof navBar !== "undefined" && navBar) {
+                        navBar.closeSearch();
+                        event.accepted = true;
+                        return;
+                    }
                     if (root.activeTab) {
                         root.activeTab.goUp();
                         event.accepted = true;

@@ -116,6 +116,26 @@ StyledRect {
         z: -1
     }
 
+    // Navigating away ends an active search: the filter is bound to the old
+    // directory, so leaving it set would show a stale "searching" state (and
+    // make Backspace clear the filter instead of going up).
+    onActiveTabChanged: {
+        if (root.isSearching || root.searchText.length > 0)
+            root.clearSearch();
+    }
+
+    Connections {
+        target: root.activeTab
+        function onCurrentPathChanged() {
+            if (root.isSearching || root.searchText.length > 0)
+                root.clearSearch();
+        }
+        function onSplitPathChanged() {
+            if (root.isSearching || root.searchText.length > 0)
+                root.clearSearch();
+        }
+    }
+
     RowLayout {
         id: navRow
 
@@ -318,9 +338,7 @@ StyledRect {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         if (crumb.isActiveSegment) {
-                                            root.isEditingPath = true;
-                                            pathInput.forceActiveFocus();
-                                            pathInput.selectAll();
+                                            root.openAddressEdit();
                                         } else if (root.activeTab) {
                                             if (root.activePane === 1 && root.activeTab.isSplit) {
                                                 root.activeTab.splitPath = crumb.modelData.path;
@@ -370,9 +388,7 @@ StyledRect {
                             anchors.fill: parent
                             cursorShape: Qt.IBeamCursor
                             onClicked: {
-                                root.isEditingPath = true;
-                                pathInput.forceActiveFocus();
-                                pathInput.selectAll();
+                                root.openAddressEdit();
                             }
                         }
                     }
@@ -704,14 +720,50 @@ StyledRect {
                         root.searchRequested(text);
                     }
 
-                    Keys.onEscapePressed: {
-                        text = "";
-                        root.searchText = "";
-                        root.isSearching = false;
-                        root.searchRequested("");
-                        if (typeof splitContainer !== "undefined" && splitContainer) {
-                            splitContainer.focusActiveView();
+                    // "/" opens search; never let it leak into the query.
+                    Keys.onPressed: event => {
+                        if (event.key === Qt.Key_Slash && event.modifiers === Qt.NoModifier) {
+                            event.accepted = true;
+                            return;
                         }
+                        // Backspace on an empty query closes the filter instead
+                        // of being swallowed by the empty text field.
+                        if (event.key === Qt.Key_Backspace && searchInput.text.length === 0) {
+                            root.closeSearch();
+                            event.accepted = true;
+                            return;
+                        }
+                    }
+
+                    // Enter/arrows hand keyboard control to the results view so
+                    // search matches can be picked without a mouse.
+                    Keys.onReturnPressed: event => {
+                        root.searchSelectFirst();
+                        event.accepted = true;
+                    }
+
+                    Keys.onEnterPressed: event => {
+                        root.searchSelectFirst();
+                        event.accepted = true;
+                    }
+
+                    Keys.onDownPressed: event => {
+                        root.searchStep(1);
+                        event.accepted = true;
+                    }
+
+                    Keys.onUpPressed: event => {
+                        root.searchStep(-1);
+                        event.accepted = true;
+                    }
+
+                    Keys.onEscapePressed: event => {
+                        // Close the search field and hand focus back to the
+                        // results. The query is kept so the matches stay until
+                        // explicitly cleared (search toggle or clear button).
+                        root.isSearching = false;
+                        root.focusResultsView();
+                        event.accepted = true;
                     }
                 }
 
@@ -773,13 +825,10 @@ StyledRect {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        root.isSearching = !root.isSearching;
                         if (root.isSearching) {
-                            searchInput.forceActiveFocus();
+                            root.closeSearch();
                         } else {
-                            searchInput.text = "";
-                            root.searchText = "";
-                            root.searchRequested("");
+                            root.openSearch();
                         }
                     }
                 }
@@ -1016,6 +1065,11 @@ StyledRect {
     }
 
     function openSearch(initialChar) {
+        // The address editor and the search bar are mutually exclusive. If the
+        // editor were left open it would reappear as soon as the search is
+        // dismissed with Esc.
+        isEditingPath = false;
+        showSuggestions = false;
         isSearching = true;
         if (typeof initialChar === "string" && initialChar.length > 0) {
             searchText = initialChar;
@@ -1028,9 +1082,47 @@ StyledRect {
         searchInput.forceActiveFocus();
     }
 
+    // Drop the active search filter and go back to the plain directory listing.
+    function clearSearch() {
+        isSearching = false;
+        searchText = "";
+        if (typeof searchInput !== "undefined" && searchInput.text.length > 0)
+            searchInput.text = "";
+        searchRequested("");
+    }
+
+    // Used by the results view (Backspace): close the filter instead of
+    // navigating to the parent directory, then keep focus on the results.
+    function closeSearch() {
+        clearSearch();
+        focusResultsView();
+    }
+
     function openAddressEdit() {
+        // Opening the address editor cancels an active search so the editor is
+        // actually visible and the listing is no longer filtered.
+        if (isSearching || searchText.length > 0)
+            clearSearch();
         isEditingPath = true;
         pathInput.forceActiveFocus();
         pathInput.selectAll();
+    }
+
+    function focusResultsView() {
+        if (typeof splitContainer !== "undefined" && splitContainer) {
+            splitContainer.focusActiveView();
+        }
+    }
+
+    function searchSelectFirst() {
+        if (typeof splitContainer !== "undefined" && splitContainer) {
+            splitContainer.selectFirstResult();
+        }
+    }
+
+    function searchStep(delta) {
+        if (typeof splitContainer !== "undefined" && splitContainer) {
+            splitContainer.stepSelection(delta);
+        }
     }
 }
