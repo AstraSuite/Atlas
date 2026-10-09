@@ -30,6 +30,7 @@
 #include "core/drivemanager.hpp"
 #include "core/networkmanager.hpp"
 #include "core/runnergame.hpp"
+#include "core/shortcutmanager.hpp"
 #include "models/filesystemmodel.hpp"
 
 static void adoptPreviousSettings() {
@@ -168,6 +169,7 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("DriveManager", driveManager);
     engine.rootContext()->setContextProperty("NetworkManager", networkManager);
     engine.rootContext()->setContextProperty("RunnerGame", atlas::core::RunnerGame::instance());
+    engine.rootContext()->setContextProperty("ShortcutManager", atlas::core::ShortcutManager::instance());
 
     const QUrl url(QStringLiteral("qrc:/qt/qml/atlas/qml/main.qml"));
     QObject::connect(
