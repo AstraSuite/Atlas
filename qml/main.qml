@@ -763,9 +763,9 @@ ApplicationWindow {
             sequence: "Ctrl+N"
             context: Qt.ApplicationShortcut
             onActivated: {
-                newItemModal.title = qsTr("Create New Folder");
-                newItemModal.icon = "create_new_folder";
-                newItemModal.initialText = qsTr("New Folder");
+                newItemModal.title = qsTr("Create New File");
+                newItemModal.icon = "note_add";
+                newItemModal.initialText = "untitled.txt";
                 newItemModal.expanded = true;
             }
         }
