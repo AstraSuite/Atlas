@@ -37,6 +37,7 @@ AppController::AppController(QObject* parent)
     QSettings legacy2("Caelestia", "Prism");
     m_showHidden = settings.value("session/showHidden", legacy1.value("session/showHidden", legacy2.value("session/showHidden", false))).toBool();
     m_singleClick = settings.value("session/singleClick", legacy1.value("session/singleClick", legacy2.value("session/singleClick", false))).toBool();
+    m_dragToScroll = settings.value("session/dragToScroll", legacy1.value("session/dragToScroll", legacy2.value("session/dragToScroll", false))).toBool();
     m_confirmPermanentDelete = settings.value("session/confirmPermanentDelete", true).toBool();
     m_restoreTabs = settings.value("preferences/restoreTabs", false).toBool();
     m_confirmMoveToTrash = settings.value("session/confirmMoveToTrash", false).toBool();
@@ -398,6 +399,15 @@ void AppController::setSingleClick(bool single) {
         QSettings settings("astra-atlas", "atlas");
         settings.setValue("session/singleClick", single);
         emit singleClickChanged();
+    }
+}
+
+void AppController::setDragToScroll(bool drag) {
+    if (m_dragToScroll != drag) {
+        m_dragToScroll = drag;
+        QSettings settings("astra-atlas", "atlas");
+        settings.setValue("session/dragToScroll", drag);
+        emit dragToScrollChanged();
     }
 }
 

@@ -237,7 +237,7 @@ Item {
         }
         Keys.onReturnPressed: if (root.currentItem) root.openItem(root.currentItem)
         Keys.onEnterPressed: if (root.currentItem) root.openItem(root.currentItem)
-        Keys.onSpacePressed: if (root.currentItem && typeof mediaViewerModal !== "undefined" && mediaViewerModal) mediaViewerModal.openFile(root.currentItem.path, root.model)
+        Keys.onSpacePressed: if (root.currentItem && root.selectedPaths.length > 0 && (FileUtils.isImage(root.currentItem.path) || FileUtils.isVideo(root.currentItem.path)) && typeof mediaViewerModal !== "undefined" && mediaViewerModal) mediaViewerModal.openFile(root.currentItem.path, root.model)
 
         Keys.onPressed: event => {
             // F-Key Accelerators
@@ -326,6 +326,17 @@ Item {
                     }
                     event.accepted = true;
                     return;
+                } else if (event.key === Qt.Key_Backspace) {
+                    if (root.model && root.model.isSearching && typeof navBar !== "undefined" && navBar) {
+                        navBar.closeSearch();
+                        event.accepted = true;
+                        return;
+                    }
+                    if (root.activeTab) {
+                        root.activeTab.goUp();
+                        event.accepted = true;
+                        return;
+                    }
                 }
             }
             if ((event.modifiers === Qt.NoModifier || event.modifiers === Qt.ShiftModifier) && event.text.length > 0) {
@@ -463,6 +474,7 @@ Item {
                     property real pressX: 0
                     property real pressY: 0
                     property bool isDragging: false
+                    property bool forwarding: false
 
                     onPressed: mouse => {
                         root.notifyFocus();
@@ -477,9 +489,26 @@ Item {
                         pressX = mouse.x;
                         pressY = mouse.y;
                         isDragging = false;
+                        forwarding = false;
+                        // An unselected item hands its drag over to the view so
+                        // the view keeps scrolling or rubber-band selecting even
+                        // when the gesture starts over an item. A selected item
+                        // keeps the gesture so it can be dragged away.
+                        if (!root.isSelected(compDelegate.modelData.path)) {
+                            const p = mapToItem(dragSelectArea, mouse.x, mouse.y);
+                            if (dragSelectArea.insideContent(p.x, p.y)) {
+                                dragSelectArea.beginGesture(p.x, p.y);
+                                forwarding = true;
+                            }
+                        }
                     }
 
                     onPositionChanged: mouse => {
+                        if (forwarding) {
+                            const p = mapToItem(dragSelectArea, mouse.x, mouse.y);
+                            dragSelectArea.updateGesture(p.x, p.y, mouse.buttons, mouse.modifiers);
+                            return;
+                        }
                         if (dragSelectArea.isSelecting) return;
                         if (mouse.buttons & Qt.LeftButton) {
                             let dx = mouse.x - pressX;
@@ -489,6 +518,13 @@ Item {
                                 let paths = root.isSelected(compDelegate.modelData.path) ? root.selectedPaths : [compDelegate.modelData.path];
                                 FileOperations.startNativeDrag(paths, 180, 50, 24);
                             }
+                        }
+                    }
+
+                    onReleased: mouse => {
+                        if (forwarding) {
+                            dragSelectArea.endGesture();
+                            forwarding = false;
                         }
                     }
 
@@ -506,6 +542,11 @@ Item {
                             return;
                         }
                         if (isDragging || dragSelectArea.isSelecting) return;
+                        if (dragSelectArea.wasSelecting || dragSelectArea.wasScrolling) {
+                            dragSelectArea.wasSelecting = false;
+                            dragSelectArea.wasScrolling = false;
+                            return;
+                        }
                         if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
                             if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
                         } else if (mouse.button === Qt.ForwardButton || mouse.button === Qt.ExtraButton2) {
@@ -648,6 +689,16 @@ Item {
         property real lastContentX: 0
         property bool isSelecting: false
         property bool wasSelecting: false
+        property bool isScrolling: false
+        property bool wasScrolling: false
+        property real scrollAnchorContentX: 0
+        property real scrollAnchorContentY: 0
+
+        // "Drag to Scroll" swaps the mouse buttons: when enabled the left
+        // button pans the view and the right button rubber-band selects; when
+        // disabled the left button selects and the right button pans.
+        readonly property int selectButton: AppController.dragToScroll ? Qt.RightButton : Qt.LeftButton
+        readonly property int scrollButton: AppController.dragToScroll ? Qt.LeftButton : Qt.RightButton
 
         readonly property real anchorViewX: anchorContentX + gridView.x - gridView.contentX
 
@@ -656,32 +707,33 @@ Item {
             return p.x >= 0 && p.y >= 0 && p.x <= gridView.width && p.y <= gridView.height;
         }
 
-        onPressed: mouse => {
-            if (!insideContent(mouse.x, mouse.y)) {
-                mouse.accepted = false;
-                return;
-            }
-            root.notifyFocus();
-            startX = mouse.x;
-            startY = mouse.y;
-            currentX = mouse.x;
-            currentY = mouse.y;
-            anchorContentX = mouse.x - gridView.x + gridView.contentX;
+        // Gesture handling is exposed as functions so the item delegates can
+        // hand a drag over to the view when the pressed item is not selected.
+        function beginGesture(x, y) {
+            startX = x;
+            startY = y;
+            currentX = x;
+            currentY = y;
+            anchorContentX = x - gridView.x + gridView.contentX;
             lastContentX = gridView.contentX;
+            scrollAnchorContentX = gridView.contentX;
+            scrollAnchorContentY = gridView.contentY;
             isSelecting = false;
             wasSelecting = false;
+            isScrolling = false;
+            wasScrolling = false;
         }
 
-        onPositionChanged: mouse => {
-            if (mouse.buttons & Qt.LeftButton) {
-                currentX = mouse.x;
-                currentY = mouse.y;
-                let dx = currentX - startX;
-                let dy = currentY - startY;
+        function updateGesture(x, y, buttons, modifiers) {
+            currentX = x;
+            currentY = y;
+            let dx = x - startX;
+            let dy = y - startY;
+            if (buttons & selectButton) {
                 if (!isSelecting && (dx * dx + dy * dy) > 36) {
                     isSelecting = true;
                     wasSelecting = true;
-                    if (!(mouse.modifiers & Qt.ControlModifier)) {
+                    if (!(modifiers & Qt.ControlModifier)) {
                         root.selectedPaths = [];
                         gridView.currentIndex = -1;
                     }
@@ -689,18 +741,44 @@ Item {
                 if (isSelecting) {
                     updateRubberBandSelection();
                 }
+            } else if (buttons & scrollButton) {
+                if (!isScrolling && (dx * dx + dy * dy) > 36) {
+                    isScrolling = true;
+                    wasScrolling = true;
+                }
+                if (isScrolling) {
+                    const limit = Math.max(0, gridView.contentWidth - gridView.width);
+                    gridView.cancelFlick();
+                    gridView.contentX = Math.max(0, Math.min(limit, scrollAnchorContentX - dx));
+                }
             }
         }
 
-        onReleased: mouse => {
-            if (isSelecting) {
-                isSelecting = false;
-            }
+        function endGesture() {
+            isSelecting = false;
+            isScrolling = false;
         }
+
+        onPressed: mouse => {
+            if (!insideContent(mouse.x, mouse.y)) {
+                mouse.accepted = false;
+                return;
+            }
+            root.notifyFocus();
+            beginGesture(mouse.x, mouse.y);
+        }
+
+        onPositionChanged: mouse => updateGesture(mouse.x, mouse.y, mouse.buttons, mouse.modifiers)
+
+        onReleased: mouse => endGesture()
 
         onClicked: mouse => {
             if (wasSelecting) {
                 wasSelecting = false;
+                return;
+            }
+            if (wasScrolling) {
+                wasScrolling = false;
                 return;
             }
             if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
@@ -724,7 +802,9 @@ Item {
             let rw = Math.abs(cx - anchorContentX);
             let rh = Math.abs(currentY - startY);
 
-            let rows = Math.max(1, Math.floor(gridView.height / gridView.cellHeight));
+            // GridView lays items out inside (height - topMargin - bottomMargin),
+            // so the same inset must be applied when mapping indices to cells.
+            let rows = Math.max(1, Math.floor((gridView.height - gridView.topMargin - gridView.bottomMargin) / gridView.cellHeight));
             let newlySelected = [];
             let total = root.model ? root.model.count : 0;
             for (let i = 0; i < total; ++i) {

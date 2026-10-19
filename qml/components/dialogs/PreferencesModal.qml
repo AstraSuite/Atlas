@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import "../"
 import "../containers"
 import "../controls"
+import "../settings"
 import atlas
 
 MouseArea {
@@ -137,7 +138,10 @@ MouseArea {
 
     onClicked: root.expanded = false
     onWheel: wheel => wheel.accepted = true
-    Keys.onEscapePressed: root.expanded = false
+    Keys.onEscapePressed: {
+        root.expanded = false;
+        shortcutsTab.abortRecorder();
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -208,11 +212,15 @@ MouseArea {
                     { tab: 0, label: qsTr("General"), icon: "tune" },
                     { tab: 1, label: qsTr("View & Sorting"), icon: "grid_view" },
                     { tab: 2, label: qsTr("Context Menu"), icon: "menu" },
-                    { tab: 3, label: qsTr("Scripts & Tools"), icon: "terminal" }
+                    { tab: 3, label: qsTr("Scripts & Tools"), icon: "terminal" },
+                    { tab: 4, label: qsTr("Shortcuts"), icon: "keyboard" }
                 ]
                 valueKey: "tab"
                 currentValue: root.currentCategory
-                onSelected: val => root.currentCategory = val
+                onSelected: val => {
+                    root.currentCategory = val;
+                    if (val !== 4) shortcutsTab.abortRecorder();
+                }
             }
 
             // Sliding Content Area
@@ -224,7 +232,7 @@ MouseArea {
 
                 Row {
                     id: pagesRow
-                    width: contentArea.width * 4
+                    width: contentArea.width * 5
                     height: contentArea.height
                     x: -root.currentCategory * contentArea.width
 
@@ -417,12 +425,20 @@ MouseArea {
                                 }
 
                                 ToggleRow {
-                                    last: true
                                     icon: "mouse"
                                     text: qsTr("Single-Click Activation")
                                     subtext: qsTr("Single click opens files; hover over items to select")
                                     checked: AppController.singleClick
                                     onToggled: val => AppController.singleClick = val
+                                }
+
+                                ToggleRow {
+                                    last: true
+                                    icon: "pan_tool_alt"
+                                    text: qsTr("Drag to Scroll")
+                                    subtext: qsTr("Left-drag scrolls, right-drag selects. Off: left-drag selects, right-drag scrolls")
+                                    checked: AppController.dragToScroll
+                                    onToggled: val => AppController.dragToScroll = val
                                 }
                             }
 
@@ -980,6 +996,13 @@ MouseArea {
                             Item { implicitHeight: Tokens.padding.small }
                         }
                     }
+
+                    // --- TAB 4: Shortcuts ---
+                    ShortcutsTab {
+                        id: shortcutsTab
+                        width: contentArea.width
+                        height: contentArea.height
+                    }
                 }
             }
 
@@ -1001,14 +1024,20 @@ MouseArea {
                 TextButton {
                     type: ButtonBase.Text
                     text: qsTr("Cancel")
-                    onClicked: root.expanded = false
+                    onClicked: {
+                        root.expanded = false;
+                        shortcutsTab.abortRecorder();
+                    }
                 }
 
                 // Done Button
                 TextButton {
                     type: ButtonBase.Filled
                     text: qsTr("Done")
-                    onClicked: root.expanded = false
+                    onClicked: {
+                        root.expanded = false;
+                        shortcutsTab.abortRecorder();
+                    }
                 }
             }
         }

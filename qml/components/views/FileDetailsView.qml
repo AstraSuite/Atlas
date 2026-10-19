@@ -542,7 +542,7 @@ Item {
             }
             Keys.onReturnPressed: if (root.currentItem) root.openItem(root.currentItem)
             Keys.onEnterPressed: if (root.currentItem) root.openItem(root.currentItem)
-            Keys.onSpacePressed: if (root.currentItem && typeof mediaViewerModal !== "undefined" && mediaViewerModal) mediaViewerModal.openFile(root.currentItem.path, root.model)
+            Keys.onSpacePressed: if (root.currentItem && root.selectedPaths.length > 0 && (FileUtils.isImage(root.currentItem.path) || FileUtils.isVideo(root.currentItem.path)) && typeof mediaViewerModal !== "undefined" && mediaViewerModal) mediaViewerModal.openFile(root.currentItem.path, root.model)
 
             Keys.onPressed: event => {
                 // F-Key Accelerators
@@ -624,6 +624,17 @@ Item {
                     } else if (event.key === Qt.Key_Slash) {
                         if (typeof navBar !== "undefined" && navBar) {
                             navBar.openSearch("");
+                        }
+                        event.accepted = true;
+                        return;
+                    } else if (event.key === Qt.Key_Backspace) {
+                        if (root.model && root.model.isSearching && typeof navBar !== "undefined" && navBar) {
+                            navBar.closeSearch();
+                            event.accepted = true;
+                            return;
+                        }
+                        if (root.activeTab) {
+                            root.activeTab.goUp();
                         }
                         event.accepted = true;
                         return;
@@ -752,6 +763,7 @@ Item {
                     property real pressX: 0
                     property real pressY: 0
                     property bool isDragging: false
+                    property bool forwarding: false
 
                     onPressed: mouse => {
                         root.notifyFocus();
@@ -766,9 +778,26 @@ Item {
                         pressX = mouse.x;
                         pressY = mouse.y;
                         isDragging = false;
+                        forwarding = false;
+                        // An unselected item hands its drag over to the view so
+                        // the view keeps scrolling or rubber-band selecting even
+                        // when the gesture starts over an item. A selected item
+                        // keeps the gesture so it can be dragged away.
+                        if (!root.isSelected(rowItem.modelData.path)) {
+                            const p = mapToItem(dragSelectArea, mouse.x, mouse.y);
+                            if (dragSelectArea.insideContent(p.x, p.y)) {
+                                dragSelectArea.beginGesture(p.x, p.y);
+                                forwarding = true;
+                            }
+                        }
                     }
 
                     onPositionChanged: mouse => {
+                        if (forwarding) {
+                            const p = mapToItem(dragSelectArea, mouse.x, mouse.y);
+                            dragSelectArea.updateGesture(p.x, p.y, mouse.buttons, mouse.modifiers);
+                            return;
+                        }
                         if (dragSelectArea.isSelecting) return;
                         if (mouse.buttons & Qt.LeftButton) {
                             let dx = mouse.x - pressX;
@@ -778,6 +807,13 @@ Item {
                                 let paths = root.isSelected(rowItem.modelData.path) ? root.selectedPaths : [rowItem.modelData.path];
                                 FileOperations.startNativeDrag(paths, 160, 110, 48);
                             }
+                        }
+                    }
+
+                    onReleased: mouse => {
+                        if (forwarding) {
+                            dragSelectArea.endGesture();
+                            forwarding = false;
                         }
                     }
 
@@ -795,6 +831,11 @@ Item {
                             return;
                         }
                         if (isDragging || dragSelectArea.isSelecting) return;
+                        if (dragSelectArea.wasSelecting || dragSelectArea.wasScrolling) {
+                            dragSelectArea.wasSelecting = false;
+                            dragSelectArea.wasScrolling = false;
+                            return;
+                        }
                         if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
                             if (root.activeTab && root.activeTab.canGoBack) root.activeTab.goBack();
                         } else if (mouse.button === Qt.ForwardButton || mouse.button === Qt.ExtraButton2) {
@@ -1015,12 +1056,77 @@ Item {
         property real lastContentY: 0
         property bool isSelecting: false
         property bool wasSelecting: false
+        property bool isScrolling: false
+        property bool wasScrolling: false
+        property real scrollAnchorContentX: 0
+        property real scrollAnchorContentY: 0
 
-        readonly property real anchorViewY: anchorContentY + listView.y - listView.contentY
+        // "Drag to Scroll" swaps the mouse buttons: when enabled the left
+        // button pans the view and the right button rubber-band selects; when
+        // disabled the left button selects and the right button pans.
+        readonly property int selectButton: AppController.dragToScroll ? Qt.RightButton : Qt.LeftButton
+        readonly property int scrollButton: AppController.dragToScroll ? Qt.LeftButton : Qt.RightButton
+
+        // The list is nested inside the horizontal Flickable's ColumnLayout, so
+        // listView.y is not in the drag area's coordinate space. Convert through
+        // the item instead of mixing coordinate systems.
+        readonly property real anchorViewY: mapFromItem(listView, 0, anchorContentY - listView.contentY).y
 
         function insideContent(px, py) {
             const p = mapToItem(listView, px, py);
             return p.x >= 0 && p.y >= 0 && p.x <= listView.width && p.y <= listView.height;
+        }
+
+        // Gesture handling is exposed as functions so the item delegates can
+        // hand a drag over to the view when the pressed item is not selected.
+        function beginGesture(x, y) {
+            startX = x;
+            startY = y;
+            currentX = x;
+            currentY = y;
+            anchorContentY = mapToItem(listView, x, y).y + listView.contentY;
+            lastContentY = listView.contentY;
+            scrollAnchorContentX = listView.contentX;
+            scrollAnchorContentY = listView.contentY;
+            isSelecting = false;
+            wasSelecting = false;
+            isScrolling = false;
+            wasScrolling = false;
+        }
+
+        function updateGesture(x, y, buttons, modifiers) {
+            currentX = x;
+            currentY = y;
+            let dx = x - startX;
+            let dy = y - startY;
+            if (buttons & selectButton) {
+                if (!isSelecting && (dx * dx + dy * dy) > 36) {
+                    isSelecting = true;
+                    wasSelecting = true;
+                    if (!(modifiers & Qt.ControlModifier)) {
+                        root.selectedPaths = [];
+                        listView.currentIndex = -1;
+                    }
+                }
+                if (isSelecting) {
+                    updateRubberBandSelection();
+                }
+            } else if (buttons & scrollButton) {
+                if (!isScrolling && (dx * dx + dy * dy) > 36) {
+                    isScrolling = true;
+                    wasScrolling = true;
+                }
+                if (isScrolling) {
+                    const limit = Math.max(0, listView.contentHeight - listView.height);
+                    listView.cancelFlick();
+                    listView.contentY = Math.max(0, Math.min(limit, scrollAnchorContentY - dy));
+                }
+            }
+        }
+
+        function endGesture() {
+            isSelecting = false;
+            isScrolling = false;
         }
 
         onPressed: mouse => {
@@ -1029,45 +1135,20 @@ Item {
                 return;
             }
             root.notifyFocus();
-            startX = mouse.x;
-            startY = mouse.y;
-            currentX = mouse.x;
-            currentY = mouse.y;
-            anchorContentY = mouse.y - listView.y + listView.contentY;
-            lastContentY = listView.contentY;
-            isSelecting = false;
-            wasSelecting = false;
+            beginGesture(mouse.x, mouse.y);
         }
 
-        onPositionChanged: mouse => {
-            if (mouse.buttons & Qt.LeftButton) {
-                currentX = mouse.x;
-                currentY = mouse.y;
-                let dx = currentX - startX;
-                let dy = currentY - startY;
-                if (!isSelecting && (dx * dx + dy * dy) > 36) {
-                    isSelecting = true;
-                    wasSelecting = true;
-                    if (!(mouse.modifiers & Qt.ControlModifier)) {
-                        root.selectedPaths = [];
-                        listView.currentIndex = -1;
-                    }
-                }
-                if (isSelecting) {
-                    updateRubberBandSelection();
-                }
-            }
-        }
+        onPositionChanged: mouse => updateGesture(mouse.x, mouse.y, mouse.buttons, mouse.modifiers)
 
-        onReleased: mouse => {
-            if (isSelecting) {
-                isSelecting = false;
-            }
-        }
+        onReleased: mouse => endGesture()
 
         onClicked: mouse => {
             if (wasSelecting) {
                 wasSelecting = false;
+                return;
+            }
+            if (wasScrolling) {
+                wasScrolling = false;
                 return;
             }
             if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1) {
@@ -1085,15 +1166,15 @@ Item {
         }
 
         function updateRubberBandSelection() {
-            let cy = currentY - listView.y + listView.contentY;
+            let cy = mapToItem(listView, currentX, currentY).y + listView.contentY;
             let ry = Math.min(anchorContentY, cy);
             let rh = Math.abs(cy - anchorContentY);
 
             let newlySelected = [];
             let total = root.model ? root.model.count : 0;
             for (let i = 0; i < total; ++i) {
-                let iy = i * 36;
-                let ih = 36;
+                let iy = i * root.rowHeight;
+                let ih = root.rowHeight;
                 if (iy < ry + rh && iy + ih > ry) {
                     let entry = root.model.get(i);
                     if (entry) {
@@ -1111,8 +1192,8 @@ Item {
 
             onTriggered: {
                 const edge = 32;
-                const top = listView.y;
-                const bottom = listView.y + listView.height;
+                const top = dragSelectArea.mapFromItem(listView, 0, 0).y;
+                const bottom = dragSelectArea.mapFromItem(listView, 0, listView.height).y;
                 let delta = 0;
                 if (dragSelectArea.currentY < top + edge)
                     delta = -Math.min(28, (top + edge - dragSelectArea.currentY) / 2);

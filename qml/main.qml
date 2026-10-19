@@ -70,6 +70,25 @@ ApplicationWindow {
         }
     }
 
+    // Paste files from the clipboard, or write a clipboard image to disk
+    // as a .png and prompt the user to name it.
+    function pasteFromClipboard() {
+        let dir = getActiveDirectory();
+        if (!dir) return;
+        if (FileOperations.clipboardFiles.length > 0) {
+            FileOperations.paste(dir);
+        } else if (FileOperations.clipboardImageData && FileOperations.clipboardImageData.length > 0) {
+            let created = FileOperations.pasteImage(dir);
+            if (created && created.length > 0) {
+                newItemModal.title = qsTr("Rename");
+                newItemModal.icon = "drive_file_rename_outline";
+                newItemModal.targetRenamePath = created;
+                newItemModal.initialText = FileUtils.baseName(created);
+                newItemModal.expanded = true;
+            }
+        }
+    }
+
     // Full File Manager Mode
     Item {
         anchors.fill: parent
@@ -345,7 +364,7 @@ ApplicationWindow {
                 } else if (action === "copyCurrentDirPath") {
                     FileOperations.copyTextToClipboard(currentDir);
                 } else if (action === "paste") {
-                    FileOperations.paste(currentDir);
+                    window.pasteFromClipboard();
                 } else if (action === "pasteSymlink") {
                     FileOperations.pasteAsSymlink(currentDir);
                 } else if (action === "symlink" && item) {
@@ -689,33 +708,32 @@ ApplicationWindow {
             id: runnerGameModal
         }
 
-        Shortcut {
-            sequence: "Space"
-            context: Qt.ApplicationShortcut
-            enabled: !mediaViewerModal.expanded && !newItemModal.expanded && !editPlaceModal.expanded && !placesManageModal.expanded && !compressModal.expanded && !openWithModal.expanded && !preferencesModal.expanded && !mediaToolsModal.expanded && !runnerGameModal.isOpen && !vectorBloomOverlay.isOpen
+        AppShortcut {
+            actionId: "view.previewMedia"
+            active: !mediaViewerModal.expanded && !newItemModal.expanded && !editPlaceModal.expanded && !placesManageModal.expanded && !compressModal.expanded && !openWithModal.expanded && !preferencesModal.expanded && !mediaToolsModal.expanded && !runnerGameModal.isOpen && !vectorBloomOverlay.isOpen
             onActivated: {
-                if (splitContainer.currentSelectedPath) {
-                    let path = splitContainer.currentSelectedPath;
-                    mediaViewerModal.openFile(path, splitContainer.activeModel);
+                let paths = splitContainer.selectedPaths;
+                if (paths && paths.length > 0) {
+                    let path = paths[0];
+                    if (FileUtils.isImage(path) || FileUtils.isVideo(path)) {
+                        mediaViewerModal.openFile(path, splitContainer.activeModel);
+                    }
                 }
             }
         }
 
-        Shortcut {
-            sequence: "Ctrl+,"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "app.preferences"
             onActivated: preferencesModal.expanded = true
         }
 
-        Shortcut {
-            sequence: "Ctrl+T"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "tabs.new"
             onActivated: TabManager.newTab()
         }
 
-        Shortcut {
-            sequence: "Ctrl+W"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "tabs.close"
             onActivated: {
                 if (TabManager.currentTab && TabManager.currentTab.isSplit) {
                     TabManager.closeSplitPane(TabManager.currentIndex, TabManager.currentTab.activePane);
@@ -725,32 +743,18 @@ ApplicationWindow {
             }
         }
 
-        Shortcut {
-            sequence: "Ctrl+Tab"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "tabs.next"
             onActivated: TabManager.nextTab()
         }
 
-        Shortcut {
-            sequence: "Ctrl+Shift+Tab"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "tabs.previous"
             onActivated: TabManager.prevTab()
         }
 
-        Shortcut {
-            sequence: "Ctrl+N"
-            context: Qt.ApplicationShortcut
-            onActivated: {
-                newItemModal.title = qsTr("Create New Folder");
-                newItemModal.icon = "create_new_folder";
-                newItemModal.initialText = qsTr("New Folder");
-                newItemModal.expanded = true;
-            }
-        }
-
-        Shortcut {
-            sequence: "Ctrl+Shift+N"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "file.newFile"
             onActivated: {
                 newItemModal.title = qsTr("Create New File");
                 newItemModal.icon = "note_add";
@@ -759,53 +763,55 @@ ApplicationWindow {
             }
         }
 
-        Shortcut {
-            sequence: "Ctrl+C"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "file.newFolder"
+            onActivated: {
+                newItemModal.title = qsTr("Create New Folder");
+                newItemModal.icon = "create_new_folder";
+                newItemModal.initialText = qsTr("New Folder");
+                newItemModal.expanded = true;
+            }
+        }
+
+        AppShortcut {
+            actionId: "edit.copy"
             onActivated: {
                 let paths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : (splitContainer.currentSelectedPath ? [splitContainer.currentSelectedPath] : []);
                 if (paths.length > 0) FileOperations.copyPaths(paths);
             }
         }
 
-        Shortcut {
-            sequence: "Ctrl+X"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "edit.cut"
             onActivated: {
                 let paths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : (splitContainer.currentSelectedPath ? [splitContainer.currentSelectedPath] : []);
                 if (paths.length > 0) FileOperations.cutPaths(paths);
             }
         }
 
-        Shortcut {
-            sequence: "Ctrl+V"
-            context: Qt.ApplicationShortcut
-            onActivated: {
-                if (TabManager.currentTab) FileOperations.paste(window.getActiveDirectory());
-            }
+        AppShortcut {
+            actionId: "edit.paste"
+            onActivated: window.pasteFromClipboard()
         }
 
-        Shortcut {
-            sequence: "Delete"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "file.trash"
             onActivated: {
                 let paths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : (splitContainer.currentSelectedPath ? [splitContainer.currentSelectedPath] : []);
                 if (paths.length > 0) window.requestMoveToTrash(paths);
             }
         }
 
-        Shortcut {
-            sequence: "Shift+Delete"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "file.deletePermanent"
             onActivated: {
                 let paths = splitContainer.selectedPaths.length > 0 ? splitContainer.selectedPaths : (splitContainer.currentSelectedPath ? [splitContainer.currentSelectedPath] : []);
                 if (paths.length > 0) window.requestPermanentDelete(paths);
             }
         }
 
-        Shortcut {
-            sequences: ["F2", "Shift+F2"]
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "file.rename"
             onActivated: {
                 let sel = splitContainer.currentSelectedPath;
                 if (sel && sel.length > 0) {
@@ -818,9 +824,8 @@ ApplicationWindow {
             }
         }
 
-        Shortcut {
-            sequence: "Alt+Return"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "file.properties"
             onActivated: {
                 let sel = splitContainer.currentSelectedPath;
                 if (sel && sel.length > 0) {
@@ -830,45 +835,28 @@ ApplicationWindow {
             }
         }
 
-        Shortcut {
-            sequence: "Ctrl+H"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "view.toggleHidden"
             onActivated: AppController.showHidden = !AppController.showHidden
         }
 
-        Shortcut {
-            sequence: "Alt+."
-            context: Qt.ApplicationShortcut
-            onActivated: AppController.showHidden = !AppController.showHidden
-        }
-
-        Shortcut {
-            sequence: "Ctrl+A"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "edit.selectAll"
             onActivated: splitContainer.selectAll()
         }
 
-        Shortcut {
-            sequence: "Ctrl+Shift+A"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "edit.clearSelection"
             onActivated: splitContainer.clearSelection()
         }
 
-        Shortcut {
-            sequence: "Ctrl+D"
-            context: Qt.ApplicationShortcut
-            onActivated: splitContainer.clearSelection()
-        }
-
-        Shortcut {
-            sequence: "Ctrl+I"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "edit.invertSelection"
             onActivated: splitContainer.invertSelection()
         }
 
-        Shortcut {
-            sequence: "Ctrl+S"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "edit.selectByPattern"
             onActivated: {
                 newItemModal.title = qsTr("Select by Pattern");
                 newItemModal.icon = "filter_alt";
@@ -877,69 +865,53 @@ ApplicationWindow {
             }
         }
 
-        Shortcut {
-            sequence: "Ctrl+1"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "view.grid"
             onActivated: if (TabManager.currentTab) TabManager.currentTab.viewMode = 0
         }
 
-        Shortcut {
-            sequence: "Ctrl+2"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "view.details"
             onActivated: if (TabManager.currentTab) TabManager.currentTab.viewMode = 1
         }
 
-        Shortcut {
-            sequence: "Ctrl+3"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "view.compact"
             onActivated: if (TabManager.currentTab) TabManager.currentTab.viewMode = 2
         }
 
-        Shortcut {
-            sequence: "Alt+Left"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "nav.back"
             onActivated: if (TabManager.currentTab && TabManager.currentTab.canGoBack) TabManager.currentTab.goBack()
         }
 
-        Shortcut {
-            sequence: "Alt+Right"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "nav.forward"
             onActivated: if (TabManager.currentTab && TabManager.currentTab.canGoForward) TabManager.currentTab.goForward()
         }
 
-        Shortcut {
-            sequence: "Alt+Up"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "nav.parent"
             onActivated: if (TabManager.currentTab) TabManager.currentTab.goUp()
         }
 
-        Shortcut {
-            sequence: "Alt+Home"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "nav.home"
             onActivated: window.setActiveDirectory(FileUtils.home)
         }
 
-        Shortcut {
-            sequences: ["Ctrl+F", "F9", "Shift+F9"]
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "nav.search"
             onActivated: navBar.openSearch()
         }
 
-        Shortcut {
-            sequence: "Ctrl+L"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "nav.address"
             onActivated: navBar.openAddressEdit()
         }
 
-        Shortcut {
-            sequence: "Alt+D"
-            context: Qt.ApplicationShortcut
-            onActivated: navBar.openAddressEdit()
-        }
-
-        Shortcut {
-            sequences: ["F3", "Shift+F3"]
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "view.split"
             onActivated: {
                 if (TabManager.currentTab) {
                     TabManager.currentTab.isSplit = !TabManager.currentTab.isSplit;
@@ -950,9 +922,8 @@ ApplicationWindow {
             }
         }
 
-        Shortcut {
-            sequences: ["F4", "Shift+F4", "Ctrl+Alt+T", "Ctrl+`"]
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "tools.terminal"
             onActivated: {
                 if (TabManager.currentTab) {
                     AppIntegration.openInTerminal(window.getActiveDirectory());
@@ -960,9 +931,8 @@ ApplicationWindow {
             }
         }
 
-        Shortcut {
-            sequences: ["F5", "Shift+F5", "Ctrl+R"]
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "view.refresh"
             onActivated: {
                 if (splitContainer.activeModel) {
                     splitContainer.activeModel.refresh();
@@ -970,26 +940,13 @@ ApplicationWindow {
             }
         }
 
-        Shortcut {
-            sequences: ["F10", "Shift+F10"]
-            context: Qt.ApplicationShortcut
-            onActivated: {
-                newItemModal.title = qsTr("Create New Folder");
-                newItemModal.icon = "create_new_folder";
-                newItemModal.initialText = qsTr("New Folder");
-                newItemModal.expanded = true;
-            }
-        }
-
-        Shortcut {
-            sequences: ["F1", "Shift+F1", "Alt+P"]
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "view.previewPanel"
             onActivated: previewPanel.expanded = !previewPanel.expanded
         }
 
-        Shortcut {
-            sequences: ["F11", "Shift+F11"]
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "app.fullscreen"
             onActivated: {
                 if (window.visibility === Window.FullScreen) {
                     window.visibility = Window.Windowed;
@@ -999,45 +956,28 @@ ApplicationWindow {
             }
         }
 
-        Shortcut {
-            sequence: "Ctrl+Z"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "edit.undo"
             onActivated: FileOperations.undo()
         }
 
-        Shortcut {
-            sequence: "Ctrl+Shift+Z"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "edit.redo"
             onActivated: FileOperations.redo()
         }
 
-        Shortcut {
-            sequence: "Ctrl+Y"
-            context: Qt.ApplicationShortcut
-            onActivated: FileOperations.redo()
-        }
-
-        Shortcut {
-            sequence: "Ctrl+="
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "view.zoomIn"
             onActivated: window.zoomLevel = Math.min(180, window.zoomLevel + 16)
         }
 
-        Shortcut {
-            sequence: "Ctrl++"
-            context: Qt.ApplicationShortcut
-            onActivated: window.zoomLevel = Math.min(180, window.zoomLevel + 16)
-        }
-
-        Shortcut {
-            sequence: "Ctrl+-"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "view.zoomOut"
             onActivated: window.zoomLevel = Math.max(48, window.zoomLevel - 16)
         }
 
-        Shortcut {
-            sequence: "Ctrl+0"
-            context: Qt.ApplicationShortcut
+        AppShortcut {
+            actionId: "view.zoomReset"
             onActivated: window.zoomLevel = 80
         }
 

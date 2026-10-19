@@ -28,6 +28,9 @@ MouseArea {
     readonly property alias videoPlayer: videoPlayerLoader.item
 
     function openFile(filePath, directoryModel) {
+        if (!filePath || (!FileUtils.isImage(filePath) && !FileUtils.isVideo(filePath))) {
+            return;
+        }
         currentFilePath = filePath;
         let list = [];
         let curIdx = -1;

@@ -117,6 +117,8 @@ qt_add_executable(atlas_app
     src/core/runnergame.cpp
     src/core/appcontroller.hpp
     src/core/appcontroller.cpp
+    src/core/shortcutmanager.hpp
+    src/core/shortcutmanager.cpp
 )
 
 set_target_properties(atlas_app PROPERTIES
@@ -139,6 +141,7 @@ qt_add_qml_module(atlas_app
         qml/main.qml
         qml/components/Anim.qml
         qml/components/CAnim.qml
+        qml/components/AppShortcut.qml
         qml/components/StyledRect.qml
         qml/components/StyledText.qml
         qml/components/MaterialIcon.qml
@@ -214,6 +217,9 @@ qt_add_qml_module(atlas_app
         qml/components/controls/StyledCheckBox.qml
         qml/components/controls/CircularProgress.qml
         qml/components/controls/CircularIndicator.qml
+        qml/components/settings/ShortcutsTab.qml
+        qml/components/settings/ShortcutRow.qml
+        qml/components/settings/KeyRecorderDialog.qml
         qml/components/statusbar/StatusBar.qml
         qml/utils/FileNameHelper.js
     RESOURCES

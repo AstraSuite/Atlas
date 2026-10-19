@@ -32,6 +32,7 @@ class AppController : public QObject {
     Q_PROPERTY(QVariantMap detailsColumnWidths READ detailsColumnWidths NOTIFY detailsColumnWidthsChanged)
     Q_PROPERTY(QStringList detailsColumnOrder READ detailsColumnOrder NOTIFY detailsColumnOrderChanged)
     Q_PROPERTY(bool singleClick READ singleClick WRITE setSingleClick NOTIFY singleClickChanged)
+    Q_PROPERTY(bool dragToScroll READ dragToScroll WRITE setDragToScroll NOTIFY dragToScrollChanged)
     Q_PROPERTY(QString defaultStartupDirectory READ defaultStartupDirectory WRITE setDefaultStartupDirectory NOTIFY defaultStartupDirectoryChanged)
     Q_PROPERTY(int defaultViewMode READ defaultViewMode WRITE setDefaultViewMode NOTIFY defaultViewModeChanged)
     Q_PROPERTY(int defaultSortField READ defaultSortField WRITE setDefaultSortField NOTIFY defaultSortFieldChanged)
@@ -107,6 +108,9 @@ public:
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
     void setSingleClick(bool single);
+
+    [[nodiscard]] bool dragToScroll() const { return m_dragToScroll; }
+    void setDragToScroll(bool drag);
 
     [[nodiscard]] QString defaultStartupDirectory() const { return m_defaultStartupDirectory; }
     void setDefaultStartupDirectory(const QString& dir);
@@ -185,6 +189,7 @@ signals:
     void detailsColumnWidthsChanged();
     void detailsColumnOrderChanged();
     void singleClickChanged();
+    void dragToScrollChanged();
     void defaultStartupDirectoryChanged();
     void defaultViewModeChanged();
     void defaultSortFieldChanged();
@@ -222,6 +227,7 @@ private:
     QVariantMap m_detailsColumnWidths;
     QStringList m_detailsColumnOrder;
     bool m_singleClick = false;
+    bool m_dragToScroll = false;
     QString m_defaultStartupDirectory = "home";
     int m_defaultViewMode = 0;
     int m_defaultSortField = 0;
