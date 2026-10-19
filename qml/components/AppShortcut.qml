@@ -7,7 +7,7 @@ import atlas
 Shortcut {
     id: root
 
-    // Stable action id registered in ShortcutManager (see SHORTCUTS.md §3).
+    // Stable action id registered in ShortcutManager (see docs/shortcuts.md).
     property string actionId: ""
     // Optional dynamic gate, e.g. "only while no modal is open".
     property bool active: true

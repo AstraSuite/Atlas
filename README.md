@@ -85,57 +85,9 @@ cmake --install build --prefix ~/.local
 sudo xargs rm -fv < build/install_manifest.txt
 ```
 
-## XDG Desktop File Picker
+## Documentation
 
-For desktop-wide portal integration (system file chooser dialogs in browsers, editors, and other applications), use [Wormhole](https://github.com/AstraSuite/Wormhole), which can drive Atlas in picker mode.
-
-### Window Rules on Wayland Compositors
-
-To ensure the picker opens centered as a floating modal, add a window rule for the picker title.
-
-#### Hyprland
-
-In your `hyprland.conf`:
-
-```ini
-windowrulev2 = float, title:^(.*Atlas File Picker.*)$
-windowrulev2 = center, title:^(.*Atlas File Picker.*)$
-windowrulev2 = size 1000 620, title:^(.*Atlas File Picker.*)$
-windowrulev2 = focusonactivate, title:^(.*Atlas File Picker.*)$
-```
-
-#### Caelestia in ~/.config/caelestia/hypr-user.lua
-
-```lua
-local rules = {
-    {
-        pattern = ".*Atlas File Picker.*",
-        type = "title",
-        float = true,
-        center = true,
-        size = "1000 620",
-        focus = true
-    }
-}
-```
-
-### Direct CLI Picker Mode
-
-Atlas can also be invoked directly in picker mode by scripts or external tools:
-
-```bash
-# Open file picker
-atlas -p -t "Select File" -d ~/Documents
-
-# Save file picker
-atlas -p -s -t "Save As" -d ~/Downloads
-
-# Directory only picker
-atlas -p --directory-only -t "Select Directory"
-
-# Filter by extensions
-atlas -p -f "png,jpg,webp" -t "Select Image"
-```
+Documentation for working on Atlas is in [docs/](docs/README.md).
 
 ## Credits and Licensing
 
