@@ -11,16 +11,19 @@ report through `FileOperationProgress` (`progress`, `statusText`, `running`) and
 `operationFinished(success, message)`. `cancelOperation()` sets a flag that the copy loop
 checks between files.
 
-Copy and move have three engines, chosen in Preferences (`transferEngine`):
+Copy and move have three engines, chosen in Preferences → General → File Transfers and
+saved as `preferences/transferEngine`:
 
 | Engine | Behaviour |
 |--------|-----------|
-| Standard | Atlas copies files itself, with byte-level progress. Symlinks are copied as links. |
-| Rsync | Runs `rsync -avh --progress --checksum`. Needs `rsync` installed. |
-| Custom | Stores a user command (`customCommand`). Copy and move don't use it yet and behave as Standard. |
+| Standard | Atlas copies files itself, with byte-level progress. Symlinks are copied as links. A name that already exists gets ` (copy N)` appended. |
+| Rsync | Runs `rsync -avh --progress --checksum` (with `--remove-source-files` for moves). Needs `rsync` installed. |
+| Custom | Runs the user's command (`preferences/customTransferCommand`) through `/bin/sh -c`, with `%F` replaced by the quoted sources and `%d` by the quoted destination folder, for example `cp -r --reflink=auto %F %d`. A non-zero exit fails the operation. |
 
-A move inside one filesystem is a rename. Moving or copying a folder into itself, or onto
-itself, is refused before anything starts.
+A move inside one filesystem is a rename, whatever the engine. Only items that can't be
+renamed (another filesystem) are transferred by the engine; with the custom engine they
+are deleted from the source once the command succeeds. Moving a folder into itself, or
+into the folder it is already in, is skipped.
 
 ## Clipboard
 
@@ -60,18 +63,32 @@ Trashing follows the [FreeDesktop trash spec](https://specifications.freedesktop
 
 ## Undo
 
-Undoable operations push an `UndoAction` onto the undo stack: rename, bulk rename, create
-file, create folder, move and move to trash. `undo()` reverses the latest one (a trash is
-undone by restoring from its `.trashinfo`) and moves it to the redo stack. Any new
-operation clears the redo stack. Copies and permanent deletes cannot be undone;
-`UndoAction::Copy` exists but nothing records it yet.
+Undoable operations call `recordUndo` with an `UndoAction`: rename, bulk rename, create
+file, create folder, copy, move and move to trash. `undo()` reverses the latest one and
+moves it to the redo stack:
+
+| Operation | Undone by |
+|-----------|-----------|
+| Copy | Moving the copies to the trash, in case one was edited since. |
+| Move | Moving each item back to the folder it came from. |
+| Move to trash | Restoring each item from its `.trashinfo`. |
+| Rename, create | Renaming back, or deleting what was created. |
+
+Copies are only recorded with the standard engine, the only one that knows the name each
+copy got; rsync and custom commands may overwrite files. Permanent deletes can't be undone.
+
+Copy, move and trash finish on a worker thread, so undo and redo replay them through the
+normal entry points. `m_replay` tells each operation, when it starts, whether it is an
+undo (record nothing), a redo (record it, keep the redo stack) or a new operation (record
+it and clear the redo stack).
 
 ## Other operations
 
 - **New file and templates:** `createFile`, `createDirectory`, and `createFromTemplate`
   for files in the XDG templates folder (`~/Templates`), which `FileUtils.templates()`
   lists for the New menu.
-- **Duplicate and symlinks:** `duplicateFile` creates `name (copy).ext`.
+- **Duplicate and symlinks:** `duplicateFile` copies an item into its own folder, where it
+  gets ` (copy N)` appended.
   `pasteAsSymlink` links the clipboard's files into a folder.
 - **Archives:** `extractArchive` picks `unzip`, `tar` (gz, xz, zst, bz2) or `7z` from the
   file name. `createArchive` runs `zip`, `tar` or `7z` for the chosen format.

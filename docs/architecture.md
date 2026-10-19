@@ -16,9 +16,6 @@ integration; QML owns every pixel. This page describes how the two halves meet.
 | `qml/components/` | The component library and the feature UI, grouped by folder (`views`, `navigation`, `dialogs`, `menus`, `panels`, `media`, `settings`, `controls`, `containers`). |
 | `assets/` | Fonts, the icon, the desktop entry and the Material Symbols name list, compiled in as Qt resources. |
 
-`qml/components/filedialog/` is left over from the old picker mode, which was removed from
-Atlas. It is compiled but not used by `main.qml`.
-
 ## Startup
 
 `main.cpp` sets a 32-bit RGBA surface format (to avoid RGB565 banding), copies settings from
@@ -105,7 +102,8 @@ The settings groups are:
 - `session/`: state Atlas remembers on its own: last path, open tabs, view mode, zoom,
   sidebar width, show-hidden.
 - `preferences/`: choices made in Preferences. `preferences/directoryViews` holds the
-  per-folder view and sort as JSON when *directory-specific views* is on.
+  per-folder view and sort as JSON when *directory-specific views* is on, and
+  `preferences/transferEngine` and `preferences/customTransferCommand` the copy engine.
 - `contextMenu/`: which optional context menu entries are shown.
 - `shortcuts/bindings`: overrides only, as JSON (see [Shortcuts](shortcuts.md)).
 - `places/`, `devices/`: hidden sidebar entries.

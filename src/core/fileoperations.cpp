@@ -18,6 +18,7 @@
 #include <QMimeData>
 #include <QMimeDatabase>
 #include <QTimer>
+#include <QSettings>
 #include <QPointer>
 #include <QUrl>
 #include <QPixmap>
@@ -34,6 +35,10 @@ Q_LOGGING_CATEGORY(lcFileOps, "atlas.fileops", QtInfoMsg)
 FileOperations::FileOperations(QObject* parent)
     : QObject(parent)
     , m_progress(new FileOperationProgress(this)) {
+    QSettings settings("astra-atlas", "atlas");
+    m_transferEngine = qBound(int(StandardEngine), settings.value("preferences/transferEngine", int(StandardEngine)).toInt(), int(CustomEngine));
+    m_customCommand = settings.value("preferences/customTransferCommand").toString();
+
     auto* clipboard = QGuiApplication::clipboard();
     connect(clipboard, &QClipboard::dataChanged, this, &FileOperations::syncFromSystemClipboard);
     syncFromSystemClipboard();
@@ -47,6 +52,7 @@ FileOperations* FileOperations::instance() {
 void FileOperations::setTransferEngine(int engine) {
     if (m_transferEngine != engine) {
         m_transferEngine = engine;
+        QSettings("astra-atlas", "atlas").setValue("preferences/transferEngine", engine);
         emit transferEngineChanged();
     }
 }
@@ -54,6 +60,7 @@ void FileOperations::setTransferEngine(int engine) {
 void FileOperations::setCustomCommand(const QString& cmd) {
     if (m_customCommand != cmd) {
         m_customCommand = cmd;
+        QSettings("astra-atlas", "atlas").setValue("preferences/customTransferCommand", cmd);
         emit customCommandChanged();
     }
 }
@@ -336,14 +343,60 @@ bool FileOperations::removeRecursively(const QString& path) {
     return QFile::remove(path);
 }
 
+static QString shellQuote(const QString& value) {
+    QString escaped = value;
+    escaped.replace(QLatin1Char('\''), QLatin1String("'\\''"));
+    return QLatin1Char('\'') + escaped + QLatin1Char('\'');
+}
+
+bool FileOperations::runCustomTransfer(const QStringList& sources, const QString& destinationDir) const {
+    if (m_customCommand.trimmed().isEmpty() || sources.isEmpty())
+        return false;
+
+    QStringList quoted;
+    for (const QString& src : sources)
+        quoted << shellQuote(src);
+
+    QString cmd = m_customCommand;
+    cmd.replace(QStringLiteral("%F"), quoted.join(QLatin1Char(' ')));
+    cmd.replace(QStringLiteral("%d"), shellQuote(destinationDir));
+
+    QProcess proc;
+    proc.setWorkingDirectory(destinationDir);
+    proc.start(QStringLiteral("/bin/sh"), QStringList{ QStringLiteral("-c"), cmd });
+    if (!proc.waitForFinished(-1))
+        return false;
+    if (proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) {
+        qCWarning(lcFileOps) << "Custom transfer command failed:" << cmd << proc.readAllStandardError();
+        return false;
+    }
+    return true;
+}
+
+void FileOperations::recordUndo(const UndoAction& action, Replay replay) {
+    // Undoing an operation must not record its reversal; redoing one records
+    // it again but keeps the rest of the redo stack.
+    if (replay == Replay::Undo)
+        return;
+    m_undoStack.push_back(action);
+    if (replay == Replay::None)
+        m_redoStack.clear();
+    emit undoStackChanged();
+}
+
 void FileOperations::copyFiles(const QStringList& sources, const QString& destinationDir) {
     m_cancelRequested = false;
     m_progress->setRunning(true);
     m_progress->setProgress(0.0);
     m_progress->setStatusText(tr("Copying files..."));
 
-    (void)QtConcurrent::run([this, sources, destinationDir]() {
+    const Replay replay = m_replay;
+    (void)QtConcurrent::run([this, sources, destinationDir, replay]() {
         bool allSuccess = true;
+        // Only the standard engine knows where each copy landed; rsync and
+        // custom commands may overwrite existing files, so they aren't undoable.
+        QStringList copiedSources;
+        QStringList copiedPaths;
 
         if (m_transferEngine == RsyncEngine) {
             // Rsync transfer with checksum verification and progress
@@ -356,6 +409,8 @@ void FileOperations::copyFiles(const QStringList& sources, const QString& destin
             proc.start("rsync", args);
             proc.waitForFinished(-1);
             allSuccess = (proc.exitCode() == 0);
+        } else if (m_transferEngine == CustomEngine) {
+            allSuccess = runCustomTransfer(sources, destinationDir);
         } else {
             qint64 total = calculateTotalSize(sources);
             qint64 processed = 0;
@@ -381,10 +436,20 @@ void FileOperations::copyFiles(const QStringList& sources, const QString& destin
                     allSuccess = false;
                     break;
                 }
+                copiedSources << src;
+                copiedPaths << dest;
             }
         }
 
-        QMetaObject::invokeMethod(this, [this, allSuccess]() {
+        QMetaObject::invokeMethod(this, [this, allSuccess, copiedSources, copiedPaths, destinationDir, replay]() {
+            if (!copiedPaths.isEmpty()) {
+                UndoAction action;
+                action.type = UndoAction::Copy;
+                action.sourcePaths = copiedSources;
+                action.destPaths = copiedPaths;
+                action.targetDir = destinationDir;
+                recordUndo(action, replay);
+            }
             m_progress->setRunning(false);
             m_progress->setProgress(1.0);
             emit operationFinished(allSuccess, allSuccess ? tr("Copy completed") : tr("Copy failed or cancelled"));
@@ -398,8 +463,11 @@ void FileOperations::moveFiles(const QStringList& sources, const QString& destin
     m_progress->setProgress(0.0);
     m_progress->setStatusText(tr("Moving files..."));
 
-    (void)QtConcurrent::run([this, sources, destinationDir]() {
+    const Replay replay = m_replay;
+    (void)QtConcurrent::run([this, sources, destinationDir, replay]() {
         bool allSuccess = true;
+        QStringList movedSources;
+        QStringList movedPaths;
 
         if (m_transferEngine == RsyncEngine) {
             QStringList args;
@@ -411,9 +479,18 @@ void FileOperations::moveFiles(const QStringList& sources, const QString& destin
             proc.start("rsync", args);
             proc.waitForFinished(-1);
             allSuccess = (proc.exitCode() == 0);
+            if (allSuccess) {
+                for (const QString& src : sources) {
+                    movedSources << src;
+                    movedPaths << destinationDir + "/" + QFileInfo(src).fileName();
+                }
+            }
         } else {
             qint64 total = calculateTotalSize(sources);
             qint64 processed = 0;
+            // Items that couldn't be renamed (another filesystem) and must be
+            // transferred by the custom command.
+            QStringList pendingCustom;
 
             for (const QString& src : sources) {
                 if (m_cancelRequested.load()) {
@@ -442,18 +519,43 @@ void FileOperations::moveFiles(const QStringList& sources, const QString& destin
                 }
 
                 // Try fast filesystem rename
-                if (!QFile::rename(src, dest)) {
+                if (QFile::rename(src, dest)) {
+                    movedSources << src;
+                    movedPaths << dest;
+                } else if (m_transferEngine == CustomEngine) {
+                    pendingCustom << src;
+                } else if (copyRecursively(src, dest, m_cancelRequested, processed, total)) {
                     // Fallback to copy and remove
-                    if (copyRecursively(src, dest, m_cancelRequested, processed, total)) {
+                    removeRecursively(src);
+                    movedSources << src;
+                    movedPaths << dest;
+                } else {
+                    allSuccess = false;
+                }
+            }
+
+            if (!pendingCustom.isEmpty() && !m_cancelRequested.load()) {
+                if (runCustomTransfer(pendingCustom, destinationDir)) {
+                    for (const QString& src : pendingCustom) {
                         removeRecursively(src);
-                    } else {
-                        allSuccess = false;
+                        movedSources << src;
+                        movedPaths << destinationDir + "/" + QFileInfo(src).fileName();
                     }
+                } else {
+                    allSuccess = false;
                 }
             }
         }
 
-        QMetaObject::invokeMethod(this, [this, allSuccess]() {
+        QMetaObject::invokeMethod(this, [this, allSuccess, movedSources, movedPaths, destinationDir, replay]() {
+            if (!movedPaths.isEmpty()) {
+                UndoAction action;
+                action.type = UndoAction::Move;
+                action.sourcePaths = movedSources;
+                action.destPaths = movedPaths;
+                action.targetDir = destinationDir;
+                recordUndo(action, replay);
+            }
             m_progress->setRunning(false);
             m_progress->setProgress(1.0);
             emit operationFinished(allSuccess, allSuccess ? tr("Move completed") : tr("Move failed or cancelled"));
@@ -598,8 +700,11 @@ void FileOperations::moveToTrash(const QStringList& paths) {
     m_progress->setRunning(true);
     m_progress->setStatusText(tr("Moving to trash..."));
 
-    (void)QtConcurrent::run([this, paths]() {
+    const Replay replay = m_replay;
+    (void)QtConcurrent::run([this, paths, replay]() {
         bool allSuccess = true;
+        QStringList trashedSources;
+        QStringList trashInfoPaths;
 
         for (const QString& p : paths) {
             QFileInfo fi(p);
@@ -650,11 +755,21 @@ void FileOperations::moveToTrash(const QStringList& paths) {
                 } else {
                     QFile::remove(infoFile);
                     allSuccess = false;
+                    continue;
                 }
             }
+            trashedSources << fi.absoluteFilePath();
+            trashInfoPaths << infoFile;
         }
 
-        QMetaObject::invokeMethod(this, [this, allSuccess]() {
+        QMetaObject::invokeMethod(this, [this, allSuccess, trashedSources, trashInfoPaths, replay]() {
+            if (!trashInfoPaths.isEmpty()) {
+                UndoAction action;
+                action.type = UndoAction::MoveToTrash;
+                action.sourcePaths = trashedSources;
+                action.trashInfoPaths = trashInfoPaths;
+                recordUndo(action, replay);
+            }
             m_progress->setRunning(false);
             emit operationFinished(allSuccess, allSuccess ? tr("Moved to trash") : tr("Failed to trash some items"));
         });
@@ -767,9 +882,7 @@ void FileOperations::renameFile(const QString& oldPath, const QString& newName) 
         action.oldPath = oldPath;
         action.newPath = newPath;
         action.name = newName;
-        m_undoStack.push_back(action);
-        m_redoStack.clear();
-        emit undoStackChanged();
+        recordUndo(action, m_replay);
     }
     emit operationFinished(success, success ? tr("Renamed successfully") : tr("Rename failed"));
 }
@@ -855,9 +968,7 @@ void FileOperations::bulkRename(const QStringList& paths, const QStringList& new
     action.type = UndoAction::BulkRename;
     action.sourcePaths = sources;
     action.destPaths = targets;
-    m_undoStack.push_back(action);
-    m_redoStack.clear();
-    emit undoStackChanged();
+    recordUndo(action, m_replay);
 
     emit operationFinished(true, sources.size() == 1
                                      ? tr("Renamed 1 item")
@@ -894,9 +1005,7 @@ void FileOperations::createFromTemplate(const QString& templatePath, const QStri
     action.newPath = destination;
     action.parentDir = parentDir;
     action.name = trimmed;
-    m_undoStack.push_back(action);
-    m_redoStack.clear();
-    emit undoStackChanged();
+    recordUndo(action, m_replay);
 
     emit operationFinished(true, tr("Created %1").arg(trimmed));
 }
@@ -910,9 +1019,7 @@ void FileOperations::createDirectory(const QString& parentDir, const QString& na
         action.parentDir = parentDir;
         action.name = name;
         action.newPath = parentDir + "/" + name;
-        m_undoStack.push_back(action);
-        m_redoStack.clear();
-        emit undoStackChanged();
+        recordUndo(action, m_replay);
     }
     emit operationFinished(success, success ? tr("Folder created") : tr("Failed to create folder"));
 }
@@ -933,9 +1040,7 @@ void FileOperations::createFile(const QString& parentDir, const QString& name, c
         action.name = name;
         action.content = content;
         action.newPath = filePath;
-        m_undoStack.push_back(action);
-        m_redoStack.clear();
-        emit undoStackChanged();
+        recordUndo(action, m_replay);
     }
     emit operationFinished(success, success ? tr("File created") : tr("Failed to create file"));
 }
@@ -964,14 +1069,25 @@ void FileOperations::undo() {
             emit operationFinished(true, tr("Undid file creation"));
         }
     } else if (action.type == UndoAction::Move) {
-        for (int i = 0; i < action.destPaths.size(); ++i) {
-            if (i < action.sourcePaths.size()) {
-                QFile::rename(action.destPaths[i], action.sourcePaths[i]);
-            }
-        }
+        // Move each item back to the folder it came from. moveFiles falls
+        // back to copy + delete when the move crossed filesystems.
+        QMap<QString, QStringList> byFolder;
+        for (int i = 0; i < action.destPaths.size() && i < action.sourcePaths.size(); ++i)
+            byFolder[QFileInfo(action.sourcePaths.at(i)).absolutePath()] << action.destPaths.at(i);
+        m_replay = Replay::Undo;
+        for (auto it = byFolder.cbegin(); it != byFolder.cend(); ++it)
+            moveFiles(it.value(), it.key());
+        m_replay = Replay::None;
         m_redoStack.push_back(action);
         emit undoStackChanged();
-        emit operationFinished(true, tr("Undid move"));
+    } else if (action.type == UndoAction::Copy) {
+        // Copies go to the trash rather than being deleted, in case one was
+        // edited after the copy.
+        m_replay = Replay::Undo;
+        moveToTrash(action.destPaths);
+        m_replay = Replay::None;
+        m_redoStack.push_back(action);
+        emit undoStackChanged();
     } else if (action.type == UndoAction::BulkRename) {
         for (int i = action.destPaths.size() - 1; i >= 0; --i) {
             if (i < action.sourcePaths.size())
@@ -1009,14 +1125,20 @@ void FileOperations::redo() {
         m_undoStack.push_back(action);
         emit undoStackChanged();
         emit operationFinished(true, tr("Redid rename"));
-    } else if (action.type == UndoAction::CreateDirectory) {
-        createDirectory(action.parentDir, action.name);
-    } else if (action.type == UndoAction::CreateFile) {
-        createFile(action.parentDir, action.name, action.content);
-    } else if (action.type == UndoAction::Move) {
-        moveFiles(action.sourcePaths, action.targetDir);
-    } else if (action.type == UndoAction::MoveToTrash) {
-        moveToTrash(action.sourcePaths);
+    } else {
+        m_replay = Replay::Redo;
+        if (action.type == UndoAction::CreateDirectory) {
+            createDirectory(action.parentDir, action.name);
+        } else if (action.type == UndoAction::CreateFile) {
+            createFile(action.parentDir, action.name, action.content);
+        } else if (action.type == UndoAction::Move) {
+            moveFiles(action.sourcePaths, action.targetDir);
+        } else if (action.type == UndoAction::Copy) {
+            copyFiles(action.sourcePaths, action.targetDir);
+        } else if (action.type == UndoAction::MoveToTrash) {
+            moveToTrash(action.sourcePaths);
+        }
+        m_replay = Replay::None;
     }
 }
 

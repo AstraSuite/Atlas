@@ -126,6 +126,19 @@ MouseArea {
     ]
     readonly property var sortFieldValues: [0, 1, 2, 3]
 
+    // Order matches FileOperations::TransferEngine.
+    readonly property list<MenuItem> transferEngineItems: [
+        MenuItem {
+            text: qsTr("Standard")
+        },
+        MenuItem {
+            text: qsTr("Rsync")
+        },
+        MenuItem {
+            text: qsTr("Custom Command")
+        }
+    ]
+
     anchors.fill: parent
     visible: opacity > 0.001
     enabled: expanded
@@ -439,6 +452,69 @@ MouseArea {
                                     subtext: qsTr("Left-drag scrolls, right-drag selects. Off: left-drag selects, right-drag scrolls")
                                     checked: AppController.dragToScroll
                                     onToggled: val => AppController.dragToScroll = val
+                                }
+                            }
+
+                            Item { implicitHeight: 4 }
+
+                            StyledText {
+                                text: qsTr("File Transfers")
+                                color: Colours.palette.m3primary
+                                font: Tokens.font.label.large
+                            }
+
+                            SplitButtonRow {
+                                first: true
+                                last: FileOperations.transferEngine !== 2
+                                label: qsTr("Copy and Move With")
+                                subtext: FileOperations.transferEngine === 1
+                                    ? qsTr("rsync with checksum verification (needs rsync installed)")
+                                    : FileOperations.transferEngine === 2
+                                        ? qsTr("Your command; %F is replaced by the files, %d by the destination folder")
+                                        : qsTr("Atlas copies files itself, with progress")
+                                menuItems: root.transferEngineItems
+                                active: root.transferEngineItems[FileOperations.transferEngine]
+                                onSelected: item => FileOperations.transferEngine = root.transferEngineItems.indexOf(item)
+                            }
+
+                            // Custom transfer command input
+                            StyledRect {
+                                visible: FileOperations.transferEngine === 2
+                                Layout.fillWidth: true
+                                implicitHeight: 42
+                                radius: Tokens.rounding.medium
+                                color: Colours.tPalette.m3surfaceContainerHighest
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Tokens.padding.medium
+                                    anchors.rightMargin: Tokens.padding.small
+                                    spacing: Tokens.spacing.small
+
+                                    MaterialIcon {
+                                        text: "terminal"
+                                        color: Colours.palette.m3primary
+                                        fontStyle: Tokens.font.icon.small
+                                    }
+
+                                    TextInput {
+                                        id: customTransferInput
+                                        Layout.fillWidth: true
+                                        text: FileOperations.customCommand
+                                        color: Colours.palette.m3onSurface
+                                        font: Tokens.font.body.small
+                                        selectByMouse: true
+                                        clip: true
+                                        onEditingFinished: FileOperations.customCommand = text.trim()
+
+                                        StyledText {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            visible: customTransferInput.text.length === 0
+                                            text: "cp -r --reflink=auto %F %d"
+                                            color: Colours.palette.m3outline
+                                            font: Tokens.font.body.small
+                                        }
+                                    }
                                 }
                             }
 

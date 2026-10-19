@@ -179,6 +179,16 @@ private:
     void writeToSystemClipboard(const QStringList& paths, bool cut);
     void syncFromSystemClipboard();
 
+    // Runs the user's custom transfer command (%F = quoted sources, %d =
+    // quoted destination folder) and waits for it. Called off the UI thread.
+    bool runCustomTransfer(const QStringList& sources, const QString& destinationDir) const;
+
+    // Undo and redo replay operations through the normal entry points, which
+    // finish asynchronously. Each operation snapshots this when it starts to
+    // decide whether to record itself and whether to clear the redo stack.
+    enum class Replay { None, Undo, Redo };
+    void recordUndo(const UndoAction& action, Replay replay);
+
     FileOperationProgress* m_progress = nullptr;
     QStringList m_clipboardFiles;
     QStringList m_activeDragFiles;
@@ -193,6 +203,7 @@ private:
     int m_transferEngine = StandardEngine;
     QString m_customCommand;
     std::atomic<bool> m_cancelRequested{false};
+    Replay m_replay = Replay::None;
 };
 
 } // namespace atlas::core
