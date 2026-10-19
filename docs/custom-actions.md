@@ -44,10 +44,17 @@ for f in "$@"; do
 done
 ```
 
-`executeCustomAction` also prepares `ATLAS_SELECTED_PATHS`, `ATLAS_CURRENT_DIR` and the
-Nautilus `NAUTILUS_SCRIPT_SELECTED_FILE_PATHS` and `NAUTILUS_SCRIPT_CURRENT_URI`, but they
-are set on a `QProcess` that is never started, so scripts don't receive them yet. Use the
-arguments.
+Scripts and service menus also get these environment variables:
+
+| Variable | Value |
+|----------|-------|
+| `ATLAS_SELECTED_PATHS` | The selected paths, one per line. |
+| `ATLAS_CURRENT_DIR` | The current folder. |
+| `NAUTILUS_SCRIPT_SELECTED_FILE_PATHS` | The same as `ATLAS_SELECTED_PATHS`, for Nautilus scripts. |
+| `NAUTILUS_SCRIPT_CURRENT_URI` | The current folder as a `file://` URL. |
+
+`PRISM_SELECTED_PATHS` and `PRISM_CURRENT_DIR` are set too, for scripts written before the
+rename.
 
 ## Service menus
 
