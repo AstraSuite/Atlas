@@ -151,13 +151,6 @@ qt_add_qml_module(atlas_app
         qml/components/StyledScrollBar.qml
         qml/components/StyledToolTip.qml
         qml/components/CachingIconImage.qml
-        qml/components/filedialog/Sizes.qml
-        qml/components/filedialog/CurrentItem.qml
-        qml/components/filedialog/DialogButtons.qml
-        qml/components/filedialog/HeaderBar.qml
-        qml/components/filedialog/Sidebar.qml
-        qml/components/filedialog/FolderContents.qml
-        qml/components/filedialog/FileDialog.qml
         qml/components/tabs/TabBar.qml
         qml/components/navigation/NavigationBar.qml
         qml/components/panels/PlacesSidebar.qml

@@ -4,7 +4,7 @@
 
 <h1 align="center">Atlas</h1>
 
-Atlas is a fast, lightweight Material Design 3 file manager and file picker built with Qt 6 and QML.
+Atlas is a fast, lightweight Material Design 3 file manager built with Qt 6 and QML.
 
 ## Dependencies
 
@@ -63,9 +63,6 @@ cmake --build build
 
 # Run file manager locally
 ./build/bin/atlas
-
-# Run picker mode directly
-./build/bin/atlas -p
 ```
 
 ## Installation

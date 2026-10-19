@@ -63,15 +63,3 @@ jobs:
             exit 1
           fi
           echo "Started clean."
-
-      - name: Open the file picker without QML errors
-        run: |
-          set -o pipefail
-          QT_QPA_PLATFORM=offscreen QT_LOGGING_TO_CONSOLE=1 \
-            timeout 20 ./build/bin/atlas -p -d "$HOME" > picker.log 2>&1 || true
-
-          if grep -aiE '\.qml:[0-9]+.*(error|is not a type|Cannot |Unable to assign|TypeError)|binding loop' picker.log; then
-            echo "::error::QML errors in picker mode, see the matches above"
-            exit 1
-          fi
-          echo "Picker started clean."
