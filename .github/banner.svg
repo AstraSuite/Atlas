@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <!-- Exported to banner.png; text uses Google Sans Flex from assets/fonts. -->
+  <defs>
+    <radialGradient id="glow" cx="0.2" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#241A1E"/>
+      <stop offset="1" stop-color="#1C1417"/>
+    </radialGradient>
+    <radialGradient id="orb" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#2A2024" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#2A2024" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#glow)"/>
+  <circle cx="1100" cy="100" r="80" fill="url(#orb)"/>
+  <circle cx="1150" cy="500" r="70" fill="url(#orb)"/>
+  <rect y="636" width="1280" height="4" fill="#734F5B"/>
+
+  <!-- Icon card -->
+  <rect x="40.5" y="100.5" width="440" height="440" rx="48" fill="#221A1D" stroke="#2E2428"/>
+  <g transform="translate(68 128) scale(0.75)">
+    <path d="M48 136a40 40 0 0 1 40-40h98a36 36 0 0 1 27 12.2L240 140h184a40 40 0 0 1 40 40v204a40 40 0 0 1-40 40H88a40 40 0 0 1-40-40Z" fill="#0B5A92"/>
+    <rect x="48" y="176" width="416" height="248" rx="40" fill="#2B8CD6"/>
+    <path d="M222 213.4A100 100 0 0 0 322 386.6M222 213.4L240 244.6M322 386.6L304 355.4" fill="none" stroke="#0B3B60" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="none" stroke="#FFE3D4" stroke-width="18" stroke-linecap="round" transform="rotate(-30 272 300)">
+      <circle cx="272" cy="300" r="64"/>
+      <ellipse cx="272" cy="300" rx="26.9" ry="64"/>
+      <path d="M208 300h128"/>
+    </g>
+  </g>
+
+  <!-- Text -->
+  <g font-family="Google Sans Flex, Google Sans, sans-serif">
+    <text x="560" y="175" font-size="14" letter-spacing="0.4" fill="#B07E8F">ASTRA SUITE</text>
+    <rect x="560" y="183" width="41" height="3" rx="1.5" fill="#8A5C6C"/>
+    <text x="558" y="265" font-size="64" fill="#F0DEE3">Atlas</text>
+    <text x="560" y="308" font-size="28" fill="#DF9AB1">File Manager</text>
+    <text x="560" y="342" font-size="18" fill="#A8969B">Fast, powerful file management built with Qt 6</text>
+    <rect x="560.5" y="374.5" width="168" height="29" rx="14.5" fill="none" stroke="#4A3A40"/>
+    <text x="574" y="394" font-size="13.5" fill="#A8969B">github.com/AstraSuite</text>
+  </g>
+</svg>
