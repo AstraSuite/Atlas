@@ -58,3 +58,37 @@ function elideFileName(name, elidedText, availableWidth, font) {
 
     return truncatedBase + ellipsis + extension
 }
+
+// Text.ElideMiddle is not supported on wrapped, multi-line text: Qt elides the
+// end instead, which cuts off the extension. Shorten the base name until it
+// fits in `lines` lines of `availableWidth`, keeping the extension visible.
+// `measure` is a hidden Text with the label's font and wrap mode.
+function elideWrappedFileName(name, measure, availableWidth, lines) {
+    if (!name || !measure || availableWidth <= 0) return name || ""
+
+    measure.width = availableWidth
+    measure.maximumLineCount = lines
+    measure.text = name
+    if (!measure.truncated) return name
+
+    var dotIndex = name.lastIndexOf(".")
+    if (dotIndex <= 0 || dotIndex === name.length - 1) {
+        return name
+    }
+
+    var baseName = name.substring(0, dotIndex)
+    var extension = name.substring(dotIndex)
+    var ellipsis = "\u2026"
+
+    // Longest prefix of the base name that still fits.
+    var lo = 0
+    var hi = baseName.length - 1
+    while (lo < hi) {
+        var mid = Math.ceil((lo + hi) / 2)
+        measure.text = baseName.substring(0, mid) + ellipsis + extension
+        if (measure.truncated) hi = mid - 1
+        else lo = mid
+    }
+
+    return baseName.substring(0, lo) + ellipsis + extension
+}

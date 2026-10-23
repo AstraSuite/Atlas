@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import "../"
 import "../containers"
 import atlas
+import "../../utils/FileNameHelper.js" as FileNameHelper
 
 Item {
     id: root
@@ -19,6 +20,16 @@ Item {
     FontMetrics {
         id: labelMetrics
         font: Tokens.font.body.small
+    }
+
+    // Lays out candidate labels so long names can be shortened while keeping
+    // their extension visible.
+    StyledText {
+        id: labelMeasure
+        visible: false
+        font: Tokens.font.body.small
+        wrapMode: Text.Wrap
+        elide: Text.ElideRight
     }
 
     property int currentIndex: view.currentIndex
@@ -679,14 +690,28 @@ Item {
                     anchors.rightMargin: 4
                     anchors.bottomMargin: root.iconPadding
 
-                    text: delegateContainer.modelData ? delegateContainer.modelData.name : ""
+                    readonly property string fullName: delegateContainer.modelData ? delegateContainer.modelData.name : ""
+                    readonly property int maxLines: root.labelLines
+
+                    // Measured imperatively: a binding would read back the
+                    // measuring label it writes to and loop.
+                    function relabel() {
+                        text = FileNameHelper.elideWrappedFileName(fullName, labelMeasure, width, maxLines);
+                    }
+
+                    text: fullName
                     color: delegateContainer.isSelected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                     font: Tokens.font.body.small
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignTop
-                    elide: Text.ElideMiddle
-                    maximumLineCount: root.labelLines
+                    elide: Text.ElideRight
+                    maximumLineCount: maxLines
                     wrapMode: Text.Wrap
+
+                    onFullNameChanged: relabel()
+                    onWidthChanged: relabel()
+                    onMaxLinesChanged: relabel()
+                    Component.onCompleted: Qt.callLater(relabel)
                 }
             }
         }
