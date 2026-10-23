@@ -14,6 +14,25 @@
 
 namespace atlas::core {
 
+namespace {
+
+// A filesystem can be mounted in several places at once (btrfs subvolumes,
+// bind mounts), and lsblk lists them in no stable order. Prefer "/" and
+// otherwise the shortest path, so the same device always opens in the same
+// place.
+QString preferredMountPoint(const QStringList& mountPoints) {
+    QString best;
+    for (const QString& mp : mountPoints) {
+        if (mp.isEmpty() || mp == "[SWAP]") continue;
+        if (mp == "/") return mp;
+        if (best.isEmpty() || mp.size() < best.size() || (mp.size() == best.size() && mp < best))
+            best = mp;
+    }
+    return best;
+}
+
+} // namespace
+
 DriveManager::DriveManager(QObject* parent)
     : QAbstractListModel(parent) {
     loadHiddenDevices();
@@ -186,14 +205,10 @@ void DriveManager::refresh() {
 
             QString mountPoint;
             if (obj["mountpoints"].isArray()) {
-                QJsonArray mps = obj["mountpoints"].toArray();
-                for (const auto& mpVal : mps) {
-                    QString mp = mpVal.toString();
-                    if (!mp.isEmpty()) {
-                        mountPoint = mp;
-                        break;
-                    }
-                }
+                QStringList mps;
+                for (const auto& mpVal : obj["mountpoints"].toArray())
+                    mps.append(mpVal.toString());
+                mountPoint = preferredMountPoint(mps);
             } else {
                 mountPoint = obj["mountpoint"].toString();
             }
@@ -288,14 +303,10 @@ void DriveManager::mountDevice(const QString& devicePath, int tabIndex) {
             QProcess checkProc;
             checkProc.start("lsblk", { "-no", "MOUNTPOINTS,MOUNTPOINT", devicePath });
             checkProc.waitForFinished(2000);
-            QString lines = QString::fromUtf8(checkProc.readAllStandardOutput()).trimmed();
-            for (const QString& line : lines.split('\n')) {
-                QString trimmed = line.trimmed();
-                if (!trimmed.isEmpty() && trimmed != "[SWAP]") {
-                    mountPoint = trimmed;
-                    break;
-                }
-            }
+            QStringList lines;
+            for (const QString& line : QString::fromUtf8(checkProc.readAllStandardOutput()).split('\n'))
+                lines.append(line.trimmed());
+            mountPoint = preferredMountPoint(lines);
         }
 
         QMetaObject::invokeMethod(this, [this, devicePath, mountPoint, tabIndex, err]() {
