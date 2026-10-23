@@ -13,6 +13,19 @@ function getMetrics(parent) {
     return _metricsInstance
 }
 
+// Index of the dot that starts the extension, treating compressed tarballs
+// (.tar.gz, .tar.zst, ...) as one extension. -1 when there is none to keep.
+function extensionIndex(name) {
+    var dotIndex = name.lastIndexOf(".")
+    if (dotIndex <= 0 || dotIndex === name.length - 1) return -1
+
+    var tarIndex = name.lastIndexOf(".", dotIndex - 1)
+    if (tarIndex > 0 && name.substring(tarIndex, dotIndex).toLowerCase() === ".tar") {
+        return tarIndex
+    }
+    return dotIndex
+}
+
 function elideFileName(name, elidedText, availableWidth, font) {
     if (!name || availableWidth <= 0) return name || ""
 
@@ -21,8 +34,8 @@ function elideFileName(name, elidedText, availableWidth, font) {
 
     metrics.font = font
 
-    var dotIndex = name.lastIndexOf(".")
-    if (dotIndex <= 0 || dotIndex === name.length - 1) {
+    var dotIndex = extensionIndex(name)
+    if (dotIndex < 0) {
         return name
     }
 
@@ -71,8 +84,8 @@ function elideWrappedFileName(name, measure, availableWidth, lines) {
     measure.text = name
     if (!measure.truncated) return name
 
-    var dotIndex = name.lastIndexOf(".")
-    if (dotIndex <= 0 || dotIndex === name.length - 1) {
+    var dotIndex = extensionIndex(name)
+    if (dotIndex < 0) {
         return name
     }
 
