@@ -1,14 +1,19 @@
 .pragma library
 
-var _metricsComponent = null
 var _metricsInstance = null
 
-function getMetrics(parent) {
-    if (!_metricsComponent) {
-        _metricsComponent = Qt.createComponent("QtQuick.TextMetrics")
-    }
-    if (!_metricsInstance && _metricsComponent && _metricsComponent.status === 1) {
-        _metricsInstance = _metricsComponent.createObject(parent)
+// Qt.createComponent() takes a file URL, not a type name, so build the
+// FontMetrics inline. It is shared, so parent it to the top-level item rather
+// than to the delegate asking, which can be destroyed while it is cached.
+// Measuring goes through advanceWidth(text) rather than TextMetrics, whose
+// text/advanceWidth properties would make the calling binding depend on the
+// values it writes and loop.
+function getMetrics(item) {
+    if (!_metricsInstance) {
+        var root = item
+        while (root && root.parent) root = root.parent
+        if (!root || root === item) return null
+        _metricsInstance = Qt.createQmlObject("import QtQuick; FontMetrics {}", root)
     }
     return _metricsInstance
 }
@@ -42,27 +47,20 @@ function elideFileName(name, elidedText, availableWidth, font) {
     var baseName = name.substring(0, dotIndex)
     var extension = name.substring(dotIndex)
 
-    metrics.text = name
-    if (metrics.advanceWidth <= availableWidth) {
+    if (metrics.advanceWidth(name) <= availableWidth) {
         return name
     }
 
-    metrics.text = extension
-    var extWidth = metrics.advanceWidth
     var ellipsis = "\u2026"
-    metrics.text = ellipsis
-    var ellipsisWidth = metrics.advanceWidth
-    var availableForBase = availableWidth - extWidth - ellipsisWidth
+    var availableForBase = availableWidth - metrics.advanceWidth(extension) - metrics.advanceWidth(ellipsis)
 
     if (availableForBase <= 0) {
         return ellipsis + extension
     }
 
     var truncatedBase = baseName
-    metrics.text = truncatedBase
-    while (truncatedBase.length > 1 && metrics.advanceWidth > availableForBase) {
+    while (truncatedBase.length > 1 && metrics.advanceWidth(truncatedBase) > availableForBase) {
         truncatedBase = truncatedBase.substring(0, truncatedBase.length - 1)
-        metrics.text = truncatedBase
     }
 
     if (truncatedBase.length === 0) {
