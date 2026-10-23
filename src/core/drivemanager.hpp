@@ -17,6 +17,9 @@ struct DriveItem {
     QString sizeFormatted;
     QString fsType;
     QString model;
+    // Stable identity for remembering hidden devices: /dev/sdX names can
+    // swap between boots, filesystem and partition UUIDs do not.
+    QString stableId;
     bool isMounted = false;
     bool isRemovable = false;
     qint64 bytesFree = 0;
@@ -84,6 +87,8 @@ private:
     void applyDeviceFilters();
     void loadHiddenDevices();
     void saveHiddenDevices();
+    void migrateHiddenDevicePaths();
+    [[nodiscard]] QString hideKeyFor(const QString& devicePath) const;
 
     QVector<DriveItem> m_allDrives;
     QVector<DriveItem> m_drives;

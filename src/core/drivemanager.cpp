@@ -14,6 +14,25 @@
 
 namespace atlas::core {
 
+namespace {
+
+// A filesystem can be mounted in several places at once (btrfs subvolumes,
+// bind mounts), and lsblk lists them in no stable order. Prefer "/" and
+// otherwise the shortest path, so the same device always opens in the same
+// place.
+QString preferredMountPoint(const QStringList& mountPoints) {
+    QString best;
+    for (const QString& mp : mountPoints) {
+        if (mp.isEmpty() || mp == "[SWAP]") continue;
+        if (mp == "/") return mp;
+        if (best.isEmpty() || mp.size() < best.size() || (mp.size() == best.size() && mp < best))
+            best = mp;
+    }
+    return best;
+}
+
+} // namespace
+
 DriveManager::DriveManager(QObject* parent)
     : QAbstractListModel(parent) {
     loadHiddenDevices();
@@ -92,17 +111,29 @@ void DriveManager::setShowHiddenDevices(bool show) {
     }
 }
 
+QString DriveManager::hideKeyFor(const QString& devicePath) const {
+    for (const auto& d : m_allDrives) {
+        if (d.devicePath == devicePath && !d.stableId.isEmpty())
+            return d.stableId;
+    }
+    return devicePath;
+}
+
 void DriveManager::hideDevice(const QString& devicePath) {
-    if (!devicePath.isEmpty() && !m_hiddenDevices.contains(devicePath)) {
-        m_hiddenDevices.append(devicePath);
+    const QString key = hideKeyFor(devicePath);
+    if (!key.isEmpty() && !m_hiddenDevices.contains(key)) {
+        m_hiddenDevices.append(key);
         saveHiddenDevices();
         applyDeviceFilters();
     }
 }
 
 void DriveManager::unhideDevice(const QString& devicePath) {
-    if (!devicePath.isEmpty() && m_hiddenDevices.contains(devicePath)) {
-        m_hiddenDevices.removeAll(devicePath);
+    const QString key = hideKeyFor(devicePath);
+    // Older settings stored the /dev path, so drop that as well.
+    const qsizetype removed = m_hiddenDevices.removeAll(key)
+        + (key != devicePath ? m_hiddenDevices.removeAll(devicePath) : 0);
+    if (removed > 0) {
         saveHiddenDevices();
         applyDeviceFilters();
     }
@@ -117,9 +148,30 @@ void DriveManager::toggleDeviceHidden(const QString& devicePath) {
 }
 
 bool DriveManager::isDeviceHidden(const QString& devicePath, const QString& name) const {
-    if (m_hiddenDevices.contains(devicePath)) return true;
+    const QString key = hideKeyFor(devicePath);
+    if (m_hiddenDevices.contains(key)) return true;
+    // A /dev path only counts when the device has no stable id to go by.
+    if (key == devicePath && m_hiddenDevices.contains(devicePath)) return true;
     if (!name.isEmpty() && m_hiddenDevices.contains(name)) return true;
     return false;
+}
+
+// Settings written before stable ids stored /dev paths. Move each one to the
+// id of the device at that path now, so it stops following the name around.
+void DriveManager::migrateHiddenDevicePaths() {
+    bool changed = false;
+    for (QString& entry : m_hiddenDevices) {
+        if (!entry.startsWith("/dev/")) continue;
+        const QString key = hideKeyFor(entry);
+        if (key != entry) {
+            entry = key;
+            changed = true;
+        }
+    }
+    if (changed) {
+        m_hiddenDevices.removeDuplicates();
+        saveHiddenDevices();
+    }
 }
 
 void DriveManager::setHiddenDevices(const QStringList& list) {
@@ -164,7 +216,7 @@ void DriveManager::applyDeviceFilters() {
 void DriveManager::refresh() {
     (void)QtConcurrent::run([this]() {
         QProcess proc;
-        proc.start("lsblk", { "-J", "-o", "NAME,LABEL,MOUNTPOINTS,SIZE,TYPE,FSTYPE,RM,HOTPLUG,MODEL" });
+        proc.start("lsblk", { "-J", "-o", "NAME,LABEL,MOUNTPOINTS,SIZE,TYPE,FSTYPE,RM,HOTPLUG,MODEL,UUID,PARTUUID" });
         if (!proc.waitForFinished(3000)) return;
 
         QByteArray out = proc.readAllStandardOutput();
@@ -183,17 +235,18 @@ void DriveManager::refresh() {
             QString model = obj["model"].toString();
             if (model.isEmpty()) model = parentModel;
             bool rm = obj["rm"].toBool() || obj["hotplug"].toBool();
+            QString stableId;
+            if (const QString uuid = obj["uuid"].toString(); !uuid.isEmpty())
+                stableId = "uuid:" + uuid;
+            else if (const QString partUuid = obj["partuuid"].toString(); !partUuid.isEmpty())
+                stableId = "partuuid:" + partUuid;
 
             QString mountPoint;
             if (obj["mountpoints"].isArray()) {
-                QJsonArray mps = obj["mountpoints"].toArray();
-                for (const auto& mpVal : mps) {
-                    QString mp = mpVal.toString();
-                    if (!mp.isEmpty()) {
-                        mountPoint = mp;
-                        break;
-                    }
-                }
+                QStringList mps;
+                for (const auto& mpVal : obj["mountpoints"].toArray())
+                    mps.append(mpVal.toString());
+                mountPoint = preferredMountPoint(mps);
             } else {
                 mountPoint = obj["mountpoint"].toString();
             }
@@ -232,6 +285,7 @@ void DriveManager::refresh() {
                     size,
                     fstype,
                     model.trimmed(),
+                    stableId,
                     !mountPoint.isEmpty(),
                     rm,
                     freeBytes,
@@ -253,6 +307,7 @@ void DriveManager::refresh() {
 
         QMetaObject::invokeMethod(this, [this, foundDrives]() {
             m_allDrives = foundDrives;
+            migrateHiddenDevicePaths();
             applyDeviceFilters();
         });
     });
@@ -288,14 +343,10 @@ void DriveManager::mountDevice(const QString& devicePath, int tabIndex) {
             QProcess checkProc;
             checkProc.start("lsblk", { "-no", "MOUNTPOINTS,MOUNTPOINT", devicePath });
             checkProc.waitForFinished(2000);
-            QString lines = QString::fromUtf8(checkProc.readAllStandardOutput()).trimmed();
-            for (const QString& line : lines.split('\n')) {
-                QString trimmed = line.trimmed();
-                if (!trimmed.isEmpty() && trimmed != "[SWAP]") {
-                    mountPoint = trimmed;
-                    break;
-                }
-            }
+            QStringList lines;
+            for (const QString& line : QString::fromUtf8(checkProc.readAllStandardOutput()).split('\n'))
+                lines.append(line.trimmed());
+            mountPoint = preferredMountPoint(lines);
         }
 
         QMetaObject::invokeMethod(this, [this, devicePath, mountPoint, tabIndex, err]() {
