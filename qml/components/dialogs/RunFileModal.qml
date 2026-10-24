@@ -66,88 +66,93 @@ MouseArea {
         color: Qt.alpha(Colours.palette.m3scrim, 0.4)
     }
 
-    StyledRect {
-        anchors.centerIn: parent
-        width: Math.min(parent.width - 48, 460)
-        height: Math.min(parent.height - 32, modalCol.implicitHeight + Tokens.padding.large * 2)
-        implicitWidth: Math.min(parent.width - 48, 460)
-        implicitHeight: modalCol.implicitHeight + Tokens.padding.large * 2
+    LazyContent {
+        expanded: root.expanded
+        sourceComponent: Item {
+            StyledRect {
+                anchors.centerIn: parent
+                width: Math.min(parent.width - 48, 460)
+                height: Math.min(parent.height - 32, modalCol.implicitHeight + Tokens.padding.large * 2)
+                implicitWidth: Math.min(parent.width - 48, 460)
+                implicitHeight: modalCol.implicitHeight + Tokens.padding.large * 2
 
-        radius: Tokens.rounding.large
-        color: Colours.palette.m3surfaceContainerHigh
+                radius: Tokens.rounding.large
+                color: Colours.palette.m3surfaceContainerHigh
 
-        scale: root.expanded ? 1.0 : 0.94
+                scale: root.expanded ? 1.0 : 0.94
 
-        Behavior on scale {
-            Anim {
-                type: Anim.FastEffects
-                easing: Tokens.anim.standard
-            }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: mouse => mouse.accepted = true
-            onWheel: wheel => wheel.accepted = true
-        }
-
-        ColumnLayout {
-            id: modalCol
-
-            anchors.fill: parent
-            anchors.margins: Tokens.padding.large
-            spacing: Tokens.spacing.medium
-
-            RowLayout {
-                spacing: Tokens.spacing.small
-
-                MaterialIcon {
-                    text: "terminal"
-                    color: Colours.palette.m3primary
-                    fontStyle: Tokens.font.icon.medium
+                Behavior on scale {
+                    Anim {
+                        type: Anim.FastEffects
+                        easing: Tokens.anim.standard
+                    }
                 }
 
-                StyledText {
-                    Layout.fillWidth: true
-                    text: qsTr("Run this file?")
-                    color: Colours.palette.m3onSurface
-                    font: Tokens.font.title.medium
-                }
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-                text: qsTr("\"%1\" is executable. Run it as a program, or open it to look at its contents?")
-                    .arg(root.targetPath.split("/").pop())
-                color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.medium
-                wrapMode: Text.Wrap
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Tokens.spacing.small
-
-                TextButton {
-                    type: ButtonBase.Text
-                    text: qsTr("Open")
-                    onClicked: root.display()
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: mouse => mouse.accepted = true
+                    onWheel: wheel => wheel.accepted = true
                 }
 
-                Item {
-                    Layout.fillWidth: true
-                }
+                ColumnLayout {
+                    id: modalCol
 
-                TextButton {
-                    type: ButtonBase.Tonal
-                    text: qsTr("In Terminal")
-                    onClicked: root.run(true)
-                }
+                    anchors.fill: parent
+                    anchors.margins: Tokens.padding.large
+                    spacing: Tokens.spacing.medium
 
-                TextButton {
-                    type: ButtonBase.Filled
-                    text: qsTr("Run")
-                    onClicked: root.run(false)
+                    RowLayout {
+                        spacing: Tokens.spacing.small
+
+                        MaterialIcon {
+                            text: "terminal"
+                            color: Colours.palette.m3primary
+                            fontStyle: Tokens.font.icon.medium
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Run this file?")
+                            color: Colours.palette.m3onSurface
+                            font: Tokens.font.title.medium
+                        }
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: qsTr("\"%1\" is executable. Run it as a program, or open it to look at its contents?")
+                            .arg(root.targetPath.split("/").pop())
+                        color: Colours.palette.m3onSurfaceVariant
+                        font: Tokens.font.body.medium
+                        wrapMode: Text.Wrap
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Tokens.spacing.small
+
+                        TextButton {
+                            type: ButtonBase.Text
+                            text: qsTr("Open")
+                            onClicked: root.display()
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        TextButton {
+                            type: ButtonBase.Tonal
+                            text: qsTr("In Terminal")
+                            onClicked: root.run(true)
+                        }
+
+                        TextButton {
+                            type: ButtonBase.Filled
+                            text: qsTr("Run")
+                            onClicked: root.run(false)
+                        }
+                    }
                 }
             }
         }

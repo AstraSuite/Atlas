@@ -150,6 +150,7 @@ qt_add_qml_module(atlas_app
         qml/components/effects/Elevation.qml
         qml/components/StyledScrollBar.qml
         qml/components/StyledToolTip.qml
+        qml/components/LazyContent.qml
         qml/components/CachingIconImage.qml
         qml/components/tabs/TabBar.qml
         qml/components/navigation/NavigationBar.qml

@@ -68,97 +68,102 @@ MouseArea {
     opacity: expanded ? 1 : 0
     Behavior on opacity { Anim { type: Anim.FastEffects } }
 
-    StyledRect {
-        id: menuRect
+    LazyContent {
+        expanded: root.expanded
+        sourceComponent: Item {
+            StyledRect {
+                id: menuRect
 
-        x: Math.min(Math.max(8, root.menuX), root.width - width - 8)
-        y: Math.min(Math.max(8, root.menuY), root.height - height - 8)
+                x: Math.min(Math.max(8, root.menuX), root.width - width - 8)
+                y: Math.min(Math.max(8, root.menuY), root.height - height - 8)
 
-        implicitWidth: menuCol.implicitWidth + Tokens.padding.extraSmall * 2
-        implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
+                implicitWidth: menuCol.implicitWidth + Tokens.padding.extraSmall * 2
+                implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
 
-        radius: Tokens.rounding.large
-        color: Colours.palette.m3surfaceContainerLow
+                radius: Tokens.rounding.large
+                color: Colours.palette.m3surfaceContainerLow
 
-        scale: root.expanded ? 1.0 : 0.94
-        Behavior on scale {
-            Anim {
-                type: Anim.FastEffects
-                easing: Tokens.anim.standard
-            }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: mouse => mouse.accepted = true
-        }
-
-        ColumnLayout {
-            id: menuCol
-
-            anchors.fill: parent
-            anchors.margins: Tokens.padding.extraSmall
-            spacing: 2
-
-            Repeater {
-                model: [
-                    { text: qsTr("Move Here"), icon: "drive_file_move", shortcut: "Shift", action: "move" },
-                    { text: qsTr("Copy Here"), icon: "content_copy", shortcut: "Ctrl", action: "copy" },
-                    { text: qsTr("Link Here"), icon: "link", shortcut: "Ctrl+Shift", action: "link" },
-                    { text: qsTr("Move Into New Folder"), icon: "create_new_folder", action: "moveNewFolder" },
-                    { text: qsTr("Cancel"), icon: "close", shortcut: "Esc", action: "cancel" }
-                ]
-
-                delegate: StyledRect {
-                    id: menuItem
-
-                    required property int index
-                    required property var modelData
-
-                    implicitWidth: itemRow.implicitWidth + 32
-                    implicitHeight: 36
-                    Layout.fillWidth: true
-
-                    radius: Tokens.rounding.small
-                    color: itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
-
-                    RowLayout {
-                        id: itemRow
-                        anchors.fill: parent
-                        anchors.leftMargin: Tokens.padding.small
-                        anchors.rightMargin: Tokens.padding.small
-                        spacing: Tokens.spacing.small
-
-                        MaterialIcon {
-                            text: menuItem.modelData.icon || ""
-                            color: itemHover.containsMouse ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-                            fontStyle: Tokens.font.icon.small
-                        }
-
-                        StyledText {
-                            text: menuItem.modelData.text || ""
-                            color: Colours.palette.m3onSurface
-                            font: Tokens.font.body.small
-                            Layout.fillWidth: true
-                        }
-
-                        StyledText {
-                            visible: menuItem.modelData.shortcut ? true : false
-                            text: menuItem.modelData.shortcut || ""
-                            color: Colours.palette.m3outline
-                            font: Tokens.font.label.small
-                            Layout.alignment: Qt.AlignRight
-                        }
+                scale: root.expanded ? 1.0 : 0.94
+                Behavior on scale {
+                    Anim {
+                        type: Anim.FastEffects
+                        easing: Tokens.anim.standard
                     }
+                }
 
-                    MouseArea {
-                        id: itemHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.executeAction(menuItem.modelData.action);
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: mouse => mouse.accepted = true
+                }
+
+                ColumnLayout {
+                    id: menuCol
+
+                    anchors.fill: parent
+                    anchors.margins: Tokens.padding.extraSmall
+                    spacing: 2
+
+                    Repeater {
+                        model: [
+                            { text: qsTr("Move Here"), icon: "drive_file_move", shortcut: "Shift", action: "move" },
+                            { text: qsTr("Copy Here"), icon: "content_copy", shortcut: "Ctrl", action: "copy" },
+                            { text: qsTr("Link Here"), icon: "link", shortcut: "Ctrl+Shift", action: "link" },
+                            { text: qsTr("Move Into New Folder"), icon: "create_new_folder", action: "moveNewFolder" },
+                            { text: qsTr("Cancel"), icon: "close", shortcut: "Esc", action: "cancel" }
+                        ]
+
+                        delegate: StyledRect {
+                            id: menuItem
+
+                            required property int index
+                            required property var modelData
+
+                            implicitWidth: itemRow.implicitWidth + 32
+                            implicitHeight: 36
+                            Layout.fillWidth: true
+
+                            radius: Tokens.rounding.small
+                            color: itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+                            RowLayout {
+                                id: itemRow
+                                anchors.fill: parent
+                                anchors.leftMargin: Tokens.padding.small
+                                anchors.rightMargin: Tokens.padding.small
+                                spacing: Tokens.spacing.small
+
+                                MaterialIcon {
+                                    text: menuItem.modelData.icon || ""
+                                    color: itemHover.containsMouse ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                                    fontStyle: Tokens.font.icon.small
+                                }
+
+                                StyledText {
+                                    text: menuItem.modelData.text || ""
+                                    color: Colours.palette.m3onSurface
+                                    font: Tokens.font.body.small
+                                    Layout.fillWidth: true
+                                }
+
+                                StyledText {
+                                    visible: menuItem.modelData.shortcut ? true : false
+                                    text: menuItem.modelData.shortcut || ""
+                                    color: Colours.palette.m3outline
+                                    font: Tokens.font.label.small
+                                    Layout.alignment: Qt.AlignRight
+                                }
+                            }
+
+                            MouseArea {
+                                id: itemHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.executeAction(menuItem.modelData.action);
+                                }
+                            }
                         }
                     }
                 }

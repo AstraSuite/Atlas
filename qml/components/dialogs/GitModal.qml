@@ -29,318 +29,323 @@ MouseArea {
         color: Qt.alpha(Colours.palette.m3scrim, 0.45)
     }
 
-    StyledRect {
-        id: dialog
+    LazyContent {
+        expanded: root.expanded
+        sourceComponent: Item {
+            StyledRect {
+                id: dialog
 
-        anchors.centerIn: parent
-        width: Math.min(parent.width - 64, 580)
-        height: Math.min(parent.height - 64, 600)
-        implicitWidth: 580
-        implicitHeight: 600
+                anchors.centerIn: parent
+                width: Math.min(parent.width - 64, 580)
+                height: Math.min(parent.height - 64, 600)
+                implicitWidth: 580
+                implicitHeight: 600
 
-        radius: Tokens.rounding.large
-        color: Colours.palette.m3surfaceContainer
+                radius: Tokens.rounding.large
+                color: Colours.palette.m3surfaceContainer
 
-        scale: root.expanded ? 1.0 : 0.94
-        Behavior on scale { Anim { type: Anim.FastEffects; easing: Tokens.anim.standard } }
+                scale: root.expanded ? 1.0 : 0.94
+                Behavior on scale { Anim { type: Anim.FastEffects; easing: Tokens.anim.standard } }
 
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: mouse => mouse.accepted = true
-            onWheel: wheel => wheel.accepted = true
-        }
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: Tokens.padding.large
-            spacing: Tokens.spacing.medium
-
-            // Header Title with current branch & Action buttons
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Tokens.spacing.small
-
-                MaterialIcon {
-                    text: "fork_right"
-                    fontStyle: Tokens.font.icon.medium
-                    color: Colours.palette.m3tertiary
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: mouse => mouse.accepted = true
+                    onWheel: wheel => wheel.accepted = true
                 }
 
                 ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.rightMargin: Tokens.spacing.small
-                    spacing: 2
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: qsTr("Git Repository")
-                        font: Tokens.font.title.medium
-                        color: Colours.palette.m3onSurface
-                        elide: Text.ElideRight
-                    }
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        visible: GitManager.branchName.length > 0
-                        text: qsTr("Current branch: %1").arg(GitManager.branchName)
-                        font: Tokens.font.label.medium
-                        color: Colours.palette.m3tertiary
-                        elide: Text.ElideMiddle
-                    }
-                }
-
-                // Pull Button
-                IconTextButton {
-                    type: ButtonBase.Tonal
-                    icon: "download"
-                    text: qsTr("Pull")
-                    onClicked: GitManager.pull()
-                }
-
-                // Fetch Button
-                IconTextButton {
-                    type: ButtonBase.Tonal
-                    icon: "sync"
-                    text: qsTr("Fetch")
-                    onClicked: GitManager.fetch()
-                }
-            }
-
-            // Status message indicator banner
-            StyledRect {
-                Layout.fillWidth: true
-                implicitHeight: 28
-                visible: GitManager.lastStatusMessage.length > 0 || GitManager.isOperating
-                radius: Tokens.rounding.small
-                color: Qt.alpha(Colours.palette.m3tertiary, 0.15)
-
-                RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
-                    spacing: 6
+                    anchors.margins: Tokens.padding.large
+                    spacing: Tokens.spacing.medium
 
-                    MaterialIcon {
-                        text: GitManager.isOperating ? "autorenew" : "info"
-                        fontStyle: Tokens.font.icon.small
-                        color: Colours.palette.m3tertiary
-                    }
-
-                    StyledText {
+                    // Header Title with current branch & Action buttons
+                    RowLayout {
                         Layout.fillWidth: true
-                        text: GitManager.lastStatusMessage
-                        font: Tokens.font.label.small
-                        color: Colours.palette.m3tertiary
-                        elide: Text.ElideRight
-                    }
-                }
-            }
+                        spacing: Tokens.spacing.small
 
-            // Segmented Switcher
-            SlidingSelector {
-                Layout.fillWidth: true
-                activeColor: Colours.palette.m3tertiaryContainer
-                activeOnColor: Colours.palette.m3onTertiaryContainer
-                inactiveColor: Colours.tPalette.m3surfaceContainerHigh
-                model: [
-                    { tab: 0, label: qsTr("Branches (%1)").arg(GitManager.branches.length), icon: "fork_right" },
-                    { tab: 1, label: qsTr("Recent Commits (%1)").arg(GitManager.commits.length), icon: "history" }
-                ]
-                valueKey: "tab"
-                currentValue: root.currentTab
-                onSelected: val => root.currentTab = val
-            }
-
-            // Sliding Tab Content
-            Item {
-                id: tabArea
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true
-
-                Row {
-                    id: pagesRow
-                    width: tabArea.width * 2
-                    height: tabArea.height
-                    x: -root.currentTab * tabArea.width
-
-                    Behavior on x {
-                        Anim {
-                            type: Anim.DefaultSpatial
-                        }
-                    }
-
-                    // Tab 0: Branches List
-                    VerticalFadeListView {
-                        id: branchesList
-                        width: tabArea.width
-                        height: tabArea.height
-                        clip: true
-                        spacing: 4
-                        model: GitManager.branches
-
-                        ScrollBar.vertical: StyledScrollBar {
-                            flickable: branchesList
+                        MaterialIcon {
+                            text: "fork_right"
+                            fontStyle: Tokens.font.icon.medium
+                            color: Colours.palette.m3tertiary
                         }
 
-                        delegate: StyledRect {
-                            id: branchItem
-                            required property string modelData
-                            readonly property bool isCurrent: modelData === GitManager.branchName
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.rightMargin: Tokens.spacing.small
+                            spacing: 2
 
-                            width: branchesList.width
-                            implicitHeight: 40
-                            radius: Tokens.rounding.small
-                            color: branchItem.isCurrent ? Qt.alpha(Colours.palette.m3tertiary, 0.18) : Colours.tPalette.m3surfaceContainerHighest
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 12
-                                anchors.rightMargin: 12
-                                spacing: 8
-
-                                MaterialIcon {
-                                    text: branchItem.isCurrent ? "check_circle" : "fork_right"
-                                    fontStyle: Tokens.font.icon.small
-                                    color: branchItem.isCurrent ? Colours.palette.m3tertiary : Colours.palette.m3outline
-                                }
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: branchItem.modelData
-                                    font: Tokens.font.body.medium
-                                    color: branchItem.isCurrent ? Colours.palette.m3tertiary : Colours.palette.m3onSurface
-                                }
-
-                                StyledText {
-                                    visible: branchItem.isCurrent
-                                    text: qsTr("HEAD")
-                                    font: Tokens.font.label.small
-                                    color: Colours.palette.m3tertiary
-                                }
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: qsTr("Git Repository")
+                                font: Tokens.font.title.medium
+                                color: Colours.palette.m3onSurface
+                                elide: Text.ElideRight
                             }
 
-                            StateLayer {
-                                anchors.fill: parent
-                                radius: Tokens.rounding.small
-                                onClicked: {
-                                    if (!branchItem.isCurrent) {
-                                        GitManager.switchBranch(branchItem.modelData);
-                                    }
-                                }
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: GitManager.branchName.length > 0
+                                text: qsTr("Current branch: %1").arg(GitManager.branchName)
+                                font: Tokens.font.label.medium
+                                color: Colours.palette.m3tertiary
+                                elide: Text.ElideMiddle
                             }
                         }
 
-                        StyledText {
-                            anchors.centerIn: parent
-                            width: parent.width - Tokens.padding.large * 2
-                            visible: branchesList.count === 0
-                            text: qsTr("No branches found in this repository")
-                            color: Colours.palette.m3outline
-                            font: Tokens.font.body.small
-                            horizontalAlignment: Text.AlignHCenter
-                            wrapMode: Text.WordWrap
+                        // Pull Button
+                        IconTextButton {
+                            type: ButtonBase.Tonal
+                            icon: "download"
+                            text: qsTr("Pull")
+                            onClicked: GitManager.pull()
+                        }
+
+                        // Fetch Button
+                        IconTextButton {
+                            type: ButtonBase.Tonal
+                            icon: "sync"
+                            text: qsTr("Fetch")
+                            onClicked: GitManager.fetch()
                         }
                     }
 
-                    // Tab 1: Commits History Feed
-                    VerticalFadeListView {
-                        id: commitsList
-                        width: tabArea.width
-                        height: tabArea.height
-                        clip: true
-                        spacing: 6
-                        model: GitManager.commits
+                    // Status message indicator banner
+                    StyledRect {
+                        Layout.fillWidth: true
+                        implicitHeight: 28
+                        visible: GitManager.lastStatusMessage.length > 0 || GitManager.isOperating
+                        radius: Tokens.rounding.small
+                        color: Qt.alpha(Colours.palette.m3tertiary, 0.15)
 
-                        ScrollBar.vertical: StyledScrollBar {
-                            flickable: commitsList
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            spacing: 6
+
+                            MaterialIcon {
+                                text: GitManager.isOperating ? "autorenew" : "info"
+                                fontStyle: Tokens.font.icon.small
+                                color: Colours.palette.m3tertiary
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: GitManager.lastStatusMessage
+                                font: Tokens.font.label.small
+                                color: Colours.palette.m3tertiary
+                                elide: Text.ElideRight
+                            }
                         }
+                    }
 
-                        delegate: StyledRect {
-                            id: commitItem
-                            required property var modelData
+                    // Segmented Switcher
+                    SlidingSelector {
+                        Layout.fillWidth: true
+                        activeColor: Colours.palette.m3tertiaryContainer
+                        activeOnColor: Colours.palette.m3onTertiaryContainer
+                        inactiveColor: Colours.tPalette.m3surfaceContainerHigh
+                        model: [
+                            { tab: 0, label: qsTr("Branches (%1)").arg(GitManager.branches.length), icon: "fork_right" },
+                            { tab: 1, label: qsTr("Recent Commits (%1)").arg(GitManager.commits.length), icon: "history" }
+                        ]
+                        valueKey: "tab"
+                        currentValue: root.currentTab
+                        onSelected: val => root.currentTab = val
+                    }
 
-                            width: commitsList.width
-                            implicitHeight: commitCol.implicitHeight + 12
-                            radius: Tokens.rounding.small
-                            color: Colours.tPalette.m3surfaceContainerHighest
+                    // Sliding Tab Content
+                    Item {
+                        id: tabArea
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
 
-                            ColumnLayout {
-                                id: commitCol
-                                anchors.fill: parent
-                                anchors.margins: 6
-                                anchors.leftMargin: 12
-                                anchors.rightMargin: 12
-                                spacing: 2
+                        Row {
+                            id: pagesRow
+                            width: tabArea.width * 2
+                            height: tabArea.height
+                            x: -root.currentTab * tabArea.width
 
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 8
+                            Behavior on x {
+                                Anim {
+                                    type: Anim.DefaultSpatial
+                                }
+                            }
 
-                                    StyledRect {
-                                        implicitHeight: 20
-                                        implicitWidth: hashText.implicitWidth + 8
-                                        radius: Tokens.rounding.full
-                                        color: Qt.alpha(Colours.palette.m3primary, 0.15)
+                            // Tab 0: Branches List
+                            VerticalFadeListView {
+                                id: branchesList
+                                width: tabArea.width
+                                height: tabArea.height
+                                clip: true
+                                spacing: 4
+                                model: GitManager.branches
+
+                                ScrollBar.vertical: StyledScrollBar {
+                                    flickable: branchesList
+                                }
+
+                                delegate: StyledRect {
+                                    id: branchItem
+                                    required property string modelData
+                                    readonly property bool isCurrent: modelData === GitManager.branchName
+
+                                    width: branchesList.width
+                                    implicitHeight: 40
+                                    radius: Tokens.rounding.small
+                                    color: branchItem.isCurrent ? Qt.alpha(Colours.palette.m3tertiary, 0.18) : Colours.tPalette.m3surfaceContainerHighest
+
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 12
+                                        anchors.rightMargin: 12
+                                        spacing: 8
+
+                                        MaterialIcon {
+                                            text: branchItem.isCurrent ? "check_circle" : "fork_right"
+                                            fontStyle: Tokens.font.icon.small
+                                            color: branchItem.isCurrent ? Colours.palette.m3tertiary : Colours.palette.m3outline
+                                        }
 
                                         StyledText {
-                                            id: hashText
-                                            anchors.centerIn: parent
-                                            text: commitItem.modelData.hash || ""
-                                            font: Tokens.font.mono.small
-                                            color: Colours.palette.m3primary
+                                            Layout.fillWidth: true
+                                            text: branchItem.modelData
+                                            font: Tokens.font.body.medium
+                                            color: branchItem.isCurrent ? Colours.palette.m3tertiary : Colours.palette.m3onSurface
+                                        }
+
+                                        StyledText {
+                                            visible: branchItem.isCurrent
+                                            text: qsTr("HEAD")
+                                            font: Tokens.font.label.small
+                                            color: Colours.palette.m3tertiary
                                         }
                                     }
 
-                                    StyledText {
-                                        text: commitItem.modelData.author || ""
-                                        font: Tokens.font.label.small
-                                        color: Colours.palette.m3outline
-                                    }
-
-                                    Item { Layout.fillWidth: true }
-
-                                    StyledText {
-                                        text: commitItem.modelData.time || ""
-                                        font: Tokens.font.label.small
-                                        color: Colours.palette.m3outline
+                                    StateLayer {
+                                        anchors.fill: parent
+                                        radius: Tokens.rounding.small
+                                        onClicked: {
+                                            if (!branchItem.isCurrent) {
+                                                GitManager.switchBranch(branchItem.modelData);
+                                            }
+                                        }
                                     }
                                 }
 
                                 StyledText {
-                                    Layout.fillWidth: true
-                                    text: commitItem.modelData.subject || ""
-                                    font: Tokens.font.body.medium
-                                    color: Colours.palette.m3onSurface
-                                    wrapMode: Text.Wrap
+                                    anchors.centerIn: parent
+                                    width: parent.width - Tokens.padding.large * 2
+                                    visible: branchesList.count === 0
+                                    text: qsTr("No branches found in this repository")
+                                    color: Colours.palette.m3outline
+                                    font: Tokens.font.body.small
+                                    horizontalAlignment: Text.AlignHCenter
+                                    wrapMode: Text.WordWrap
+                                }
+                            }
+
+                            // Tab 1: Commits History Feed
+                            VerticalFadeListView {
+                                id: commitsList
+                                width: tabArea.width
+                                height: tabArea.height
+                                clip: true
+                                spacing: 6
+                                model: GitManager.commits
+
+                                ScrollBar.vertical: StyledScrollBar {
+                                    flickable: commitsList
+                                }
+
+                                delegate: StyledRect {
+                                    id: commitItem
+                                    required property var modelData
+
+                                    width: commitsList.width
+                                    implicitHeight: commitCol.implicitHeight + 12
+                                    radius: Tokens.rounding.small
+                                    color: Colours.tPalette.m3surfaceContainerHighest
+
+                                    ColumnLayout {
+                                        id: commitCol
+                                        anchors.fill: parent
+                                        anchors.margins: 6
+                                        anchors.leftMargin: 12
+                                        anchors.rightMargin: 12
+                                        spacing: 2
+
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: 8
+
+                                            StyledRect {
+                                                implicitHeight: 20
+                                                implicitWidth: hashText.implicitWidth + 8
+                                                radius: Tokens.rounding.full
+                                                color: Qt.alpha(Colours.palette.m3primary, 0.15)
+
+                                                StyledText {
+                                                    id: hashText
+                                                    anchors.centerIn: parent
+                                                    text: commitItem.modelData.hash || ""
+                                                    font: Tokens.font.mono.small
+                                                    color: Colours.palette.m3primary
+                                                }
+                                            }
+
+                                            StyledText {
+                                                text: commitItem.modelData.author || ""
+                                                font: Tokens.font.label.small
+                                                color: Colours.palette.m3outline
+                                            }
+
+                                            Item { Layout.fillWidth: true }
+
+                                            StyledText {
+                                                text: commitItem.modelData.time || ""
+                                                font: Tokens.font.label.small
+                                                color: Colours.palette.m3outline
+                                            }
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: commitItem.modelData.subject || ""
+                                            font: Tokens.font.body.medium
+                                            color: Colours.palette.m3onSurface
+                                            wrapMode: Text.Wrap
+                                        }
+                                    }
+                                }
+
+                                StyledText {
+                                    anchors.centerIn: parent
+                                    width: parent.width - Tokens.padding.large * 2
+                                    visible: commitsList.count === 0
+                                    text: qsTr("No commits yet")
+                                    color: Colours.palette.m3outline
+                                    font: Tokens.font.body.small
+                                    horizontalAlignment: Text.AlignHCenter
+                                    wrapMode: Text.WordWrap
                                 }
                             }
                         }
+                    }
 
-                        StyledText {
-                            anchors.centerIn: parent
-                            width: parent.width - Tokens.padding.large * 2
-                            visible: commitsList.count === 0
-                            text: qsTr("No commits yet")
-                            color: Colours.palette.m3outline
-                            font: Tokens.font.body.small
-                            horizontalAlignment: Text.AlignHCenter
-                            wrapMode: Text.WordWrap
+                    // Close Button
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignRight
+
+                        TextButton {
+                            type: ButtonBase.Text
+                            text: qsTr("Close")
+                            onClicked: root.expanded = false
                         }
                     }
-                }
-            }
-
-            // Close Button
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignRight
-
-                TextButton {
-                    type: ButtonBase.Text
-                    text: qsTr("Close")
-                    onClicked: root.expanded = false
                 }
             }
         }

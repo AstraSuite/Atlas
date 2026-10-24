@@ -29,120 +29,125 @@ MouseArea {
     opacity: expanded ? 1.0 : 0.0
     Behavior on opacity { Anim { type: Anim.FastEffects } }
 
-    StyledRect {
-        id: menuCard
-
-        x: Math.min(Math.max(8, root.menuX), root.width - width - 8)
-        y: Math.min(Math.max(8, root.menuY), root.height - height - 8)
-
-        implicitWidth: menuCol.implicitWidth + Tokens.padding.extraSmall * 2
-        implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
-
-        radius: Tokens.rounding.large
-        color: Colours.palette.m3surfaceContainerLow
-
-        scale: root.expanded ? 1.0 : 0.94
-        Behavior on scale { Anim { type: Anim.FastEffects; easing: Tokens.anim.standard } }
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: mouse => mouse.accepted = true
-        }
-
-        ColumnLayout {
-            id: menuCol
-            anchors.fill: parent
-            anchors.margins: Tokens.padding.extraSmall
-            spacing: 0
-
-            // Split Tab Side-by-Side
+    LazyContent {
+        expanded: root.expanded
+        sourceComponent: Item {
             StyledRect {
-                Layout.fillWidth: true
-                implicitWidth: mi1Row.implicitWidth + 24
-                implicitHeight: 36
-                radius: Tokens.rounding.medium
-                color: mi1Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                id: menuCard
 
-                RowLayout {
-                    id: mi1Row
-                    anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 12
-                    spacing: 8
-                    MaterialIcon { text: "splitscreen"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { text: qsTr("Split Tab Side-by-Side"); font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
-                }
+                x: Math.min(Math.max(8, root.menuX), root.width - width - 8)
+                y: Math.min(Math.max(8, root.menuY), root.height - height - 8)
+
+                implicitWidth: menuCol.implicitWidth + Tokens.padding.extraSmall * 2
+                implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
+
+                radius: Tokens.rounding.large
+                color: Colours.palette.m3surfaceContainerLow
+
+                scale: root.expanded ? 1.0 : 0.94
+                Behavior on scale { Anim { type: Anim.FastEffects; easing: Tokens.anim.standard } }
 
                 MouseArea {
-                    id: mi1Hover
                     anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        root.expanded = false;
-                        TabManager.splitTabWith(root.targetTabIndex, "");
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: mouse => mouse.accepted = true
+                }
+
+                ColumnLayout {
+                    id: menuCol
+                    anchors.fill: parent
+                    anchors.margins: Tokens.padding.extraSmall
+                    spacing: 0
+
+                    // Split Tab Side-by-Side
+                    StyledRect {
+                        Layout.fillWidth: true
+                        implicitWidth: mi1Row.implicitWidth + 24
+                        implicitHeight: 36
+                        radius: Tokens.rounding.medium
+                        color: mi1Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+                        RowLayout {
+                            id: mi1Row
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 8
+                            MaterialIcon { text: "splitscreen"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { text: qsTr("Split Tab Side-by-Side"); font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
+                        }
+
+                        MouseArea {
+                            id: mi1Hover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.expanded = false;
+                                TabManager.splitTabWith(root.targetTabIndex, "");
+                            }
+                        }
                     }
-                }
-            }
 
-            // Duplicate Tab
-            StyledRect {
-                Layout.fillWidth: true
-                implicitWidth: mi2Row.implicitWidth + 24
-                implicitHeight: 36
-                radius: Tokens.rounding.medium
-                color: mi2Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                    // Duplicate Tab
+                    StyledRect {
+                        Layout.fillWidth: true
+                        implicitWidth: mi2Row.implicitWidth + 24
+                        implicitHeight: 36
+                        radius: Tokens.rounding.medium
+                        color: mi2Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
 
-                RowLayout {
-                    id: mi2Row
-                    anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 12
-                    spacing: 8
-                    MaterialIcon { text: "content_copy"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { text: qsTr("Duplicate Tab"); font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
-                }
+                        RowLayout {
+                            id: mi2Row
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 8
+                            MaterialIcon { text: "content_copy"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { text: qsTr("Duplicate Tab"); font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
+                        }
 
-                MouseArea {
-                    id: mi2Hover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        root.expanded = false;
-                        TabManager.duplicateTab(root.targetTabIndex);
+                        MouseArea {
+                            id: mi2Hover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.expanded = false;
+                                TabManager.duplicateTab(root.targetTabIndex);
+                            }
+                        }
                     }
-                }
-            }
 
-            // Close Tab
-            StyledRect {
-                Layout.fillWidth: true
-                implicitWidth: mi3Row.implicitWidth + 24
-                implicitHeight: 36
-                radius: Tokens.rounding.medium
-                color: mi3Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
-                visible: TabManager.count > 1
+                    // Close Tab
+                    StyledRect {
+                        Layout.fillWidth: true
+                        implicitWidth: mi3Row.implicitWidth + 24
+                        implicitHeight: 36
+                        radius: Tokens.rounding.medium
+                        color: mi3Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                        visible: TabManager.count > 1
 
-                RowLayout {
-                    id: mi3Row
-                    anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 12
-                    spacing: 8
-                    MaterialIcon { text: "close"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3error }
-                    StyledText { text: qsTr("Close Tab"); font: Tokens.font.body.medium; color: Colours.palette.m3error }
-                }
+                        RowLayout {
+                            id: mi3Row
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 8
+                            MaterialIcon { text: "close"; fontStyle: Tokens.font.icon.small; color: Colours.palette.m3error }
+                            StyledText { text: qsTr("Close Tab"); font: Tokens.font.body.medium; color: Colours.palette.m3error }
+                        }
 
-                MouseArea {
-                    id: mi3Hover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        root.expanded = false;
-                        TabManager.closeTab(root.targetTabIndex);
+                        MouseArea {
+                            id: mi3Hover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.expanded = false;
+                                TabManager.closeTab(root.targetTabIndex);
+                            }
+                        }
                     }
                 }
             }

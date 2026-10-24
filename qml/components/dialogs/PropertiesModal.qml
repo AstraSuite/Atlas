@@ -59,607 +59,612 @@ MouseArea {
         opacity: 0.45
     }
 
-    StyledRect {
-        id: dialog
+    LazyContent {
+        expanded: root.expanded
+        sourceComponent: Item {
+            StyledRect {
+                id: dialog
 
-        anchors.centerIn: parent
-        width: Math.min(parent.width - 64, 620)
-        height: Math.min(parent.height - 64, 600)
-        implicitWidth: 620
-        implicitHeight: 600
+                anchors.centerIn: parent
+                width: Math.min(parent.width - 64, 620)
+                height: Math.min(parent.height - 64, 600)
+                implicitWidth: 620
+                implicitHeight: 600
 
-        radius: Tokens.rounding.large
-        color: Colours.palette.m3surfaceContainer
+                radius: Tokens.rounding.large
+                color: Colours.palette.m3surfaceContainer
 
-        scale: root.expanded ? 1.0 : 0.94
-        Behavior on scale { Anim { type: Anim.FastEffects; easing: Tokens.anim.standard } }
+                scale: root.expanded ? 1.0 : 0.94
+                Behavior on scale { Anim { type: Anim.FastEffects; easing: Tokens.anim.standard } }
 
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: mouse => mouse.accepted = true
-            onWheel: wheel => wheel.accepted = true
-        }
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: Tokens.padding.large
-            spacing: Tokens.spacing.medium
-
-            // Header Title
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Tokens.spacing.small
-
-                MaterialIcon {
-                    text: meta.isDir ? "folder" : "description"
-                    fontStyle: Tokens.font.icon.medium
-                    color: Colours.palette.m3primary
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: mouse => mouse.accepted = true
+                    onWheel: wheel => wheel.accepted = true
                 }
 
-                StyledText {
-                    Layout.fillWidth: true
-                    text: meta.name
-                    font: Tokens.font.title.medium
-                    color: Colours.palette.m3onSurface
-                    elide: Text.ElideMiddle
-                }
-            }
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: Tokens.padding.large
+                    spacing: Tokens.spacing.medium
 
-            // Tab Bar Switcher
-            SlidingSelector {
-                Layout.fillWidth: true
-                buttonHeight: 38
-                model: {
-                    let tabs = [
-                        { tab: 0, label: qsTr("General"), icon: "info" },
-                        { tab: 1, label: qsTr("Permissions"), icon: "lock" }
-                    ];
-                    if (!meta.isDir) {
-                        tabs.push({ tab: 2, label: qsTr("Checksums"), icon: "fingerprint" });
-                        if (meta.hasMediaDetails)
-                            tabs.push({ tab: 3, label: qsTr("Details"), icon: "perm_media" });
-                    }
-                    return tabs;
-                }
-                valueKey: "tab"
-                currentValue: root.currentTab
-                onSelected: (val) => {
-                    root.currentTab = val;
-                    if (val === 2 && !meta.md5) {
-                        meta.calculateChecksums();
-                    }
-                }
-            }
-
-            Connections {
-                target: meta
-                function onMediaDetailsChanged() {
-                    if (root.currentTab === 3 && !meta.hasMediaDetails)
-                        root.currentTab = 0;
-                }
-            }
-
-            // Tab 0: General
-            ColumnLayout {
-                visible: root.currentTab === 0
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 8
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-                    StyledText { Layout.preferredWidth: 120; text: qsTr("Type:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.mimeDescription || (meta.isDir ? qsTr("Folder") : meta.mimeType); font: Tokens.font.body.medium; color: Colours.palette.m3onSurface; elide: Text.ElideRight }
-                }
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-                    StyledText { Layout.preferredWidth: 120; text: qsTr("Location:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.path; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; elide: Text.ElideMiddle }
-                }
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-                    StyledText { Layout.preferredWidth: 120; text: meta.isDir ? qsTr("Contents:") : qsTr("Size:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.isDir ? qsTr("%1 items").arg(meta.itemCount) : meta.formattedSize; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface; elide: Text.ElideRight }
-                }
-                RowLayout {
-                    visible: meta.imageDimensions.length > 0
-                    Layout.fillWidth: true
-                    spacing: 12
-                    StyledText { Layout.preferredWidth: 120; text: qsTr("Dimensions:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.imageDimensions; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface; elide: Text.ElideRight }
-                }
-
-                Rectangle { Layout.fillWidth: true; height: 1; color: Colours.palette.m3outlineVariant; opacity: 0.5 }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-                    Layout.alignment: Qt.AlignTop
-                    StyledText { Layout.preferredWidth: 120; Layout.alignment: Qt.AlignTop; text: qsTr("Created:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.formattedCreated; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
-                }
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-                    Layout.alignment: Qt.AlignTop
-                    StyledText { Layout.preferredWidth: 120; Layout.alignment: Qt.AlignTop; text: qsTr("Modified:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.formattedModified; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
-                }
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-                    Layout.alignment: Qt.AlignTop
-                    StyledText { Layout.preferredWidth: 120; Layout.alignment: Qt.AlignTop; text: qsTr("Accessed:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { Layout.fillWidth: true; text: meta.formattedAccessed; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
-                }
-
-                RowLayout {
-                    visible: !meta.isDir
-                    Layout.fillWidth: true
-                    spacing: 12
-
-                    StyledText {
-                        Layout.preferredWidth: 120
-                        text: qsTr("Open With:")
-                        font: Tokens.font.label.medium
-                        color: Colours.palette.m3onSurfaceVariant
-                    }
-
+                    // Header Title
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: Tokens.spacing.small
 
                         MaterialIcon {
-                            text: "apps"
-                            fontStyle: Tokens.font.icon.small
+                            text: meta.isDir ? "folder" : "description"
+                            fontStyle: Tokens.font.icon.medium
                             color: Colours.palette.m3primary
                         }
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: root.defaultAppName.length > 0 ? root.defaultAppName : qsTr("System Default")
-                            font: Tokens.font.body.medium
-                            color: Colours.palette.m3onSurface
-                            elide: Text.ElideRight
-                        }
-
-                        StyledRect {
-                            implicitHeight: 28
-                            implicitWidth: changeText.implicitWidth + 20
-                            radius: Tokens.rounding.full
-                            color: changeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
-
-                            StyledText {
-                                id: changeText
-                                anchors.centerIn: parent
-                                text: qsTr("Change...")
-                                font: Tokens.font.label.small
-                                color: Colours.palette.m3primary
-                            }
-
-                            MouseArea {
-                                id: changeHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (typeof openWithModal !== "undefined" && openWithModal) {
-                                        openWithModal.targetPath = root.targetPath;
-                                        openWithModal.expanded = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Item { Layout.fillHeight: true }
-            }
-
-            // Tab 1: Permissions
-            ColumnLayout {
-                visible: root.currentTab === 1
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 12
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    StyledText { Layout.preferredWidth: 100; text: qsTr("Owner:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { text: meta.owner; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
-                }
-                RowLayout {
-                    Layout.fillWidth: true
-                    StyledText { Layout.preferredWidth: 100; text: qsTr("Group:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { text: meta.group; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
-                }
-
-                Rectangle { Layout.fillWidth: true; height: 1; color: Colours.palette.m3outlineVariant; opacity: 0.5 }
-
-                // Checkbox Matrix: Read / Write / Exec
-                GridLayout {
-                    columns: 4
-                    columnSpacing: 16
-                    rowSpacing: 8
-
-                    Item { width: 60 }
-                    StyledText { text: qsTr("Read"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { text: qsTr("Write"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-                    StyledText { text: qsTr("Execute"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-
-                    StyledText { text: qsTr("Owner"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-                    StyledCheckBox { id: uR; checked: meta.permissions.length >= 3 && meta.permissions[0] === 'r' }
-                    StyledCheckBox { id: uW; checked: meta.permissions.length >= 3 && meta.permissions[1] === 'w' }
-                    StyledCheckBox { id: uX; checked: meta.permissions.length >= 3 && meta.permissions[2] === 'x' }
-
-                    StyledText { text: qsTr("Group"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-                    StyledCheckBox { id: gR; checked: meta.permissions.length >= 6 && meta.permissions[3] === 'r' }
-                    StyledCheckBox { id: gW; checked: meta.permissions.length >= 6 && meta.permissions[4] === 'w' }
-                    StyledCheckBox { id: gX; checked: meta.permissions.length >= 6 && meta.permissions[5] === 'x' }
-
-                    StyledText { text: qsTr("Others"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-                    StyledCheckBox { id: oR; checked: meta.permissions.length >= 9 && meta.permissions[6] === 'r' }
-                    StyledCheckBox { id: oW; checked: meta.permissions.length >= 9 && meta.permissions[7] === 'w' }
-                    StyledCheckBox { id: oX; checked: meta.permissions.length >= 9 && meta.permissions[8] === 'x' }
-                }
-
-                StyledCheckBox {
-                    id: recursiveCheck
-                    Layout.fillWidth: true
-                    Layout.topMargin: Tokens.spacing.small
-                    visible: meta.isDir
-                    text: qsTr("Apply to enclosed files and folders")
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    visible: recursiveCheck.visible && recursiveCheck.checked
-                    text: qsTr("Folders keep the execute bit wherever they are readable, so they stay open-able.")
-                    color: Colours.palette.m3outline
-                    font: Tokens.font.label.small
-                    wrapMode: Text.WordWrap
-                }
-
-                TextButton {
-                    Layout.alignment: Qt.AlignRight
-                    type: ButtonBase.Tonal
-                    text: qsTr("Apply Permissions")
-                    onClicked: meta.applyPermissions(uR.checked, uW.checked, uX.checked, gR.checked, gW.checked, gX.checked, oR.checked, oW.checked, oX.checked, meta.isDir && recursiveCheck.checked)
-                }
-
-                Item { Layout.fillHeight: true }
-            }
-
-            // Tab 2: Checksums & Hash Validator
-            ColumnLayout {
-                visible: root.currentTab === 2
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 10
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: meta.checksumsLoading ? qsTr("Calculating checksums...") : qsTr("Cryptographic Hashes")
-                        font: Tokens.font.title.small
-                        color: Colours.palette.m3onSurface
-                    }
-
-                    IconTextButton {
-                        type: ButtonBase.Tonal
-                        icon: "sync"
-                        text: qsTr("Recalculate")
-                        onClicked: meta.calculateChecksums()
-                    }
-                }
-
-                // MD5
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 2
-                    StyledText { text: "MD5"; font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: meta.md5 || "..."
-                            font: Tokens.font.mono.small
+                            text: meta.name
+                            font: Tokens.font.title.medium
                             color: Colours.palette.m3onSurface
                             elide: Text.ElideMiddle
                         }
-                        MaterialIcon {
-                            text: "content_copy"
-                            fontStyle: Tokens.font.icon.small
-                            color: Colours.palette.m3outline
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: FileOperations.copyTextToClipboard(meta.md5)
-                            }
-                        }
                     }
-                }
 
-                // SHA-1
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 2
-                    StyledText { text: "SHA-1"; font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-                    RowLayout {
+                    // Tab Bar Switcher
+                    SlidingSelector {
                         Layout.fillWidth: true
-                        spacing: 8
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: meta.sha1 || "..."
-                            font: Tokens.font.mono.small
-                            color: Colours.palette.m3onSurface
-                            elide: Text.ElideMiddle
+                        buttonHeight: 38
+                        model: {
+                            let tabs = [
+                                { tab: 0, label: qsTr("General"), icon: "info" },
+                                { tab: 1, label: qsTr("Permissions"), icon: "lock" }
+                            ];
+                            if (!meta.isDir) {
+                                tabs.push({ tab: 2, label: qsTr("Checksums"), icon: "fingerprint" });
+                                if (meta.hasMediaDetails)
+                                    tabs.push({ tab: 3, label: qsTr("Details"), icon: "perm_media" });
+                            }
+                            return tabs;
                         }
-                        MaterialIcon {
-                            text: "content_copy"
-                            fontStyle: Tokens.font.icon.small
-                            color: Colours.palette.m3outline
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: FileOperations.copyTextToClipboard(meta.sha1)
+                        valueKey: "tab"
+                        currentValue: root.currentTab
+                        onSelected: (val) => {
+                            root.currentTab = val;
+                            if (val === 2 && !meta.md5) {
+                                meta.calculateChecksums();
                             }
                         }
                     }
-                }
 
-                // SHA-256
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 2
-                    StyledText { text: "SHA-256"; font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: meta.sha256 || "..."
-                            font: Tokens.font.mono.small
-                            color: Colours.palette.m3onSurface
-                            elide: Text.ElideMiddle
-                        }
-                        MaterialIcon {
-                            text: "content_copy"
-                            fontStyle: Tokens.font.icon.small
-                            color: Colours.palette.m3outline
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: FileOperations.copyTextToClipboard(meta.sha256)
-                            }
+                    Connections {
+                        target: meta
+                        function onMediaDetailsChanged() {
+                            if (root.currentTab === 3 && !meta.hasMediaDetails)
+                                root.currentTab = 0;
                         }
                     }
-                }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: Colours.palette.m3outlineVariant; opacity: 0.5 }
-
-                // Hash Comparator / Validator
-                StyledText { text: qsTr("Verify Hash Match:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurface }
-                StyledRect {
-                    Layout.fillWidth: true
-                    implicitHeight: 36
-                    radius: Tokens.rounding.small
-                    color: Colours.tPalette.m3surfaceContainerHigh
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        spacing: 6
-
-                        TextInput {
-                            id: compareInput
-                            Layout.fillWidth: true
-                            color: Colours.palette.m3onSurface
-                            font: Tokens.font.mono.small
-                            clip: true
-                            selectByMouse: true
-                            onTextChanged: root.hashToCompare = text.trim().toLowerCase()
-
-                            Text {
-                                anchors.fill: parent
-                                text: qsTr("Paste expected hash here...")
-                                color: Colours.palette.m3outline
-                                font: parent.font
-                                visible: !compareInput.text && !compareInput.activeFocus
-                            }
-                        }
-
-                        // Match Result Indicator
-                        RowLayout {
-                            visible: root.hashToCompare.length > 0
-                            spacing: 4
-                            readonly property bool isMatch: root.hashToCompare === meta.md5 || root.hashToCompare === meta.sha1 || root.hashToCompare === meta.sha256
-
-                            MaterialIcon {
-                                text: parent.isMatch ? "check_circle" : "cancel"
-                                color: parent.isMatch ? "#4caf50" : Colours.palette.m3error
-                                fontStyle: Tokens.font.icon.small
-                            }
-                            StyledText {
-                                text: parent.isMatch ? qsTr("Match") : qsTr("Mismatch")
-                                font: Tokens.font.label.small
-                                color: parent.isMatch ? "#4caf50" : Colours.palette.m3error
-                            }
-                        }
-                    }
-                }
-
-                Item { Layout.fillHeight: true }
-            }
-
-            // Tab 3: Media Metadata (EXIF / container tags)
-            ColumnLayout {
-                visible: root.currentTab === 3 && meta.hasMediaDetails
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 8
-
-                StyledText {
-                    text: meta.isVideo ? qsTr("Container Metadata") : (meta.isAudio ? qsTr("Audio Tags") : qsTr("EXIF Metadata"))
-                    font: Tokens.font.title.small
-                    color: Colours.palette.m3onSurface
-                }
-
-                Flickable {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    contentHeight: detailsCol.implicitHeight
-                    clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-
-                    ScrollBar.vertical: StyledScrollBar {
-                        flickable: parent
-                    }
-
+                    // Tab 0: General
                     ColumnLayout {
-                        id: detailsCol
-                        width: parent.width
+                        visible: root.currentTab === 0
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
                         spacing: 8
 
-                        Repeater {
-                            model: meta.mediaDetails
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            StyledText { Layout.preferredWidth: 120; text: qsTr("Type:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { Layout.fillWidth: true; text: meta.mimeDescription || (meta.isDir ? qsTr("Folder") : meta.mimeType); font: Tokens.font.body.medium; color: Colours.palette.m3onSurface; elide: Text.ElideRight }
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            StyledText { Layout.preferredWidth: 120; text: qsTr("Location:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { Layout.fillWidth: true; text: meta.path; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; elide: Text.ElideMiddle }
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            StyledText { Layout.preferredWidth: 120; text: meta.isDir ? qsTr("Contents:") : qsTr("Size:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { Layout.fillWidth: true; text: meta.isDir ? qsTr("%1 items").arg(meta.itemCount) : meta.formattedSize; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface; elide: Text.ElideRight }
+                        }
+                        RowLayout {
+                            visible: meta.imageDimensions.length > 0
+                            Layout.fillWidth: true
+                            spacing: 12
+                            StyledText { Layout.preferredWidth: 120; text: qsTr("Dimensions:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { Layout.fillWidth: true; text: meta.imageDimensions; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface; elide: Text.ElideRight }
+                        }
+
+                        Rectangle { Layout.fillWidth: true; height: 1; color: Colours.palette.m3outlineVariant; opacity: 0.5 }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            Layout.alignment: Qt.AlignTop
+                            StyledText { Layout.preferredWidth: 120; Layout.alignment: Qt.AlignTop; text: qsTr("Created:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { Layout.fillWidth: true; text: meta.formattedCreated; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            Layout.alignment: Qt.AlignTop
+                            StyledText { Layout.preferredWidth: 120; Layout.alignment: Qt.AlignTop; text: qsTr("Modified:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { Layout.fillWidth: true; text: meta.formattedModified; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            Layout.alignment: Qt.AlignTop
+                            StyledText { Layout.preferredWidth: 120; Layout.alignment: Qt.AlignTop; text: qsTr("Accessed:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { Layout.fillWidth: true; text: meta.formattedAccessed; font: Tokens.font.body.small; color: Colours.palette.m3onSurface; wrapMode: Text.WordWrap }
+                        }
+
+                        RowLayout {
+                            visible: !meta.isDir
+                            Layout.fillWidth: true
+                            spacing: 12
+
+                            StyledText {
+                                Layout.preferredWidth: 120
+                                text: qsTr("Open With:")
+                                font: Tokens.font.label.medium
+                                color: Colours.palette.m3onSurfaceVariant
+                            }
 
                             RowLayout {
-                                id: detailRow
-                                required property var modelData
-                                readonly property bool isCommentRow: detailRow.modelData.label === "Comment" && meta.isImage
-                                property bool isEditing: false
-
                                 Layout.fillWidth: true
-                                spacing: 12
+                                spacing: 8
+
+                                MaterialIcon {
+                                    text: "apps"
+                                    fontStyle: Tokens.font.icon.small
+                                    color: Colours.palette.m3primary
+                                }
 
                                 StyledText {
-                                    Layout.preferredWidth: 130
-                                    text: detailRow.modelData.label + ":"
-                                    font: Tokens.font.label.medium
-                                    color: Colours.palette.m3onSurfaceVariant
-                                    Layout.alignment: Qt.AlignVCenter
+                                    Layout.fillWidth: true
+                                    text: root.defaultAppName.length > 0 ? root.defaultAppName : qsTr("System Default")
+                                    font: Tokens.font.body.medium
+                                    color: Colours.palette.m3onSurface
+                                    elide: Text.ElideRight
                                 }
 
-                                // Standard view
-                                RowLayout {
-                                    visible: !detailRow.isEditing
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: 28
-                                    Layout.alignment: Qt.AlignVCenter
-                                    spacing: 8
+                                StyledRect {
+                                    implicitHeight: 28
+                                    implicitWidth: changeText.implicitWidth + 20
+                                    radius: Tokens.rounding.full
+                                    color: changeHover.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : Colours.tPalette.m3surfaceContainerHigh
 
                                     StyledText {
-                                        Layout.fillWidth: true
-                                        Layout.alignment: Qt.AlignVCenter
-                                        text: {
-                                            if (detailRow.modelData.value && detailRow.modelData.value.length > 0)
-                                                return detailRow.modelData.value;
-                                            return detailRow.isCommentRow ? qsTr("(No comment)") : "";
-                                        }
-                                        font: Tokens.font.body.medium
-                                        color: (detailRow.isCommentRow && (!detailRow.modelData.value || detailRow.modelData.value.length === 0))
-                                            ? Colours.palette.m3outline
-                                            : Colours.palette.m3onSurface
-                                        wrapMode: Text.Wrap
+                                        id: changeText
+                                        anchors.centerIn: parent
+                                        text: qsTr("Change...")
+                                        font: Tokens.font.label.small
+                                        color: Colours.palette.m3primary
                                     }
 
-                                    IconButton {
-                                        visible: detailRow.isCommentRow
-                                        icon: "edit"
-                                        type: ButtonBase.Standard
-                                        implicitWidth: 26
-                                        implicitHeight: 26
-                                        Layout.alignment: Qt.AlignVCenter
+                                    MouseArea {
+                                        id: changeHover
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            commentInput.text = detailRow.modelData.value || "";
-                                            detailRow.isEditing = true;
-                                            commentInput.forceActiveFocus();
+                                            if (typeof openWithModal !== "undefined" && openWithModal) {
+                                                openWithModal.targetPath = root.targetPath;
+                                                openWithModal.expanded = true;
+                                            }
                                         }
                                     }
                                 }
+                            }
+                        }
 
-                                // Editable view
-                                RowLayout {
-                                    visible: detailRow.isEditing
+                        Item { Layout.fillHeight: true }
+                    }
+
+                    // Tab 1: Permissions
+                    ColumnLayout {
+                        visible: root.currentTab === 1
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        spacing: 12
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            StyledText { Layout.preferredWidth: 100; text: qsTr("Owner:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { text: meta.owner; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            StyledText { Layout.preferredWidth: 100; text: qsTr("Group:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { text: meta.group; font: Tokens.font.body.medium; color: Colours.palette.m3onSurface }
+                        }
+
+                        Rectangle { Layout.fillWidth: true; height: 1; color: Colours.palette.m3outlineVariant; opacity: 0.5 }
+
+                        // Checkbox Matrix: Read / Write / Exec
+                        GridLayout {
+                            columns: 4
+                            columnSpacing: 16
+                            rowSpacing: 8
+
+                            Item { width: 60 }
+                            StyledText { text: qsTr("Read"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { text: qsTr("Write"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
+                            StyledText { text: qsTr("Execute"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
+
+                            StyledText { text: qsTr("Owner"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
+                            StyledCheckBox { id: uR; checked: meta.permissions.length >= 3 && meta.permissions[0] === 'r' }
+                            StyledCheckBox { id: uW; checked: meta.permissions.length >= 3 && meta.permissions[1] === 'w' }
+                            StyledCheckBox { id: uX; checked: meta.permissions.length >= 3 && meta.permissions[2] === 'x' }
+
+                            StyledText { text: qsTr("Group"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
+                            StyledCheckBox { id: gR; checked: meta.permissions.length >= 6 && meta.permissions[3] === 'r' }
+                            StyledCheckBox { id: gW; checked: meta.permissions.length >= 6 && meta.permissions[4] === 'w' }
+                            StyledCheckBox { id: gX; checked: meta.permissions.length >= 6 && meta.permissions[5] === 'x' }
+
+                            StyledText { text: qsTr("Others"); font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
+                            StyledCheckBox { id: oR; checked: meta.permissions.length >= 9 && meta.permissions[6] === 'r' }
+                            StyledCheckBox { id: oW; checked: meta.permissions.length >= 9 && meta.permissions[7] === 'w' }
+                            StyledCheckBox { id: oX; checked: meta.permissions.length >= 9 && meta.permissions[8] === 'x' }
+                        }
+
+                        StyledCheckBox {
+                            id: recursiveCheck
+                            Layout.fillWidth: true
+                            Layout.topMargin: Tokens.spacing.small
+                            visible: meta.isDir
+                            text: qsTr("Apply to enclosed files and folders")
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: recursiveCheck.visible && recursiveCheck.checked
+                            text: qsTr("Folders keep the execute bit wherever they are readable, so they stay open-able.")
+                            color: Colours.palette.m3outline
+                            font: Tokens.font.label.small
+                            wrapMode: Text.WordWrap
+                        }
+
+                        TextButton {
+                            Layout.alignment: Qt.AlignRight
+                            type: ButtonBase.Tonal
+                            text: qsTr("Apply Permissions")
+                            onClicked: meta.applyPermissions(uR.checked, uW.checked, uX.checked, gR.checked, gW.checked, gX.checked, oR.checked, oW.checked, oX.checked, meta.isDir && recursiveCheck.checked)
+                        }
+
+                        Item { Layout.fillHeight: true }
+                    }
+
+                    // Tab 2: Checksums & Hash Validator
+                    ColumnLayout {
+                        visible: root.currentTab === 2
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        spacing: 10
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: meta.checksumsLoading ? qsTr("Calculating checksums...") : qsTr("Cryptographic Hashes")
+                                font: Tokens.font.title.small
+                                color: Colours.palette.m3onSurface
+                            }
+
+                            IconTextButton {
+                                type: ButtonBase.Tonal
+                                icon: "sync"
+                                text: qsTr("Recalculate")
+                                onClicked: meta.calculateChecksums()
+                            }
+                        }
+
+                        // MD5
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            StyledText { text: "MD5"; font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+                                StyledText {
                                     Layout.fillWidth: true
-                                    Layout.preferredHeight: 28
-                                    Layout.alignment: Qt.AlignVCenter
-                                    spacing: 6
+                                    text: meta.md5 || "..."
+                                    font: Tokens.font.mono.small
+                                    color: Colours.palette.m3onSurface
+                                    elide: Text.ElideMiddle
+                                }
+                                MaterialIcon {
+                                    text: "content_copy"
+                                    fontStyle: Tokens.font.icon.small
+                                    color: Colours.palette.m3outline
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: FileOperations.copyTextToClipboard(meta.md5)
+                                    }
+                                }
+                            }
+                        }
 
-                                    StyledRect {
+                        // SHA-1
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            StyledText { text: "SHA-1"; font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: meta.sha1 || "..."
+                                    font: Tokens.font.mono.small
+                                    color: Colours.palette.m3onSurface
+                                    elide: Text.ElideMiddle
+                                }
+                                MaterialIcon {
+                                    text: "content_copy"
+                                    fontStyle: Tokens.font.icon.small
+                                    color: Colours.palette.m3outline
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: FileOperations.copyTextToClipboard(meta.sha1)
+                                    }
+                                }
+                            }
+                        }
+
+                        // SHA-256
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            StyledText { text: "SHA-256"; font: Tokens.font.label.small; color: Colours.palette.m3onSurfaceVariant }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: meta.sha256 || "..."
+                                    font: Tokens.font.mono.small
+                                    color: Colours.palette.m3onSurface
+                                    elide: Text.ElideMiddle
+                                }
+                                MaterialIcon {
+                                    text: "content_copy"
+                                    fontStyle: Tokens.font.icon.small
+                                    color: Colours.palette.m3outline
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: FileOperations.copyTextToClipboard(meta.sha256)
+                                    }
+                                }
+                            }
+                        }
+
+                        Rectangle { Layout.fillWidth: true; height: 1; color: Colours.palette.m3outlineVariant; opacity: 0.5 }
+
+                        // Hash Comparator / Validator
+                        StyledText { text: qsTr("Verify Hash Match:"); font: Tokens.font.label.medium; color: Colours.palette.m3onSurface }
+                        StyledRect {
+                            Layout.fillWidth: true
+                            implicitHeight: 36
+                            radius: Tokens.rounding.small
+                            color: Colours.tPalette.m3surfaceContainerHigh
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 8
+                                anchors.rightMargin: 8
+                                spacing: 6
+
+                                TextInput {
+                                    id: compareInput
+                                    Layout.fillWidth: true
+                                    color: Colours.palette.m3onSurface
+                                    font: Tokens.font.mono.small
+                                    clip: true
+                                    selectByMouse: true
+                                    onTextChanged: root.hashToCompare = text.trim().toLowerCase()
+
+                                    Text {
+                                        anchors.fill: parent
+                                        text: qsTr("Paste expected hash here...")
+                                        color: Colours.palette.m3outline
+                                        font: parent.font
+                                        visible: !compareInput.text && !compareInput.activeFocus
+                                    }
+                                }
+
+                                // Match Result Indicator
+                                RowLayout {
+                                    visible: root.hashToCompare.length > 0
+                                    spacing: 4
+                                    readonly property bool isMatch: root.hashToCompare === meta.md5 || root.hashToCompare === meta.sha1 || root.hashToCompare === meta.sha256
+
+                                    MaterialIcon {
+                                        text: parent.isMatch ? "check_circle" : "cancel"
+                                        color: parent.isMatch ? "#4caf50" : Colours.palette.m3error
+                                        fontStyle: Tokens.font.icon.small
+                                    }
+                                    StyledText {
+                                        text: parent.isMatch ? qsTr("Match") : qsTr("Mismatch")
+                                        font: Tokens.font.label.small
+                                        color: parent.isMatch ? "#4caf50" : Colours.palette.m3error
+                                    }
+                                }
+                            }
+                        }
+
+                        Item { Layout.fillHeight: true }
+                    }
+
+                    // Tab 3: Media Metadata (EXIF / container tags)
+                    ColumnLayout {
+                        visible: root.currentTab === 3 && meta.hasMediaDetails
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        spacing: 8
+
+                        StyledText {
+                            text: meta.isVideo ? qsTr("Container Metadata") : (meta.isAudio ? qsTr("Audio Tags") : qsTr("EXIF Metadata"))
+                            font: Tokens.font.title.small
+                            color: Colours.palette.m3onSurface
+                        }
+
+                        Flickable {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            contentHeight: detailsCol.implicitHeight
+                            clip: true
+                            boundsBehavior: Flickable.StopAtBounds
+
+                            ScrollBar.vertical: StyledScrollBar {
+                                flickable: parent
+                            }
+
+                            ColumnLayout {
+                                id: detailsCol
+                                width: parent.width
+                                spacing: 8
+
+                                Repeater {
+                                    model: meta.mediaDetails
+
+                                    RowLayout {
+                                        id: detailRow
+                                        required property var modelData
+                                        readonly property bool isCommentRow: detailRow.modelData.label === "Comment" && meta.isImage
+                                        property bool isEditing: false
+
                                         Layout.fillWidth: true
-                                        implicitHeight: 28
-                                        radius: Tokens.rounding.extraSmall
-                                        color: Colours.palette.m3surfaceContainerHighest
-                                        border.color: commentInput.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outlineVariant, 0.5)
-                                        border.width: commentInput.activeFocus ? 2 : 1
-                                        clip: true
+                                        spacing: 12
 
-                                        TextInput {
-                                            id: commentInput
-                                            anchors.fill: parent
-                                            anchors.leftMargin: 8
-                                            anchors.rightMargin: 8
-                                            color: Colours.palette.m3onSurface
-                                            selectionColor: Colours.palette.m3primaryContainer
-                                            selectedTextColor: Colours.palette.m3onPrimaryContainer
-                                            font: Tokens.font.body.medium
-                                            selectByMouse: true
-                                            verticalAlignment: TextInput.AlignVCenter
-                                            onAccepted: {
-                                                meta.setComment(commentInput.text.trim());
-                                                detailRow.isEditing = false;
+                                        StyledText {
+                                            Layout.preferredWidth: 130
+                                            text: detailRow.modelData.label + ":"
+                                            font: Tokens.font.label.medium
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+
+                                        // Standard view
+                                        RowLayout {
+                                            visible: !detailRow.isEditing
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: 28
+                                            Layout.alignment: Qt.AlignVCenter
+                                            spacing: 8
+
+                                            StyledText {
+                                                Layout.fillWidth: true
+                                                Layout.alignment: Qt.AlignVCenter
+                                                text: {
+                                                    if (detailRow.modelData.value && detailRow.modelData.value.length > 0)
+                                                        return detailRow.modelData.value;
+                                                    return detailRow.isCommentRow ? qsTr("(No comment)") : "";
+                                                }
+                                                font: Tokens.font.body.medium
+                                                color: (detailRow.isCommentRow && (!detailRow.modelData.value || detailRow.modelData.value.length === 0))
+                                                    ? Colours.palette.m3outline
+                                                    : Colours.palette.m3onSurface
+                                                wrapMode: Text.Wrap
                                             }
-                                            Keys.onEscapePressed: detailRow.isEditing = false
-                                        }
-                                    }
 
-                                    IconButton {
-                                        icon: "check"
-                                        type: ButtonBase.Filled
-                                        implicitWidth: 26
-                                        implicitHeight: 26
-                                        Layout.alignment: Qt.AlignVCenter
-                                        onClicked: {
-                                            meta.setComment(commentInput.text.trim());
-                                            detailRow.isEditing = false;
+                                            IconButton {
+                                                visible: detailRow.isCommentRow
+                                                icon: "edit"
+                                                type: ButtonBase.Standard
+                                                implicitWidth: 26
+                                                implicitHeight: 26
+                                                Layout.alignment: Qt.AlignVCenter
+                                                onClicked: {
+                                                    commentInput.text = detailRow.modelData.value || "";
+                                                    detailRow.isEditing = true;
+                                                    commentInput.forceActiveFocus();
+                                                }
+                                            }
                                         }
-                                    }
 
-                                    IconButton {
-                                        icon: "close"
-                                        type: ButtonBase.Standard
-                                        implicitWidth: 26
-                                        implicitHeight: 26
-                                        Layout.alignment: Qt.AlignVCenter
-                                        onClicked: {
-                                            detailRow.isEditing = false;
+                                        // Editable view
+                                        RowLayout {
+                                            visible: detailRow.isEditing
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: 28
+                                            Layout.alignment: Qt.AlignVCenter
+                                            spacing: 6
+
+                                            StyledRect {
+                                                Layout.fillWidth: true
+                                                implicitHeight: 28
+                                                radius: Tokens.rounding.extraSmall
+                                                color: Colours.palette.m3surfaceContainerHighest
+                                                border.color: commentInput.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outlineVariant, 0.5)
+                                                border.width: commentInput.activeFocus ? 2 : 1
+                                                clip: true
+
+                                                TextInput {
+                                                    id: commentInput
+                                                    anchors.fill: parent
+                                                    anchors.leftMargin: 8
+                                                    anchors.rightMargin: 8
+                                                    color: Colours.palette.m3onSurface
+                                                    selectionColor: Colours.palette.m3primaryContainer
+                                                    selectedTextColor: Colours.palette.m3onPrimaryContainer
+                                                    font: Tokens.font.body.medium
+                                                    selectByMouse: true
+                                                    verticalAlignment: TextInput.AlignVCenter
+                                                    onAccepted: {
+                                                        meta.setComment(commentInput.text.trim());
+                                                        detailRow.isEditing = false;
+                                                    }
+                                                    Keys.onEscapePressed: detailRow.isEditing = false
+                                                }
+                                            }
+
+                                            IconButton {
+                                                icon: "check"
+                                                type: ButtonBase.Filled
+                                                implicitWidth: 26
+                                                implicitHeight: 26
+                                                Layout.alignment: Qt.AlignVCenter
+                                                onClicked: {
+                                                    meta.setComment(commentInput.text.trim());
+                                                    detailRow.isEditing = false;
+                                                }
+                                            }
+
+                                            IconButton {
+                                                icon: "close"
+                                                type: ButtonBase.Standard
+                                                implicitWidth: 26
+                                                implicitHeight: 26
+                                                Layout.alignment: Qt.AlignVCenter
+                                                onClicked: {
+                                                    detailRow.isEditing = false;
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
-            }
 
-            // Bottom Close Button
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignRight
+                    // Bottom Close Button
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignRight
 
-                TextButton {
-                    type: ButtonBase.Text
-                    text: qsTr("Close")
-                    onClicked: root.expanded = false
+                        TextButton {
+                            type: ButtonBase.Text
+                            text: qsTr("Close")
+                            onClicked: root.expanded = false
+                        }
+                    }
                 }
             }
         }

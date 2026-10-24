@@ -153,7 +153,8 @@ MouseArea {
     onWheel: wheel => wheel.accepted = true
     Keys.onEscapePressed: {
         root.expanded = false;
-        shortcutsTab.abortRecorder();
+        if (content.item)
+            content.item.abortRecorder();
     }
 
     Rectangle {
@@ -161,958 +162,969 @@ MouseArea {
         color: Qt.alpha(Colours.palette.m3scrim, 0.45)
     }
 
-    StyledRect {
-        id: modalCard
-
-        anchors.centerIn: parent
-        width: Math.min(parent.width - 64, 760)
-        height: Math.min(parent.height - 64, 660)
-        implicitWidth: 760
-        implicitHeight: 660
-
-        radius: Tokens.rounding.large
-        color: Colours.palette.m3surfaceContainerHigh
-
-        scale: root.expanded ? 1.0 : 0.94
-        Behavior on scale {
-            Anim {
-                type: Anim.FastEffects
-                easing: Tokens.anim.standard
-            }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: mouse => mouse.accepted = true
-            onWheel: wheel => wheel.accepted = true
-        }
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: Tokens.padding.large
-            spacing: Tokens.spacing.large
-
-            // Header
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Tokens.spacing.small
-
-                MaterialIcon {
-                    text: "settings"
-                    color: Colours.palette.m3primary
-                    fontStyle: Tokens.font.icon.medium
-                }
-
-                StyledText {
-                    text: qsTr("Preferences")
-                    color: Colours.palette.m3onSurface
-                    font: Tokens.font.body.builders.large.weight(Font.Bold).build()
-                    Layout.fillWidth: true
-                }
-
-                IconButton {
-                    type: ButtonBase.Text
-                    icon: "close"
-                    onClicked: root.expanded = false
-                }
+    // Built after startup; see LazyContent.
+    LazyContent {
+        id: content
+        expanded: root.expanded
+        sourceComponent: Item {
+            function abortRecorder() {
+                shortcutsTab.abortRecorder();
             }
 
-            // Category Navigation Tabs
-            SlidingSelector {
-                Layout.fillWidth: true
-                inactiveColor: Colours.tPalette.m3surfaceContainerHighest
-                model: [
-                    { tab: 0, label: qsTr("General"), icon: "tune" },
-                    { tab: 1, label: qsTr("View & Sorting"), icon: "grid_view" },
-                    { tab: 2, label: qsTr("Context Menu"), icon: "menu" },
-                    { tab: 3, label: qsTr("Scripts & Tools"), icon: "terminal" },
-                    { tab: 4, label: qsTr("Shortcuts"), icon: "keyboard" }
-                ]
-                valueKey: "tab"
-                currentValue: root.currentCategory
-                onSelected: val => {
-                    root.currentCategory = val;
-                    if (val !== 4) shortcutsTab.abortRecorder();
+            StyledRect {
+                id: modalCard
+
+                anchors.centerIn: parent
+                width: Math.min(parent.width - 64, 760)
+                height: Math.min(parent.height - 64, 660)
+                implicitWidth: 760
+                implicitHeight: 660
+
+                radius: Tokens.rounding.large
+                color: Colours.palette.m3surfaceContainerHigh
+
+                scale: root.expanded ? 1.0 : 0.94
+                Behavior on scale {
+                    Anim {
+                        type: Anim.FastEffects
+                        easing: Tokens.anim.standard
+                    }
                 }
-            }
 
-            // Sliding Content Area
-            Item {
-                id: contentArea
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: mouse => mouse.accepted = true
+                    onWheel: wheel => wheel.accepted = true
+                }
 
-                Row {
-                    id: pagesRow
-                    width: contentArea.width * 5
-                    height: contentArea.height
-                    x: -root.currentCategory * contentArea.width
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: Tokens.padding.large
+                    spacing: Tokens.spacing.large
 
-                    Behavior on x {
-                        Anim {
-                            type: Anim.DefaultSpatial
+                    // Header
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Tokens.spacing.small
+
+                        MaterialIcon {
+                            text: "settings"
+                            color: Colours.palette.m3primary
+                            fontStyle: Tokens.font.icon.medium
+                        }
+
+                        StyledText {
+                            text: qsTr("Preferences")
+                            color: Colours.palette.m3onSurface
+                            font: Tokens.font.body.builders.large.weight(Font.Bold).build()
+                            Layout.fillWidth: true
+                        }
+
+                        IconButton {
+                            type: ButtonBase.Text
+                            icon: "close"
+                            onClicked: root.expanded = false
                         }
                     }
 
-                    // --- TAB 0: General & Startup ---
-                    VerticalFadeFlickable {
-                        id: tab0Flickable
-                        width: contentArea.width
-                        height: contentArea.height
-                        contentWidth: width
-                        contentHeight: tab0Col.implicitHeight + Tokens.padding.medium
-                        clip: true
-                        fadeAmount: 0.08
-                        boundsBehavior: Flickable.StopAtBounds
-
-                        ScrollBar.vertical: StyledScrollBar {
-                            flickable: tab0Flickable
+                    // Category Navigation Tabs
+                    SlidingSelector {
+                        Layout.fillWidth: true
+                        inactiveColor: Colours.tPalette.m3surfaceContainerHighest
+                        model: [
+                            { tab: 0, label: qsTr("General"), icon: "tune" },
+                            { tab: 1, label: qsTr("View & Sorting"), icon: "grid_view" },
+                            { tab: 2, label: qsTr("Context Menu"), icon: "menu" },
+                            { tab: 3, label: qsTr("Scripts & Tools"), icon: "terminal" },
+                            { tab: 4, label: qsTr("Shortcuts"), icon: "keyboard" }
+                        ]
+                        valueKey: "tab"
+                        currentValue: root.currentCategory
+                        onSelected: val => {
+                            root.currentCategory = val;
+                            if (val !== 4) shortcutsTab.abortRecorder();
                         }
+                    }
 
-                        ColumnLayout {
-                            id: tab0Col
-                            width: tab0Flickable.width
-                            spacing: Tokens.spacing.medium
+                    // Sliding Content Area
+                    Item {
+                        id: contentArea
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
 
-                            StyledText {
-                                text: qsTr("Startup Location")
-                                Layout.topMargin: Tokens.spacing.small
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                            }
+                        Row {
+                            id: pagesRow
+                            width: contentArea.width * 5
+                            height: contentArea.height
+                            x: -root.currentCategory * contentArea.width
 
-                            SplitButtonRow {
-                                first: true
-                                last: !(AppController.defaultStartupDirectory !== "home" && AppController.defaultStartupDirectory !== "last")
-                                label: qsTr("Startup Directory")
-                                subtext: qsTr("Initial directory opened on application launch")
-                                menuItems: root.startupItems
-                                active: root.startupItems[root.startupIndex()]
-                                onSelected: item => {
-                                    const v = root.startupValues[root.startupItems.indexOf(item)];
-                                    if (v === "custom") {
-                                        if (AppController.defaultStartupDirectory === "home" || AppController.defaultStartupDirectory === "last") {
-                                            AppController.defaultStartupDirectory = FileUtils.home;
-                                        }
-                                    } else {
-                                        AppController.defaultStartupDirectory = v;
-                                    }
+                            Behavior on x {
+                                Anim {
+                                    type: Anim.DefaultSpatial
                                 }
                             }
 
-                            // Custom path input
-                            StyledRect {
-                                visible: AppController.defaultStartupDirectory !== "home" && AppController.defaultStartupDirectory !== "last"
-                                Layout.fillWidth: true
-                                implicitHeight: 42
-                                radius: Tokens.rounding.medium
-                                color: Colours.tPalette.m3surfaceContainerHighest
+                            // --- TAB 0: General & Startup ---
+                            VerticalFadeFlickable {
+                                id: tab0Flickable
+                                width: contentArea.width
+                                height: contentArea.height
+                                contentWidth: width
+                                contentHeight: tab0Col.implicitHeight + Tokens.padding.medium
+                                clip: true
+                                fadeAmount: 0.08
+                                boundsBehavior: Flickable.StopAtBounds
 
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.small
-                                    spacing: Tokens.spacing.small
-
-                                    MaterialIcon {
-                                        text: "folder"
-                                        color: Colours.palette.m3primary
-                                        fontStyle: Tokens.font.icon.small
-                                    }
-
-                                    TextInput {
-                                        id: customPathInput
-                                        Layout.fillWidth: true
-                                        text: AppController.defaultStartupDirectory
-                                        color: Colours.palette.m3onSurface
-                                        font: Tokens.font.body.small
-                                        selectByMouse: true
-                                        onEditingFinished: {
-                                            if (text.trim().length > 0) {
-                                                AppController.defaultStartupDirectory = text.trim();
-                                            }
-                                        }
-                                    }
+                                ScrollBar.vertical: StyledScrollBar {
+                                    flickable: tab0Flickable
                                 }
-                            }
-
-                            Item { implicitHeight: 4 }
-
-                            StyledText {
-                                text: qsTr("File Display & Navigation")
-                                Layout.topMargin: Tokens.spacing.small
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                            }
-
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 2
-
-                                ToggleRow {
-                                    first: true
-                                    icon: "visibility"
-                                    text: qsTr("Show Hidden Files and Folders")
-                                    subtext: qsTr("Display hidden dotfiles in views (Ctrl+H)")
-                                    checked: AppController.showHidden
-                                    onToggled: val => AppController.showHidden = val
-                                }
-
-                                ToggleRow {
-                                    icon: "hard_drive_2"
-                                    text: qsTr("Show Free Space")
-                                    subtext: qsTr("Report the space left on the current volume in the status bar")
-                                    checked: AppController.showFreeSpace
-                                    onToggled: checked => AppController.showFreeSpace = checked
-                                }
-
-                                ToggleRow {
-                                    icon: "delete_forever"
-                                    text: qsTr("Confirm Permanent Deletion")
-                                    subtext: qsTr("Ask before deleting files without using the trash (Shift+Delete)")
-                                    checked: AppController.confirmPermanentDelete
-                                    onToggled: val => AppController.confirmPermanentDelete = val
-                                }
-
-                                ToggleRow {
-                                    icon: "account_tree"
-                                    text: qsTr("Expandable Folders")
-                                    subtext: qsTr("Unfold a folder in place in the details view instead of opening it")
-                                    checked: AppController.expandableFolders
-                                    onToggled: checked => AppController.expandableFolders = checked
-                                }
-
-                                ToggleRow {
-                                    icon: "keyboard"
-                                    text: qsTr("Vim Motions")
-                                    subtext: qsTr("Move with H, J, K and L instead of jumping to those letters")
-                                    checked: AppController.vimMotions
-                                    onToggled: checked => AppController.vimMotions = checked
-                                }
-
-                                ToggleRow {
-                                    icon: "folder_managed"
-                                    text: qsTr("Remember View per Folder")
-                                    subtext: qsTr("Keep the view mode and sort order each folder was last left in")
-                                    checked: AppController.directorySpecificViews
-                                    onToggled: checked => AppController.directorySpecificViews = checked
-                                }
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    visible: AppController.directorySpecificViews
-                                    spacing: Tokens.spacing.small
-
-                                    Item { Layout.fillWidth: true }
-
-                                    TextButton {
-                                        type: ButtonBase.Text
-                                        text: qsTr("Forget saved folder views")
-                                        onClicked: AppController.forgetDirectoryViews()
-                                    }
-                                }
-
-                                ToggleRow {
-                                    icon: "tab_duplicate"
-                                    text: qsTr("Restore Tabs on Startup")
-                                    subtext: qsTr("Reopen the tabs that were open when the window was last closed")
-                                    checked: AppController.restoreTabs
-                                    onToggled: checked => AppController.restoreTabs = checked
-                                }
-
-                                ToggleRow {
-                                    icon: "delete"
-                                    text: qsTr("Confirm Move to Trash")
-                                    subtext: qsTr("Ask before moving files to the trash")
-                                    checked: AppController.confirmMoveToTrash
-                                    onToggled: checked => AppController.confirmMoveToTrash = checked
-                                }
-
-                                ToggleRow {
-                                    icon: "image"
-                                    text: qsTr("Show Thumbnails")
-                                    subtext: qsTr("Preview images and videos instead of generic icons")
-                                    checked: AppController.thumbnailsEnabled
-                                    onToggled: val => AppController.thumbnailsEnabled = val
-                                }
-
-                                ToggleRow {
-                                    icon: "mouse"
-                                    text: qsTr("Single-Click Activation")
-                                    subtext: qsTr("Single click opens files; hover over items to select")
-                                    checked: AppController.singleClick
-                                    onToggled: val => AppController.singleClick = val
-                                }
-
-                                ToggleRow {
-                                    last: true
-                                    icon: "pan_tool_alt"
-                                    text: qsTr("Drag to Scroll")
-                                    subtext: qsTr("Left-drag scrolls, right-drag selects. Off: left-drag selects, right-drag scrolls")
-                                    checked: AppController.dragToScroll
-                                    onToggled: val => AppController.dragToScroll = val
-                                }
-                            }
-
-                            Item { implicitHeight: 4 }
-
-                            StyledText {
-                                text: qsTr("File Transfers")
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                            }
-
-                            SplitButtonRow {
-                                first: true
-                                last: FileOperations.transferEngine !== 2
-                                label: qsTr("Copy and Move With")
-                                subtext: FileOperations.transferEngine === 1
-                                    ? qsTr("rsync with checksum verification (needs rsync installed)")
-                                    : FileOperations.transferEngine === 2
-                                        ? qsTr("Your command; %F is replaced by the files, %d by the destination folder")
-                                        : qsTr("Atlas copies files itself, with progress")
-                                menuItems: root.transferEngineItems
-                                active: root.transferEngineItems[FileOperations.transferEngine]
-                                onSelected: item => FileOperations.transferEngine = root.transferEngineItems.indexOf(item)
-                            }
-
-                            // Custom transfer command input
-                            StyledRect {
-                                visible: FileOperations.transferEngine === 2
-                                Layout.fillWidth: true
-                                implicitHeight: 42
-                                radius: Tokens.rounding.medium
-                                color: Colours.tPalette.m3surfaceContainerHighest
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.small
-                                    spacing: Tokens.spacing.small
-
-                                    MaterialIcon {
-                                        text: "terminal"
-                                        color: Colours.palette.m3primary
-                                        fontStyle: Tokens.font.icon.small
-                                    }
-
-                                    TextInput {
-                                        id: customTransferInput
-                                        Layout.fillWidth: true
-                                        text: FileOperations.customCommand
-                                        color: Colours.palette.m3onSurface
-                                        font: Tokens.font.body.small
-                                        selectByMouse: true
-                                        clip: true
-                                        onEditingFinished: FileOperations.customCommand = text.trim()
-
-                                        StyledText {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            visible: customTransferInput.text.length === 0
-                                            text: "cp -r --reflink=auto %F %d"
-                                            color: Colours.palette.m3outline
-                                            font: Tokens.font.body.small
-                                        }
-                                    }
-                                }
-                            }
-
-                            Item { implicitHeight: 4 }
-
-                            StyledText {
-                                text: qsTr("Scroll Sensitivity")
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                            }
-
-                            ConnectedRect {
-                                first: true
-                                last: true
-                                Layout.fillWidth: true
-                                implicitHeight: scrollColumn.implicitHeight + Tokens.padding.largeIncreased + Tokens.padding.large
 
                                 ColumnLayout {
-                                    id: scrollColumn
-
-                                    anchors.fill: parent
-                                    anchors.margins: Tokens.padding.largeIncreased
-                                    anchors.topMargin: Tokens.padding.large
+                                    id: tab0Col
+                                    width: tab0Flickable.width
                                     spacing: Tokens.spacing.medium
 
-                                    RowLayout {
-                                        Layout.fillWidth: true
-                                        spacing: Tokens.spacing.small
+                                    StyledText {
+                                        text: qsTr("Startup Location")
+                                        Layout.topMargin: Tokens.spacing.small
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                    }
 
-                                        MaterialIcon {
-                                            text: "speed"
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            fontStyle: Tokens.font.icon.medium
-                                        }
-
-                                        StyledText {
-                                            Layout.leftMargin: Tokens.spacing.extraSmall
-                                            text: qsTr("Scroll Speed")
-                                            color: Colours.palette.m3onSurface
-                                            font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-
-                                        IconButton {
-                                            type: ButtonBase.Text
-                                            icon: "restart_alt"
-                                            fontStyle: Tokens.font.icon.small
-                                            opacity: Math.abs(AppController.scrollSpeed - 1.0) >= 0.05 ? 1 : 0
-                                            enabled: opacity > 0.01
-                                            onClicked: AppController.resetScrollSpeed()
-
-                                            Behavior on opacity {
-                                                Anim { type: Anim.FastEffects }
+                                    SplitButtonRow {
+                                        first: true
+                                        last: !(AppController.defaultStartupDirectory !== "home" && AppController.defaultStartupDirectory !== "last")
+                                        label: qsTr("Startup Directory")
+                                        subtext: qsTr("Initial directory opened on application launch")
+                                        menuItems: root.startupItems
+                                        active: root.startupItems[root.startupIndex()]
+                                        onSelected: item => {
+                                            const v = root.startupValues[root.startupItems.indexOf(item)];
+                                            if (v === "custom") {
+                                                if (AppController.defaultStartupDirectory === "home" || AppController.defaultStartupDirectory === "last") {
+                                                    AppController.defaultStartupDirectory = FileUtils.home;
+                                                }
+                                            } else {
+                                                AppController.defaultStartupDirectory = v;
                                             }
                                         }
-
-                                        Item {
-                                            Layout.fillWidth: true
-                                        }
-
-                                        StyledText {
-                                            text: qsTr("%1x").arg(AppController.scrollSpeed.toFixed(1))
-                                            color: Colours.palette.m3outline
-                                            font: Tokens.font.body.small
-                                        }
                                     }
 
-                                    StyledSlider {
+                                    // Custom path input
+                                    StyledRect {
+                                        visible: AppController.defaultStartupDirectory !== "home" && AppController.defaultStartupDirectory !== "last"
                                         Layout.fillWidth: true
-                                        implicitHeight: Tokens.padding.medium * 2
+                                        implicitHeight: 42
+                                        radius: Tokens.rounding.medium
+                                        color: Colours.tPalette.m3surfaceContainerHighest
 
-                                        radius: Tokens.rounding.small
-                                        trackHeight: 10
-                                        handleWidth: 4
-                                        handleHeight: 26
-                                        handleHeightPressed: 32
-                                        from: 0.5
-                                        to: 2.5
-                                        value: AppController.scrollSpeed
-                                        onInteraction: v => {
-                                            AppController.scrollSpeed = Math.round(v * 10) / 10;
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.leftMargin: Tokens.padding.medium
+                                            anchors.rightMargin: Tokens.padding.small
+                                            spacing: Tokens.spacing.small
+
+                                            MaterialIcon {
+                                                text: "folder"
+                                                color: Colours.palette.m3primary
+                                                fontStyle: Tokens.font.icon.small
+                                            }
+
+                                            TextInput {
+                                                id: customPathInput
+                                                Layout.fillWidth: true
+                                                text: AppController.defaultStartupDirectory
+                                                color: Colours.palette.m3onSurface
+                                                font: Tokens.font.body.small
+                                                selectByMouse: true
+                                                onEditingFinished: {
+                                                    if (text.trim().length > 0) {
+                                                        AppController.defaultStartupDirectory = text.trim();
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
-                                }
-                            }
 
-                            Item { implicitHeight: 4 }
+                                    Item { implicitHeight: 4 }
 
-                            StyledText {
-                                text: qsTr("Thumbnail Generation")
-                                Layout.topMargin: Tokens.spacing.small
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                                opacity: AppController.thumbnailsEnabled ? 1 : 0.4
-                            }
-
-                            SplitButtonRow {
-                                first: true
-                                last: true
-                                label: qsTr("Thumbnail Size Limit")
-                                subtext: qsTr("Maximum file size for preview thumbnail generation")
-                                enabled: AppController.thumbnailsEnabled
-                                opacity: enabled ? 1 : 0.4
-                                menuItems: root.thumbSizeItems
-                                active: root.thumbSizeItems[Math.max(0, root.thumbSizeValues.indexOf(AppController.thumbnailMaxMb))]
-                                onSelected: item => AppController.thumbnailMaxMb = root.thumbSizeValues[root.thumbSizeItems.indexOf(item)]
-                            }
-
-                            Item { implicitHeight: 4 }
-
-                            StyledText {
-                                text: qsTr("Theme & Icons")
-                                Layout.topMargin: Tokens.spacing.small
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                            }
-
-                            // Papirus Folders hot reload card
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: 56
-                                radius: Tokens.rounding.large
-                                color: Colours.tPalette.m3surfaceContainer
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.medium
-                                    anchors.rightMargin: Tokens.padding.medium
-                                    spacing: Tokens.spacing.medium
-
-                                    MaterialIcon {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        text: "folder_special"
+                                    StyledText {
+                                        text: qsTr("File Display & Navigation")
+                                        Layout.topMargin: Tokens.spacing.small
                                         color: Colours.palette.m3primary
-                                        fontStyle: Tokens.font.icon.medium
+                                        font: Tokens.font.label.large
                                     }
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
-                                        Layout.alignment: Qt.AlignVCenter
                                         spacing: 2
 
-                                        StyledText {
+                                        ToggleRow {
+                                            first: true
+                                            icon: "visibility"
+                                            text: qsTr("Show Hidden Files and Folders")
+                                            subtext: qsTr("Display hidden dotfiles in views (Ctrl+H)")
+                                            checked: AppController.showHidden
+                                            onToggled: val => AppController.showHidden = val
+                                        }
+
+                                        ToggleRow {
+                                            icon: "hard_drive_2"
+                                            text: qsTr("Show Free Space")
+                                            subtext: qsTr("Report the space left on the current volume in the status bar")
+                                            checked: AppController.showFreeSpace
+                                            onToggled: checked => AppController.showFreeSpace = checked
+                                        }
+
+                                        ToggleRow {
+                                            icon: "delete_forever"
+                                            text: qsTr("Confirm Permanent Deletion")
+                                            subtext: qsTr("Ask before deleting files without using the trash (Shift+Delete)")
+                                            checked: AppController.confirmPermanentDelete
+                                            onToggled: val => AppController.confirmPermanentDelete = val
+                                        }
+
+                                        ToggleRow {
+                                            icon: "account_tree"
+                                            text: qsTr("Expandable Folders")
+                                            subtext: qsTr("Unfold a folder in place in the details view instead of opening it")
+                                            checked: AppController.expandableFolders
+                                            onToggled: checked => AppController.expandableFolders = checked
+                                        }
+
+                                        ToggleRow {
+                                            icon: "keyboard"
+                                            text: qsTr("Vim Motions")
+                                            subtext: qsTr("Move with H, J, K and L instead of jumping to those letters")
+                                            checked: AppController.vimMotions
+                                            onToggled: checked => AppController.vimMotions = checked
+                                        }
+
+                                        ToggleRow {
+                                            icon: "folder_managed"
+                                            text: qsTr("Remember View per Folder")
+                                            subtext: qsTr("Keep the view mode and sort order each folder was last left in")
+                                            checked: AppController.directorySpecificViews
+                                            onToggled: checked => AppController.directorySpecificViews = checked
+                                        }
+
+                                        RowLayout {
                                             Layout.fillWidth: true
-                                            text: qsTr("Papirus Folders")
+                                            visible: AppController.directorySpecificViews
+                                            spacing: Tokens.spacing.small
+
+                                            Item { Layout.fillWidth: true }
+
+                                            TextButton {
+                                                type: ButtonBase.Text
+                                                text: qsTr("Forget saved folder views")
+                                                onClicked: AppController.forgetDirectoryViews()
+                                            }
+                                        }
+
+                                        ToggleRow {
+                                            icon: "tab_duplicate"
+                                            text: qsTr("Restore Tabs on Startup")
+                                            subtext: qsTr("Reopen the tabs that were open when the window was last closed")
+                                            checked: AppController.restoreTabs
+                                            onToggled: checked => AppController.restoreTabs = checked
+                                        }
+
+                                        ToggleRow {
+                                            icon: "delete"
+                                            text: qsTr("Confirm Move to Trash")
+                                            subtext: qsTr("Ask before moving files to the trash")
+                                            checked: AppController.confirmMoveToTrash
+                                            onToggled: checked => AppController.confirmMoveToTrash = checked
+                                        }
+
+                                        ToggleRow {
+                                            icon: "image"
+                                            text: qsTr("Show Thumbnails")
+                                            subtext: qsTr("Preview images and videos instead of generic icons")
+                                            checked: AppController.thumbnailsEnabled
+                                            onToggled: val => AppController.thumbnailsEnabled = val
+                                        }
+
+                                        ToggleRow {
+                                            icon: "mouse"
+                                            text: qsTr("Single-Click Activation")
+                                            subtext: qsTr("Single click opens files; hover over items to select")
+                                            checked: AppController.singleClick
+                                            onToggled: val => AppController.singleClick = val
+                                        }
+
+                                        ToggleRow {
+                                            last: true
+                                            icon: "pan_tool_alt"
+                                            text: qsTr("Drag to Scroll")
+                                            subtext: qsTr("Left-drag scrolls, right-drag selects. Off: left-drag selects, right-drag scrolls")
+                                            checked: AppController.dragToScroll
+                                            onToggled: val => AppController.dragToScroll = val
+                                        }
+                                    }
+
+                                    Item { implicitHeight: 4 }
+
+                                    StyledText {
+                                        text: qsTr("File Transfers")
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                    }
+
+                                    SplitButtonRow {
+                                        first: true
+                                        last: FileOperations.transferEngine !== 2
+                                        label: qsTr("Copy and Move With")
+                                        subtext: FileOperations.transferEngine === 1
+                                            ? qsTr("rsync with checksum verification (needs rsync installed)")
+                                            : FileOperations.transferEngine === 2
+                                                ? qsTr("Your command; %F is replaced by the files, %d by the destination folder")
+                                                : qsTr("Atlas copies files itself, with progress")
+                                        menuItems: root.transferEngineItems
+                                        active: root.transferEngineItems[FileOperations.transferEngine]
+                                        onSelected: item => FileOperations.transferEngine = root.transferEngineItems.indexOf(item)
+                                    }
+
+                                    // Custom transfer command input
+                                    StyledRect {
+                                        visible: FileOperations.transferEngine === 2
+                                        Layout.fillWidth: true
+                                        implicitHeight: 42
+                                        radius: Tokens.rounding.medium
+                                        color: Colours.tPalette.m3surfaceContainerHighest
+
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.leftMargin: Tokens.padding.medium
+                                            anchors.rightMargin: Tokens.padding.small
+                                            spacing: Tokens.spacing.small
+
+                                            MaterialIcon {
+                                                text: "terminal"
+                                                color: Colours.palette.m3primary
+                                                fontStyle: Tokens.font.icon.small
+                                            }
+
+                                            TextInput {
+                                                id: customTransferInput
+                                                Layout.fillWidth: true
+                                                text: FileOperations.customCommand
+                                                color: Colours.palette.m3onSurface
+                                                font: Tokens.font.body.small
+                                                selectByMouse: true
+                                                clip: true
+                                                onEditingFinished: FileOperations.customCommand = text.trim()
+
+                                                StyledText {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    visible: customTransferInput.text.length === 0
+                                                    text: "cp -r --reflink=auto %F %d"
+                                                    color: Colours.palette.m3outline
+                                                    font: Tokens.font.body.small
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Item { implicitHeight: 4 }
+
+                                    StyledText {
+                                        text: qsTr("Scroll Sensitivity")
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                    }
+
+                                    ConnectedRect {
+                                        first: true
+                                        last: true
+                                        Layout.fillWidth: true
+                                        implicitHeight: scrollColumn.implicitHeight + Tokens.padding.largeIncreased + Tokens.padding.large
+
+                                        ColumnLayout {
+                                            id: scrollColumn
+
+                                            anchors.fill: parent
+                                            anchors.margins: Tokens.padding.largeIncreased
+                                            anchors.topMargin: Tokens.padding.large
+                                            spacing: Tokens.spacing.medium
+
+                                            RowLayout {
+                                                Layout.fillWidth: true
+                                                spacing: Tokens.spacing.small
+
+                                                MaterialIcon {
+                                                    text: "speed"
+                                                    color: Colours.palette.m3onSurfaceVariant
+                                                    fontStyle: Tokens.font.icon.medium
+                                                }
+
+                                                StyledText {
+                                                    Layout.leftMargin: Tokens.spacing.extraSmall
+                                                    text: qsTr("Scroll Speed")
+                                                    color: Colours.palette.m3onSurface
+                                                    font: Tokens.font.body.small
+                                                    elide: Text.ElideRight
+                                                }
+
+                                                IconButton {
+                                                    type: ButtonBase.Text
+                                                    icon: "restart_alt"
+                                                    fontStyle: Tokens.font.icon.small
+                                                    opacity: Math.abs(AppController.scrollSpeed - 1.0) >= 0.05 ? 1 : 0
+                                                    enabled: opacity > 0.01
+                                                    onClicked: AppController.resetScrollSpeed()
+
+                                                    Behavior on opacity {
+                                                        Anim { type: Anim.FastEffects }
+                                                    }
+                                                }
+
+                                                Item {
+                                                    Layout.fillWidth: true
+                                                }
+
+                                                StyledText {
+                                                    text: qsTr("%1x").arg(AppController.scrollSpeed.toFixed(1))
+                                                    color: Colours.palette.m3outline
+                                                    font: Tokens.font.body.small
+                                                }
+                                            }
+
+                                            StyledSlider {
+                                                Layout.fillWidth: true
+                                                implicitHeight: Tokens.padding.medium * 2
+
+                                                radius: Tokens.rounding.small
+                                                trackHeight: 10
+                                                handleWidth: 4
+                                                handleHeight: 26
+                                                handleHeightPressed: 32
+                                                from: 0.5
+                                                to: 2.5
+                                                value: AppController.scrollSpeed
+                                                onInteraction: v => {
+                                                    AppController.scrollSpeed = Math.round(v * 10) / 10;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Item { implicitHeight: 4 }
+
+                                    StyledText {
+                                        text: qsTr("Thumbnail Generation")
+                                        Layout.topMargin: Tokens.spacing.small
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                        opacity: AppController.thumbnailsEnabled ? 1 : 0.4
+                                    }
+
+                                    SplitButtonRow {
+                                        first: true
+                                        last: true
+                                        label: qsTr("Thumbnail Size Limit")
+                                        subtext: qsTr("Maximum file size for preview thumbnail generation")
+                                        enabled: AppController.thumbnailsEnabled
+                                        opacity: enabled ? 1 : 0.4
+                                        menuItems: root.thumbSizeItems
+                                        active: root.thumbSizeItems[Math.max(0, root.thumbSizeValues.indexOf(AppController.thumbnailMaxMb))]
+                                        onSelected: item => AppController.thumbnailMaxMb = root.thumbSizeValues[root.thumbSizeItems.indexOf(item)]
+                                    }
+
+                                    Item { implicitHeight: 4 }
+
+                                    StyledText {
+                                        text: qsTr("Theme & Icons")
+                                        Layout.topMargin: Tokens.spacing.small
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                    }
+
+                                    // Papirus Folders hot reload card
+                                    StyledRect {
+                                        Layout.fillWidth: true
+                                        implicitHeight: 56
+                                        radius: Tokens.rounding.large
+                                        color: Colours.tPalette.m3surfaceContainer
+
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.leftMargin: Tokens.padding.medium
+                                            anchors.rightMargin: Tokens.padding.medium
+                                            spacing: Tokens.spacing.medium
+
+                                            MaterialIcon {
+                                                Layout.alignment: Qt.AlignVCenter
+                                                text: "folder_special"
+                                                color: Colours.palette.m3primary
+                                                fontStyle: Tokens.font.icon.medium
+                                            }
+
+                                            ColumnLayout {
+                                                Layout.fillWidth: true
+                                                Layout.alignment: Qt.AlignVCenter
+                                                spacing: 2
+
+                                                StyledText {
+                                                    Layout.fillWidth: true
+                                                    text: qsTr("Papirus Folders")
+                                                    color: Colours.palette.m3onSurface
+                                                    font: Tokens.font.body.small
+                                                    elide: Text.ElideRight
+                                                }
+
+                                                StyledText {
+                                                    Layout.fillWidth: true
+                                                    text: qsTr("Active folder color: %1 • Hot reload active").arg(PapirusWatcher.currentColor)
+                                                    color: Colours.palette.m3onSurfaceVariant
+                                                    font: Tokens.font.label.small
+                                                    elide: Text.ElideRight
+                                                }
+                                            }
+
+                                            IconTextButton {
+                                                type: ButtonBase.Tonal
+                                                icon: "refresh"
+                                                text: qsTr("Reload")
+                                                Layout.alignment: Qt.AlignVCenter
+                                                onClicked: PapirusWatcher.reload()
+                                            }
+                                        }
+                                    }
+
+                                    Item { implicitHeight: Tokens.padding.small }
+                                }
+                            }
+
+                            // --- TAB 1: View & Sorting Defaults ---
+                            VerticalFadeFlickable {
+                                id: tab1Flickable
+                                width: contentArea.width
+                                height: contentArea.height
+                                contentWidth: width
+                                contentHeight: tab1Col.implicitHeight + Tokens.padding.medium
+                                clip: true
+                                fadeAmount: 0.08
+                                boundsBehavior: Flickable.StopAtBounds
+
+                                ScrollBar.vertical: StyledScrollBar {
+                                    flickable: tab1Flickable
+                                }
+
+                                ColumnLayout {
+                                    id: tab1Col
+                                    width: tab1Flickable.width
+                                    spacing: Tokens.spacing.medium
+
+                                    StyledText {
+                                        text: qsTr("Layout & View Mode")
+                                        Layout.topMargin: Tokens.spacing.small
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                    }
+
+                                    SplitButtonRow {
+                                        first: true
+                                        last: true
+                                        label: qsTr("Default View Mode")
+                                        subtext: qsTr("Initial view layout when opening directories")
+                                        menuItems: root.viewModeItems
+                                        active: root.viewModeItems[Math.max(0, root.viewModeValues.indexOf(AppController.defaultViewMode))]
+                                        onSelected: item => AppController.defaultViewMode = root.viewModeValues[root.viewModeItems.indexOf(item)]
+                                    }
+
+                                    Item { implicitHeight: 4 }
+
+                                    StyledText {
+                                        text: qsTr("Details View Columns")
+                                        Layout.topMargin: Tokens.spacing.small
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                    }
+
+                                    ButtonGroup {
+                                        Layout.fillWidth: true
+
+                                        ButtonGroupItem {
+                                            icon: "straighten"
+                                            text: qsTr("Size")
+                                            checked: AppController.showSizeColumn
+                                            onClicked: AppController.showSizeColumn = !AppController.showSizeColumn
+                                        }
+
+                                        ButtonGroupItem {
+                                            icon: "category"
+                                            text: qsTr("Type")
+                                            checked: AppController.showTypeColumn
+                                            onClicked: AppController.showTypeColumn = !AppController.showTypeColumn
+                                        }
+
+                                        ButtonGroupItem {
+                                            icon: "schedule"
+                                            text: qsTr("Date Modified")
+                                            checked: AppController.showDateColumn
+                                            onClicked: AppController.showDateColumn = !AppController.showDateColumn
+                                        }
+
+                                        ButtonGroupItem {
+                                            icon: "lock"
+                                            text: qsTr("Permissions")
+                                            checked: AppController.showPermissionsColumn
+                                            onClicked: AppController.showPermissionsColumn = !AppController.showPermissionsColumn
+                                        }
+                                    }
+
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: qsTr("The name column is always shown")
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        font: Tokens.font.label.small
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Item { implicitHeight: 4 }
+
+                                    StyledText {
+                                        text: qsTr("Date & Time")
+                                        Layout.topMargin: Tokens.spacing.small
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                    }
+
+                                    SplitButtonRow {
+                                        first: true
+                                        last: true
+                                        label: qsTr("Show Item Count for Folders")
+                                        subtext: qsTr("Counting reads every folder in the listing, which is slow over a network")
+                                        menuItems: root.folderCountItems
+                                        active: root.folderCountItems[Math.max(0, root.folderCountValues.indexOf(AppController.folderItemCount))]
+                                        onSelected: item => AppController.folderItemCount = root.folderCountValues[root.folderCountItems.indexOf(item)]
+                                    }
+
+                                    Item { implicitHeight: 4 }
+
+                                    SplitButtonRow {
+                                        first: true
+                                        last: AppController.dateFormat !== 3
+                                        label: qsTr("Date Format")
+                                        subtext: qsTr("Format: %1").arg(FileUtils.formatDateTime(new Date(), AppController.dateFormat))
+                                        menuItems: root.dateFormatItems
+                                        active: root.dateFormatItems[Math.max(0, root.dateFormatValues.indexOf(AppController.dateFormat))]
+                                        onSelected: item => AppController.dateFormat = root.dateFormatValues[root.dateFormatItems.indexOf(item)]
+                                    }
+
+                                    StyledRect {
+                                        visible: AppController.dateFormat === 3
+                                        Layout.fillWidth: true
+                                        implicitHeight: 42
+                                        topLeftRadius: Tokens.rounding.extraSmall
+                                        topRightRadius: Tokens.rounding.extraSmall
+                                        bottomLeftRadius: Tokens.rounding.large
+                                        bottomRightRadius: Tokens.rounding.large
+                                        color: Colours.tPalette.m3surfaceContainer
+
+                                        TextInput {
+                                            id: customDateInput
+                                            anchors.fill: parent
+                                            anchors.leftMargin: Tokens.padding.largeIncreased
+                                            anchors.rightMargin: Tokens.padding.largeIncreased
+                                            verticalAlignment: TextInput.AlignVCenter
+                                            text: AppController.customDateFormat
                                             color: Colours.palette.m3onSurface
                                             font: Tokens.font.body.small
-                                            elide: Text.ElideRight
-                                        }
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            text: qsTr("Active folder color: %1 • Hot reload active").arg(PapirusWatcher.currentColor)
-                                            color: Colours.palette.m3onSurfaceVariant
-                                            font: Tokens.font.label.small
-                                            elide: Text.ElideRight
+                                            selectByMouse: true
+                                            clip: true
+                                            onEditingFinished: AppController.customDateFormat = text
                                         }
                                     }
 
-                                    IconTextButton {
-                                        type: ButtonBase.Tonal
-                                        icon: "refresh"
-                                        text: qsTr("Reload")
-                                        Layout.alignment: Qt.AlignVCenter
-                                        onClicked: PapirusWatcher.reload()
+                                    Item { implicitHeight: 4 }
+
+                                    StyledText {
+                                        text: qsTr("Sidebar Navigation")
+                                        Layout.topMargin: Tokens.spacing.small
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
                                     }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        SplitButtonRow {
+                                            first: true
+                                            label: qsTr("Sidebar Icon Size")
+                                            subtext: qsTr("Size of icons in the navigation sidebar")
+                                            menuItems: root.iconSizeItems
+                                            active: root.iconSizeItems[Math.max(0, root.iconSizeValues.indexOf(AppController.placesIconSize))]
+                                            onSelected: item => AppController.placesIconSize = root.iconSizeValues[root.iconSizeItems.indexOf(item)]
+                                        }
+
+                                        ToggleRow {
+                                            last: true
+                                            icon: "cloud"
+                                            text: qsTr("Show Network Section")
+                                            subtext: qsTr("Display remote servers and network locations in sidebar")
+                                            checked: AppController.showNetworkSection
+                                            onToggled: val => AppController.showNetworkSection = val
+                                        }
+                                    }
+
+                                    Item { implicitHeight: 4 }
+
+                                    StyledText {
+                                        text: qsTr("Sorting & Organization")
+                                        Layout.topMargin: Tokens.spacing.small
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        SplitButtonRow {
+                                            first: true
+                                            label: qsTr("Default Sort Field")
+                                            subtext: qsTr("Primary criterion for sorting file entries")
+                                            menuItems: root.sortFieldItems
+                                            active: root.sortFieldItems[Math.max(0, root.sortFieldValues.indexOf(AppController.defaultSortField))]
+                                            onSelected: item => AppController.defaultSortField = root.sortFieldValues[root.sortFieldItems.indexOf(item)]
+                                        }
+
+                                        RowButton {
+                                            icon: AppController.defaultSortOrder === 0 ? "arrow_upward" : "arrow_downward"
+                                            text: qsTr("Sort Direction")
+                                            subtext: AppController.defaultSortOrder === 0 ? qsTr("Ascending (A to Z, oldest first)") : qsTr("Descending (Z to A, newest first)")
+                                            onClicked: AppController.defaultSortOrder = (AppController.defaultSortOrder === 0 ? 1 : 0)
+                                        }
+
+                                        ToggleRow {
+                                            last: true
+                                            icon: "folder"
+                                            text: qsTr("Folders First")
+                                            subtext: qsTr("Always display folders above files when sorting")
+                                            checked: AppController.showDirsFirst
+                                            onToggled: val => AppController.showDirsFirst = val
+                                        }
+
+                                        ToggleRow {
+                                            icon: "match_case"
+                                            text: qsTr("Case-Sensitive Sorting")
+                                            subtext: qsTr("Sort uppercase names before lowercase ones instead of mixing them")
+                                            checked: AppController.caseSensitiveSort
+                                            onToggled: checked => AppController.caseSensitiveSort = checked
+                                        }
+
+                                    }
+
+                                    Item { implicitHeight: Tokens.padding.small }
                                 }
                             }
 
-                            Item { implicitHeight: Tokens.padding.small }
+                            // --- TAB 2: Context Menu Customization ---
+                            VerticalFadeFlickable {
+                                id: tab2Flickable
+                                width: contentArea.width
+                                height: contentArea.height
+                                contentWidth: width
+                                contentHeight: tab2Col.implicitHeight + Tokens.padding.medium
+                                clip: true
+                                fadeAmount: 0.08
+                                boundsBehavior: Flickable.StopAtBounds
+
+                                ScrollBar.vertical: StyledScrollBar {
+                                    flickable: tab2Flickable
+                                }
+
+                                ColumnLayout {
+                                    id: tab2Col
+                                    width: tab2Flickable.width
+                                    spacing: Tokens.spacing.medium
+
+                                    StyledText {
+                                        text: qsTr("Context Menu Visibility")
+                                        Layout.topMargin: Tokens.spacing.small
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                    }
+
+                                    StyledText {
+                                        text: qsTr("Customize which items and submenus appear in right-click context menus.")
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        font: Tokens.font.body.small
+                                        Layout.fillWidth: true
+                                        wrapMode: Text.WordWrap
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        // Secondary Code Editor Toggle
+                                        ToggleRow {
+                                            first: true
+                                            icon: "code"
+                                            text: qsTr("Secondary Code Editor")
+                                            subtext: qsTr("Show detected editor like VS Code or VSCodium under Open")
+                                            checked: AppController.menuShowSecondaryEditor
+                                            onToggled: val => AppController.menuShowSecondaryEditor = val
+                                        }
+
+                                        // Upload Online Toggle
+                                        ToggleRow {
+                                            icon: "cloud_upload"
+                                            text: qsTr("Upload Online")
+                                            subtext: qsTr("Upload directly to Catbox and Litterbox")
+                                            checked: AppController.menuShowUploadOnline
+                                            onToggled: val => AppController.menuShowUploadOnline = val
+                                        }
+
+                                        // Send To Submenu Toggle
+                                        ToggleRow {
+                                            icon: "send"
+                                            text: qsTr("Send To Submenu")
+                                            subtext: qsTr("Include sharing destinations and external targets")
+                                            checked: AppController.menuShowSendTo
+                                            onToggled: val => AppController.menuShowSendTo = val
+                                        }
+
+                                        // Compress & Archive Toggle
+                                        ToggleRow {
+                                            icon: "archive"
+                                            text: qsTr("Compress & Archive")
+                                            subtext: qsTr("Archive presets and extraction tools")
+                                            checked: AppController.menuShowCompress
+                                            onToggled: val => AppController.menuShowCompress = val
+                                        }
+
+                                        // Create Symlink Toggle
+                                        ToggleRow {
+                                            icon: "link"
+                                            text: qsTr("Symlinks")
+                                            subtext: qsTr("Show Create Symlink and Paste as Symlink")
+                                            checked: AppController.menuShowSymlink
+                                            onToggled: val => AppController.menuShowSymlink = val
+                                        }
+
+                                        // Open in Terminal Toggle
+                                        ToggleRow {
+                                            icon: "terminal"
+                                            text: qsTr("Open in Terminal")
+                                            subtext: qsTr("Launch default terminal emulator in directory")
+                                            checked: AppController.menuShowTerminal
+                                            onToggled: val => AppController.menuShowTerminal = val
+                                        }
+
+                                        // Permanent Delete Toggle
+                                        ToggleRow {
+                                            last: true
+                                            icon: "delete"
+                                            text: qsTr("Delete Actions")
+                                            subtext: qsTr("Show Move to Trash and Delete Permanently")
+                                            checked: AppController.menuShowDelete
+                                            onToggled: val => AppController.menuShowDelete = val
+                                        }
+                                    }
+
+                                    Item { implicitHeight: Tokens.padding.small }
+                                }
+                            }
+
+                            // --- TAB 3: Custom Scripts & Tools ---
+                            VerticalFadeFlickable {
+                                id: tab3Flickable
+                                width: contentArea.width
+                                height: contentArea.height
+                                contentWidth: width
+                                contentHeight: tab3Col.implicitHeight + Tokens.padding.medium
+                                clip: true
+                                fadeAmount: 0.08
+                                boundsBehavior: Flickable.StopAtBounds
+
+                                ScrollBar.vertical: StyledScrollBar {
+                                    flickable: tab3Flickable
+                                }
+
+                                ColumnLayout {
+                                    id: tab3Col
+                                    width: tab3Flickable.width
+                                    spacing: Tokens.spacing.medium
+
+                                    StyledText {
+                                        text: qsTr("Custom Context Actions & Scripts")
+                                        Layout.topMargin: Tokens.spacing.small
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                    }
+
+                                    StyledText {
+                                        text: qsTr("Atlas supports custom scripts and action entries in your context menu. Place executable scripts in the scripts directory to run custom commands with selected files.")
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        font: Tokens.font.body.small
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+
+                                    // Open Scripts Directory Card
+                                    RowButton {
+                                        first: true
+                                        last: true
+                                        icon: "folder_special"
+                                        text: qsTr("Open Scripts Folder")
+                                        subtext: qsTr("~/.local/share/atlas/scripts/ (Also supports Nautilus scripts)")
+                                        trailingIcon: "open_in_new"
+                                        onClicked: AppIntegration.openScriptsFolder()
+                                    }
+
+                                    Item { implicitHeight: Tokens.padding.small }
+                                }
+                            }
+
+                            // --- TAB 4: Shortcuts ---
+                            ShortcutsTab {
+                                id: shortcutsTab
+                                width: contentArea.width
+                                height: contentArea.height
+                            }
                         }
                     }
 
-                    // --- TAB 1: View & Sorting Defaults ---
-                    VerticalFadeFlickable {
-                        id: tab1Flickable
-                        width: contentArea.width
-                        height: contentArea.height
-                        contentWidth: width
-                        contentHeight: tab1Col.implicitHeight + Tokens.padding.medium
-                        clip: true
-                        fadeAmount: 0.08
-                        boundsBehavior: Flickable.StopAtBounds
-
-                        ScrollBar.vertical: StyledScrollBar {
-                            flickable: tab1Flickable
-                        }
-
-                        ColumnLayout {
-                            id: tab1Col
-                            width: tab1Flickable.width
-                            spacing: Tokens.spacing.medium
-
-                            StyledText {
-                                text: qsTr("Layout & View Mode")
-                                Layout.topMargin: Tokens.spacing.small
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                            }
-
-                            SplitButtonRow {
-                                first: true
-                                last: true
-                                label: qsTr("Default View Mode")
-                                subtext: qsTr("Initial view layout when opening directories")
-                                menuItems: root.viewModeItems
-                                active: root.viewModeItems[Math.max(0, root.viewModeValues.indexOf(AppController.defaultViewMode))]
-                                onSelected: item => AppController.defaultViewMode = root.viewModeValues[root.viewModeItems.indexOf(item)]
-                            }
-
-                            Item { implicitHeight: 4 }
-
-                            StyledText {
-                                text: qsTr("Details View Columns")
-                                Layout.topMargin: Tokens.spacing.small
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                            }
-
-                            ButtonGroup {
-                                Layout.fillWidth: true
-
-                                ButtonGroupItem {
-                                    icon: "straighten"
-                                    text: qsTr("Size")
-                                    checked: AppController.showSizeColumn
-                                    onClicked: AppController.showSizeColumn = !AppController.showSizeColumn
-                                }
-
-                                ButtonGroupItem {
-                                    icon: "category"
-                                    text: qsTr("Type")
-                                    checked: AppController.showTypeColumn
-                                    onClicked: AppController.showTypeColumn = !AppController.showTypeColumn
-                                }
-
-                                ButtonGroupItem {
-                                    icon: "schedule"
-                                    text: qsTr("Date Modified")
-                                    checked: AppController.showDateColumn
-                                    onClicked: AppController.showDateColumn = !AppController.showDateColumn
-                                }
-
-                                ButtonGroupItem {
-                                    icon: "lock"
-                                    text: qsTr("Permissions")
-                                    checked: AppController.showPermissionsColumn
-                                    onClicked: AppController.showPermissionsColumn = !AppController.showPermissionsColumn
-                                }
-                            }
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: qsTr("The name column is always shown")
-                                color: Colours.palette.m3onSurfaceVariant
-                                font: Tokens.font.label.small
-                                elide: Text.ElideRight
-                            }
-
-                            Item { implicitHeight: 4 }
-
-                            StyledText {
-                                text: qsTr("Date & Time")
-                                Layout.topMargin: Tokens.spacing.small
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                            }
-
-                            SplitButtonRow {
-                                first: true
-                                last: true
-                                label: qsTr("Show Item Count for Folders")
-                                subtext: qsTr("Counting reads every folder in the listing, which is slow over a network")
-                                menuItems: root.folderCountItems
-                                active: root.folderCountItems[Math.max(0, root.folderCountValues.indexOf(AppController.folderItemCount))]
-                                onSelected: item => AppController.folderItemCount = root.folderCountValues[root.folderCountItems.indexOf(item)]
-                            }
-
-                            Item { implicitHeight: 4 }
-
-                            SplitButtonRow {
-                                first: true
-                                last: AppController.dateFormat !== 3
-                                label: qsTr("Date Format")
-                                subtext: qsTr("Format: %1").arg(FileUtils.formatDateTime(new Date(), AppController.dateFormat))
-                                menuItems: root.dateFormatItems
-                                active: root.dateFormatItems[Math.max(0, root.dateFormatValues.indexOf(AppController.dateFormat))]
-                                onSelected: item => AppController.dateFormat = root.dateFormatValues[root.dateFormatItems.indexOf(item)]
-                            }
-
-                            StyledRect {
-                                visible: AppController.dateFormat === 3
-                                Layout.fillWidth: true
-                                implicitHeight: 42
-                                topLeftRadius: Tokens.rounding.extraSmall
-                                topRightRadius: Tokens.rounding.extraSmall
-                                bottomLeftRadius: Tokens.rounding.large
-                                bottomRightRadius: Tokens.rounding.large
-                                color: Colours.tPalette.m3surfaceContainer
-
-                                TextInput {
-                                    id: customDateInput
-                                    anchors.fill: parent
-                                    anchors.leftMargin: Tokens.padding.largeIncreased
-                                    anchors.rightMargin: Tokens.padding.largeIncreased
-                                    verticalAlignment: TextInput.AlignVCenter
-                                    text: AppController.customDateFormat
-                                    color: Colours.palette.m3onSurface
-                                    font: Tokens.font.body.small
-                                    selectByMouse: true
-                                    clip: true
-                                    onEditingFinished: AppController.customDateFormat = text
-                                }
-                            }
-
-                            Item { implicitHeight: 4 }
-
-                            StyledText {
-                                text: qsTr("Sidebar Navigation")
-                                Layout.topMargin: Tokens.spacing.small
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                            }
-
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 2
-
-                                SplitButtonRow {
-                                    first: true
-                                    label: qsTr("Sidebar Icon Size")
-                                    subtext: qsTr("Size of icons in the navigation sidebar")
-                                    menuItems: root.iconSizeItems
-                                    active: root.iconSizeItems[Math.max(0, root.iconSizeValues.indexOf(AppController.placesIconSize))]
-                                    onSelected: item => AppController.placesIconSize = root.iconSizeValues[root.iconSizeItems.indexOf(item)]
-                                }
-
-                                ToggleRow {
-                                    last: true
-                                    icon: "cloud"
-                                    text: qsTr("Show Network Section")
-                                    subtext: qsTr("Display remote servers and network locations in sidebar")
-                                    checked: AppController.showNetworkSection
-                                    onToggled: val => AppController.showNetworkSection = val
-                                }
-                            }
-
-                            Item { implicitHeight: 4 }
-
-                            StyledText {
-                                text: qsTr("Sorting & Organization")
-                                Layout.topMargin: Tokens.spacing.small
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                            }
-
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 2
-
-                                SplitButtonRow {
-                                    first: true
-                                    label: qsTr("Default Sort Field")
-                                    subtext: qsTr("Primary criterion for sorting file entries")
-                                    menuItems: root.sortFieldItems
-                                    active: root.sortFieldItems[Math.max(0, root.sortFieldValues.indexOf(AppController.defaultSortField))]
-                                    onSelected: item => AppController.defaultSortField = root.sortFieldValues[root.sortFieldItems.indexOf(item)]
-                                }
-
-                                RowButton {
-                                    icon: AppController.defaultSortOrder === 0 ? "arrow_upward" : "arrow_downward"
-                                    text: qsTr("Sort Direction")
-                                    subtext: AppController.defaultSortOrder === 0 ? qsTr("Ascending (A to Z, oldest first)") : qsTr("Descending (Z to A, newest first)")
-                                    onClicked: AppController.defaultSortOrder = (AppController.defaultSortOrder === 0 ? 1 : 0)
-                                }
-
-                                ToggleRow {
-                                    last: true
-                                    icon: "folder"
-                                    text: qsTr("Folders First")
-                                    subtext: qsTr("Always display folders above files when sorting")
-                                    checked: AppController.showDirsFirst
-                                    onToggled: val => AppController.showDirsFirst = val
-                                }
-
-                                ToggleRow {
-                                    icon: "match_case"
-                                    text: qsTr("Case-Sensitive Sorting")
-                                    subtext: qsTr("Sort uppercase names before lowercase ones instead of mixing them")
-                                    checked: AppController.caseSensitiveSort
-                                    onToggled: checked => AppController.caseSensitiveSort = checked
-                                }
-
-                            }
-
-                            Item { implicitHeight: Tokens.padding.small }
-                        }
+                    StyledRect {
+                        Layout.fillWidth: true
+                        Layout.topMargin: Tokens.spacing.extraSmall
+                        implicitHeight: 1
+                        color: Qt.alpha(Colours.palette.m3outlineVariant, 0.6)
                     }
 
-                    // --- TAB 2: Context Menu Customization ---
-                    VerticalFadeFlickable {
-                        id: tab2Flickable
-                        width: contentArea.width
-                        height: contentArea.height
-                        contentWidth: width
-                        contentHeight: tab2Col.implicitHeight + Tokens.padding.medium
-                        clip: true
-                        fadeAmount: 0.08
-                        boundsBehavior: Flickable.StopAtBounds
+                    // Bottom Action Buttons
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Tokens.spacing.small
 
-                        ScrollBar.vertical: StyledScrollBar {
-                            flickable: tab2Flickable
+                        Item { Layout.fillWidth: true }
+
+                        // Cancel Button
+                        TextButton {
+                            type: ButtonBase.Text
+                            text: qsTr("Cancel")
+                            onClicked: {
+                                root.expanded = false;
+                                shortcutsTab.abortRecorder();
+                            }
                         }
 
-                        ColumnLayout {
-                            id: tab2Col
-                            width: tab2Flickable.width
-                            spacing: Tokens.spacing.medium
-
-                            StyledText {
-                                text: qsTr("Context Menu Visibility")
-                                Layout.topMargin: Tokens.spacing.small
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
+                        // Done Button
+                        TextButton {
+                            type: ButtonBase.Filled
+                            text: qsTr("Done")
+                            onClicked: {
+                                root.expanded = false;
+                                shortcutsTab.abortRecorder();
                             }
-
-                            StyledText {
-                                text: qsTr("Customize which items and submenus appear in right-click context menus.")
-                                color: Colours.palette.m3onSurfaceVariant
-                                font: Tokens.font.body.small
-                                Layout.fillWidth: true
-                                wrapMode: Text.WordWrap
-                            }
-
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 2
-
-                                // Secondary Code Editor Toggle
-                                ToggleRow {
-                                    first: true
-                                    icon: "code"
-                                    text: qsTr("Secondary Code Editor")
-                                    subtext: qsTr("Show detected editor like VS Code or VSCodium under Open")
-                                    checked: AppController.menuShowSecondaryEditor
-                                    onToggled: val => AppController.menuShowSecondaryEditor = val
-                                }
-
-                                // Upload Online Toggle
-                                ToggleRow {
-                                    icon: "cloud_upload"
-                                    text: qsTr("Upload Online")
-                                    subtext: qsTr("Upload directly to Catbox and Litterbox")
-                                    checked: AppController.menuShowUploadOnline
-                                    onToggled: val => AppController.menuShowUploadOnline = val
-                                }
-
-                                // Send To Submenu Toggle
-                                ToggleRow {
-                                    icon: "send"
-                                    text: qsTr("Send To Submenu")
-                                    subtext: qsTr("Include sharing destinations and external targets")
-                                    checked: AppController.menuShowSendTo
-                                    onToggled: val => AppController.menuShowSendTo = val
-                                }
-
-                                // Compress & Archive Toggle
-                                ToggleRow {
-                                    icon: "archive"
-                                    text: qsTr("Compress & Archive")
-                                    subtext: qsTr("Archive presets and extraction tools")
-                                    checked: AppController.menuShowCompress
-                                    onToggled: val => AppController.menuShowCompress = val
-                                }
-
-                                // Create Symlink Toggle
-                                ToggleRow {
-                                    icon: "link"
-                                    text: qsTr("Symlinks")
-                                    subtext: qsTr("Show Create Symlink and Paste as Symlink")
-                                    checked: AppController.menuShowSymlink
-                                    onToggled: val => AppController.menuShowSymlink = val
-                                }
-
-                                // Open in Terminal Toggle
-                                ToggleRow {
-                                    icon: "terminal"
-                                    text: qsTr("Open in Terminal")
-                                    subtext: qsTr("Launch default terminal emulator in directory")
-                                    checked: AppController.menuShowTerminal
-                                    onToggled: val => AppController.menuShowTerminal = val
-                                }
-
-                                // Permanent Delete Toggle
-                                ToggleRow {
-                                    last: true
-                                    icon: "delete"
-                                    text: qsTr("Delete Actions")
-                                    subtext: qsTr("Show Move to Trash and Delete Permanently")
-                                    checked: AppController.menuShowDelete
-                                    onToggled: val => AppController.menuShowDelete = val
-                                }
-                            }
-
-                            Item { implicitHeight: Tokens.padding.small }
                         }
-                    }
-
-                    // --- TAB 3: Custom Scripts & Tools ---
-                    VerticalFadeFlickable {
-                        id: tab3Flickable
-                        width: contentArea.width
-                        height: contentArea.height
-                        contentWidth: width
-                        contentHeight: tab3Col.implicitHeight + Tokens.padding.medium
-                        clip: true
-                        fadeAmount: 0.08
-                        boundsBehavior: Flickable.StopAtBounds
-
-                        ScrollBar.vertical: StyledScrollBar {
-                            flickable: tab3Flickable
-                        }
-
-                        ColumnLayout {
-                            id: tab3Col
-                            width: tab3Flickable.width
-                            spacing: Tokens.spacing.medium
-
-                            StyledText {
-                                text: qsTr("Custom Context Actions & Scripts")
-                                Layout.topMargin: Tokens.spacing.small
-                                color: Colours.palette.m3primary
-                                font: Tokens.font.label.large
-                            }
-
-                            StyledText {
-                                text: qsTr("Atlas supports custom scripts and action entries in your context menu. Place executable scripts in the scripts directory to run custom commands with selected files.")
-                                color: Colours.palette.m3onSurfaceVariant
-                                font: Tokens.font.body.small
-                                wrapMode: Text.WordWrap
-                                Layout.fillWidth: true
-                            }
-
-                            // Open Scripts Directory Card
-                            RowButton {
-                                first: true
-                                last: true
-                                icon: "folder_special"
-                                text: qsTr("Open Scripts Folder")
-                                subtext: qsTr("~/.local/share/atlas/scripts/ (Also supports Nautilus scripts)")
-                                trailingIcon: "open_in_new"
-                                onClicked: AppIntegration.openScriptsFolder()
-                            }
-
-                            Item { implicitHeight: Tokens.padding.small }
-                        }
-                    }
-
-                    // --- TAB 4: Shortcuts ---
-                    ShortcutsTab {
-                        id: shortcutsTab
-                        width: contentArea.width
-                        height: contentArea.height
-                    }
-                }
-            }
-
-            StyledRect {
-                Layout.fillWidth: true
-                Layout.topMargin: Tokens.spacing.extraSmall
-                implicitHeight: 1
-                color: Qt.alpha(Colours.palette.m3outlineVariant, 0.6)
-            }
-
-            // Bottom Action Buttons
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Tokens.spacing.small
-
-                Item { Layout.fillWidth: true }
-
-                // Cancel Button
-                TextButton {
-                    type: ButtonBase.Text
-                    text: qsTr("Cancel")
-                    onClicked: {
-                        root.expanded = false;
-                        shortcutsTab.abortRecorder();
-                    }
-                }
-
-                // Done Button
-                TextButton {
-                    type: ButtonBase.Filled
-                    text: qsTr("Done")
-                    onClicked: {
-                        root.expanded = false;
-                        shortcutsTab.abortRecorder();
                     }
                 }
             }
