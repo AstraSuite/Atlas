@@ -2,7 +2,7 @@
 
 #include <QFont>
 #include <QVariantMap>
-#include <qqmlintegration.h>
+#include <QtQmlIntegration/qqmlintegration.h>
 
 namespace atlas::config {
 

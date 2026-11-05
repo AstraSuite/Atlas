@@ -1,0 +1,8 @@
+pub mod desktop;
+pub mod exif;
+pub mod paths;
+pub mod recent;
+pub mod storage;
+pub mod trash;
+pub mod fileutils;
+pub mod watcher;

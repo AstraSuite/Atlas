@@ -9,7 +9,7 @@
 #include <QFileSystemWatcher>
 #include <QList>
 #include <QJsonObject>
-#include <qqmlintegration.h>
+#include <QtQmlIntegration/qqmlintegration.h>
 
 namespace atlas::config {
 

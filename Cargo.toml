@@ -1,0 +1,40 @@
+[package]
+name = "atlas"
+version = "1.3.1"
+edition = "2021"
+license = "GPL-3.0-only"
+description = "A fast, lightweight Material Design 3 file manager"
+# The QML module aliases every .qml file by its path relative to this
+# manifest (qrc:/qt/qml/atlas/qml/...), so the crate lives at the repo root
+# rather than under crates/ like Airlock's.
+build = "build.rs"
+
+[[bin]]
+name = "atlas"
+path = "src/main.rs"
+
+[dependencies]
+cxx = "1.0.95"
+cxx-qt = "0.10"
+cxx-qt-lib = { version = "0.10", features = ["qt_full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+regex = "1"
+libc = "0.2"
+chrono = "0.4"
+md-5 = "0.10"
+sha1 = "0.10"
+sha2 = "0.10"
+kamadak-exif = "0.6"
+ureq = "3"
+quick-xml = "0.39"
+percent-encoding = "2"
+rand = "0.8"
+
+[build-dependencies]
+cxx-qt-build = { version = "0.10", features = ["link_qt_object_files"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+strip = "symbols"

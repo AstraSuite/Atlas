@@ -3,7 +3,7 @@
 #include "fontbuilder.hpp"
 #include <QObject>
 #include <QFont>
-#include <qqmlintegration.h>
+#include <QtQmlIntegration/qqmlintegration.h>
 
 namespace atlas::config {
 

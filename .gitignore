@@ -4,3 +4,5 @@ build*/
 *.kdev4
 .vscode/
 .idea/
+target/
+.qmlls.ini
