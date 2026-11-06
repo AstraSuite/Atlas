@@ -29,6 +29,7 @@ kamadak-exif = "0.6"
 ureq = "3"
 quick-xml = "0.39"
 percent-encoding = "2"
+base64 = "0.22"
 rand = "0.8"
 
 [build-dependencies]

@@ -34,7 +34,7 @@ use super::*;
 
 pub static APP_CONTROLLER: Slot<appcontroller::qobject::AppController> = Slot::new();
 pub static TAB_MANAGER: Slot<tabmanager::qobject::TabManager> = Slot::new();
-// PORT: pub static FILE_OPERATIONS: Slot<fileoperations::qobject::FileOperations> = Slot::new();
-// PORT: pub static CATBOX_UPLOADER: Slot<catboxuploader::qobject::CatboxUploader> = Slot::new();
+pub static FILE_OPERATIONS: Slot<fileoperations::qobject::FileOperations> = Slot::new();
+pub static CATBOX_UPLOADER: Slot<catboxuploader::qobject::CatboxUploader> = Slot::new();
 // PORT: pub static PLACES_MODEL: Slot<placesmodel::qobject::PlacesModel> = Slot::new();
 // PORT: pub static PAPIRUS_WATCHER: Slot<papiruswatcher::qobject::PapirusWatcher> = Slot::new();

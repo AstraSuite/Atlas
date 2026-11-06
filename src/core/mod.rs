@@ -6,3 +6,5 @@ pub mod storage;
 pub mod trash;
 pub mod fileutils;
 pub mod watcher;
+pub mod entry;
+pub mod fileops;
