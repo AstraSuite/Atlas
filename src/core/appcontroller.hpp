@@ -18,6 +18,7 @@ class AppController : public QObject {
     QML_SINGLETON
 
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden NOTIFY showHiddenChanged)
+    Q_PROPERTY(bool opaqueHidden READ opaqueHidden WRITE setOpaqueHidden NOTIFY opaqueHiddenChanged)
     Q_PROPERTY(bool confirmPermanentDelete READ confirmPermanentDelete WRITE setConfirmPermanentDelete NOTIFY confirmPermanentDeleteChanged)
     Q_PROPERTY(bool restoreTabs READ restoreTabs WRITE setRestoreTabs NOTIFY restoreTabsChanged)
     Q_PROPERTY(bool confirmMoveToTrash READ confirmMoveToTrash WRITE setConfirmMoveToTrash NOTIFY confirmMoveToTrashChanged)
@@ -72,6 +73,7 @@ public:
     void setInitialDirectory(const QString& dir);
 
     [[nodiscard]] bool showHidden() const { return m_showHidden; }
+    [[nodiscard]] bool opaqueHidden() const { return m_opaqueHidden; }
     [[nodiscard]] bool confirmPermanentDelete() const { return m_confirmPermanentDelete; }
     void setConfirmPermanentDelete(bool confirm);
 
@@ -105,6 +107,7 @@ public:
     Q_INVOKABLE void setDetailsColumnOrder(const QStringList& order);
     Q_INVOKABLE void resetDetailsColumnOrder();
     void setShowHidden(bool show);
+    void setOpaqueHidden(bool opaque);
 
     [[nodiscard]] bool singleClick() const { return m_singleClick; }
     void setSingleClick(bool single);
@@ -175,6 +178,7 @@ public:
 
 signals:
     void showHiddenChanged();
+    void opaqueHiddenChanged();
     void confirmPermanentDeleteChanged();
     void restoreTabsChanged();
     void confirmMoveToTrashChanged();
@@ -213,6 +217,7 @@ private:
     explicit AppController(QObject* parent = nullptr);
     QString m_initialDirectory;
     bool m_showHidden = false;
+    bool m_opaqueHidden = false;
     bool m_confirmPermanentDelete = true;
     QString m_customDateFormat = QStringLiteral("yyyy-MM-dd hh:mm");
     bool m_restoreTabs = false;

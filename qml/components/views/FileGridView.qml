@@ -439,7 +439,7 @@ Item {
                 clip: true
 
                 // Cut & Hidden & Dragging Files Indication: Darkened / Ghosted Opacity
-                opacity: delegateContainer.isDragged ? 0.35 : (delegateContainer.isCut ? 0.38 : (delegateContainer.isHidden ? 0.58 : 1.0))
+                opacity: delegateContainer.isDragged ? 0.35 : (delegateContainer.isCut ? 0.38 : (delegateContainer.isHidden && !AppController.opaqueHidden ? 0.58 : 1.0))
 
                 Behavior on opacity {
                     Anim {

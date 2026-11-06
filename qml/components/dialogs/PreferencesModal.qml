@@ -370,6 +370,15 @@ MouseArea {
                                         }
 
                                         ToggleRow {
+                                            icon: "opacity"
+                                            text: qsTr("Opaque Hidden Files and Folders")
+                                            subtext: qsTr("Make hidden dotfiles opaque instead of using lower opacity")
+                                            disabled: !AppController.showHidden
+                                            checked: AppController.opaqueHidden
+                                            onToggled: val => AppController.opaqueHidden = val
+                                        }
+
+                                        ToggleRow {
                                             icon: "hard_drive_2"
                                             text: qsTr("Show Free Space")
                                             subtext: qsTr("Report the space left on the current volume in the status bar")

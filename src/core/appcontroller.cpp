@@ -49,6 +49,7 @@ AppController::AppController(QObject* parent)
     m_caseSensitiveSort = settings.value("preferences/caseSensitiveSort", false).toBool();
     m_directorySpecificViews = settings.value("preferences/directorySpecificViews", false).toBool();
     m_vimMotions = settings.value("preferences/vimMotions", true).toBool();
+    m_opaqueHidden = settings.value("preferences/opaqueHidden", false).toBool();
 
     const QByteArray viewsJson = settings.value("preferences/directoryViews").toString().toUtf8();
     if (!viewsJson.isEmpty())
@@ -384,12 +385,22 @@ void AppController::resetDetailsColumnOrder() {
     settings.remove("preferences/detailsColumnOrder");
     emit detailsColumnOrderChanged();
 }
+
 void AppController::setShowHidden(bool show) {
     if (m_showHidden != show) {
         m_showHidden = show;
         QSettings settings("astra-atlas", "atlas");
         settings.setValue("session/showHidden", show);
         emit showHiddenChanged();
+    }
+}
+
+void AppController::setOpaqueHidden(bool opaque) {
+    if (m_opaqueHidden != opaque) {
+        m_opaqueHidden = opaque;
+        QSettings settings("astra-atlas", "atlas");
+        settings.setValue("preferences/opaqueHidden", opaque);
+        emit opaqueHiddenChanged();
     }
 }
 

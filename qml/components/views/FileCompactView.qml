@@ -421,7 +421,7 @@ Item {
                     : (compDelegate.isSelected ? Colours.palette.m3secondaryContainer : (compHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : Qt.alpha(Colours.tPalette.m3surfaceContainerHigh, 0)))
 
                 // Cut & Hidden & Dragging Files Indication: Darkened / Ghosted Opacity
-                opacity: compDelegate.isDragged ? 0.35 : (compDelegate.isCut ? 0.38 : (compDelegate.isHidden ? 0.58 : 1.0))
+                opacity: compDelegate.isDragged ? 0.35 : (compDelegate.isCut ? 0.38 : (compDelegate.isHidden && !AppController.opaqueHidden ? 0.58 : 1.0))
 
                 // Scale up when dragging over folder
                 scale: folderDropArea.containsDrag ? 1.05 : 1.0
