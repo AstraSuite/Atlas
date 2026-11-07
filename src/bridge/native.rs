@@ -79,6 +79,13 @@ pub mod ffi {
         #[cxx_name = "iconThemeSearchPaths"]
         fn icon_theme_search_paths() -> QStringList;
 
+        #[cxx_name = "normalizeKeySequence"]
+        fn normalize_key_sequence(sequence: &QString) -> QString;
+        #[cxx_name = "keySequenceFromKey"]
+        fn key_sequence_from_key(key: i32, modifiers: i32) -> QString;
+        #[cxx_name = "isBareKeySequence"]
+        fn is_bare_key_sequence(sequence: &QString) -> bool;
+
         #[cxx_name = "formatDateTime"]
         fn format_date_time(msecs: i64, format: i32, pattern: &QString) -> QString;
         #[cxx_name = "queryKeyboardModifiers"]

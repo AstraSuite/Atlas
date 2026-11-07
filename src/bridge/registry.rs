@@ -37,4 +37,4 @@ pub static TAB_MANAGER: Slot<tabmanager::qobject::TabManager> = Slot::new();
 pub static FILE_OPERATIONS: Slot<fileoperations::qobject::FileOperations> = Slot::new();
 pub static CATBOX_UPLOADER: Slot<catboxuploader::qobject::CatboxUploader> = Slot::new();
 pub static PLACES_MODEL: Slot<placesmodel::qobject::PlacesModel> = Slot::new();
-// PORT: pub static PAPIRUS_WATCHER: Slot<papiruswatcher::qobject::PapirusWatcher> = Slot::new();
+pub static PAPIRUS_WATCHER: Slot<papiruswatcher::qobject::PapirusWatcher> = Slot::new();

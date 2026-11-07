@@ -51,6 +51,11 @@ QStringList mimeAliases(const QString& name);
 bool hasThemeIcon(const QString& name);
 QStringList iconThemeSearchPaths();
 
+// QKeySequence, for the shortcut registry
+QString normalizeKeySequence(const QString& sequence);
+QString keySequenceFromKey(int key, int modifiers);
+bool isBareKeySequence(const QString& sequence);
+
 // Misc
 QString formatDateTime(std::int64_t msecs, int format, const QString& pattern);
 int queryKeyboardModifiers();

@@ -12,6 +12,7 @@
 #include <QIcon>
 #include <QImage>
 #include <QImageReader>
+#include <QKeySequence>
 #include <QLocale>
 #include <QMimeData>
 #include <QMimeDatabase>
@@ -177,6 +178,52 @@ bool hasThemeIcon(const QString& name) {
 
 QStringList iconThemeSearchPaths() {
     return QIcon::themeSearchPaths();
+}
+
+// ---- Key sequences ----
+
+QString normalizeKeySequence(const QString& sequence) {
+    if (sequence.trimmed().isEmpty())
+        return {};
+    const QKeySequence ks(sequence);
+    if (ks.isEmpty())
+        return {};
+    return ks.toString(QKeySequence::PortableText);
+}
+
+QString keySequenceFromKey(int key, int modifiers) {
+    const auto k = static_cast<Qt::Key>(key);
+    switch (k) {
+    case Qt::Key_unknown:
+    case Qt::Key_Shift:
+    case Qt::Key_Control:
+    case Qt::Key_Alt:
+    case Qt::Key_Meta:
+    case Qt::Key_AltGr:
+        return {};
+    default:
+        break;
+    }
+    const auto mods = static_cast<Qt::KeyboardModifiers>(modifiers) & Qt::KeyboardModifierMask;
+    return QKeySequence(QKeyCombination(mods, k)).toString(QKeySequence::PortableText);
+}
+
+bool isBareKeySequence(const QString& sequence) {
+    const QKeySequence ks(sequence);
+    if (ks.isEmpty())
+        return false;
+    const QKeyCombination combo = ks[0];
+    if (combo.keyboardModifiers() != Qt::NoModifier)
+        return false;
+    const int key = static_cast<int>(combo.key());
+    // Function/navigation/special keys live at or above Qt::Key_Escape
+    // (0x01000000) and must never count as bare printable keys.
+    if (key < 0x20 || key > 0xFFFF)
+        return false;
+    if (key >= 0xD800 && key <= 0xDFFF)
+        return false;
+    const QChar ch(key);
+    return ch.isPrint() && !ch.isSpace();
 }
 
 // ---- Misc ----
