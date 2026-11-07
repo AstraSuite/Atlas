@@ -6,3 +6,6 @@ pub mod registry;
 pub mod tabmanager;
 pub mod filesystemmodel;
 pub mod catboxuploader;
+pub mod placesmodel;
+pub mod drivemanager;
+pub mod networkmanager;

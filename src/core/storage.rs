@@ -84,6 +84,49 @@ pub fn space(path: &str) -> Option<(i64, i64)> {
     Some((st.f_bavail as i64 * frsize, st.f_blocks as i64 * frsize))
 }
 
+/// (free bytes including root-reserved, total bytes), like QStorageInfo's
+/// bytesFree() and bytesTotal().
+pub fn space_free_total(path: &str) -> Option<(i64, i64)> {
+    let c = CString::new(path).ok()?;
+    let mut st: libc::statvfs = unsafe { std::mem::zeroed() };
+    if unsafe { libc::statvfs(c.as_ptr(), &mut st) } != 0 {
+        return None;
+    }
+    let frsize = st.f_frsize as i64;
+    Some((st.f_bfree as i64 * frsize, st.f_blocks as i64 * frsize))
+}
+
+/// Calls `on_change` (on a background thread) whenever the mount table
+/// changes. /proc/self/mounts signals this with POLLPRI.
+pub fn watch_mounts(on_change: impl Fn() + Send + 'static) {
+    std::thread::Builder::new()
+        .name("atlas-mounts".into())
+        .spawn(move || {
+            let Ok(path) = CString::new("/proc/self/mounts") else { return };
+            let fd = unsafe { libc::open(path.as_ptr(), libc::O_RDONLY | libc::O_CLOEXEC) };
+            if fd < 0 {
+                return;
+            }
+            loop {
+                let mut pfd = libc::pollfd { fd, events: libc::POLLPRI | libc::POLLERR, revents: 0 };
+                let n = unsafe { libc::poll(&mut pfd, 1, -1) };
+                if n < 0 {
+                    if std::io::Error::last_os_error().kind() == std::io::ErrorKind::Interrupted {
+                        continue;
+                    }
+                    break;
+                }
+                // Re-read to re-arm the notification.
+                unsafe { libc::lseek(fd, 0, libc::SEEK_SET) };
+                let mut buf = [0u8; 4096];
+                while unsafe { libc::read(fd, buf.as_mut_ptr() as *mut libc::c_void, buf.len()) } > 0 {}
+                on_change();
+            }
+            unsafe { libc::close(fd) };
+        })
+        .ok();
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
