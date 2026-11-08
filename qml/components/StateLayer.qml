@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
+import atlas
 
 MouseArea {
     id: root

@@ -490,7 +490,7 @@ impl cxx_qt::Initialize for FileSystemModel {
         // rescan shortly after they settle.
         let thread = self.qt_thread();
         let pending = Arc::new(AtomicBool::new(false));
-        let watcher = Watcher::new(move |_| {
+        let watcher = Watcher::new(move |p| {
             if pending.swap(true, AtomicOrdering::AcqRel) {
                 return;
             }

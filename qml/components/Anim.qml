@@ -1,4 +1,5 @@
 import QtQuick
+import atlas
 
 NumberAnimation {
     enum Type {

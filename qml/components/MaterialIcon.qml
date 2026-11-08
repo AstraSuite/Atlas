@@ -1,4 +1,5 @@
 import QtQuick
+import atlas
 
 StyledText {
     property real fill: 0

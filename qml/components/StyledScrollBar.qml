@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Templates as T
+import atlas
 
 T.ScrollBar {
     id: root

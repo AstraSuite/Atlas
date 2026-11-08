@@ -339,3 +339,33 @@ pub fn create_archive(sources: &[String], destination: &str, format: &str) -> bo
         false
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trash_and_restore_round_trip() {
+        let root = std::env::temp_dir().join(format!("atlas-trash-test-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        let data = root.join("data");
+        let work = root.join("work");
+        fs::create_dir_all(&work).unwrap();
+        std::env::set_var("XDG_DATA_HOME", &data);
+        let file = work.join("a file.txt");
+        fs::write(&file, "x").unwrap();
+        let dir = work.join("docs");
+        fs::create_dir_all(dir.join("inner")).unwrap();
+
+        let info_file = trash_one(file.to_str().unwrap()).expect("trash file");
+        let info_dir = trash_one(dir.to_str().unwrap()).expect("trash dir");
+        assert!(!file.exists() && !dir.exists());
+        let info_text = fs::read_to_string(&info_file).unwrap();
+        assert!(info_text.contains("Path=") && info_text.contains("a%20file.txt"), "{info_text}");
+
+        assert_eq!(restore_from_trash(&info_file).as_deref(), Some("a file.txt"));
+        assert_eq!(restore_from_trash(&info_dir).as_deref(), Some("docs"));
+        assert!(file.exists() && dir.join("inner").exists());
+        let _ = fs::remove_dir_all(&root);
+    }
+}

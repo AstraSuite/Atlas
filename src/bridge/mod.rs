@@ -16,3 +16,7 @@ pub mod shortcutmanager;
 pub mod papiruswatcher;
 pub mod appintegration;
 pub mod mimeservice;
+pub mod runnergame;
+pub mod circularindicatormanager;
+pub mod colours;
+pub mod filemetadata;
