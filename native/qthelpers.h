@@ -40,10 +40,7 @@ void settingsRemove(const QString& key);
 
 // Shared MIME database
 QString mimeNameForFile(const QString& path);
-QString mimeNameForFileName(const QString& fileName);
 QString mimeComment(const QString& name);
-QString mimeIconName(const QString& name);
-QString mimeGenericIconName(const QString& name);
 bool mimeInherits(const QString& name, const QString& parent);
 QStringList mimeAliases(const QString& name);
 

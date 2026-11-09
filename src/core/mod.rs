@@ -1,10 +1,10 @@
 pub mod desktop;
+pub mod entry;
 pub mod exif;
+pub mod fileops;
+pub mod fileutils;
 pub mod paths;
 pub mod recent;
 pub mod storage;
 pub mod trash;
-pub mod fileutils;
 pub mod watcher;
-pub mod entry;
-pub mod fileops;

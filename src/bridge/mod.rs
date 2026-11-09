@@ -1,22 +1,32 @@
+//! The cxx-qt bridges. Enums and signals that only QML uses look dead
+//! to rustc, hence the allows on those modules.
+
 pub mod appcontroller;
-pub mod fileoperations;
-pub mod fileutils;
-pub mod native;
-pub mod registry;
-pub mod tabmanager;
-pub mod filesystemmodel;
-pub mod catboxuploader;
-pub mod placesmodel;
-pub mod drivemanager;
-pub mod networkmanager;
-pub mod mediatools;
-pub mod gitmanager;
-pub mod iconcatalog;
-pub mod shortcutmanager;
-pub mod papiruswatcher;
 pub mod appintegration;
-pub mod mimeservice;
-pub mod runnergame;
+#[allow(dead_code)]
+pub mod catboxuploader;
+#[allow(dead_code)]
 pub mod circularindicatormanager;
 pub mod colours;
+pub mod drivemanager;
 pub mod filemetadata;
+#[allow(dead_code)]
+pub mod fileoperations;
+#[allow(dead_code)]
+pub mod filesystemmodel;
+#[allow(dead_code)]
+pub mod fileutils;
+pub mod gitmanager;
+pub mod iconcatalog;
+#[allow(dead_code)]
+pub mod mediatools;
+pub mod mimeservice;
+pub mod native;
+pub mod networkmanager;
+pub mod papiruswatcher;
+pub mod placesmodel;
+pub mod registry;
+#[allow(dead_code)]
+pub mod runnergame;
+pub mod shortcutmanager;
+pub mod tabmanager;

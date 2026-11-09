@@ -27,19 +27,6 @@ pub fn config_home() -> String {
     xdg_base("XDG_CONFIG_HOME", ".config")
 }
 
-pub fn cache_home() -> String {
-    xdg_base("XDG_CACHE_HOME", ".cache")
-}
-
-/// `QStandardPaths::CacheLocation` for the "astra-atlas"/"atlas" application.
-pub fn app_cache_dir() -> String {
-    format!("{}/astra-atlas/atlas", cache_home())
-}
-
-pub fn state_home() -> String {
-    xdg_base("XDG_STATE_HOME", ".local/state")
-}
-
 /// Reads one `XDG_*_DIR` entry from user-dirs.dirs, like QStandardPaths does.
 pub fn user_dir(key: &str, fallback: &str) -> String {
     let file = format!("{}/user-dirs.dirs", config_home());
@@ -145,15 +132,6 @@ pub fn complete_base_name(name: &str) -> String {
     }
 }
 
-/// `QFileInfo::baseName`: the name up to its first dot.
-pub fn base_name(name: &str) -> String {
-    let name = file_name(name);
-    match name.find('.') {
-        Some(i) => name[..i].to_string(),
-        None => name,
-    }
-}
-
 pub fn exists(path: &str) -> bool {
     !path.is_empty() && Path::new(path).symlink_metadata().is_ok()
 }
@@ -229,27 +207,6 @@ pub fn is_executable(path: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Returns `dir/name` if free, else `dir/base (n).ext` with the first free n.
-pub fn unique_path(dir: &str, name: &str) -> String {
-    let candidate = format!("{dir}/{name}");
-    if !exists(&candidate) {
-        return candidate;
-    }
-    let base = complete_base_name(name);
-    let ext = suffix(name);
-    for n in 1.. {
-        let next = if ext.is_empty() || base.is_empty() {
-            format!("{dir}/{name} ({n})")
-        } else {
-            format!("{dir}/{base} ({n}).{ext}")
-        };
-        if !exists(&next) {
-            return next;
-        }
-    }
-    unreachable!()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -266,7 +223,6 @@ mod tests {
     fn names() {
         assert_eq!(suffix("/x/archive.tar.gz"), "gz");
         assert_eq!(complete_base_name("archive.tar.gz"), "archive.tar");
-        assert_eq!(base_name("archive.tar.gz"), "archive");
         assert_eq!(suffix(".bashrc"), "bashrc");
         assert_eq!(parent("/a/b"), "/a");
         assert_eq!(parent("/a"), "/");

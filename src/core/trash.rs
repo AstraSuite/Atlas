@@ -7,7 +7,6 @@ use std::os::unix::fs::MetadataExt;
 
 #[derive(Clone, Debug, Default)]
 pub struct TrashLocation {
-    pub base_dir: String,
     pub files_dir: String,
     pub info_dir: String,
     pub top_dir: String,
@@ -20,7 +19,6 @@ impl TrashLocation {
 
     fn new(base_dir: &str, top_dir: &str) -> Self {
         Self {
-            base_dir: base_dir.to_string(),
             files_dir: format!("{base_dir}/files"),
             info_dir: format!("{base_dir}/info"),
             top_dir: top_dir.to_string(),

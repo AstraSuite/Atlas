@@ -611,7 +611,7 @@ impl TabManager {
         }
     }
 
-    fn split_tab_with(mut self: Pin<&mut Self>, tab_index: i32, secondary_path: &QString) {
+    fn split_tab_with(self: Pin<&mut Self>, tab_index: i32, secondary_path: &QString) {
         let len = self.tabs.len() as i32;
         if tab_index < 0 || tab_index >= len {
             return;

@@ -60,25 +60,12 @@ impl Watcher {
         true
     }
 
-    pub fn remove_path(&self, path: &str) {
-        let mut watches = self.shared.watches.lock().unwrap();
-        let wds: Vec<i32> = watches.iter().filter(|(_, p)| p.as_str() == path).map(|(wd, _)| *wd).collect();
-        for wd in wds {
-            unsafe { libc::inotify_rm_watch(self.shared.fd, wd) };
-            watches.remove(&wd);
-        }
-    }
-
     pub fn clear(&self) {
         let mut watches = self.shared.watches.lock().unwrap();
         for wd in watches.keys() {
             unsafe { libc::inotify_rm_watch(self.shared.fd, *wd) };
         }
         watches.clear();
-    }
-
-    pub fn paths(&self) -> Vec<String> {
-        self.shared.watches.lock().unwrap().values().cloned().collect()
     }
 
     pub fn is_watching(&self, path: &str) -> bool {

@@ -146,20 +146,8 @@ QString mimeNameForFile(const QString& path) {
     return mimeDb().mimeTypeForFile(path).name();
 }
 
-QString mimeNameForFileName(const QString& fileName) {
-    return mimeDb().mimeTypeForFile(fileName, QMimeDatabase::MatchExtension).name();
-}
-
 QString mimeComment(const QString& name) {
     return mimeDb().mimeTypeForName(name).comment();
-}
-
-QString mimeIconName(const QString& name) {
-    return mimeDb().mimeTypeForName(name).iconName();
-}
-
-QString mimeGenericIconName(const QString& name) {
-    return mimeDb().mimeTypeForName(name).genericIconName();
 }
 
 bool mimeInherits(const QString& name, const QString& parent) {

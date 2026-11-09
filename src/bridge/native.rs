@@ -61,14 +61,8 @@ pub mod ffi {
 
         #[cxx_name = "mimeNameForFile"]
         fn mime_name_for_file(path: &QString) -> QString;
-        #[cxx_name = "mimeNameForFileName"]
-        fn mime_name_for_file_name(file_name: &QString) -> QString;
         #[cxx_name = "mimeComment"]
         fn mime_comment(name: &QString) -> QString;
-        #[cxx_name = "mimeIconName"]
-        fn mime_icon_name(name: &QString) -> QString;
-        #[cxx_name = "mimeGenericIconName"]
-        fn mime_generic_icon_name(name: &QString) -> QString;
         #[cxx_name = "mimeInherits"]
         fn mime_inherits(name: &QString, parent: &QString) -> bool;
         #[cxx_name = "mimeAliases"]
@@ -248,18 +242,8 @@ pub mod mime {
     pub fn for_file(path: &str) -> String {
         ffi::mime_name_for_file(&qs(path)).to_string()
     }
-    /// Detects by file name only: cheap, for large listings.
-    pub fn for_file_name(name: &str) -> String {
-        ffi::mime_name_for_file_name(&qs(name)).to_string()
-    }
     pub fn comment(name: &str) -> String {
         ffi::mime_comment(&qs(name)).to_string()
-    }
-    pub fn icon_name(name: &str) -> String {
-        ffi::mime_icon_name(&qs(name)).to_string()
-    }
-    pub fn generic_icon_name(name: &str) -> String {
-        ffi::mime_generic_icon_name(&qs(name)).to_string()
     }
     pub fn inherits(name: &str, parent: &str) -> bool {
         ffi::mime_inherits(&qs(name), &qs(parent))
