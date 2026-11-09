@@ -1,12 +1,13 @@
 # File operations
 
-`core::FileOperations` (exposed to QML as `FileOperations`) does everything that changes
+`FileOperations` (`src/bridge/fileoperations.rs`, with the blocking work in
+`src/core/fileops.rs`) does everything that changes
 files: copy, move, rename, create, trash, delete, archives and the clipboard. It owns the
 undo stack and the progress object the operations modal and status bar watch.
 
 ## Running an operation
 
-Long operations (copy, move, delete, archives) run through `QtConcurrent::run`. They
+Long operations (copy, move, delete, archives) run on worker threads. They
 report through `FileOperationProgress` (`progress`, `statusText`, `running`) and finish with
 `operationFinished(success, message)`. `cancelOperation()` sets a flag that the copy loop
 checks between files.
@@ -41,7 +42,7 @@ Atlas uses the system clipboard so copy and paste work with other file managers:
 When the clipboard holds an image and no files (a screenshot, an image copied from a
 browser), `Ctrl+V` writes it as a PNG:
 
-1. `syncFromSystemClipboard()` reads the image from `QMimeData::imageData()`, or from the
+1. The clipboard sync (`clipboardRead` in `native/qthelpers.cpp`) reads the image from `QMimeData::imageData()`, or from the
    first of `image/png`, `image/jpeg`, `image/bmp`, `image/gif`, `image/webp` that
    decodes, and keeps it PNG-encoded.
 2. `pasteImage(dir)` writes `image.png`, or `image (1).png`, `image (2).png` and so on,
@@ -52,7 +53,7 @@ browser), `Ctrl+V` writes it as a PNG:
 
 Trashing follows the [FreeDesktop trash spec](https://specifications.freedesktop.org/trash-spec/latest/):
 
-- `TrashLocations::forSourceFile` picks the trash for the file's volume: the home trash
+- `trash::for_source_file` (`src/core/trash.rs`) picks the trash for the file's volume: the home trash
   (`~/.local/share/Trash`) for the home filesystem, `$topdir/.Trash/$uid` or
   `$topdir/.Trash-$uid` on other mounts.
 - Each file gets a `.trashinfo` with its original path and deletion date, so other file

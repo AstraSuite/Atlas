@@ -1,26 +1,33 @@
 # Architecture
 
-Atlas is one Qt 6 binary, `atlas`. C++ owns the filesystem, processes, settings and system
-integration; QML owns every pixel. This page describes how the two halves meet.
+Atlas is one binary, `atlas`, written in Rust on Qt 6 through [cxx-qt](https://github.com/KDAB/cxx-qt).
+Rust owns the filesystem, processes, settings and system integration; QML owns every pixel.
+This page describes how the two halves meet.
 
 ## Layout
 
 | Path | Contents |
 |------|----------|
-| `src/main.cpp` | Command-line parsing, singleton creation, QML context registration. |
-| `src/config/` | `Colours` (the Material 3 palette), `Tokens` (rounding, spacing, padding, fonts, animation) and the font builders. See [Theming](theming.md). |
-| `src/models/` | `FileSystemModel` and its `FileSystemEntry` rows: one directory listing, or search results. |
-| `src/controllers/` | `TabManager` and `TabItem`: tabs, split panes, per-tab history. |
-| `src/core/` | Services: file operations, MIME and app launching, places, drives, network mounts, git, media tools, thumbnails, icons, shortcuts, uploads. |
+| `src/main.rs`, `src/cli.rs` | Command-line parsing, application and engine setup. |
+| `src/bridge/` | Every QObject QML sees, one `#[cxx_qt::bridge]` per file: the services, `FileSystemModel`, `TabManager`, `Colours`. cxx-qt-build only accepts one source directory per QML module, so all bridges live here. |
+| `src/bridge/native.rs` | The bridge to `native/qthelpers.h`, plus helpers for strings, JSON to `QVariant`, settings and MIME lookups. |
+| `src/bridge/registry.rs` | Pointers to the singletons that other services call. |
+| `src/core/` | Plain Rust with no Qt types: paths and XDG dirs, mounts, the trash spec, recent files, desktop entries and process launching, EXIF, the inotify watcher, listing rows, and the blocking file operations. |
+| `native/theme/` | `Tokens` and the font builders, in C++: they expose `QEasingCurve` and `QFont` gadget values, which cxx-qt cannot express. See [Theming](theming.md). |
+| `native/providers/` | The `image://icon` and `image://thumb` image providers, in C++. |
+| `native/qthelpers.*` | The Qt facilities Rust calls into: `QSettings`, the MIME database, theme icons, `QLocale` dates, `QKeySequence`, the clipboard and native drags. |
+| `native/register.cpp` | Installs the image providers and the `Tokens` singleton on the engine. |
+| `build.rs` | Compiles every `.qml` file into the `atlas` QML module and embeds the assets, at the same `qrc:/qt/qml/atlas/...` paths the old CMake build used. |
 | `qml/main.qml` | The window, the tab/split container, every modal, and the global shortcuts. |
 | `qml/components/` | The component library and the feature UI, grouped by folder (`views`, `navigation`, `dialogs`, `menus`, `panels`, `media`, `settings`, `controls`, `containers`). |
-| `assets/` | Fonts, the icon, the desktop entry and the Material Symbols name list, compiled in as Qt resources. |
+| `assets/` | Fonts, the icon, the desktop entry and the Material Symbols name list. |
 
 ## Startup
 
-`main.cpp` sets a 32-bit RGBA surface format (to avoid RGB565 banding), copies settings from
-the old `prism` organisation on first run, and registers the bundled fonts. It then parses
-the command line:
+`main.rs` parses the command line, sets a 32-bit RGBA surface format (to avoid RGB565
+banding), creates the application, copies settings from the old `prism` organisation on
+first run, and registers the bundled fonts. It then installs the image providers and
+`Tokens` on the engine and loads `qrc:/qt/qml/atlas/qml/main.qml`.
 
 | Option | Effect |
 |--------|--------|
@@ -29,59 +36,65 @@ the command line:
 | `--hidden` | Show hidden files, and remember it. |
 | `--light`, `--dark` | Force a palette instead of following Caelestia's scheme. |
 
-Every service is created next, so `TabManager` can restore tabs before QML loads. Last,
-the singletons are attached to the root context and `qrc:/qt/qml/atlas/qml/main.qml` is
-loaded.
+The options are kept in `cli::options()`. Services read them as the QML engine creates
+them: `TabManager` opens the given folder in its current tab, `AppController` applies
+`--hidden`, and `Colours` applies `--light`/`--dark`.
 
-## Exposing C++ to QML
+## Exposing Rust to QML
 
-Services are process-wide singletons reached through `instance()`. Their headers declare
-`QML_ELEMENT`/`QML_SINGLETON`, so they are part of the `atlas` QML module, and `main.cpp`
-also sets most of them as context properties. Either way, QML refers to them by name:
+Every service is a QML singleton in the `atlas` module (`#[qml_element]` and
+`#[qml_singleton]`), created by the engine the first time QML uses it. QML files reach
+them with `import atlas`:
 
-| Name | Class | Role |
-|------|-------|------|
-| `AppController` | `core::AppController` | Preferences and remembered UI state. |
-| `TabManager` | `controllers::TabManager` | Tabs, splits, the current path of each pane. |
-| `FileOperations` | `core::FileOperations` | Copy, move, trash, clipboard, undo, archives. See [File operations](file-operations.md). |
-| `FileUtils` | `core::FileUtils` | Static helpers: formatting, path expansion and completion, MIME and icon lookup. |
-| `AppIntegration` | `core::AppIntegration` | Opening and running files, terminals, custom actions, Papirus. See [Opening files](opening-files.md). |
-| `PlacesModel` | `core::PlacesModel` | The sidebar's places and bookmarks. |
-| `DriveManager` | `core::DriveManager` | Drives and partitions through `udisks2`. |
-| `NetworkManager` | `core::NetworkManager` | SFTP, SMB, FTP, NFS and WebDAV mounts through `gio`/GVFS. |
-| `MediaTools` | `core::MediaTools` | `ffmpeg` and ImageMagick conversions. |
-| `CatboxUploader` | `core::CatboxUploader` | Uploads to catbox.moe and litterbox. |
-| `ShortcutManager` | `core::ShortcutManager` | The shortcut registry. See [Shortcuts](shortcuts.md). |
-| `PapirusWatcher` | `core::PapirusWatcher` | Reloads icons when the Papirus folder colour changes. |
-| `Colours`, `Tokens` | `config::*` | The palette and design tokens. |
-| `RunnerGame` | `core::RunnerGame` | The offline runner game easter egg. |
-| `MimeService` | `core::MimeService` | Default applications and Open With. Module singleton only. |
-| `GitManager` | `core::GitManager` | Branch and status for the git modal. Module singleton only. |
-| `IconCatalog` | `core::IconCatalog` | Searchable Material Symbols names for the icon picker. Module singleton only. |
+| Name | Bridge | Role |
+|------|--------|------|
+| `AppController` | `appcontroller.rs` | Preferences and remembered UI state. |
+| `TabManager` | `tabmanager.rs` | Tabs, splits, the current path of each pane. |
+| `FileOperations` | `fileoperations.rs` | Copy, move, trash, clipboard, undo, archives. See [File operations](file-operations.md). |
+| `FileUtils` | `fileutils.rs` | Formatting, path expansion and completion, MIME and icon lookup. |
+| `AppIntegration` | `appintegration.rs` | Opening and running files, terminals, custom actions, Papirus. See [Opening files](opening-files.md). |
+| `PlacesModel` | `placesmodel.rs` | The sidebar's places and bookmarks. |
+| `DriveManager` | `drivemanager.rs` | Drives and partitions through `udisks2`. |
+| `NetworkManager` | `networkmanager.rs` | SFTP, SMB, FTP, NFS and WebDAV mounts through `gio`/GVFS. |
+| `MediaTools` | `mediatools.rs` | `ffmpeg` and ImageMagick conversions. |
+| `CatboxUploader` | `catboxuploader.rs` | Uploads to catbox.moe and litterbox. |
+| `ShortcutManager` | `shortcutmanager.rs` | The shortcut registry. See [Shortcuts](shortcuts.md). |
+| `PapirusWatcher` | `papiruswatcher.rs` | Reloads icons when the Papirus folder colour changes. |
+| `Colours` | `colours.rs` | The palette. See [Theming](theming.md). |
+| `Tokens` | `native/theme/tokens.hpp` | Rounding, spacing, padding, fonts and motion. |
+| `RunnerGame` | `runnergame.rs` | The offline runner game easter egg. |
+| `MimeService` | `mimeservice.rs` | Default applications and Open With. |
+| `GitManager` | `gitmanager.rs` | Branch and status for the git modal. |
+| `IconCatalog` | `iconcatalog.rs` | Searchable Material Symbols names for the icon picker. |
 
-`FileMetadata` (the properties dialog and preview panel) is a plain QML type, created per
-use.
+`FileMetadata` (the properties dialog and preview panel), `FileSystemModel` and
+`CircularIndicatorManager` are plain QML types, created per use. `SplitViewContainer`
+creates one `FileSystemModel` per pane, so a split tab has two. Rows are
+`FileSystemEntry` objects, tabs are `TabItem` objects; Rust creates both as children of
+their model through `native/qobjectfactory.h`.
+
+cxx-qt invokables cannot have default arguments, so where QML calls a method with fewer
+arguments, the bridge declares one overload per arity under the same `cxx_name` (for
+example `TabManager.newTab()`, `newTab(path)` and `newTab(path, activate)`).
 
 Two image providers are registered too: `image://icon/<name>` resolves theme icons and
 `image://thumb/<path>` produces thumbnails (see below).
 
-`FileSystemModel` is registered as a QML type rather than a singleton. `SplitViewContainer`
-creates one per pane and binds its `path` to that pane's `TabItem`, so a split tab has two
-models.
-
 ## Threads
 
-The UI thread runs QML and all model state. Anything that can block runs elsewhere:
+The UI thread runs QML and all model state. Anything that can block runs on a worker
+thread and hands its result back with cxx-qt's `qt_thread().queue(...)`:
 
-- Directory scans and recursive search in `FileSystemModel` run through
-  `QtConcurrent::run`. Results are posted back with `QMetaObject::invokeMethod` and
-  dropped if the path or query changed in the meantime.
-- File operations run on worker threads and report through `FileOperationProgress`
-  objects, which drive the operations modal and the status bar.
-- External tools (`git`, `ffmpeg`, `magick`, `gio`, `udisksctl`, archivers) run as
-  `QProcess`es and report through signals.
-- Thumbnails are a `QQuickAsyncImageProvider`. Each request runs on the global thread
-  pool, checks a 200-entry in-memory LRU, then a PNG disk cache in
+- Directory scans and recursive search in `FileSystemModel`. Results are dropped if the
+  path or query changed in the meantime (a generation counter).
+- File operations, which report through the `FileOperationProgress` object that drives the
+  operations modal and the status bar.
+- External tools (`git`, `ffmpeg`, `ffprobe`, `magick`, `gio`, `udisksctl`, `lsblk`,
+  archivers) and uploads.
+- Change notification: `core::watcher` wraps inotify for folders and settings files, and
+  `DriveManager` watches `/proc/self/mounts` for mount changes.
+- Thumbnails are a C++ `QQuickAsyncImageProvider`. Each request runs on a thread pool,
+  checks a 200-entry in-memory LRU, then a PNG disk cache in
   `~/.cache/astra-atlas/atlas/thumbnails`, and only then decodes the file (with
   `ffmpegthumbnailer` for videos).
 
@@ -114,6 +127,6 @@ missing, so settings from before the rename still load.
 ## Easter eggs
 
 `atlas://` addresses typed in the address bar go to
-`AppIntegration::handleCustomProtocol`, which returns an id that `main.qml` turns into a
+`AppIntegration.handleCustomProtocol`, which returns an id that `main.qml` turns into a
 hidden overlay (`VectorBloomOverlay`, `RunnerGameModal`). The addresses are obfuscated in
 the source on purpose.

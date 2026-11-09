@@ -2,7 +2,7 @@
 
 The context menu can run user scripts and service-menu actions, alongside entries Atlas
 adds for tools it finds installed. Everything is collected by
-`AppIntegration::scanCustomActions`, which runs each time the menu opens, so a new script
+`scan_custom_actions` in `src/bridge/appintegration.rs`, which runs each time the menu opens, so a new script
 shows up without restarting.
 
 ## Detected tools

@@ -365,10 +365,9 @@ impl cxx_qt::Initialize for Colours {
         }
         self.as_mut().reload();
 
-        // A forced --light/--dark wins over the scheme file.
+        // A forced --light/--dark lasts until the scheme file next changes.
         if let Some(light) = crate::cli::options().force_light {
             self.as_mut().set_light(light);
-            return;
         }
 
         let thread = self.qt_thread();

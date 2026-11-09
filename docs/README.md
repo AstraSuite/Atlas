@@ -5,7 +5,7 @@ are for people working on it.
 
 - [Contributing](CONTRIBUTING.md): getting set up, building, the CI checks, and the
   conventions a change should follow.
-- [Architecture](architecture.md): how the C++ singletons and the QML tree fit together,
+- [Architecture](architecture.md): how the Rust services, the native C++ layer and the QML tree fit together,
   where state is stored, and what runs off the UI thread.
 - [Navigation](navigation.md): the address bar, search, the three file views and
   type-ahead.

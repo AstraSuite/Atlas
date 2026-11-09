@@ -8,20 +8,10 @@ on:
 
 jobs:
   build:
+    name: Build and start
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: with Exiv2
-            exiv2: true
-          - name: without Exiv2
-            exiv2: false
-
-    name: Build ${{ matrix.name }}
 
     steps:
       - name: Install dependencies
@@ -30,33 +20,30 @@ jobs:
           pacman -S --noconfirm --needed \
             base-devel \
             git \
-            cmake \
-            ninja \
+            rust \
             qt6-base \
             qt6-declarative \
             qt6-multimedia \
-            qt6-shadertools \
             qt6-svg
-          if [ "${{ matrix.exiv2 }}" = "true" ]; then
-            pacman -S --noconfirm --needed exiv2
-          fi
 
       - name: Mark git safe directory
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - uses: actions/checkout@v4
 
-      - name: Configure
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: cmake --build build
+        run: cargo build --release --locked
+
+      - name: Test
+        run: cargo test --release --locked
 
       - name: Start without QML errors
         run: |
           set -o pipefail
           QT_QPA_PLATFORM=offscreen QT_LOGGING_TO_CONSOLE=1 \
-            timeout 20 ./build/bin/atlas "$HOME" > run.log 2>&1 || true
+            timeout 20 ./target/release/atlas "$HOME" > run.log 2>&1 || true
 
           if grep -aiE '\.qml:[0-9]+.*(error|is not a type|Cannot |Unable to assign|TypeError)|binding loop' run.log; then
             echo "::error::QML errors on startup, see the matches above"

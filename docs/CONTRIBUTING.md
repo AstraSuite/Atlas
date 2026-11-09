@@ -5,27 +5,27 @@ checks, and the conventions the codebase follows.
 
 ## Setting up
 
-You need a C++20 compiler (GCC 11+ or Clang 14+), CMake 3.19+, Ninja, pkg-config and the
-Qt 6.5+ development packages listed in the [README](../README.md). Exiv2's development
-package is optional: without it Atlas builds without EXIF metadata.
+You need a stable Rust toolchain, a C++ compiler, and the Qt 6.5+ development packages
+listed in the [README](../README.md), with `qmake6` on `PATH` (or `QMAKE` set).
 
 ```sh
 git clone https://github.com/AstraSuite/Atlas
 cd Atlas
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build
+cargo build --release
 ```
 
-The binary lands in `build/bin/atlas`. QML is compiled into the binary as the `atlas` QML
-module, so every new `.qml` file (and every new `.cpp`/`.hpp`) has to be listed in
-`CMakeLists.txt` or it won't be found at runtime.
+The binary lands in `target/release/atlas` (`target/debug/atlas` without `--release`).
+`build.rs` picks things up on its own: every `.qml` file under `qml/` is compiled into the
+`atlas` QML module, and every file in `src/bridge/` containing a `cxx_qt::bridge` is
+generated. Two lists in `build.rs` are kept by hand: `NATIVE` (the C++ files in `native/`)
+and `RESOURCES` (non-QML files embedded in the binary, such as fonts and sounds).
 
 ## Running your build
 
 ```sh
-./build/bin/atlas                # opens the startup directory from Preferences
-./build/bin/atlas ~/Downloads    # or a given folder; a file opens its parent
-./build/bin/atlas --dark --hidden # force the dark palette and show dotfiles
+./target/release/atlas                 # opens the startup directory from Preferences
+./target/release/atlas ~/Downloads     # or a given folder; a file opens its parent
+./target/release/atlas --dark --hidden # force the dark palette and show dotfiles
 ```
 
 Your development build shares settings with an installed Atlas
@@ -33,18 +33,19 @@ Your development build shares settings with an installed Atlas
 
 ## Version
 
-`CMakeLists.txt` takes the version from the latest `v*` git tag. Without a tag it uses
-`0.<YYYYMMDD>` of the last commit, since CMake only accepts numeric components. Pass
-`-DATLAS_VERSION=X.Y.Z` to pin it.
+`build.rs` takes the version from the latest `v*` git tag. Without a tag it uses
+`0.<YYYYMMDD>` of the last commit. Set `ATLAS_VERSION=X.Y.Z` in the environment to pin it.
+`Cargo.toml`'s own version is only the last fallback.
 
 ## CI
 
-`.github/workflows/build.yml` builds on Arch Linux twice, with and without Exiv2, then
-starts Atlas offscreen for 20 seconds and fails on any QML error or binding loop in the
+`.github/workflows/build.yml` builds on Arch Linux, runs `cargo test`, then starts Atlas
+offscreen for 20 seconds and fails on any QML error or binding loop in the
 log. Run the same check before opening a pull request:
 
 ```sh
-QT_QPA_PLATFORM=offscreen QT_LOGGING_TO_CONSOLE=1 timeout 20 ./build/bin/atlas "$HOME" > run.log 2>&1
+cargo test
+QT_QPA_PLATFORM=offscreen QT_LOGGING_TO_CONSOLE=1 timeout 20 ./target/release/atlas "$HOME" > run.log 2>&1
 grep -aiE '\.qml:[0-9]+.*(error|is not a type|Cannot |Unable to assign|TypeError)|binding loop' run.log
 ```
 
@@ -58,7 +59,7 @@ GitHub release with generated notes.
 
 1. Branch off `main`.
 2. Keep each change to one feature or fix. A new preference usually touches three places:
-   a `Q_PROPERTY` and setter in `AppController`, the code reading it, and its row in
+   a row in the property table at the top of `src/bridge/appcontroller.rs`, the code reading it, and its row in
    `PreferencesModal.qml`. A new global shortcut is described in
    [Shortcuts](shortcuts.md#adding-an-action).
 3. Try it in the real app, in light and dark, and in each view mode it affects.
@@ -86,20 +87,28 @@ Comments explain why code is there or how something non-obvious works, not what 
 line does. A spec quirk, a workaround for a Qt or `xdg-open` behaviour, or a reason a
 simpler approach fails is worth a comment. Longer explanations belong in `docs/`.
 
-### C++
+### Rust and C++
 
-- Everything lives in the `atlas::` namespaces (`atlas::core`, `atlas::models`,
-  `atlas::controllers`, `atlas::config`).
-- Services are singletons with `instance()` and are exposed to QML as context properties
-  in `src/main.cpp`. See [Architecture](architecture.md).
-- Settings go through `QSettings("astra-atlas", "atlas")`. Group keys under `session/`
-  (remembered state), `preferences/` (user choices), or the feature's own group. Structured
-  values are stored as compact JSON strings.
-- Filesystem walks, process output and image decoding run off the UI thread through
-  `QtConcurrent::run`, then hand results back with `QMetaObject::invokeMethod`. Check the
-  result is still wanted before applying it (see `FileSystemModel::performSearch`).
-- Paths passed to a shell are quoted with `shellQuote`. Prefer `QProcess` with an argument
-  list over `sh -c`.
+- QObjects live in `src/bridge/`, one bridge per file; logic with no Qt types belongs in
+  `src/core/` so it can be unit tested. See [Architecture](architecture.md).
+- New services are QML singletons (`#[qml_element]`, `#[qml_singleton]`). QML files that use
+  them need `import atlas`. A service other services call records itself in
+  `src/bridge/registry.rs` from its `cxx_qt::Initialize` impl.
+- cxx-qt invokables have no default arguments. When QML calls a method with fewer
+  arguments, add an overload with the same `cxx_name` for each arity.
+- Settings go through `bridge::native::settings`, which wraps
+  `QSettings("astra-atlas", "atlas")` so `atlas.conf` keeps its format. Group keys under
+  `session/` (remembered state), `preferences/` (user choices), or the feature's own group.
+  Structured values are stored as compact JSON strings.
+- Filesystem walks, process output and network calls run on a worker thread, then hand
+  results back with `self.qt_thread().queue(...)`. Check the result is still wanted before
+  applying it (see `FileSystemModel::perform_search`).
+- Paths passed to a shell are quoted with `desktop::shell_quote`. Prefer
+  `std::process::Command` with an argument list over `sh -c`.
+- Keep C++ to `native/`: only what needs Qt types cxx-qt can't bind (image providers,
+  `QEasingCurve`/`QFont` gadgets, `QPainter`, `QDrag`) or a Qt service with no Rust
+  equivalent (`QSettings`, `QMimeDatabase`, `QIcon` themes).
+- Run `cargo test` for anything in `src/core/`, and keep the build free of warnings.
 
 ### QML
 

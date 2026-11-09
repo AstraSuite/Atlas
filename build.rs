@@ -120,7 +120,6 @@ fn main() {
         .files(bridges())
         .cpp_files(NATIVE.iter().map(|f| repo_root.join(f)))
         .qt_module("Quick")
-        .qt_module("Multimedia")
         .qrc(qrc);
     // SAFETY: only adds an include path for the native/ headers.
     let builder = unsafe {

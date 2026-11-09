@@ -4,28 +4,19 @@
 
 <h1 align="center">Atlas</h1>
 
-Atlas is a fast, lightweight Material Design 3 file manager built with Qt 6 and QML.
+Atlas is a fast, lightweight Material Design 3 file manager built with Rust, Qt 6 and QML.
 
 ## Dependencies
 
 ### Build Dependencies (Required)
 
-- C++20 compiler: GCC 11+ or Clang 14+
-- CMake 3.19+
-- Ninja build system
-- pkg-config
-- Qt 6.5+ development packages:
+- Rust (stable toolchain) and Cargo
+- A C++17 compiler (GCC or Clang) for the small native layer and cxx-qt's generated code
+- Qt 6.5+ development packages, with `qmake6` on `PATH` (or `QMAKE` set):
   - `Qt6Core`
   - `Qt6Gui`
   - `Qt6Qml`
   - `Qt6Quick`
-  - `Qt6QuickControls2`
-  - `Qt6QuickEffects`
-  - `Qt6Concurrent`
-  - `Qt6Svg`
-  - `Qt6Multimedia`
-  - `Qt6Network`
-  - `Qt6DBus`
 
 ### Runtime Dependencies (Required)
 
@@ -35,8 +26,6 @@ Atlas is a fast, lightweight Material Design 3 file manager built with Qt 6 and 
   - `qt6-quickeffects`
   - `qt6-svg`
   - `qt6-multimedia`
-  - `qt6-network`
-  - `qt6-dbus`
 
 ### Optional Dependencies
 
@@ -45,41 +34,41 @@ Atlas is a fast, lightweight Material Design 3 file manager built with Qt 6 and 
 - `gio`: command-line URI mounting and volume management
 - `xdg-utils`: default application launching via `xdg-open`
 - `git`: inline repository status, branch tracking, and Git modal operations
-- `ffmpeg`: media tools for video and audio (trim/clip, format conversion, rotate/flip)
+- `ffmpeg`: media tools for video and audio (trim/clip, format conversion, rotate/flip), and `ffprobe` for audio and video details in the preview panel and properties dialog
 - `imagemagick`: image conversion in the Media Tools menu (supports any readable format, including SVG, PDF, HEIC)
-- `exiv2` (development package at build time): EXIF metadata display for photos in the preview panel and properties dialog; builds without it when absent
+- `exiv2`: editing the EXIF comment of a photo in the properties dialog (reading EXIF needs nothing extra)
 - `caelestia-cli`: dynamic color palette and accent syncing with Caelestia
 - `papirus-icon-theme` and `papirus-folders`: dynamic folder color and system icon theme integration
 - Archive tools: `p7zip`, `tar`, `gzip`, `bzip2`, `xz`, `zip`, `unzip` for archive extraction and compression
 
 ## Build Instructions
 
-```bash
-# Configure
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+Atlas is written in Rust on Qt 6 through [cxx-qt](https://github.com/KDAB/cxx-qt). The QML,
+fonts and assets are compiled into a single `atlas` binary.
 
+```bash
 # Build
-cmake --build build
+cargo build --release
 
 # Run file manager locally
-./build/bin/atlas
+./target/release/atlas
 ```
 
 ## Installation
 
 ```bash
-# Install system-wide: installs atlas and its desktop entry
-sudo cmake --install build
+# Build as your user first, then install the binary, its desktop entry and its icon
+cargo build --release
+sudo make install
 
 # Or install to a custom prefix
-cmake --install build --prefix ~/.local
+make install PREFIX=~/.local
 ```
 
 ### Uninstallation
 
 ```bash
-# Remove all installed files recorded in the build manifest
-sudo xargs rm -fv < build/install_manifest.txt
+sudo make uninstall
 ```
 
 ## Documentation

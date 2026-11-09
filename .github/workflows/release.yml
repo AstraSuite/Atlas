@@ -22,14 +22,11 @@ jobs:
           pacman -S --noconfirm --needed \
             base-devel \
             git \
-            cmake \
-            ninja \
+            rust \
             qt6-base \
             qt6-declarative \
             qt6-multimedia \
-            qt6-shadertools \
-            qt6-svg \
-            exiv2
+            qt6-svg
 
       - name: Mark git safe directory
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -38,11 +35,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-
       - name: Build
-        run: cmake --build build
+        run: cargo build --release --locked
 
       - name: Stage release artifacts
         shell: bash
@@ -51,7 +45,7 @@ jobs:
           tag="${GITHUB_REF_NAME}"
           version="${tag#v}"
 
-          cp -v build/bin/atlas "astra-atlas-${tag}"
+          cp -v target/release/atlas "astra-atlas-${tag}"
           git archive --format=tar.gz --prefix="astra-atlas-${version}/" -o "astra-atlas-${version}.tar.gz" "${tag}"
 
           echo "ARTIFACTS<<EOF" >> "$GITHUB_ENV"

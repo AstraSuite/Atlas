@@ -58,3 +58,18 @@ You may obtain a copy of the License at
 
 - **Copyright:** Google LLC
 - **License:** SIL Open Font License, Version 1.1
+
+---
+
+### 4. Rust crates
+
+- **Copyright:** their respective authors
+- **License:** MIT, Apache-2.0, or dual MIT/Apache-2.0 (each crate's license is in its
+  `Cargo.toml`)
+
+The binary statically links the crates listed in `Cargo.lock`, among them
+[cxx](https://github.com/dtolnay/cxx) and [cxx-qt](https://github.com/KDAB/cxx-qt) (Qt
+bindings), [serde_json](https://github.com/serde-rs/json),
+[kamadak-exif](https://github.com/kamadak/exif-rs) (EXIF metadata),
+[ureq](https://github.com/algesten/ureq) (uploads) and
+[quick-xml](https://github.com/tafia/quick-xml) (bookmarks and recent files).

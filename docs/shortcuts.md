@@ -7,14 +7,14 @@ add an action.
 ## How it fits together
 
 ```
-ShortcutManager (C++)          AppShortcut (QML)               main.qml
+ShortcutManager (Rust)         AppShortcut (QML)               main.qml
   id → default keys      ──▶     actionId: "edit.paste"   ──▶    onActivated: paste…
   + user overrides               sequences from bindings
 ```
 
-- `src/core/shortcutmanager.cpp` holds the registry: for every action a stable id, label,
+- `src/bridge/shortcutmanager.rs` holds the registry: for every action a stable id, label,
   description, category, Material Symbols icon and default key sequences. The order of
-  `defaultActions()` is the order of the settings page.
+  `ACTIONS` is the order of the settings page.
 - `qml/components/AppShortcut.qml` wraps a Qt `Shortcut` with
   `context: Qt.ApplicationShortcut`. It takes an `actionId`, reads its sequences from
   `ShortcutManager.bindings`, and has an `active` property for extra gating, such as "no
@@ -71,7 +71,7 @@ they must not fire while a text field has focus or only make sense in one place:
 
 ## Adding an action
 
-1. Add an entry to `defaultActions()` in `src/core/shortcutmanager.cpp`, in the category
+1. Add an entry to `ACTIONS` in `src/bridge/shortcutmanager.rs`, in the category
    it belongs to. Ids are `<category>.<camelCase>` and must never change once released,
    since saved overrides refer to them.
 2. Add an `AppShortcut` to `qml/main.qml` with that `actionId` and the behaviour in

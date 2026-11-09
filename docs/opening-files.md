@@ -1,20 +1,20 @@
 # Opening files
 
 What happens when a file is double-clicked, picked from Open With, or is itself a program.
-The code is in `core::MimeService` (`src/core/mimeservice.cpp`) and
-`core::AppIntegration` (`src/core/appintegration.cpp`).
+The code is in `MimeService` (`src/bridge/mimeservice.rs`) and `AppIntegration`
+(`src/bridge/appintegration.rs`), with desktop entry parsing in `src/core/desktop.rs`.
 
 ## Opening with the default application
 
-`AppIntegration::openWithDefault` resolves the handler itself and launches it through
-`MimeService::openWith`, the same path the Open With dialog uses. It does not hand the file
+`AppIntegration.openWithDefault` resolves the handler itself and launches it through
+`MimeService.openWith`, the same path the Open With dialog uses. It does not hand the file
 to `xdg-open` or `QDesktopServices`: when an association only exists under
 `[Added Associations]`, or the desktop's handler cache is stale, `xdg-open` shows its "choose
 an application" prompt even though a good handler exists. `xdg-open` also ignores
 `Terminal=true`. Only when Atlas finds no handler at all does it fall back to
-`QDesktopServices::openUrl`.
+`xdg-open`.
 
-`MimeService::getDefaultApp(mime)` looks in this order and takes the first hit:
+`MimeService.getDefaultApp(mime)` looks in this order and takes the first hit:
 
 1. `~/.config/mimeapps.list`: `[Default Applications]`, then the first entry of
    `[Added Associations]`. `[Removed Associations]` is remembered for the later steps.
@@ -29,7 +29,7 @@ A handler listed under `[Removed Associations]` is skipped. Desktop files are lo
 
 ## Open With
 
-`MimeService::getApplicationsForFile` returns every application, recommended ones (those
+`MimeService.getApplicationsForFile` returns every application, recommended ones (those
 declaring the file's MIME type) first. Applications with `NoDisplay=true` are hidden from
 launchers but are included when they declare the file's type explicitly: swappy, for
 example, ships `NoDisplay=true` with `MimeType=image/png;image/jpeg;`, and is a perfectly
@@ -40,7 +40,7 @@ containing `;` and `,`.
 
 ### Setting a default
 
-*Always use this application* calls `MimeService::setDefaultApp(mime, desktopId)`. It
+*Always use this application* calls `MimeService.setDefaultApp(mime, desktopId)`. It
 registers the application for the chosen type and for every other type in the same group
 that the application declares: picking an image viewer for a PNG also makes it the default
 for the JPEG, WebP and other `image/*` types it lists. Otherwise a later choice for one
@@ -60,7 +60,7 @@ warning that the new default may appear not to work.
 ## Terminal applications
 
 An application with `Terminal=true` (micro, nvim, htop) needs a terminal to run in.
-`MimeService::openWith` launches it as `<terminal> -e <program> <args> <file>`.
+`MimeService.openWith` launches it as `<terminal> -e <program> <args> <file>`.
 
 The terminal is `$TERMINAL` when set, otherwise the first installed of `foot`, `kitty`,
 `alacritty`, `ghostty`, `wezterm`, `konsole`, `gnome-terminal` and `xterm`. The same choice is
@@ -68,7 +68,7 @@ used for *Open in Terminal* (`F4`), which starts the terminal in the current fol
 
 ## Running programs
 
-Opening a file that `AppIntegration::isRunnable` accepts shows `RunFileModal` instead of
+Opening a file that `AppIntegration.isRunnable` accepts shows `RunFileModal` instead of
 opening it in an editor. A file is runnable when it has the executable bit and is an ELF
 executable, a shared library, a shell script, or a text file starting with `#!`. The
 modal offers to run it directly or in a terminal (`runExecutable(path, inTerminal)`), with

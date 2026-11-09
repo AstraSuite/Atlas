@@ -2,11 +2,11 @@
 
 Atlas follows Material Design 3, with tokens and components derived from
 [Caelestia Shell](https://github.com/caelestia-dots/shell). QML never uses literal colours,
-sizes or durations; it reads them from two C++ singletons, `Colours` and `Tokens`.
+sizes or durations; it reads them from two singletons, `Colours` (Rust) and `Tokens` (C++).
 
 ## Colours
 
-`config::ColoursSingleton` (`src/config/colours.cpp`) exposes:
+`Colours` (`src/bridge/colours.rs`) exposes:
 
 - `Colours.palette`: an `M3Palette` with every Material 3 role as an `m3`-prefixed colour
   property: `m3primary`, `m3onSurface`, `m3surfaceContainerHigh`, `m3outlineVariant` and so
@@ -27,17 +27,19 @@ writes when the wallpaper or theme changes:
 ```
 
 `mode` sets `Colours.light`, and each `colours` entry `<role>: <hex>` is written to
-`m3<role>` on both palettes. A `QFileSystemWatcher` on the file and on its folder (the file
+`m3<role>` on both palettes. An inotify watch on the file and on its folder (the file
 is often replaced rather than edited) reloads the scheme while Atlas runs, so it recolours
 with the rest of the desktop.
 
 Without Caelestia, or with `--light` / `--dark` on the command line, Atlas uses the
-built-in default palette for that mode (`M3Palette::loadDefaults`). A forced mode lasts
+built-in default palette for that mode (`M3Palette::load_defaults`). A forced mode lasts
 until the scheme file next changes.
 
 ## Tokens
 
-`config::TokensSingleton` groups the remaining design values:
+`TokensSingleton` (`native/theme/tokens.hpp`) groups the remaining design values. It stays
+in C++ because it hands QML `QEasingCurve` values and `QFont` builder gadgets, which cxx-qt
+cannot express:
 
 | Token | Contents |
 |-------|----------|
@@ -54,7 +56,8 @@ layers and the motion of the rest of the app.
 
 ## Fonts and symbols
 
-Two fonts are compiled into the binary and registered in `main.cpp`:
+Two fonts are compiled into the binary and registered at startup (`setupApplication` in
+`native/qthelpers.cpp`):
 
 - **Google Sans Flex** for all text. `FontBuilder` sets its variable axes (weight, width,
   grade) so one file covers every style.
