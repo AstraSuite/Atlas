@@ -67,13 +67,13 @@ StyledRect {
                     Canvas {
                         id: activeTabShape
                         anchors.fill: parent
-                        visible: tabItem.selected
+                        visible: tabItem.selected && !Colours.tty
                         antialiasing: true
                         smooth: true
 
                         Connections {
                             target: Colours.palette
-                            function onM3surfaceContainerChanged() { activeTabShape.requestPaint(); }
+                            function onPaletteChanged() { activeTabShape.requestPaint(); }
                         }
 
                         onPaint: {
@@ -111,6 +111,23 @@ StyledRect {
 
                         onWidthChanged: requestPaint()
                         onHeightChanged: requestPaint()
+                    }
+
+                    // TTY's active tab: a square cell underlined in the accent
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        visible: tabItem.selected && Colours.tty
+                        color: Colours.palette.m3surfaceContainerHighest
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            height: 2
+                            color: Colours.palette.m3primary
+                        }
                     }
 
                     // Inactive Tab Background

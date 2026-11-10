@@ -21,12 +21,23 @@ StyledRect {
     implicitWidth: sidebarWidth
     color: Colours.tPalette.m3surfaceContainer
 
+    // TTY: the whole sidebar is one box, its title where the header was
+    TtyBox {
+        anchors.fill: parent
+        anchors.leftMargin: 6
+        anchors.rightMargin: 4
+        anchors.bottomMargin: 6
+        anchors.topMargin: Tokens.padding.medium + Tokens.padding.extraSmall / 2 + placesHeader.height / 2
+        title: qsTr("places")
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: Tokens.padding.medium
         spacing: Tokens.spacing.extraSmall
 
         Item {
+            id: placesHeader
             Layout.fillWidth: true
             implicitHeight: 28
             Layout.topMargin: Tokens.padding.extraSmall / 2
@@ -34,6 +45,7 @@ StyledRect {
 
             StyledText {
                 anchors.centerIn: parent
+                visible: !Colours.tty
                 text: qsTr("Places")
                 color: Colours.palette.m3onSurface
                 font: Tokens.font.body.builders.large.weight(Font.Bold).build()
@@ -258,8 +270,18 @@ StyledRect {
                     Layout.topMargin: visible ? Tokens.spacing.medium : 0
                     Layout.bottomMargin: visible ? Tokens.spacing.extraSmall : 0
 
+                    TtyRule {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.rightMargin: 34
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: Colours.tty
+                        title: qsTr("network")
+                    }
+
                     StyledText {
                         anchors.centerIn: parent
+                        visible: !Colours.tty
                         text: qsTr("Network")
                         color: Colours.palette.m3onSurface
                         font: Tokens.font.body.builders.large.weight(Font.Bold).build()
@@ -396,11 +418,19 @@ StyledRect {
                 }
 
                 // Section 3: Devices Header
+                TtyRule {
+                    Layout.fillWidth: true
+                    Layout.topMargin: Tokens.spacing.medium
+                    Layout.bottomMargin: Tokens.spacing.extraSmall
+                    visible: DriveManager.count > 0 && Colours.tty
+                    title: qsTr("devices")
+                }
+
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: Tokens.spacing.medium
                     Layout.bottomMargin: Tokens.spacing.extraSmall
-                    visible: DriveManager.count > 0
+                    visible: DriveManager.count > 0 && !Colours.tty
                     text: qsTr("Devices")
                     color: Colours.palette.m3onSurface
                     font: Tokens.font.body.builders.large.weight(Font.Bold).build()

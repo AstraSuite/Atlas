@@ -389,6 +389,7 @@ MouseArea {
                 width: Math.min(parent.width - 32, 720)
                 height: Math.min(parent.height - 32, 680)
                 radius: Tokens.rounding.large
+                ttyFrame: true
                 color: Colours.palette.m3surfaceContainer
 
                 scale: root.expanded ? 1.0 : 0.94

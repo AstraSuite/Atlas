@@ -63,6 +63,7 @@ MouseArea {
         implicitHeight: 600
 
         radius: Tokens.rounding.large
+        ttyFrame: true
         color: Colours.palette.m3surfaceContainerHigh
 
         scale: root.expanded ? 1.0 : 0.94

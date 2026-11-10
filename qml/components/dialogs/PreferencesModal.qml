@@ -91,6 +91,19 @@ MouseArea {
             text: qsTr("Custom")
         }
     ]
+    // Index = Colours.style: follow KiiteShell, Material 3, TTY
+    readonly property list<MenuItem> styleItems: [
+        MenuItem {
+            text: qsTr("Follow KiiteShell")
+        },
+        MenuItem {
+            text: qsTr("Material 3")
+        },
+        MenuItem {
+            text: qsTr("TTY")
+        }
+    ]
+
     // Order matches dateFormatItems: ISO, Short, Long
     readonly property var dateFormatValues: [1, 0, 2, 3]
 
@@ -181,6 +194,7 @@ MouseArea {
                 implicitHeight: 660
 
                 radius: Tokens.rounding.large
+                ttyFrame: true
                 color: Colours.palette.m3surfaceContainerHigh
 
                 scale: root.expanded ? 1.0 : 0.94
@@ -284,6 +298,31 @@ MouseArea {
                                     id: tab0Col
                                     width: tab0Flickable.width
                                     spacing: Tokens.spacing.medium
+
+                                    StyledText {
+                                        text: qsTr("Appearance")
+                                        Layout.topMargin: Tokens.spacing.small
+                                        color: Colours.palette.m3primary
+                                        font: Tokens.font.label.large
+                                    }
+
+                                    SplitButtonRow {
+                                        first: true
+                                        last: true
+                                        label: qsTr("Style")
+                                        subtext: {
+                                            if (Colours.style !== 0)
+                                                return qsTr("Material 3 Expressive, or drawn like a terminal");
+                                            if (!Colours.kiiteAvailable)
+                                                return qsTr("KiiteShell isn't set up, so Material 3");
+                                            return Colours.tty ? qsTr("KiiteShell is using TTY") : qsTr("KiiteShell is using Material 3");
+                                        }
+                                        menuItems: root.styleItems
+                                        active: root.styleItems[Colours.style]
+                                        onSelected: item => Colours.style = root.styleItems.indexOf(item)
+                                    }
+
+                                    Item { implicitHeight: 4 }
 
                                     StyledText {
                                         text: qsTr("Startup Location")
@@ -656,6 +695,7 @@ MouseArea {
                                         Layout.fillWidth: true
                                         implicitHeight: 56
                                         radius: Tokens.rounding.large
+                                        ttyFrame: true
                                         color: Colours.tPalette.m3surfaceContainer
 
                                         RowLayout {

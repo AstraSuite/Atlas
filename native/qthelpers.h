@@ -22,6 +22,8 @@ void preApplicationSetup();
 void setupApplication(const QString& version);
 void installEngine(QQmlApplicationEngine& engine);
 void clearIconCache();
+// Switches Tokens to the TTY look (see TokensSingleton::setTty).
+void setTtyTokens(bool tty, const QString& preferredMono);
 
 // QSettings. scope 0 is ("astra-atlas", "atlas"); 1 and 2 are the legacy
 // ("caelestia", "prism") and ("Caelestia", "Prism") stores read for fallbacks.

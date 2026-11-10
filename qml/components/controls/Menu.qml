@@ -116,7 +116,8 @@ MouseArea {
         }
 
         radius: Tokens.rounding.large
-        level: 2
+        // TTY draws no shadows
+        level: Colours.tty ? 0 : 2
 
         implicitWidth: Math.max(200, column.implicitWidth + column.anchors.margins * 2)
         implicitHeight: column.implicitHeight + column.anchors.margins * 2
@@ -140,6 +141,7 @@ MouseArea {
             anchors.fill: parent
             radius: parent.radius
             color: Colours.palette.m3surfaceContainerLow
+            ttyFrame: true
 
             ColumnLayout {
                 id: column

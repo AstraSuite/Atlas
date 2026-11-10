@@ -2,6 +2,7 @@
 
 #include "atlas/src/bridge/native.cxx.h"
 #include "providers/iconprovider.hpp"
+#include "theme/tokens.hpp"
 
 #include <QBuffer>
 #include <QClipboard>
@@ -70,6 +71,10 @@ void setupApplication(const QString& version) {
 
 void clearIconCache() {
     atlas::core::IconImageProvider::clearCache();
+}
+
+void setTtyTokens(bool tty, const QString& preferredMono) {
+    atlas::config::TokensSingleton::instance()->setTty(tty, preferredMono);
 }
 
 // ---- QSettings ----

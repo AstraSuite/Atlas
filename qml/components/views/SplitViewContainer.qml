@@ -133,6 +133,8 @@ StyledRect {
     Item {
         anchors.fill: parent
         anchors.margins: Tokens.padding.extraSmall
+        // room for the TTY boxes' titles, which rise above their top edge
+        anchors.topMargin: Colours.tty ? 12 : Tokens.padding.extraSmall
 
         // Left / Main Pane
         StyledRect {
@@ -157,7 +159,7 @@ StyledRect {
                 height: 3
                 radius: 1.5
                 color: Colours.palette.m3primary
-                visible: root.isSplit && root.activePane === 0
+                visible: root.isSplit && root.activePane === 0 && !Colours.tty
                 z: 20
                 opacity: 0.95
             }
@@ -281,7 +283,7 @@ StyledRect {
                 height: 3
                 radius: 1.5
                 color: Colours.palette.m3primary
-                visible: root.isSplit && root.activePane === 1
+                visible: root.isSplit && root.activePane === 1 && !Colours.tty
                 z: 20
                 opacity: 0.95
             }
@@ -331,6 +333,29 @@ StyledRect {
                     root.createNewFile();
                 }
             }
+        }
+
+        // TTY: each pane is a box titled with its folder; the focused one
+        // has the brighter edge and the cursor
+        TtyBox {
+            x: pane1.x
+            y: pane1.y
+            width: pane1.width
+            height: pane1.height
+            z: 30
+            title: root.activeTab ? FileUtils.shortenHome(root.activeTab.currentPath) : ""
+            focused: !root.isSplit || root.activePane === 0
+        }
+
+        TtyBox {
+            x: pane2.x
+            y: pane2.y
+            width: pane2.width
+            height: pane2.height
+            z: 30
+            visible: Colours.tty && root.isSplit
+            title: root.activeTab ? FileUtils.shortenHome(root.activeTab.splitPath) : ""
+            focused: root.activePane === 1
         }
     }
 

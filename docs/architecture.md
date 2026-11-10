@@ -34,11 +34,12 @@ first run, and registers the bundled fonts. It then installs the image providers
 | `[path]` | Open this folder, or the folder containing this file. `file://` URLs work. |
 | `-d`, `--directory <dir>` | Same, as an option. |
 | `--hidden` | Show hidden files, and remember it. |
-| `--light`, `--dark` | Force a palette instead of following Caelestia's scheme. |
+| `--light`, `--dark` | Force a palette instead of following KiiteShell's or Caelestia's scheme. |
+| `--tty` | Use the TTY look for this run. See [Theming](theming.md#tty). |
 
 The options are kept in `cli::options()`. Services read them as the QML engine creates
 them: `TabManager` opens the given folder in its current tab, `AppController` applies
-`--hidden`, and `Colours` applies `--light`/`--dark`.
+`--hidden`, and `Colours` applies `--light`/`--dark` and `--tty`.
 
 ## Exposing Rust to QML
 

@@ -18,16 +18,44 @@ StyledRect {
     signal gitRequested()
     signal operationsRequested()
 
+    // TTY draws the status bar as a status line: text segments split by │,
+    // with the accent inverted at its end
+    readonly property string sep: Colours.tty ? "│  " : "•  "
+
     implicitHeight: statusRow.implicitHeight + Tokens.padding.extraSmall * 2
-    color: Colours.tPalette.m3surfaceContainer
+    color: Colours.tty ? Colours.palette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainer
+
+    Rectangle {
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 1
+        visible: Colours.tty
+        color: Colours.palette.m3outlineVariant
+    }
 
     RowLayout {
         id: statusRow
 
         anchors.fill: parent
-        anchors.leftMargin: Tokens.padding.medium
+        anchors.leftMargin: Colours.tty ? 0 : Tokens.padding.medium
         anchors.rightMargin: Tokens.padding.medium
         spacing: Tokens.spacing.medium
+
+        StyledRect {
+            visible: Colours.tty
+            Layout.fillHeight: true
+            implicitWidth: capText.implicitWidth + 20
+            color: Colours.palette.m3primary
+
+            StyledText {
+                id: capText
+                anchors.centerIn: parent
+                text: "atlas"
+                color: Colours.palette.m3onPrimary
+                font: Tokens.font.label.medium
+            }
+        }
 
         // Item Count
         StyledText {
@@ -39,7 +67,7 @@ StyledRect {
         // Directory Size
         StyledText {
             visible: root.activeModel && root.activeModel.directorySizeFormatted.length > 0
-            text: root.activeModel ? qsTr("•  %1 total").arg(root.activeModel.directorySizeFormatted) : ""
+            text: root.activeModel ? root.sep + qsTr("%1 total").arg(root.activeModel.directorySizeFormatted) : ""
             color: Colours.palette.m3onSurfaceVariant
             font: Tokens.font.label.medium
         }
@@ -51,8 +79,8 @@ StyledRect {
             text: {
                 const size = root.selectedSizeFormatted.length > 0 ? ` (${root.selectedSizeFormatted})` : "";
                 if (root.selectedCount === 1 && root.selectedName.length > 0)
-                    return qsTr("•  %1%2").arg(root.selectedName).arg(size);
-                return qsTr("•  %1 selected%2").arg(root.selectedCount).arg(size);
+                    return root.sep + qsTr("%1%2").arg(root.selectedName).arg(size);
+                return root.sep + qsTr("%1 selected%2").arg(root.selectedCount).arg(size);
             }
             color: Colours.palette.m3primary
             font: Tokens.font.label.medium
@@ -65,7 +93,7 @@ StyledRect {
                 if (!AppController.showFreeSpace || !root.activeTab)
                     return "";
                 const free = FileUtils.freeSpaceFor(root.activeTab.currentPath);
-                return free.length > 0 ? qsTr("•  %1 free").arg(free) : "";
+                return free.length > 0 ? root.sep + qsTr("%1 free").arg(free) : "";
             }
             color: Colours.palette.m3onSurfaceVariant
             font: Tokens.font.label.medium
@@ -196,6 +224,23 @@ StyledRect {
                     visible: zoomLargeHover.containsMouse
                     y: -height - Tokens.padding.extraSmall
                 }
+            }
+        }
+
+        // TTY shows a running file operation as a text bar
+        RowLayout {
+            visible: Colours.tty && FileOperations.progress.running
+            spacing: Tokens.spacing.small
+
+            TtyBar {
+                fraction: FileOperations.progress.progress
+                cells: 10
+            }
+
+            StyledText {
+                text: Math.round(FileOperations.progress.progress * 100) + "%"
+                color: Colours.palette.m3onSurfaceVariant
+                font: Tokens.font.label.medium
             }
         }
 

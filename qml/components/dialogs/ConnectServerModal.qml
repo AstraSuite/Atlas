@@ -92,6 +92,7 @@ MouseArea {
                 width: Math.min(parent.width - 32, 480)
                 height: Math.min(parent.height - 32, formCol.implicitHeight + headerRow.implicitHeight + actionRow.implicitHeight + (errorBanner.visible ? errorBanner.implicitHeight + Tokens.spacing.medium : 0) + Tokens.padding.large * 2 + Tokens.spacing.medium * 2)
                 radius: Tokens.rounding.large
+                ttyFrame: true
                 color: Colours.palette.m3surfaceContainer
 
                 scale: root.expanded ? 1.0 : 0.94

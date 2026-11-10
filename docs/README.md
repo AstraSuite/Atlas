@@ -16,5 +16,5 @@ are for people working on it.
 - [Opening files](opening-files.md): default applications, Open With, `mimeapps.list` and
   terminal applications.
 - [Custom actions](custom-actions.md): user scripts and service menus in the context menu.
-- [Theming](theming.md): the Material 3 palette, Caelestia's scheme, tokens, fonts and
-  Papirus folder colours.
+- [Theming](theming.md): the Material 3 palette, KiiteShell's and Caelestia's schemes,
+  the TTY look, tokens, fonts and Papirus folder colours.

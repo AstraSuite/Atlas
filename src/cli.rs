@@ -11,6 +11,8 @@ pub struct Options {
     pub show_hidden: bool,
     /// Some(true) for --light, Some(false) for --dark.
     pub force_light: Option<bool>,
+    /// --tty: the TTY look for this run, whatever the preference says.
+    pub force_tty: bool,
 }
 
 static OPTIONS: OnceLock<Options> = OnceLock::new();
@@ -29,6 +31,7 @@ Options:
   --hidden               Show hidden files by default
   --light                Force light theme
   --dark                 Force dark theme
+  --tty                  Use the TTY look for this run
 
 Arguments:
   path                   Directory or file path to open";
@@ -66,6 +69,7 @@ pub fn parse() {
             }
             "--hidden" => options.show_hidden = true,
             "--light" => options.force_light = Some(true),
+            "--tty" => options.force_tty = true,
             "--dark" => options.force_light = options.force_light.or(Some(false)),
             "-d" | "--directory" => match args.next() {
                 Some(dir) => {

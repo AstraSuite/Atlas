@@ -42,6 +42,7 @@ Item {
                 implicitHeight: 400
 
                 radius: Tokens.rounding.large
+                ttyFrame: true
                 color: Colours.palette.m3surfaceContainerHigh
 
                 visible: opacity > 0.001

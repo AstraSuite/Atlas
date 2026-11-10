@@ -37,7 +37,8 @@ Atlas is a fast, lightweight Material Design 3 file manager built with Rust, Qt 
 - `ffmpeg`: media tools for video and audio (trim/clip, format conversion, rotate/flip), and `ffprobe` for audio and video details in the preview panel and properties dialog
 - `imagemagick`: image conversion in the Media Tools menu (supports any readable format, including SVG, PDF, HEIC)
 - `exiv2`: editing the EXIF comment of a photo in the properties dialog (reading EXIF needs nothing extra)
-- `caelestia-cli`: dynamic color palette and accent syncing with Caelestia
+- [KiiteShell](https://github.com/Kiite-Org/KiiteShell): its wallpaper palette, and its TTY theme, which Atlas follows by default (Preferences → General → Style)
+- `caelestia-cli`: dynamic color palette and accent syncing with Caelestia, used when KiiteShell isn't
 - `papirus-icon-theme` and `papirus-folders`: dynamic folder color and system icon theme integration
 - Archive tools: `p7zip`, `tar`, `gzip`, `bzip2`, `xz`, `zip`, `unzip` for archive extraction and compression
 

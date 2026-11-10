@@ -76,6 +76,7 @@ MouseArea {
         implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
 
         radius: Tokens.rounding.large
+        ttyFrame: true
         color: Colours.palette.m3surfaceContainerLow
 
         scale: root.expanded ? 1.0 : 0.94
@@ -531,6 +532,7 @@ MouseArea {
         implicitHeight: submenuCol.implicitHeight + Tokens.padding.extraSmall * 2
 
         radius: Tokens.rounding.large
+        ttyFrame: true
         color: Colours.palette.m3surfaceContainerLow
 
         transformOrigin: openOnRight ? Item.TopLeft : Item.TopRight

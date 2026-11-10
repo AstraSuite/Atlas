@@ -57,9 +57,17 @@ StyledRect {
         }
     }
 
+    TtyBox {
+        anchors.fill: parent
+        anchors.margins: 4
+        anchors.topMargin: 12
+        title: qsTr("preview")
+    }
+
     Flickable {
         anchors.fill: parent
         anchors.margins: Tokens.padding.medium
+        anchors.topMargin: Colours.tty ? 26 : Tokens.padding.medium
         contentHeight: previewCol.implicitHeight
         clip: true
         boundsBehavior: Flickable.StopAtBounds

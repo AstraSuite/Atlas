@@ -1,10 +1,12 @@
 #include "tokens.hpp"
+#include <cmath>
 #include <QPointF>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QDir>
+#include <QFontDatabase>
 
 namespace atlas::config {
 
@@ -114,6 +116,27 @@ void AnimCurves::loadJson(const QJsonObject& json) {
     emit curvesChanged();
 }
 
+static qreal ttyStep(qreal progress) {
+    constexpr qreal steps = 4.0;
+    if (progress >= 1.0)
+        return 1.0;
+    return qMin(1.0, (std::floor(qMax(progress, 0.0) * (steps - 1.0)) + 1.0) / steps);
+}
+
+QEasingCurve AnimCurves::s_ttyCurve() {
+    QEasingCurve curve(QEasingCurve::Linear);
+    curve.setCustomType(ttyStep);
+    return curve;
+}
+
+void AnimCurves::setTty(bool tty) {
+    if (m_tty == tty)
+        return;
+    m_tty = tty;
+    m_durations->setTty(tty);
+    emit curvesChanged();
+}
+
 // TokensSingleton
 TokensSingleton::TokensSingleton(QObject* parent)
     : QObject(parent)
@@ -204,6 +227,34 @@ void TokensSingleton::loadShellConfigFile(const QString& filePath) {
                 m_font->icon()->setScale(scale);
             }
         }
+    }
+}
+
+// The monospace face TTY draws with: the one asked for when installed, else
+// the first of the usual terminal faces, as KiiteShell picks it.
+static QString pickMonoFace(const QString& preferred) {
+    const QStringList families = QFontDatabase::families();
+    const QStringList wanted = { preferred, "JetBrains Mono", "JetBrainsMono NF", "JetBrainsMono Nerd Font",
+                                 "JetBrains Mono NF", "Iosevka", "DejaVu Sans Mono", "Noto Sans Mono",
+                                 "Liberation Mono" };
+    for (const QString& w : wanted) {
+        if (!w.isEmpty() && families.contains(w))
+            return w;
+    }
+    return QStringLiteral("monospace");
+}
+
+void TokensSingleton::setTty(bool tty, const QString& preferredMono) {
+    m_tty = tty;
+    m_rounding->setSquared(tty);
+    m_anim->setTty(tty);
+    if (tty) {
+        const QString mono = pickMonoFace(preferredMono);
+        m_font->setFamily(mono);
+        m_font->mono()->setFamily(mono);
+    } else {
+        m_font->setFamily(QStringLiteral("Google Sans Flex"));
+        m_font->mono()->setFamily(QStringLiteral("monospace"));
     }
 }
 

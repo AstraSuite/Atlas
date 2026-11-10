@@ -124,6 +124,7 @@ Item {
         width: Math.min(parent.width - 48, 480)
         implicitHeight: boxContent.implicitHeight + 64
         radius: Tokens.rounding.extraLarge
+        ttyFrame: true
         color: Colours.palette.m3surfaceContainerHigh
 
         scale: root.isOpen ? 1 : 0.88

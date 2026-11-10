@@ -1,5 +1,7 @@
-//! Colours: the Material 3 palette, following Caelestia's generated scheme
-//! (~/.local/state/caelestia/scheme.json) when there is one.
+//! Colours: the Material 3 palette, following KiiteShell's generated scheme
+//! (~/.local/state/kiite/user/generated/colors.json), else Caelestia's
+//! (~/.local/state/caelestia/scheme.json), and the look: Material 3 or TTY,
+//! the latter as KiiteShell draws it.
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -134,20 +136,35 @@ pub mod qobject {
         #[qobject]
         #[qml_element]
         #[qml_singleton]
-        #[qproperty(bool, light, READ, WRITE = set_light, NOTIFY = light_changed)]
+        #[qproperty(bool, light, READ = is_light, WRITE = set_light, NOTIFY = light_changed)]
         #[qproperty(*mut M3Palette, palette, READ = palette, CONSTANT)]
         #[qproperty(*mut M3Palette, t_palette, cxx_name = "tPalette", READ = t_palette, CONSTANT)]
+        #[qproperty(i32, style, READ, WRITE = set_style, NOTIFY = style_changed)]
+        #[qproperty(bool, tty, READ, NOTIFY = tty_changed)]
+        #[qproperty(bool, kiite_available, cxx_name = "kiiteAvailable", READ = kiite_available, CONSTANT)]
         type Colours = super::ColoursRust;
 
         #[qsignal]
         #[cxx_name = "lightChanged"]
         fn light_changed(self: Pin<&mut Colours>);
+        #[qsignal]
+        #[cxx_name = "styleChanged"]
+        fn style_changed(self: Pin<&mut Colours>);
+        #[qsignal]
+        #[cxx_name = "ttyChanged"]
+        fn tty_changed(self: Pin<&mut Colours>);
 
+        #[cxx_name = "isLight"]
+        fn is_light(self: &Colours) -> bool;
         #[cxx_name = "setLight"]
         fn set_light(self: Pin<&mut Colours>, light: bool);
         fn palette(self: &Colours) -> *mut M3Palette;
         #[cxx_name = "tPalette"]
         fn t_palette(self: &Colours) -> *mut M3Palette;
+        #[cxx_name = "setStyle"]
+        fn set_style(self: Pin<&mut Colours>, style: i32);
+        #[cxx_name = "kiiteAvailable"]
+        fn kiite_available(self: &Colours) -> bool;
 
         #[qinvokable]
         fn reload(self: Pin<&mut Colours>);
@@ -157,6 +174,7 @@ pub mod qobject {
     impl cxx_qt::Constructor<()> for Colours {}
 }
 
+use crate::bridge::native::{self, qs, settings};
 use crate::core::paths;
 use crate::core::watcher::Watcher;
 use cxx_qt::{CxxQtType, Threading};
@@ -169,8 +187,14 @@ const NAMES: [&str; 36] = ["m3background", "m3onBackground", "m3surface", "m3sur
 const DARK: [&str; 36] = ["#191114", "#efdfe2", "#191114", "#191114", "#403739", "#130c0e", "#22191c", "#261d20", "#31282a", "#3c3235", "#efdfe2", "#514347", "#d5c2c6", "#efdfe2", "#372e30", "#9e8c91", "#514347", "#000000", "#000000", "#ffb0ca", "#ffb0ca", "#541d34", "#6f334a", "#ffd9e3", "#e2bdc7", "#422932", "#5a3f48", "#ffd9e3", "#f0bc95", "#48290c", "#b58763", "#000000", "#ffb4ab", "#690005", "#93000a", "#ffdad6"];
 const LIGHT: [&str; 36] = ["#fff8f8", "#22191c", "#fff8f8", "#e6dadc", "#fff8f8", "#ffffff", "#fcf1f3", "#f7ebed", "#f1e5e8", "#ebdfe2", "#22191c", "#f2dde2", "#514347", "#372e30", "#faeeef", "#837377", "#d5c2c6", "#000000", "#000000", "#8b4a62", "#8b4a62", "#ffffff", "#ffd9e3", "#39071f", "#745660", "#ffffff", "#ffd9e3", "#2b151d", "#7e5635", "#ffffff", "#ffdcc3", "#2f1500", "#ba1a1a", "#ffffff", "#ffdad6", "#410002"];
 
+/// `preferences/uiStyle`: follow KiiteShell's look, or pick one.
+const STYLE_FOLLOW_KIITE: i32 = 0;
+const STYLE_TTY: i32 = 2;
+
+type Rgba = [u8; 4];
+
 /// "#rrggbb" or "#aarrggbb", as QColor parses them.
-fn parse_hex(text: &str) -> Option<[u8; 4]> {
+fn parse_hex(text: &str) -> Option<Rgba> {
     let hex = text.strip_prefix('#')?;
     let byte = |i: usize| u8::from_str_radix(hex.get(i..i + 2)?, 16).ok();
     match hex.len() {
@@ -180,24 +204,153 @@ fn parse_hex(text: &str) -> Option<[u8; 4]> {
     }
 }
 
-fn defaults(light: bool) -> [[u8; 4]; 36] {
+fn defaults(light: bool) -> [Rgba; 36] {
     let source = if light { LIGHT } else { DARK };
     source.map(|c| parse_hex(c).unwrap())
 }
 
+/// TTY's neutrals, from KiiteShell's `look::ink`: tinted toward its default
+/// accent like a terminal scheme.
+mod ink {
+    pub const GROUND: [u8; 4] = [0x0b, 0x0e, 0x0d, 255];
+    pub const RAISED: [u8; 4] = [0x0f, 0x13, 0x12, 255];
+    pub const ROW: [u8; 4] = [0x16, 0x21, 0x1f, 255];
+    pub const TAB: [u8; 4] = [0x1f, 0x2a, 0x28, 255];
+    pub const BORDER: [u8; 4] = [0x2f, 0x3a, 0x37, 255];
+    pub const TEXT: [u8; 4] = [0xcf, 0xd8, 0xd5, 255];
+    pub const BRIGHT: [u8; 4] = [0xe7, 0xee, 0xec, 255];
+    pub const VARIANT: [u8; 4] = [0x9a, 0xa6, 0xa2, 255];
+    pub const DIM: [u8; 4] = [0x7d, 0x8a, 0x86, 255];
+    pub const ERROR: [u8; 4] = [0xe5, 0x83, 0x8a, 255];
+    pub const BLACK: [u8; 4] = [0, 0, 0, 255];
+}
+
+/// `c` laid over the TTY ground at `alpha`.
+fn tint(c: Rgba, alpha: f32) -> Rgba {
+    let g = ink::GROUND;
+    let mix = |i: usize| (g[i] as f32 + (c[i] as f32 - g[i] as f32) * alpha).round() as u8;
+    [mix(0), mix(1), mix(2), 255]
+}
+
+/// The scheme's palette as TTY shows it: its accents stay, its surfaces
+/// flatten to one ground that borders, not tones, divide (KiiteShell's
+/// `tty_palette`).
+fn tty_color(name: &str, base: &[Rgba; 36]) -> Rgba {
+    let get = |n: &str| base[NAMES.iter().position(|x| *x == n).unwrap()];
+    let (primary, tertiary) = (get("m3primary"), get("m3tertiary"));
+    match name {
+        "m3primary" | "m3surfaceTint" | "m3onPrimaryContainer" | "m3onSecondaryContainer" => primary,
+        "m3secondary" => get("m3secondary"),
+        "m3tertiary" | "m3onTertiaryContainer" => tertiary,
+        "m3onPrimary" | "m3onSecondary" | "m3onTertiary" | "m3onError" => ink::GROUND,
+        "m3primaryContainer" => tint(primary, 0.18),
+        "m3secondaryContainer" | "m3surfaceBright" => ink::TAB,
+        "m3tertiaryContainer" => tint(tertiary, 0.18),
+        "m3error" | "m3onErrorContainer" => ink::ERROR,
+        "m3errorContainer" => tint(ink::ERROR, 0.2),
+        "m3onBackground" | "m3onSurface" => ink::TEXT,
+        "m3surfaceVariant" | "m3surfaceContainerHighest" => ink::ROW,
+        "m3onSurfaceVariant" => ink::VARIANT,
+        "m3outline" => ink::DIM,
+        "m3outlineVariant" => ink::BORDER,
+        "m3surfaceContainerHigh" | "m3inverseSurface" => ink::RAISED,
+        "m3inverseOnSurface" => ink::BRIGHT,
+        "m3shadow" | "m3scrim" => ink::BLACK,
+        _ => ink::GROUND,
+    }
+}
+
+/// "surface_container_high" -> "m3surfaceContainerHigh"
+fn kiite_key_to_name(key: &str) -> String {
+    let mut out = String::from("m3");
+    let mut upper = false;
+    for c in key.chars() {
+        if c == '_' {
+            upper = true;
+        } else if upper {
+            out.extend(c.to_uppercase());
+            upper = false;
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
+fn kiite_colors_file() -> String {
+    format!("{}/.local/state/kiite/user/generated/colors.json", paths::home())
+}
+
+fn caelestia_scheme_file() -> String {
+    format!("{}/.local/state/caelestia/scheme.json", paths::home())
+}
+
+fn kiite_config_file() -> String {
+    format!("{}/kiite/config.json", paths::config_home())
+}
+
+/// KiiteShell's `appearance`: (whether its theme is "tty", its monospace face).
+fn kiite_appearance() -> Option<(bool, String)> {
+    let text = std::fs::read_to_string(kiite_config_file()).ok()?;
+    let root: Value = serde_json::from_str(&text).ok()?;
+    let appearance = root.get("appearance")?;
+    let tty = appearance.get("theme").and_then(Value::as_str).is_some_and(|t| t.eq_ignore_ascii_case("tty"));
+    let mono = appearance.pointer("/fonts/monospace").and_then(Value::as_str).unwrap_or("").to_string();
+    Some((tty, mono))
+}
+
+/// A scheme: whether it is light, and its colours by palette name.
+struct Scheme {
+    light: bool,
+    colours: Vec<(String, Rgba)>,
+}
+
+/// KiiteShell's generated palette: snake_case roles, no mode, so the mode is
+/// read off the background.
+fn read_kiite_scheme() -> Option<Scheme> {
+    let text = std::fs::read_to_string(kiite_colors_file()).ok()?;
+    let Value::Object(map) = serde_json::from_str::<Value>(&text).ok()? else { return None };
+    let colours: Vec<(String, Rgba)> = map
+        .iter()
+        .filter_map(|(k, v)| Some((kiite_key_to_name(k), parse_hex(v.as_str()?)?)))
+        .collect();
+    let bg = colours.iter().find(|(n, _)| n == "m3background").map(|(_, c)| *c)?;
+    let luma = 0.2126 * bg[0] as f32 + 0.7152 * bg[1] as f32 + 0.0722 * bg[2] as f32;
+    Some(Scheme { light: luma > 127.0, colours })
+}
+
+/// Caelestia's scheme: `mode` and `colours` of camelCase roles without "#".
+fn read_caelestia_scheme() -> Option<Scheme> {
+    let text = std::fs::read_to_string(caelestia_scheme_file()).ok()?;
+    let Value::Object(root) = serde_json::from_str::<Value>(&text).ok()? else { return None };
+    let light = root.get("mode").and_then(Value::as_str) == Some("light");
+    let colours = root
+        .get("colours")
+        .and_then(Value::as_object)
+        .map(|c| {
+            c.iter()
+                .filter_map(|(k, v)| Some((format!("m3{k}"), parse_hex(&format!("#{}", v.as_str()?))?)))
+                .collect()
+        })
+        .unwrap_or_default();
+    Some(Scheme { light, colours })
+}
+
 pub struct M3PaletteRust {
-    colors: [[u8; 4]; 36],
+    /// The scheme's own colours
+    colors: [Rgba; 36],
+    tty: bool,
 }
 
 impl Default for M3PaletteRust {
     fn default() -> Self {
-        Self { colors: defaults(false) }
+        Self { colors: defaults(false), tty: false }
     }
 }
 
 impl M3Palette {
     fn color(&self, index: usize) -> QColor {
-        let [r, g, b, a] = self.colors[index];
+        let [r, g, b, a] = if self.tty { tty_color(NAMES[index], &self.colors) } else { self.colors[index] };
         if a == 255 {
             QColor::from_rgb(r as i32, g as i32, b as i32)
         } else {
@@ -210,15 +363,20 @@ impl M3Palette {
         self.palette_changed();
     }
 
-    /// Applies "primary" -> "ffb0ca" style entries from a scheme file.
-    fn apply(mut self: Pin<&mut Self>, colours: &serde_json::Map<String, Value>) {
-        for (key, value) in colours {
-            let Some(index) = NAMES.iter().position(|n| n[2..] == *key) else { continue };
-            if let Some(color) = value.as_str().and_then(|v| parse_hex(&format!("#{v}"))) {
-                self.as_mut().rust_mut().colors[index] = color;
+    fn apply(mut self: Pin<&mut Self>, colours: &[(String, Rgba)]) {
+        for (name, color) in colours {
+            if let Some(index) = NAMES.iter().position(|n| n == name) {
+                self.as_mut().rust_mut().colors[index] = *color;
             }
         }
         self.palette_changed();
+    }
+
+    fn set_tty(mut self: Pin<&mut Self>, tty: bool) {
+        if self.tty != tty {
+            self.as_mut().rust_mut().tty = tty;
+            self.palette_changed();
+        }
     }
 
     fn m3background(&self) -> QColor {
@@ -333,9 +491,10 @@ impl M3Palette {
 
 pub struct ColoursRust {
     light: bool,
+    style: i32,
+    tty: bool,
     palette: *mut M3Palette,
     t_palette: *mut M3Palette,
-    scheme_file: String,
     watcher: Option<Watcher>,
 }
 
@@ -343,9 +502,10 @@ impl Default for ColoursRust {
     fn default() -> Self {
         Self {
             light: false,
+            style: settings::int("preferences/uiStyle", STYLE_FOLLOW_KIITE).clamp(0, 2),
+            tty: false,
             palette: std::ptr::null_mut(),
             t_palette: std::ptr::null_mut(),
-            scheme_file: format!("{}/.local/state/caelestia/scheme.json", paths::home()),
             watcher: None,
         }
     }
@@ -353,6 +513,11 @@ impl Default for ColoursRust {
 
 fn pin<'a>(p: *mut M3Palette) -> Pin<&'a mut M3Palette> {
     unsafe { Pin::new_unchecked(&mut *p) }
+}
+
+/// Files whose changes recolour or restyle Atlas while it runs.
+fn watched_files() -> [String; 3] {
+    [kiite_colors_file(), caelestia_scheme_file(), kiite_config_file()]
 }
 
 impl cxx_qt::Initialize for Colours {
@@ -364,8 +529,9 @@ impl cxx_qt::Initialize for Colours {
             r.t_palette = unsafe { qobject::new_palette(me) };
         }
         self.as_mut().reload();
+        self.as_mut().apply_style();
 
-        // A forced --light/--dark lasts until the scheme file next changes.
+        // A forced --light/--dark lasts until the scheme next changes.
         if let Some(light) = crate::cli::options().force_light {
             self.as_mut().set_light(light);
         }
@@ -376,29 +542,51 @@ impl cxx_qt::Initialize for Colours {
             std::thread::spawn(move || {
                 // Let the writer finish flushing before reading.
                 std::thread::sleep(std::time::Duration::from_millis(20));
-                let _ = thread.queue(|colours| colours.on_scheme_changed());
+                let _ = thread.queue(|colours| colours.on_files_changed());
             });
         });
-        if let Some(w) = &watcher {
-            let state_dir = paths::parent(&self.scheme_file);
-            if paths::is_dir(&state_dir) {
-                w.add_path(&state_dir);
-            }
-            if paths::exists(&self.scheme_file) {
-                w.add_path(&self.scheme_file);
-            }
-        }
         self.as_mut().rust_mut().watcher = watcher;
+        self.watch_files();
     }
 }
 
 impl Colours {
+    /// Watches each file and its folder: the files are often replaced
+    /// rather than edited, which ends a watch on the file itself.
+    fn watch_files(&self) {
+        let Some(w) = &self.watcher else { return };
+        for file in watched_files() {
+            let dir = paths::parent(&file);
+            if paths::is_dir(&dir) && !w.is_watching(&dir) {
+                w.add_path(&dir);
+            }
+            if paths::exists(&file) && !w.is_watching(&file) {
+                w.add_path(&file);
+            }
+        }
+    }
+
+    fn on_files_changed(mut self: Pin<&mut Self>) {
+        self.watch_files();
+        self.as_mut().reload();
+        self.apply_style();
+    }
+
     fn palette(&self) -> *mut M3Palette {
         self.palette
     }
 
     fn t_palette(&self) -> *mut M3Palette {
         self.t_palette
+    }
+
+    /// TTY is dark only.
+    fn is_light(&self) -> bool {
+        self.light && !self.tty
+    }
+
+    fn kiite_available(&self) -> bool {
+        paths::exists(&kiite_config_file())
     }
 
     fn set_light(mut self: Pin<&mut Self>, light: bool) {
@@ -410,26 +598,66 @@ impl Colours {
         }
     }
 
-    fn on_scheme_changed(self: Pin<&mut Self>) {
-        if let Some(w) = &self.watcher {
-            if paths::exists(&self.scheme_file) && !w.is_watching(&self.scheme_file) {
-                w.add_path(&self.scheme_file);
-            }
+    fn set_style(mut self: Pin<&mut Self>, style: i32) {
+        let style = style.clamp(0, 2);
+        if self.style != style {
+            self.as_mut().rust_mut().style = style;
+            settings::set_int("preferences/uiStyle", style);
+            self.as_mut().style_changed();
+            self.apply_style();
         }
-        self.reload();
     }
 
+    /// Works out whether TTY is on (--tty, the style preference, or
+    /// KiiteShell's own theme) and switches the palettes and tokens over.
+    fn apply_style(mut self: Pin<&mut Self>) {
+        let kiite = kiite_appearance();
+        let tty = crate::cli::options().force_tty
+            || match self.style {
+                STYLE_FOLLOW_KIITE => kiite.as_ref().is_some_and(|(tty, _)| *tty),
+                s => s == STYLE_TTY,
+            };
+        if self.tty == tty {
+            return;
+        }
+        let mono = kiite.map(|(_, mono)| mono).unwrap_or_default();
+        native::ffi::set_tty_tokens(tty, &qs(&mono));
+        self.as_mut().rust_mut().tty = tty;
+        pin(self.palette).set_tty(tty);
+        pin(self.t_palette).set_tty(tty);
+        self.as_mut().tty_changed();
+        self.light_changed();
+    }
+
+    /// Loads KiiteShell's scheme, else Caelestia's.
     fn reload(mut self: Pin<&mut Self>) {
-        let Ok(text) = std::fs::read_to_string(&self.scheme_file) else { return };
-        let Ok(Value::Object(root)) = serde_json::from_str::<Value>(&text) else { return };
-        let light = root.get("mode").and_then(Value::as_str) == Some("light");
-        if self.light != light {
-            self.as_mut().rust_mut().light = light;
+        let Some(scheme) = read_kiite_scheme().or_else(read_caelestia_scheme) else { return };
+        if self.light != scheme.light {
+            self.as_mut().rust_mut().light = scheme.light;
             self.as_mut().light_changed();
         }
-        if let Some(Value::Object(colours)) = root.get("colours") {
-            pin(self.palette).apply(colours);
-            pin(self.t_palette).apply(colours);
-        }
+        pin(self.palette).apply(&scheme.colours);
+        pin(self.t_palette).apply(&scheme.colours);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn kiite_keys_map_to_palette_names() {
+        assert_eq!(kiite_key_to_name("surface_container_high"), "m3surfaceContainerHigh");
+        assert_eq!(kiite_key_to_name("on_primary"), "m3onPrimary");
+        assert!(NAMES.contains(&kiite_key_to_name("inverse_on_surface").as_str()));
+    }
+
+    #[test]
+    fn tty_keeps_accents_and_flattens_surfaces() {
+        let base = defaults(false);
+        let primary = base[NAMES.iter().position(|n| *n == "m3primary").unwrap()];
+        assert_eq!(tty_color("m3primary", &base), primary);
+        assert_eq!(tty_color("m3surfaceContainer", &base), ink::GROUND);
+        assert_eq!(tty_color("m3onPrimary", &base), ink::GROUND);
     }
 }
