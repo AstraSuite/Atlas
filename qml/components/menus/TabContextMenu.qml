@@ -38,11 +38,10 @@ MouseArea {
                 x: Math.min(Math.max(8, root.menuX), root.width - width - 8)
                 y: Math.min(Math.max(8, root.menuY), root.height - height - 8)
 
-                implicitWidth: menuCol.implicitWidth + Tokens.padding.extraSmall * 2
-                implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
+                implicitWidth: menuCol.implicitWidth + (Colours.tty ? 0 : Tokens.padding.extraSmall * 2)
+                implicitHeight: menuCol.implicitHeight + (Colours.tty ? 26 : Tokens.padding.extraSmall * 2)
 
                 radius: Tokens.rounding.large
-                ttyFrame: true
                 color: Colours.palette.m3surfaceContainerLow
 
                 scale: root.expanded ? 1.0 : 0.94
@@ -54,22 +53,38 @@ MouseArea {
                     onClicked: mouse => mouse.accepted = true
                 }
 
+                TtyBox {
+                    anchors.fill: parent
+                    title: qsTr("tab")
+                }
+
                 ColumnLayout {
                     id: menuCol
                     anchors.fill: parent
-                    anchors.margins: Tokens.padding.extraSmall
+                    anchors.margins: Colours.tty ? 0 : Tokens.padding.extraSmall
+                    anchors.topMargin: Colours.tty ? 18 : Tokens.padding.extraSmall
+                    anchors.bottomMargin: Colours.tty ? 8 : Tokens.padding.extraSmall
                     spacing: 0
 
                     // Split Tab Side-by-Side
                     StyledRect {
                         Layout.fillWidth: true
                         implicitWidth: mi1Row.implicitWidth + 24
-                        implicitHeight: 36
+                        implicitHeight: Colours.tty ? 26 : 36
                         radius: Tokens.rounding.medium
-                        color: mi1Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                        color: !Colours.tty && (mi1Hover.containsMouse) ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+                        TtyMenuRow {
+                            anchors.fill: parent
+                            visible: Colours.tty
+                            text: qsTr("Split Tab Side-by-Side")
+                            hovered: mi1Hover.containsMouse
+                            shortcut: "view.split"
+                        }
 
                         RowLayout {
                             id: mi1Row
+                            visible: !Colours.tty
                             anchors.fill: parent
                             anchors.leftMargin: 12
                             anchors.rightMargin: 12
@@ -94,12 +109,20 @@ MouseArea {
                     StyledRect {
                         Layout.fillWidth: true
                         implicitWidth: mi2Row.implicitWidth + 24
-                        implicitHeight: 36
+                        implicitHeight: Colours.tty ? 26 : 36
                         radius: Tokens.rounding.medium
-                        color: mi2Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                        color: !Colours.tty && (mi2Hover.containsMouse) ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+                        TtyMenuRow {
+                            anchors.fill: parent
+                            visible: Colours.tty
+                            text: qsTr("Duplicate Tab")
+                            hovered: mi2Hover.containsMouse
+                        }
 
                         RowLayout {
                             id: mi2Row
+                            visible: !Colours.tty
                             anchors.fill: parent
                             anchors.leftMargin: 12
                             anchors.rightMargin: 12
@@ -124,13 +147,23 @@ MouseArea {
                     StyledRect {
                         Layout.fillWidth: true
                         implicitWidth: mi3Row.implicitWidth + 24
-                        implicitHeight: 36
+                        implicitHeight: Colours.tty ? 26 : 36
                         radius: Tokens.rounding.medium
-                        color: mi3Hover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                        color: !Colours.tty && (mi3Hover.containsMouse) ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
                         visible: TabManager.count > 1
+
+                        TtyMenuRow {
+                            anchors.fill: parent
+                            visible: Colours.tty
+                            text: qsTr("Close Tab")
+                            hovered: mi3Hover.containsMouse
+                            danger: true
+                            shortcut: "tabs.close"
+                        }
 
                         RowLayout {
                             id: mi3Row
+                            visible: !Colours.tty
                             anchors.fill: parent
                             anchors.leftMargin: 12
                             anchors.rightMargin: 12

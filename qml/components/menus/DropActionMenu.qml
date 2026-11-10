@@ -77,11 +77,10 @@ MouseArea {
                 x: Math.min(Math.max(8, root.menuX), root.width - width - 8)
                 y: Math.min(Math.max(8, root.menuY), root.height - height - 8)
 
-                implicitWidth: menuCol.implicitWidth + Tokens.padding.extraSmall * 2
-                implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
+                implicitWidth: menuCol.implicitWidth + (Colours.tty ? 0 : Tokens.padding.extraSmall * 2)
+                implicitHeight: menuCol.implicitHeight + (Colours.tty ? 26 : Tokens.padding.extraSmall * 2)
 
                 radius: Tokens.rounding.large
-                ttyFrame: true
                 color: Colours.palette.m3surfaceContainerLow
 
                 scale: root.expanded ? 1.0 : 0.94
@@ -98,11 +97,18 @@ MouseArea {
                     onClicked: mouse => mouse.accepted = true
                 }
 
+                TtyBox {
+                    anchors.fill: parent
+                    title: qsTr("drop")
+                }
+
                 ColumnLayout {
                     id: menuCol
 
                     anchors.fill: parent
-                    anchors.margins: Tokens.padding.extraSmall
+                    anchors.margins: Colours.tty ? 0 : Tokens.padding.extraSmall
+                    anchors.topMargin: Colours.tty ? 18 : Tokens.padding.extraSmall
+                    anchors.bottomMargin: Colours.tty ? 8 : Tokens.padding.extraSmall
                     spacing: 2
 
                     Repeater {
@@ -121,14 +127,23 @@ MouseArea {
                             required property var modelData
 
                             implicitWidth: itemRow.implicitWidth + 32
-                            implicitHeight: 36
+                            implicitHeight: Colours.tty ? 26 : 36
                             Layout.fillWidth: true
 
                             radius: Tokens.rounding.small
-                            color: itemHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+                            color: !Colours.tty && (itemHover.containsMouse) ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+                            TtyMenuRow {
+                                anchors.fill: parent
+                                visible: Colours.tty
+                                text: menuItem.modelData.text || ""
+                                hovered: itemHover.containsMouse
+                                keys: menuItem.modelData.shortcut || ""
+                            }
 
                             RowLayout {
                                 id: itemRow
+                                visible: !Colours.tty
                                 anchors.fill: parent
                                 anchors.leftMargin: Tokens.padding.small
                                 anchors.rightMargin: Tokens.padding.small

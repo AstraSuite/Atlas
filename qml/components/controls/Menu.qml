@@ -119,8 +119,8 @@ MouseArea {
         // TTY draws no shadows
         level: Colours.tty ? 0 : 2
 
-        implicitWidth: Math.max(200, column.implicitWidth + column.anchors.margins * 2)
-        implicitHeight: column.implicitHeight + column.anchors.margins * 2
+        implicitWidth: Math.max(200, column.implicitWidth + column.anchors.leftMargin * 2)
+        implicitHeight: column.implicitHeight + column.anchors.topMargin + column.anchors.bottomMargin
 
         transform: Scale {
             yScale: root.expanded ? 1 : 0.1
@@ -147,7 +147,9 @@ MouseArea {
                 id: column
 
                 anchors.fill: parent
-                anchors.margins: Tokens.padding.extraSmall
+                anchors.margins: Colours.tty ? 0 : Tokens.padding.extraSmall
+                anchors.topMargin: Colours.tty ? 6 : Tokens.padding.extraSmall
+                anchors.bottomMargin: Colours.tty ? 6 : Tokens.padding.extraSmall
                 spacing: 0
 
                 Repeater {
@@ -163,8 +165,8 @@ MouseArea {
                         readonly property bool active: modelData === root?.active
 
                         Layout.fillWidth: true
-                        implicitWidth: menuOptionRow.implicitWidth + Tokens.padding.medium * 2
-                        implicitHeight: menuOptionRow.implicitHeight + Tokens.padding.medium * 2
+                        implicitWidth: Colours.tty ? ttyRow.implicitWidth : menuOptionRow.implicitWidth + Tokens.padding.medium * 2
+                        implicitHeight: Colours.tty ? ttyRow.implicitHeight : menuOptionRow.implicitHeight + Tokens.padding.medium * 2
 
                         radius: active ? Tokens.rounding.medium : Tokens.rounding.extraSmall
                         topLeftRadius: index === 0 ? Tokens.rounding.medium : radius
@@ -172,13 +174,25 @@ MouseArea {
                         bottomLeftRadius: index === repeater?.count - 1 ? Tokens.rounding.medium : radius
                         bottomRightRadius: index === repeater?.count - 1 ? Tokens.rounding.medium : radius
 
-                        color: Qt.alpha(Colours.palette.m3tertiaryContainer, active ? 1 : 0)
+                        color: Qt.alpha(Colours.palette.m3tertiaryContainer, active && !Colours.tty ? 1 : 0)
 
                         Behavior on radius {
                             Anim {}
                         }
 
+                        TtyMenuRow {
+                            id: ttyRow
+                            anchors.fill: parent
+                            visible: Colours.tty
+                            text: item.modelData?.text ?? ""
+                            hovered: itemState.containsMouse
+                            checkable: true
+                            checked: item.active
+                        }
+
                         StateLayer {
+                            id: itemState
+                            showHoverBackground: !Colours.tty
                             topLeftRadius: parent.topLeftRadius
                             topRightRadius: parent.topRightRadius
                             bottomLeftRadius: parent.bottomLeftRadius
@@ -197,6 +211,7 @@ MouseArea {
                         RowLayout {
                             id: menuOptionRow
 
+                            visible: !Colours.tty
                             anchors.fill: parent
                             anchors.margins: Tokens.padding.medium
                             spacing: Tokens.spacing.small

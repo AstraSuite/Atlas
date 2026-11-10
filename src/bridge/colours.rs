@@ -8,6 +8,8 @@ pub mod qobject {
     unsafe extern "C++" {
         include!("cxx-qt-lib/qcolor.h");
         type QColor = cxx_qt_lib::QColor;
+        include!("cxx-qt-lib/qstring.h");
+        type QString = cxx_qt_lib::QString;
 
         include!("qobjectfactory.h");
         #[cxx_name = "atlasNewChild"]
@@ -142,6 +144,7 @@ pub mod qobject {
         #[qproperty(i32, style, READ, WRITE = set_style, NOTIFY = style_changed)]
         #[qproperty(bool, tty, READ, NOTIFY = tty_changed)]
         #[qproperty(bool, kiite_available, cxx_name = "kiiteAvailable", READ = kiite_available, CONSTANT)]
+        #[qproperty(QString, nerd_family, cxx_name = "nerdFamily", READ, NOTIFY = tty_changed)]
         type Colours = super::ColoursRust;
 
         #[qsignal]
@@ -168,6 +171,11 @@ pub mod qobject {
 
         #[qinvokable]
         fn reload(self: Pin<&mut Colours>);
+        /// The Nerd glyph TTY draws for the Material symbol `name`; empty
+        /// outside TTY, without a Nerd face, or for a symbol it has none for.
+        #[qinvokable]
+        #[cxx_name = "nerdGlyph"]
+        fn nerd_glyph(self: &Colours, name: &QString) -> QString;
     }
 
     impl cxx_qt::Threading for Colours {}
@@ -175,10 +183,10 @@ pub mod qobject {
 }
 
 use crate::bridge::native::{self, qs, settings};
-use crate::core::paths;
+use crate::core::{nerd, paths};
 use crate::core::watcher::Watcher;
 use cxx_qt::{CxxQtType, Threading};
-use cxx_qt_lib::QColor;
+use cxx_qt_lib::{QColor, QString};
 use qobject::{Colours, M3Palette};
 use serde_json::Value;
 use std::pin::Pin;
@@ -289,14 +297,21 @@ fn kiite_config_file() -> String {
     format!("{}/kiite/config.json", paths::config_home())
 }
 
-/// KiiteShell's `appearance`: (whether its theme is "tty", its monospace face).
-fn kiite_appearance() -> Option<(bool, String)> {
+/// KiiteShell's `appearance`: whether its theme is "tty", and its monospace
+/// and Nerd icon faces.
+struct KiiteAppearance {
+    tty: bool,
+    mono: String,
+    icon_nerd: String,
+}
+
+fn kiite_appearance() -> Option<KiiteAppearance> {
     let text = std::fs::read_to_string(kiite_config_file()).ok()?;
     let root: Value = serde_json::from_str(&text).ok()?;
     let appearance = root.get("appearance")?;
     let tty = appearance.get("theme").and_then(Value::as_str).is_some_and(|t| t.eq_ignore_ascii_case("tty"));
-    let mono = appearance.pointer("/fonts/monospace").and_then(Value::as_str).unwrap_or("").to_string();
-    Some((tty, mono))
+    let font = |key: &str| appearance.pointer(&format!("/fonts/{key}")).and_then(Value::as_str).unwrap_or("").to_string();
+    Some(KiiteAppearance { tty, mono: font("monospace"), icon_nerd: font("iconNerd") })
 }
 
 /// A scheme: whether it is light, and its colours by palette name.
@@ -493,6 +508,7 @@ pub struct ColoursRust {
     light: bool,
     style: i32,
     tty: bool,
+    nerd_family: QString,
     palette: *mut M3Palette,
     t_palette: *mut M3Palette,
     watcher: Option<Watcher>,
@@ -504,6 +520,7 @@ impl Default for ColoursRust {
             light: false,
             style: settings::int("preferences/uiStyle", STYLE_FOLLOW_KIITE).clamp(0, 2),
             tty: false,
+            nerd_family: QString::default(),
             palette: std::ptr::null_mut(),
             t_palette: std::ptr::null_mut(),
             watcher: None,
@@ -585,6 +602,13 @@ impl Colours {
         self.light && !self.tty
     }
 
+    fn nerd_glyph(&self, name: &QString) -> QString {
+        if self.nerd_family.is_empty() {
+            return QString::default();
+        }
+        nerd::glyph(&name.to_string()).map(|c| qs(&c.to_string())).unwrap_or_default()
+    }
+
     fn kiite_available(&self) -> bool {
         paths::exists(&kiite_config_file())
     }
@@ -614,14 +638,16 @@ impl Colours {
         let kiite = kiite_appearance();
         let tty = crate::cli::options().force_tty
             || match self.style {
-                STYLE_FOLLOW_KIITE => kiite.as_ref().is_some_and(|(tty, _)| *tty),
+                STYLE_FOLLOW_KIITE => kiite.as_ref().is_some_and(|k| k.tty),
                 s => s == STYLE_TTY,
             };
         if self.tty == tty {
             return;
         }
-        let mono = kiite.map(|(_, mono)| mono).unwrap_or_default();
+        let (mono, icon_nerd) = kiite.map(|k| (k.mono, k.icon_nerd)).unwrap_or_default();
         native::ffi::set_tty_tokens(tty, &qs(&mono));
+        let nerd = if tty { nerd::pick_face(&native::from_qsl(&native::ffi::font_families()), &[&icon_nerd, &mono]) } else { None };
+        self.as_mut().rust_mut().nerd_family = qs(&nerd.unwrap_or_default());
         self.as_mut().rust_mut().tty = tty;
         pin(self.palette).set_tty(tty);
         pin(self.t_palette).set_tty(tty);

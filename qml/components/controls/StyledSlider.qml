@@ -31,8 +31,18 @@ T.Slider {
     contentItem: Item {
         anchors.fill: parent
 
+        // TTY: a bar in text, `████▌░░░`, as many cells as fit
+        TtyBar {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            visible: Colours.tty
+            cells: Math.max(1, Math.floor(root.width / cellWidth))
+            fraction: root.pos
+        }
+
         StyledRect {
             id: remaining
+            visible: !Colours.tty
 
             anchors.left: handle.right
             anchors.right: parent.right
@@ -47,6 +57,7 @@ T.Slider {
         }
 
         StyledRect {
+            visible: !Colours.tty
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.rightMargin: 2
@@ -61,6 +72,7 @@ T.Slider {
 
         StyledRect {
             id: handle
+            visible: !Colours.tty
 
             anchors.left: filled.right
             anchors.verticalCenter: parent.verticalCenter
@@ -81,6 +93,7 @@ T.Slider {
 
         StyledRect {
             id: filled
+            visible: !Colours.tty
 
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter

@@ -35,6 +35,8 @@ pub mod ffi {
         fn clear_icon_cache();
         #[cxx_name = "setTtyTokens"]
         fn set_tty_tokens(tty: bool, preferred_mono: &QString);
+        #[cxx_name = "fontFamilies"]
+        fn font_families() -> QStringList;
 
         #[cxx_name = "settingsContains"]
         fn settings_contains(scope: i32, key: &QString) -> bool;

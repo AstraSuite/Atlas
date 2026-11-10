@@ -22,8 +22,18 @@ Item {
         anchors.centerIn: parent
         spacing: 6
 
+        // TTY: the box in text, `[x]` or `[ ]`
+        StyledText {
+            visible: Colours.tty
+            Layout.alignment: Qt.AlignVCenter
+            text: root.checked ? "[x]" : "[ ]"
+            color: root.checked ? Colours.palette.m3primary : checkArea.containsMouse ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3outline
+            font: Tokens.font.body.medium
+        }
+
         // Checkbox Touch / Hover Target & Box
         Item {
+            visible: !Colours.tty
             implicitWidth: 24
             implicitHeight: 24
             Layout.alignment: Qt.AlignVCenter

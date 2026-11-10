@@ -3,6 +3,7 @@ pub mod entry;
 pub mod exif;
 pub mod fileops;
 pub mod fileutils;
+pub mod nerd;
 pub mod paths;
 pub mod recent;
 pub mod storage;

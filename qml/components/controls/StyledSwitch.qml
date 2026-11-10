@@ -15,16 +15,28 @@ T.Switch {
     implicitWidth: implicitIndicatorWidth
     implicitHeight: implicitIndicatorHeight
 
+    // TTY: a checkbox in text, `[x]` or `[ ]`, as KiiteShell draws its switches
     indicator: StyledRect {
         radius: Tokens.rounding.full
         color: {
+            if (Colours.tty)
+                return "transparent";
             if (root.disabled)
                 return root.checked ? Qt.alpha(Colours.palette.m3onSurface, 0.12) : Qt.alpha(Colours.palette.m3surfaceContainerHighest, 0.38);
             return root.checked ? Colours.palette.m3primary : Colours.palette.m3surfaceContainerHighest;
         }
 
-        implicitWidth: implicitHeight * 1.75
-        implicitHeight: 28
+        implicitWidth: Colours.tty ? ttyMark.implicitWidth : implicitHeight * 1.75
+        implicitHeight: Colours.tty ? ttyMark.implicitHeight : 28
+
+        StyledText {
+            id: ttyMark
+            visible: Colours.tty
+            text: root.checked ? "[x]" : "[ ]"
+            color: root.checked ? Colours.palette.m3primary : root.hovered ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3outline
+            opacity: root.disabled ? 0.5 : 1
+            font: Tokens.font.body.medium
+        }
 
         Behavior on color {
             CAnim {}
@@ -32,6 +44,7 @@ T.Switch {
 
         StyledRect {
             id: thumbRect
+            visible: !Colours.tty
             readonly property real nonAnimWidth: root.pressed ? implicitHeight * 1.15 : implicitHeight
 
             radius: Tokens.rounding.full

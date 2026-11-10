@@ -158,7 +158,16 @@ StyledRect {
         RowLayout {
             spacing: Tokens.spacing.extraSmall
 
+            // TTY: `zoom ████▌░░░ 96`, as KiiteShell labels its sliders
+            StyledText {
+                visible: Colours.tty
+                text: qsTr("zoom")
+                color: Colours.palette.m3outline
+                font: Tokens.font.body.medium
+            }
+
             Item {
+                visible: !Colours.tty
                 implicitWidth: zoomSmallIcon.implicitWidth
                 implicitHeight: zoomSmallIcon.implicitHeight
 
@@ -199,7 +208,15 @@ StyledRect {
                 }
             }
 
+            StyledText {
+                visible: Colours.tty
+                text: Math.round(root.zoomLevel)
+                color: Colours.palette.m3onSurface
+                font: Tokens.font.body.medium
+            }
+
             Item {
+                visible: !Colours.tty
                 implicitWidth: zoomLargeIcon.implicitWidth
                 implicitHeight: zoomLargeIcon.implicitHeight
 

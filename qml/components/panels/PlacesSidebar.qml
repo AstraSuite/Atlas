@@ -24,23 +24,24 @@ StyledRect {
     // TTY: the whole sidebar is one box, its title where the header was
     TtyBox {
         anchors.fill: parent
-        anchors.leftMargin: 6
-        anchors.rightMargin: 4
-        anchors.bottomMargin: 6
-        anchors.topMargin: Tokens.padding.medium + Tokens.padding.extraSmall / 2 + placesHeader.height / 2
+        // the panes' boxes sit as far in, so all their edges line up
+        anchors.margins: Tokens.padding.extraSmall
+        anchors.topMargin: 12
         title: qsTr("places")
     }
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: Tokens.padding.medium
+        // TTY sets the header on the box's top edge, beside the title
+        anchors.topMargin: Colours.tty ? 0 : Tokens.padding.medium
         spacing: Tokens.spacing.extraSmall
 
         Item {
             id: placesHeader
             Layout.fillWidth: true
-            implicitHeight: 28
-            Layout.topMargin: Tokens.padding.extraSmall / 2
+            implicitHeight: Colours.tty ? 24 : 28
+            Layout.topMargin: Tokens.padding.extraSmall / 2 * !Colours.tty
             Layout.bottomMargin: Tokens.spacing.small
 
             StyledText {
@@ -57,7 +58,7 @@ StyledRect {
                 implicitWidth: 26
                 implicitHeight: 26
                 radius: Tokens.rounding.full
-                color: cfgHover.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.08) : "transparent"
+                color: cfgHover.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.08) : Colours.tty ? Colours.palette.m3surface : "transparent"
 
                 MaterialIcon {
                     anchors.centerIn: parent

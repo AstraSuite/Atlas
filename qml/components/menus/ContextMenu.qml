@@ -34,6 +34,14 @@ MouseArea {
     )
     property var convertFormats: []
 
+    // The binding TTY shows beside each action, as the mockup's `^C`
+    readonly property var actionShortcuts: ({
+        copy: "edit.copy", cut: "edit.cut", paste: "edit.paste", rename: "file.rename",
+        trash: "file.trash", delete: "file.deletePermanent", properties: "file.properties",
+        propertiesDir: "file.properties", newFolder: "file.newFolder", newFile: "file.newFile",
+        openTerminal: "tools.terminal", openTerminalItem: "tools.terminal", preview: "view.previewMedia"
+    })
+
     signal actionTriggered(string action, var item)
 
     onExpandedChanged: {
@@ -72,11 +80,10 @@ MouseArea {
         x: Math.min(Math.max(8, root.menuX), root.width - width - 8)
         y: Math.min(Math.max(8, root.menuY), root.height - height - 8)
 
-        implicitWidth: menuCol.implicitWidth + Tokens.padding.extraSmall * 2
-        implicitHeight: menuCol.implicitHeight + Tokens.padding.extraSmall * 2
+        implicitWidth: menuCol.implicitWidth + (Colours.tty ? 0 : Tokens.padding.extraSmall * 2)
+        implicitHeight: menuCol.implicitHeight + (Colours.tty ? 26 : Tokens.padding.extraSmall * 2)
 
         radius: Tokens.rounding.large
-        ttyFrame: true
         color: Colours.palette.m3surfaceContainerLow
 
         scale: root.expanded ? 1.0 : 0.94
@@ -94,11 +101,18 @@ MouseArea {
             onClicked: mouse => mouse.accepted = true
         }
 
+        TtyBox {
+            anchors.fill: parent
+            title: root.targetItem ? root.targetItem.name + (root.targetItem.isDir ? "/" : "") : FileUtils.baseName(root.currentDir) + "/"
+        }
+
         ColumnLayout {
             id: menuCol
 
             anchors.fill: parent
-            anchors.margins: Tokens.padding.extraSmall
+            anchors.margins: Colours.tty ? 0 : Tokens.padding.extraSmall
+            anchors.topMargin: Colours.tty ? 18 : Tokens.padding.extraSmall
+            anchors.bottomMargin: Colours.tty ? 8 : Tokens.padding.extraSmall
             spacing: 0
 
             Repeater {
@@ -382,11 +396,11 @@ MouseArea {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: Tokens.padding.medium
-                anchors.rightMargin: Tokens.padding.medium
+                anchors.leftMargin: Colours.tty ? 14 : Tokens.padding.medium
+                anchors.rightMargin: Colours.tty ? 14 : Tokens.padding.medium
                 height: 1
                 color: Colours.tPalette.m3outlineVariant
-                opacity: 0.4
+                opacity: Colours.tty ? 1 : 0.4
             }
         }
     }
@@ -397,16 +411,28 @@ MouseArea {
             id: menuItem
 
             Layout.fillWidth: true
-            implicitWidth: itemRow.implicitWidth + Tokens.padding.medium * 2
-            implicitHeight: 36
+            readonly property bool highlighted: itemHover.containsMouse || (modelData.hasSubmenu === true && root.submenuOpen && root.activeSubmenuItems === modelData.submenuItems)
+
+            implicitWidth: Colours.tty ? ttyRow.implicitWidth : itemRow.implicitWidth + Tokens.padding.medium * 2
+            implicitHeight: Colours.tty ? ttyRow.implicitHeight : 36
             radius: Tokens.rounding.medium
-            color: (itemHover.containsMouse || (modelData.hasSubmenu && root.submenuOpen && root.activeSubmenuItems === modelData.submenuItems))
-                ? Colours.tPalette.m3surfaceContainerHigh
-                : "transparent"
+            color: highlighted && !Colours.tty ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+            TtyMenuRow {
+                id: ttyRow
+                anchors.fill: parent
+                visible: Colours.tty
+                text: modelData.text || ""
+                hovered: menuItem.highlighted
+                danger: modelData.action === "delete" || modelData.action === "emptyTrash" || modelData.action === "trash"
+                hasSubmenu: modelData.hasSubmenu === true
+                shortcut: root.actionShortcuts[modelData.action] || ""
+            }
 
             StateLayer {
                 id: itemHover
                 hoverEnabled: true
+                showHoverBackground: !Colours.tty
                 onContainsMouseChanged: {
                     if (modelData.hasSubmenu) {
                         if (containsMouse) {
@@ -437,6 +463,7 @@ MouseArea {
 
             RowLayout {
                 id: itemRow
+                visible: !Colours.tty
                 anchors.fill: parent
                 anchors.leftMargin: Tokens.padding.medium
                 anchors.rightMargin: Tokens.padding.medium
@@ -478,14 +505,23 @@ MouseArea {
             id: subMenuItem
 
             Layout.fillWidth: true
-            implicitWidth: subItemRow.implicitWidth + Tokens.padding.medium * 2
-            implicitHeight: 36
+            implicitWidth: Colours.tty ? ttySubRow.implicitWidth : subItemRow.implicitWidth + Tokens.padding.medium * 2
+            implicitHeight: Colours.tty ? ttySubRow.implicitHeight : 36
             radius: Tokens.rounding.medium
-            color: subHover.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+            color: subHover.containsMouse && !Colours.tty ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+            TtyMenuRow {
+                id: ttySubRow
+                anchors.fill: parent
+                visible: Colours.tty
+                text: modelData.text || ""
+                hovered: subHover.containsMouse
+            }
 
             StateLayer {
                 id: subHover
                 hoverEnabled: true
+                showHoverBackground: !Colours.tty
                 onClicked: {
                     root.expanded = false;
                     root.submenuOpen = false;
@@ -496,6 +532,7 @@ MouseArea {
 
             RowLayout {
                 id: subItemRow
+                visible: !Colours.tty
                 anchors.fill: parent
                 anchors.leftMargin: Tokens.padding.medium
                 anchors.rightMargin: Tokens.padding.medium
@@ -528,8 +565,8 @@ MouseArea {
         x: openOnRight ? (menuRect.x + menuRect.width + 4) : Math.max(8, menuRect.x - width - 4)
         y: Math.min(Math.max(8, root.submenuY - 4), root.height - height - 8)
 
-        implicitWidth: submenuCol.implicitWidth + Tokens.padding.extraSmall * 2
-        implicitHeight: submenuCol.implicitHeight + Tokens.padding.extraSmall * 2
+        implicitWidth: submenuCol.implicitWidth + (Colours.tty ? 0 : Tokens.padding.extraSmall * 2)
+        implicitHeight: submenuCol.implicitHeight + (Colours.tty ? 12 : Tokens.padding.extraSmall * 2)
 
         radius: Tokens.rounding.large
         ttyFrame: true
@@ -587,7 +624,9 @@ MouseArea {
             id: submenuCol
 
             anchors.fill: parent
-            anchors.margins: Tokens.padding.extraSmall
+            anchors.margins: Colours.tty ? 0 : Tokens.padding.extraSmall
+            anchors.topMargin: Colours.tty ? 6 : Tokens.padding.extraSmall
+            anchors.bottomMargin: Colours.tty ? 6 : Tokens.padding.extraSmall
             spacing: 0
 
             Repeater {
