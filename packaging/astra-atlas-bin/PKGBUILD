@@ -1,0 +1,60 @@
+# Maintainer: Dan Griffiths <me at evertiro dot com>
+
+pkgname=astra-atlas-bin
+_pkgname=astra-atlas
+pkgver=1.4.0
+pkgrel=1
+pkgdesc='Fast, lightweight Material Design 3 file manager (prebuilt binary)'
+arch=('x86_64')
+url='https://github.com/AstraSuite/Atlas'
+license=('GPL-3.0-only')
+depends=(
+	'gcc-libs'
+	'glibc'
+	'qt6-base'
+	'qt6-declarative'
+	'qt6-multimedia'
+	'qt6-svg'
+)
+optdepends=(
+	'caelestia-cli: dynamic color scheme syncing with Caelestia'
+	'exiv2: editing the EXIF comment of a photo'
+	'ffmpeg: integrated video and audio manipulation'
+	'gvfs: remote network filesystem mounting'
+	'git: inline repository status and branch tracking'
+	'imagemagick: integrated image conversion and manipulation'
+	'papirus-folders: dynamic folder color'
+	'papirus-icon-theme: dynamic folder color'
+	'udisks2: external drive management'
+	'xdg-desktop-portal: desktop portal integration'
+	'xdg-utils: default application launching'
+	'bzip2: archive extraction and compression'
+	'gzip: archive extraction and compression'
+	'p7zip: archive extraction and compression'
+	'tar: archive extraction and compression'
+	'unzip: archive extraction and compression'
+	'xz: archive extraction and compression'
+	'zip: archive extraction and compression'
+)
+provides=('astra-atlas')
+conflicts=('astra-atlas' 'astra-atlas-git')
+options=('!strip' '!debug')
+_raw="https://raw.githubusercontent.com/AstraSuite/Atlas/v${pkgver}"
+source=(
+	"${_pkgname}-v${pkgver}::https://github.com/AstraSuite/Atlas/releases/download/v${pkgver}/${_pkgname}-v${pkgver}"
+	"atlas-${pkgver}.desktop::${_raw}/assets/atlas.desktop"
+	"atlas-${pkgver}.svg::${_raw}/assets/atlas.svg"
+	"LICENSE-${pkgver}::${_raw}/LICENSE"
+)
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+package() {
+	install -Dm755 "${_pkgname}-v${pkgver}" "${pkgdir}/usr/bin/atlas"
+	install -Dm644 "atlas-${pkgver}.desktop" "${pkgdir}/usr/share/applications/atlas.desktop"
+	install -Dm644 "atlas-${pkgver}.svg" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/atlas.svg"
+	install -Dm644 "atlas-${pkgver}.svg" "${pkgdir}/usr/share/pixmaps/atlas.svg"
+	install -Dm644 "LICENSE-${pkgver}" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
