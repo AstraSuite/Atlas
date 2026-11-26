@@ -1,6 +1,6 @@
 [package]
 name = "atlas"
-version = "1.3.1"
+version = "2.0.1"
 edition = "2021"
 license = "GPL-3.0-only"
 description = "A fast, lightweight Material Design 3 file manager"

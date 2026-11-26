@@ -7,14 +7,19 @@ BINDIR = $(DESTDIR)$(PREFIX)/bin
 DATADIR = $(DESTDIR)$(PREFIX)/share
 CARGO ?= cargo
 
-.PHONY: all install uninstall clean
+.PHONY: all build version install uninstall clean
 
-all: target/release/atlas
+all: build
 
-target/release/atlas:
+# Cargo needs a literal version in its manifest, so sync it from git before
+# building. build.rs watches the tags for the binary's own version.
+version:
+	@./scripts/sync-version.sh
+
+build: version
 	$(CARGO) build --release --locked
 
-install: target/release/atlas
+install: build
 	install -Dm755 target/release/atlas $(BINDIR)/atlas
 	install -Dm644 assets/atlas.desktop $(DATADIR)/applications/atlas.desktop
 	install -Dm644 assets/atlas.svg $(DATADIR)/icons/hicolor/scalable/apps/atlas.svg

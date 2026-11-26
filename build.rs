@@ -62,8 +62,9 @@ fn collect_qml(dir: &Path, out: &mut Vec<String>) {
     }
 }
 
-/// Version from the latest `vX.Y.Z` tag, else the commit date as 0.YYYYMMDD,
-/// matching what the CMake build used to do.
+/// Version from the latest `vX.Y.Z` tag, else the commit date as 0.0.YYYYMMDD
+/// (a three-part version, as Cargo requires). scripts/sync-version.sh mirrors
+/// this for Cargo.toml/Cargo.lock and should be kept in step with it.
 fn atlas_version() -> String {
     if let Ok(v) = std::env::var("ATLAS_VERSION") {
         if !v.is_empty() {
@@ -79,13 +80,50 @@ fn atlas_version() -> String {
             .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
             .filter(|s| !s.is_empty())
     };
-    if let Some(tag) = git(&["describe", "--tags", "--match", "v[0-9]*", "--abbrev=0", "HEAD"]) {
-        return tag.trim_start_matches('v').to_string();
+    // Highest version tag reachable from HEAD; unlike git describe this is
+    // unambiguous when several tags point at the same commit.
+    if let Some(tags) = git(&[
+        "tag",
+        "--list",
+        "v[0-9]*",
+        "--merged",
+        "HEAD",
+        "--sort=-version:refname",
+    ]) {
+        if let Some(tag) = tags.lines().next() {
+            return tag.trim_start_matches('v').to_string();
+        }
     }
-    if let Some(date) = git(&["log", "-1", "--format=%cd", "--date=format:%Y%m%d"]) {
-        return format!("0.{date}");
+    if let Some(date) = git(&["log", "-1", "--format=%cd", "--date=format:0.0.%Y%m%d"]) {
+        return date;
     }
     std::env::var("CARGO_PKG_VERSION").unwrap()
+}
+
+/// Tags can move without HEAD changing, so watching .git/HEAD alone leaves a
+/// built binary on the old version. Watch the refs themselves (including the
+/// packed form and the common dir used by worktrees) instead.
+fn watch_git_refs() {
+    let output = Command::new("git")
+        .args([
+            "rev-parse",
+            "--path-format=absolute",
+            "--git-dir",
+            "--git-common-dir",
+        ])
+        .output();
+    let dirs: Vec<PathBuf> = match output {
+        Ok(out) if out.status.success() => String::from_utf8_lossy(&out.stdout)
+            .lines()
+            .map(PathBuf::from)
+            .collect(),
+        _ => vec![PathBuf::from(".git")],
+    };
+    for dir in dirs {
+        for name in ["HEAD", "refs/tags", "packed-refs"] {
+            println!("cargo:rerun-if-changed={}", dir.join(name).display());
+        }
+    }
 }
 
 fn generate_qrc(repo_root: &Path, out_dir: &Path) -> PathBuf {
@@ -105,7 +143,7 @@ fn main() {
 
     println!("cargo:rustc-env=ATLAS_VERSION={}", atlas_version());
     println!("cargo:rerun-if-env-changed=ATLAS_VERSION");
-    println!("cargo:rerun-if-changed=.git/HEAD");
+    watch_git_refs();
     for dir in ["qml", "assets", "native", "src/bridge"] {
         println!("cargo:rerun-if-changed={}", repo_root.join(dir).display());
     }

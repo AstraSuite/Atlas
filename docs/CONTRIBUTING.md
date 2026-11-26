@@ -15,7 +15,8 @@ cargo build --release
 ```
 
 The binary lands in `target/release/atlas` (`target/debug/atlas` without `--release`).
-`build.rs` picks things up on its own: every `.qml` file under `qml/` is compiled into the
+`make` does the same build while also syncing the Cargo version from git tags (see
+[Version](#version)). `build.rs` picks things up on its own: every `.qml` file under `qml/` is compiled into the
 `atlas` QML module, and every file in `src/bridge/` containing a `cxx_qt::bridge` is
 generated. Two lists in `build.rs` are kept by hand: `NATIVE` (the C++ files in `native/`)
 and `RESOURCES` (non-QML files embedded in the binary, such as fonts and sounds).
@@ -33,9 +34,17 @@ Your development build shares settings with an installed Atlas
 
 ## Version
 
-`build.rs` takes the version from the latest `v*` git tag. Without a tag it uses
-`0.<YYYYMMDD>` of the last commit. Set `ATLAS_VERSION=X.Y.Z` in the environment to pin it.
-`Cargo.toml`'s own version is only the last fallback.
+Git tags are the single source of truth. `scripts/sync-version.sh` writes the latest
+`vX.Y.Z` tag (without the `v`) into both `Cargo.toml` and `Cargo.lock`, and `build.rs`
+stamps the same value into the binary. `make` and both CI workflows run the script for
+you; after adding a tag, run `./scripts/sync-version.sh` yourself before a direct
+`cargo build`. `build.rs` reruns when the tags change, so an incremental build picks
+up a new tag without a clean.
+
+Without a tag, or in a source archive without git history, the version falls back to
+`0.0.<YYYYMMDD>` of the last commit, or to the version already in `Cargo.toml` when
+there is no git metadata at all. Set `ATLAS_VERSION=X.Y.Z` to pin it, e.g. when
+building from an archive.
 
 ## CI
 

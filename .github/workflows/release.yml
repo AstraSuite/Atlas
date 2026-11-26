@@ -35,6 +35,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Sync Cargo version from git tag
+        run: |
+          # Tag being released wins over any other reachable tag.
+          export ATLAS_VERSION="${GITHUB_REF_NAME#v}"
+          ./scripts/sync-version.sh
+
       - name: Build
         run: cargo build --release --locked
 
@@ -46,7 +52,11 @@ jobs:
           version="${tag#v}"
 
           cp -v target/release/atlas "astra-atlas-${tag}"
-          git archive --format=tar.gz --prefix="astra-atlas-${version}/" -o "astra-atlas-${version}.tar.gz" "${tag}"
+          # Package the synced working tree, not the tag's tree: the manifest
+          # version is written by sync-version.sh after the tag was created.
+          git ls-files -z | tar --null --files-from=- \
+            --transform="s|^|astra-atlas-${version}/|" \
+            -czf "astra-atlas-${version}.tar.gz"
 
           echo "ARTIFACTS<<EOF" >> "$GITHUB_ENV"
           echo "astra-atlas-${tag}" >> "$GITHUB_ENV"
